@@ -1,26 +1,44 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { Component } from "react"
+import Map from "./Map/Map"
+import Santa from "./Santa/Santa"
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+type WimsfoTypes = {
+  preShow: boolean
+  runShow: boolean
+  endShow: boolean
 }
 
-export default App;
+class App extends Component<{}, WimsfoTypes>{
+
+  listenInterval: any
+  constructor(props: any) {
+    super(props)
+    this.state = {
+      preShow: false,
+      runShow: true,
+      endShow: false
+    }
+
+  }
+
+  componentDidMount() {
+    this.listen()
+    this.listenInterval = setInterval(this.listen, 5000)
+  }
+
+  listen = () => {
+    Santa.getSantaData()    
+  }
+
+  render() {
+    return (
+      <div className="Wimsfo-Santa">
+        {this.state.runShow && <div className="Run-Show">
+          <Map/>
+        </div>}
+      </div>
+    )
+  }
+}
+
+export default App
