@@ -60,7 +60,7 @@ class Tracker extends Component {
             styles: this.mapStyles[4]
         })
         console.log(this.map)
-    }
+    }//bump
 
     render() {
 
