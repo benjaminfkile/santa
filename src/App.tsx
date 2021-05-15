@@ -1,6 +1,7 @@
 import React, { Component } from "react"
-import Map from "./Map/Map"
+import Map from "./Tracker/Tracker"
 import Santa from "./Santa/Santa"
+import 'bootstrap/dist/css/bootstrap.min.css'
 
 type WimsfoTypes = {
   preShow: boolean
