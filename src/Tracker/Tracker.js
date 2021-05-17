@@ -1,18 +1,26 @@
 import { Component } from "react";
 import Map from "./Map/Map"
 import Santa from "../Santa/Santa"
-import Standard from './Map/MapStyles/Standard'
-import Retro from './Map/MapStyles/Retro'
-import Silver from './Map/MapStyles/Silver'
-import Dark from './Map/MapStyles/Dark'
-import Night from './Map/MapStyles/Night'
-import Aubergine from './Map/MapStyles/Aubergine'
-import { DropdownButton, Dropdown } from 'react-bootstrap'
+import Standard from './Map/MapThemes/Standard'
+import Retro from './Map/MapThemes/Retro'
+import Silver from './Map/MapThemes/Silver'
+import Dark from './Map/MapThemes/Dark'
+import Night from './Map/MapThemes/Night'
+import Aubergine from './Map/MapThemes/Aubergine'
+import TrackerMenu from "./TrackerMenu/TrackerMenu"
 import "./Tracker.css"
 
 class Tracker extends Component {
 
-    mapStyles = [Standard, Retro, Silver, Dark, Night, Aubergine]
+    mapThemes =
+        [
+            { mapTheme: Standard, title: "Standard" },
+            { mapTheme: Retro, title: "Retro" },
+            { mapTheme: Silver, title: "Silver" },
+            { mapTheme: Dark, title: "Dark" },
+            { mapTheme: Night, title: "Night" },
+            { mapTheme: Aubergine, title: "Aubergine" }
+        ]
     map
     marker
     locationInterval
@@ -22,7 +30,7 @@ class Tracker extends Component {
         this.state = {
             lat: 46.833,
             lng: -114.030,
-            style: this.mapStyles[4],
+            currentTheme: this.mapThemes[4].title
         }
     }
 
@@ -41,7 +49,8 @@ class Tracker extends Component {
     }
 
     setTheme = (index) => {
-        this.map.setOptions({ styles: this.mapStyles[index] })
+        this.map.setOptions({ styles: this.mapThemes[index].mapTheme })
+        this.setState({currentTheme: this.mapThemes[index].title})
     }
 
     setMapOptions = (map) => {
@@ -53,18 +62,16 @@ class Tracker extends Component {
             zoomControl: false,
             fullscreenControl: false,
             streetViewControl: false,
+            gestureHandling: 'greedy',
             mapTypeId: 'terrain',
             mapTypeControlOptions: {
                 mapTypeIds: ['terrain', 'roadmap', 'hybrid'],
             },
-            styles: this.mapStyles[4]
+            styles: this.mapThemes[4].mapTheme
         })
-        console.log(this.map)
-    }//bump
+    }
 
     render() {
-
-        console.log("render")
 
         return (
 
@@ -82,16 +89,11 @@ class Tracker extends Component {
                         this.marker = marker
                     }}
                 />
-                <div className="TrackerMenu">
-                    <DropdownButton id="dropdown-basic-button" title="Theme">
-                        <Dropdown.Item onClick={() => this.setTheme(0)}>Standard</Dropdown.Item>
-                        <Dropdown.Item onClick={() => this.setTheme(1)}>Retro</Dropdown.Item>
-                        <Dropdown.Item onClick={() => this.setTheme(2)}>Silver</Dropdown.Item>
-                        <Dropdown.Item onClick={() => this.setTheme(3)}>Dark</Dropdown.Item>
-                        <Dropdown.Item onClick={() => this.setTheme(4)}>Night</Dropdown.Item>
-                        <Dropdown.Item onClick={() => this.setTheme(5)}>Aubergine</Dropdown.Item>
-                    </DropdownButton>
-                </div>
+                <TrackerMenu
+                    changeTheme={this.setTheme}
+                    availableThemes={this.mapThemes}
+                    currentTheme={this.state.currentTheme}
+                />
             </div>
         )
     }
