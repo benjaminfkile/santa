@@ -22,6 +22,7 @@ class Tracker extends Component {
             { mapTheme: Aubergine, title: "Aubergine" }
         ]
     map
+    mapType = "terrain"
     marker
     locationInterval
     locationData
@@ -50,7 +51,17 @@ class Tracker extends Component {
 
     setTheme = (index) => {
         this.map.setOptions({ styles: this.mapThemes[index].mapTheme })
-        this.setState({currentTheme: this.mapThemes[index].title})
+        this.setState({ currentTheme: this.mapThemes[index].title })
+    }
+
+    toggleTerrain = () => {
+        if (this.mapType === "terrain") {
+            this.mapType = "roadmap"
+            this.map.setOptions({ mapTypeId: 'roadmap' })
+        } else {
+            this.mapType = "terrain"
+            this.map.setOptions({ mapTypeId: 'terrain' })
+        }
     }
 
     setMapOptions = (map) => {
@@ -93,6 +104,9 @@ class Tracker extends Component {
                     changeTheme={this.setTheme}
                     availableThemes={this.mapThemes}
                     currentTheme={this.state.currentTheme}
+                    toggleMapTypes={this.toggleTerrain}
+                    mapType={this.mapType}
+
                 />
             </div>
         )

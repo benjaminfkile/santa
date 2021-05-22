@@ -4,12 +4,15 @@ import "./TrackerMenu.css"
 
 interface TrackerMenuProps {
     changeTheme: Function
+    toggleMapTypes: Function
+    mapType: string
     availableThemes: Array<any>
     currentTheme: string
 }
 
 type TrackerMenuTypes = {
     menuOpen: boolean
+    mapTypeId: string
 }
 
 class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
@@ -17,7 +20,8 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
     constructor(props: TrackerMenuProps) {
         super(props)
         this.state = {
-            menuOpen: false
+            menuOpen: false,
+            mapTypeId: this.props.mapType
         }
     }
 
@@ -27,6 +31,15 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
         } else {
             this.setState({ menuOpen: true })
         }
+    }
+
+    toggleMapTypes = () => {
+        if (this.state.mapTypeId === "terrain") {
+            this.setState({ mapTypeId: "roadmap" })
+        } else {
+            this.setState({ mapTypeId: "terrain" })
+        }
+        this.props.toggleMapTypes()
     }
 
     render() {
@@ -39,14 +52,19 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                     <span className="material-icons">settings</span>
                 </div>}
                 {this.state.menuOpen && <div className="TrackerMenuContent" id={this.props.currentTheme.toLowerCase() + "-theme-menu-content"}>
-                    <div className="TrackerMenuThemesWrapper">
+                    <div className="TrackerMenuThemesWrapper" id={"tracker-menu-themes-wrapper-" + this.props.currentTheme.toLowerCase()}>
                         {this.props.availableThemes.length > 0 && this.props.availableThemes.map((theme: any, index: number) =>
-                            <div className="TrackerMenuThemeSelector" key={"tracker-menu-theme-selector-" + index}>
-                                <Button id="wtf" onClick={() => this.props.changeTheme(index)}>{theme.title}</Button>
-                            </div>
-                        )}
+                            <div className="ThemeToggleBtnWrapper" id={theme.title.toLowerCase() + "-theme-toggle-btn"} key={"theme-toggle-btn-" + index} onClick={() => this.props.changeTheme(index)}>
+                                <img src={"./res/map-theme-icons/" + theme.title.toLowerCase() + ".PNG"} alt=""></img>
+                            </div>)}
                     </div>
-                    <Button id="tracker-menu-close-btn" onClick={this.toggleMenu}>Close</Button>
+                    <div className="MapTypeIdWrapper">
+                        {this.state.mapTypeId === "terrain" && <Button variant="secondary" onClick={() => this.toggleMapTypes()}>Roadmap</Button>}
+                        {this.state.mapTypeId === "roadmap" && <Button variant="secondary" onClick={() => this.toggleMapTypes()}>Terrain</Button>}
+                    </div>
+                    <div className="TrackerMenuFooter">
+                        <Button id="tracker-menu-close-btn" variant="secondary" onClick={this.toggleMenu}>Close</Button>
+                    </div>
                 </div>}
             </div>
         )
