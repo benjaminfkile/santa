@@ -5,14 +5,15 @@
 }
 
 .TrackerMenuBtn {
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
     text-align: center;
     border-radius: 10px;
+    background-color: white;
 }
 
 .TrackerMenuBtn span {
-    font-size: 30px;
+    font-size: 40px;
     margin-top: 5px;
     -webkit-animation: rotate-center 2s ease-in-out both;
     animation: rotate-center 2s ease-in-out both;
@@ -24,159 +25,82 @@
     right: 0;
     width: 300px;
     height: 70%;
-    background-color: #000000;
     border-bottom-left-radius: 10px;
     -webkit-animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
     animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
 
-.TrackerMenuThemesWrapper {
+.TrackerMenuThemes {
     display: flex;
-}
-
-#tracker-menu-themes-wrapper-night {
-    background-color: #2f3948;
-}
-
-.TrackerMenuThemeSelector {
-    display: block;
     width: 100%;
+    height: 100px;
+    overflow-x: scroll;
 }
 
-.ThemeToggleBtnWrapper {
-    height: 43px;
-    border-radius: 5px;
-    margin: 5px;
+.TrackerMenuTheme {
+    height: 90px;
+    border: 1px solid;
+    border-radius: 8px;
 }
 
-.ThemeToggleBtnWrapper img {
+.TrackerMenuTheme img {
     display: block;
-    height: 40px;
-    width: 40px;
-    object-fit: cover;
+    width: 60px;
+    height: 60px;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-top: 5px;
     border-radius: 50%;
-    margin: auto;
 }
 
-
-#aubergine-theme-menu-btn {
-    background-color: #ffffff;
-    color: #000000;
+.TrackerMenuTheme p {
+    text-align: center;
+    font-size: 14px;
 }
+
+/*-theme-menu-btn*/
 
 #night-theme-menu-btn {
-    background-color: #25303f;
-    color: #939ba5;
+    background-color: #273d40;
+    color: #bdbdbd;
 }
 
-#aubergine-theme-menu-btn {
-    background-color: #013d56;
-    color: #9ba6bd;
-}
-
-#dark-theme-menu-btn {
-    background-color: #1e1e1e;
-    color: #939ba5;
-}
-
-#retro-theme-menu-btn {
-    background-color: #879061;
-    color: #eae2cc;
-}
-
-#silver-theme-menu-btn {
-    background-color: #a1a1a1;
-    color: #ffffff;
-}
-
-#standard-theme-menu-btn {
-    background-color: #ffffff;
-    color: #313131;
-}
+/*-theme-menu-content*/
 
 #night-theme-menu-content {
-    background-color: #25303f;
+    background-color: #17263c;
 }
 
-#silver-theme-menu-content {
-    background-color: #ffffff;
+/*tracker-menu-themes-*/
+
+/* #tracker-menu-themes-night {
+} */
+
+#tracker-menu-themes-night p {
+    color: white;
 }
 
-#aubergine-theme-menu-content {
-    background-color: #013d56;
-}
+/*tracker-menu-theme-*/
 
-#dark-theme-menu-content {
-    background-color: #1c1c1c;
-}
-
-#standard-theme-menu-content {
-    background-color: #ffffff;
-}
-
-#retro-theme-menu-content {
-    background-color: #dacdaa;
+#tracker-menu-theme-night {
+    background-color: #3c495a;
 }
 
 .TrackerMenuFooter {
-    width: 100%;
     position: absolute;
-    bottom: 3px;
-}
-
-.MapTypeIdWrapper {
+    display: block;
     width: 100%;
-    margin-top: 5px;
+    bottom: 2px;
+    right: 2px;
 }
 
-.MapTypeIdWrapper button {
+#tracker-menu-close-btn {
+    background-color: #3c495a;
     float: right;
 }
 
-@-webkit-keyframes rotate-center {
-    0% {
-        -webkit-transform: rotate(0);
-        transform: rotate(0);
-    }
-    100% {
-        -webkit-transform: rotate(360deg);
-        transform: rotate(360deg);
-    }
-}
-
-@keyframes rotate-center {
-    0% {
-        -webkit-transform: rotate(0);
-        transform: rotate(0);
-    }
-    100% {
-        -webkit-transform: rotate(360deg);
-        transform: rotate(360deg);
-    }
-}
-
-@-webkit-keyframes slide-in-right {
-    0% {
-        -webkit-transform: translateX(1000px);
-        transform: translateX(1000px);
-        opacity: 0;
-    }
-    100% {
-        -webkit-transform: translateX(0);
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-@keyframes slide-in-right {
-    0% {
-        -webkit-transform: translateX(1000px);
-        transform: translateX(1000px);
-        opacity: 0;
-    }
-    100% {
-        -webkit-transform: translateX(0);
-        transform: translateX(0);
-        opacity: 1;
-    }
+#terrain, #roadmap{
+    position: absolute;
+    bottom: 40px;
+    right: 2px;
 }

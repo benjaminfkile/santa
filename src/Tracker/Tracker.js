@@ -8,6 +8,7 @@ import Dark from './Map/MapThemes/Dark'
 import Night from './Map/MapThemes/Night'
 import Aubergine from './Map/MapThemes/Aubergine'
 import TrackerMenu from "./TrackerMenu/TrackerMenu"
+import Snow from "../Snow/Snow"
 import "./Tracker.css"
 
 class Tracker extends Component {
@@ -31,7 +32,8 @@ class Tracker extends Component {
         this.state = {
             lat: 46.833,
             lng: -114.030,
-            currentTheme: this.mapThemes[4].title
+            currentTheme: this.mapThemes[4].title,
+            snow: false
         }
     }
 
@@ -82,6 +84,14 @@ class Tracker extends Component {
         })
     }
 
+    toggleSnow = () => {
+        if (this.state.snow) {
+            this.setState({ snow: false })
+        } else {
+            this.setState({ snow: true })
+        }
+    }
+
     render() {
 
         return (
@@ -106,8 +116,10 @@ class Tracker extends Component {
                     currentTheme={this.state.currentTheme}
                     toggleMapTypes={this.toggleTerrain}
                     mapType={this.mapType}
+                    toggleSnow={this.toggleSnow}
 
                 />
+                {this.state.snow && <Snow />}
             </div>
         )
     }
