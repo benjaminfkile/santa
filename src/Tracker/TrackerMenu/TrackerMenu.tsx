@@ -14,6 +14,7 @@ interface TrackerMenuProps {
 type TrackerMenuTypes = {
     menuOpen: boolean
     mapTypeId: string
+    snow: boolean
 }
 
 class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
@@ -22,7 +23,8 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
         super(props)
         this.state = {
             menuOpen: false,
-            mapTypeId: this.props.mapType
+            mapTypeId: this.props.mapType,
+            snow: false
         }
     }
 
@@ -44,6 +46,11 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
     }
 
     toggleSnow = () => {
+        if (this.state.snow) {
+            this.setState({ snow: false })
+        } else {
+            this.setState({ snow: true })
+        }
         this.props.toggleSnow()
     }
 
@@ -65,11 +72,19 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                             </div>
                         )}
                     </div>
-                    {this.state.mapTypeId === "terrain" && <Button variant="secondary" onClick={() => this.toggleMapTypes()}>Roadmap</Button>}
-                    {this.state.mapTypeId === "roadmap" && <Button variant="secondary" onClick={() => this.toggleMapTypes()}>Terrain</Button>}
+                    <div className="TrackerMenuMapTypeWrapper">
+                        {this.state.mapTypeId !== "terrain" && <Button className="TerrainToggle" id="terrain-toggled-off" onClick={() => this.toggleMapTypes()}><span className="material-icons">terrain</span><p>Terrain</p></Button>}
+                        {this.state.mapTypeId === "terrain" && <Button className="TerrainToggle" id="terrain-toggled-on"><span className="material-icons">terrain</span><p>Terrain</p></Button>}
+                        {this.state.mapTypeId === "roadmap" && <Button className="RoadMapToggle" id="terrain-toggled-on"><span className="material-icons">map</span><p>Roadmap</p></Button>}
+                        {this.state.mapTypeId !== "roadmap" && <Button className="RoadMapToggle" id="terrain-toggled-off" onClick={() => this.toggleMapTypes()}><span className="material-icons">map</span><p>Roadmap</p></Button>}
+                        {this.state.snow && <Button id="snow-toggled-on" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons">ac_unit</span><p>Snow</p></Button>}
+                        {!this.state.snow && <Button id="snow-toggled-off" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons">ac_unit</span><p>Snow</p></Button>}
+
+
+
+                    </div>
                     <br></br>
                     <br></br>
-                    <Button id="tracker-menu-snow-btn" variant="secondary" onClick={this.toggleSnow}>Snow</Button>
                     <div className="TrackerMenuFooter">
                         <Button id="tracker-menu-close-btn" variant="secondary" onClick={this.toggleMenu}>Close</Button>
                     </div>

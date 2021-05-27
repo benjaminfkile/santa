@@ -5,16 +5,17 @@
 }
 
 .TrackerMenuBtn {
-    width: 50px;
-    height: 50px;
+    width: 45px;
+    height: 40px;
     text-align: center;
-    border-radius: 10px;
+    border: 2px solid;
+    border-radius: 5px;
     background-color: white;
 }
 
 .TrackerMenuBtn span {
     font-size: 40px;
-    margin-top: 5px;
+    margin-top: -2px;
     -webkit-animation: rotate-center 2s ease-in-out both;
     animation: rotate-center 2s ease-in-out both;
 }
@@ -34,13 +35,18 @@
     display: flex;
     width: 100%;
     height: 100px;
+    margin-top: 3px;
     overflow-x: scroll;
+    overflow-y: hidden;
+
 }
 
 .TrackerMenuTheme {
     height: 90px;
     border: 1px solid;
     border-radius: 8px;
+    margin-left: 1px;
+    margin-right: 1px;
 }
 
 .TrackerMenuTheme img {
@@ -60,12 +66,22 @@
 
 /*-theme-menu-btn*/
 
-#night-theme-menu-btn {
-    background-color: #273d40;
+#standard-theme-menu-btn {
+    background-color: #ffffff;
     color: #bdbdbd;
+    border-color: #bdbdbd;
 }
 
+#night-theme-menu-btn {
+    background-color: #17263c;
+    color: #bdbdbd;
+    border-color: #bdbdbd;
+}
 /*-theme-menu-content*/
+
+#standard-theme-menu-content {
+    background-color: #efebe2;
+}
 
 #night-theme-menu-content {
     background-color: #17263c;
@@ -81,6 +97,10 @@
 }
 
 /*tracker-menu-theme-*/
+
+#tracker-menu-theme-standard {
+    background-color: #b2cdb1;
+}
 
 #tracker-menu-theme-night {
     background-color: #3c495a;
@@ -99,8 +119,84 @@
     float: right;
 }
 
-#terrain, #roadmap{
+#terrain, #roadmap {
     position: absolute;
     bottom: 40px;
     right: 2px;
 }
+
+.TrackerMenuMapTypeWrapper {
+    display: flex;
+    width: 300px;
+    height: 40px;
+    margin-top: -3px;
+}
+
+.TerrainToggle, .RoadMapToggle, .SnowToggle {
+    margin-left: 5.5px;
+}
+
+.TerrainToggle {
+    width: 90px;
+}
+
+.RoadMapToggle {
+    width: 110px;
+}
+
+.SnowToggle {
+    width: 77px;
+}
+
+#terrain-toggled-off, #terrain-toggled-on, #snow-toggled-on, #snow-toggled-off {
+    display: flex;
+    height: 35px;
+    padding: 0px;
+    padding-top: 3px;
+    padding-left: 12px;
+    border: none;
+    background-color: #3c495a;
+}
+
+#terrain-toggled-off:focus, #terrain-toggled-on:focus, #snow-toggled-on:focus, #snow-toggled-off:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+#terrain-toggled-on, #snow-toggled-on {
+    border-bottom: solid 2px #ffffff;
+}
+
+#terrain-toggled-off p, #terrain-toggled-on p, #snow-toggled-off p, #snow-toggled-on p {
+    margin-left: 5px;
+}
+
+#terrain-toggled-off span, #terrain-toggled-on span, #snow-toggled-on span, #snow-toggled-off span {
+    margin-left: -10px;
+}
+
+ @-webkit-keyframes slide-in-right {
+    0% {
+      -webkit-transform: translateX(1000px);
+              transform: translateX(1000px);
+      opacity: 0;
+    }
+    100% {
+      -webkit-transform: translateX(0);
+              transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  @keyframes slide-in-right {
+    0% {
+      -webkit-transform: translateX(1000px);
+              transform: translateX(1000px);
+      opacity: 0;
+    }
+    100% {
+      -webkit-transform: translateX(0);
+              transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
