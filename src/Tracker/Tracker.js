@@ -70,7 +70,7 @@ class Tracker extends Component {
         this.map = map
         this.map.setOptions({
             center: { lat: this.state.lat, lng: this.state.lng },
-            zoom: 13,
+            zoom: 10,
             mapTypeControl: false,
             zoomControl: false,
             fullscreenControl: false,
