@@ -5,25 +5,24 @@
 }
 
 .TrackerMenuBtn {
-    width: 45px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
     text-align: center;
     border: 2px solid;
-    border-radius: 5px;
-    background-color: white;
+    border-radius: 50%;
 }
 
 .TrackerMenuBtn span {
     font-size: 40px;
-    margin-top: -2px;
-    -webkit-animation: rotate-center 2s ease-in-out both;
-    animation: rotate-center 2s ease-in-out both;
+    margin-top: 3px;
+    -webkit-animation: rotate-center 3s ease-in-out both;
+    animation: rotate-center 3s ease-in-out both;
 }
 
 .TrackerMenuContent {
     position: fixed;
-    top: 0;
-    right: 0;
+    top: 0px;
+    right: 0px;
     width: 300px;
     height: 70%;
     border-bottom-left-radius: 10px;
@@ -38,8 +37,16 @@
     margin-top: 3px;
     overflow-x: scroll;
     overflow-y: hidden;
-
 }
+
+/* .TrackerMenuThemes {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.TrackerMenuThemes::-webkit-scrollbar {
+    display: none;
+} */
 
 .TrackerMenuTheme {
     height: 90px;
@@ -64,46 +71,11 @@
     font-size: 14px;
 }
 
-/*-theme-menu-btn*/
-
-#standard-theme-menu-btn {
-    background-color: #ffffff;
-    color: #bdbdbd;
-    border-color: #bdbdbd;
-}
-
-#night-theme-menu-btn {
-    background-color: #17263c;
-    color: #bdbdbd;
-    border-color: #bdbdbd;
-}
-/*-theme-menu-content*/
-
-#standard-theme-menu-content {
-    background-color: #efebe2;
-}
-
-#night-theme-menu-content {
-    background-color: #17263c;
-}
-
-/*tracker-menu-themes-*/
-
-/* #tracker-menu-themes-night {
-} */
-
-#tracker-menu-themes-night p {
-    color: white;
-}
-
-/*tracker-menu-theme-*/
-
-#tracker-menu-theme-standard {
-    background-color: #b2cdb1;
-}
-
-#tracker-menu-theme-night {
-    background-color: #3c495a;
+.TrackerMenuMapTypeWrapper {
+    display: flex;
+    width: 300px;
+    height: 40px;
+    margin-top: -3px;
 }
 
 .TrackerMenuFooter {
@@ -123,13 +95,6 @@
     position: absolute;
     bottom: 40px;
     right: 2px;
-}
-
-.TrackerMenuMapTypeWrapper {
-    display: flex;
-    width: 300px;
-    height: 40px;
-    margin-top: -3px;
 }
 
 .TerrainToggle, .RoadMapToggle, .SnowToggle {
@@ -155,7 +120,6 @@
     padding-top: 3px;
     padding-left: 12px;
     border: none;
-    background-color: #3c495a;
 }
 
 #terrain-toggled-off:focus, #terrain-toggled-on:focus, #snow-toggled-on:focus, #snow-toggled-off:focus {
@@ -175,28 +139,160 @@
     margin-left: -10px;
 }
 
- @-webkit-keyframes slide-in-right {
+#standard-theme-menu-btn {
+    color: #53aef5;
+}
+
+#standard-theme-menu-content {
+    background-color: #aadaffb8;
+}
+
+#standard-theme-menu-content .TrackerMenuTheme {
+    background-color: #e8e8e8;
+    border: none;
+}
+
+#standard-theme-menu-content button {
+    background-color: #e8e8e8;
+    color: black;
+}
+
+#retro-theme-menu-btn {
+    color: #4e4e4c;
+}
+
+#retro-theme-menu-content {
+    background-color: #dfd2aea8;
+}
+
+#retro-theme-menu-content .TrackerMenuTheme {
+    background-color: #ece4ce;
+    border: none;
+}
+
+#retro-theme-menu-content button {
+    background-color: #ece4ce;
+    color: black;
+}
+
+#silver-theme-menu-btn {
+    color: #737373;
+}
+
+#silver-theme-menu-content {
+    background-color: #f7f7f7d6;
+}
+
+#silver-theme-menu-content .TrackerMenuTheme {
+    background-color: #a2a29d;
+    border: none;
+}
+
+#silver-theme-menu-content button {
+    background-color: #a2a29d;
+    color: black;
+}
+
+#dark-theme-menu-btn {
+    color: #737373;
+}
+
+#dark-theme-menu-content {
+    background-color: #212121d4;
+}
+
+#dark-theme-menu-content .TrackerMenuTheme {
+    background-color: #434343;
+    border: none;
+    color: #b5b5b5;
+}
+
+#dark-theme-menu-content button {
+    background-color: #434343;
+    color: #b5b5b5;
+}
+
+#night-theme-menu-btn {
+    color: #3e737b;
+}
+
+#night-theme-menu-content {
+    background-color: #242f3eb3;
+}
+
+#night-theme-menu-content .TrackerMenuTheme {
+    background-color: #4d5662;
+    color: #FFFFFF;
+    border: none;
+}
+
+#night-theme-menu-content button {
+    background-color: #4d5662;
+    color: #FFFFFF;
+}
+
+#aubergine-theme-menu-btn {
+    color: #3b5a98;
+}
+
+#aubergine-theme-menu-content {
+    background-color: #1d2c4dd4;
+}
+
+#aubergine-theme-menu-content .TrackerMenuTheme {
+    background-color: #2d5f75;
+    color: #FFFFFF;
+    border: none;
+}
+
+#aubergine-theme-menu-content button {
+    background-color: #2d5f75;
+}
+
+@-webkit-keyframes rotate-center {
     0% {
-      -webkit-transform: translateX(1000px);
-              transform: translateX(1000px);
-      opacity: 0;
+        -webkit-transform: rotate(0);
+        transform: rotate(0);
     }
     100% {
-      -webkit-transform: translateX(0);
-              transform: translateX(0);
-      opacity: 1;
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
     }
-  }
-  @keyframes slide-in-right {
+}
+
+@keyframes rotate-center {
     0% {
-      -webkit-transform: translateX(1000px);
-              transform: translateX(1000px);
-      opacity: 0;
+        -webkit-transform: rotate(0);
+        transform: rotate(0);
     }
     100% {
-      -webkit-transform: translateX(0);
-              transform: translateX(0);
-      opacity: 1;
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
     }
-  }
-  
+}
+
+@-webkit-keyframes slide-in-right {
+    0% {
+        -webkit-transform: translateX(1000px);
+        transform: translateX(1000px);
+        opacity: 0;
+    }
+    100% {
+        -webkit-transform: translateX(0);
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slide-in-right {
+    0% {
+        -webkit-transform: translateX(1000px);
+        transform: translateX(1000px);
+        opacity: 0;
+    }
+    100% {
+        -webkit-transform: translateX(0);
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
