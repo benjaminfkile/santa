@@ -56,7 +56,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
 
     render() {
 
-        console.log(this.props)
+        // console.log(this.props)
 
         return (
             <div className="TrackerMenu">
@@ -66,7 +66,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                 {this.state.menuOpen && <div className="TrackerMenuContent" id={this.props.currentTheme.toLowerCase() + "-theme-menu-content"}>
                     <div className="TrackerMenuThemes" id={"tracker-menu-themes-" + this.props.currentTheme.toLowerCase()}>
                         {this.props.availableThemes.map((theme: any, index: number) =>
-                            <div className="TrackerMenuTheme" id={"tracker-menu-theme-" + this.props.currentTheme.toLowerCase()} onClick={() => this.props.changeTheme(index)}>
+                            <div className="TrackerMenuTheme" id={"tracker-menu-theme-" + this.props.currentTheme.toLowerCase()} key={"tracker-menu-theme-" + index} onClick={() => this.props.changeTheme(index)}>
                                 <img src={"./res/map-theme-icons/" + theme.title.toLowerCase() + ".PNG"} alt=""></img>
                                 <p>{theme.title}</p>
                             </div>

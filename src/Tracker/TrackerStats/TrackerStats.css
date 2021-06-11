@@ -1,0 +1,25 @@
+.TrackerStatsWrapper{
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    height: 110px;
+    width: 100px;
+    border-bottom-right-radius: 10px;
+}
+
+#stats-item-wrapper{
+    width: 100%;
+}
+
+#stats-item-wrapper p{
+    margin: 0px;
+    padding: 0px;
+    margin-left: 5px;
+    /* text-align: center; */
+}
+
+
+#tracker-menu-stats-wrapper-night{
+    background-color: #242f3eb3;
+    color: #f4f4f5;
+}

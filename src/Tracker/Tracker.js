@@ -8,6 +8,7 @@ import Dark from './Map/MapThemes/Dark'
 import Night from './Map/MapThemes/Night'
 import Aubergine from './Map/MapThemes/Aubergine'
 import TrackerMenu from "./TrackerMenu/TrackerMenu"
+import TrackerStats from "./TrackerStats/TrackerStats"
 import Snow from "../Snow/Snow"
 import "./Tracker.css"
 
@@ -33,7 +34,8 @@ class Tracker extends Component {
             lat: 46.833,
             lng: -114.030,
             currentTheme: this.mapThemes[4].title,
-            snow: false
+            snow: false,
+            santaDat: {error: true}
         }
     }
 
@@ -44,6 +46,11 @@ class Tracker extends Component {
 
     setLocation = () => {
         const santaDat = Santa.location
+        if(santaDat.lat){
+            this.setState({santaDat: santaDat})
+        }else{
+            this.setState({santaDat: {error: true}})
+        }
         if ((JSON.stringify(santaDat) !== JSON.stringify(this.locationData)) && santaDat.lat) {
             this.locationData = santaDat
             this.map.setCenter({ lat: Number(this.locationData.lat), lng: Number(this.locationData.lng) })
@@ -119,6 +126,10 @@ class Tracker extends Component {
                     toggleSnow={this.toggleSnow}
 
                 />
+                {Santa.location.accuracy && <TrackerStats
+                santaDat={this.state.santaDat}
+                currentTheme={this.state.currentTheme}
+                />}
                 {this.state.snow && <Snow />}
             </div>
         )
