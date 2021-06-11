@@ -1,5 +1,4 @@
 import { Component } from "react"
-import { textSpanIntersectsWithPosition } from "typescript"
 import "./TrackerStats.css"
 
 interface TrackerStatsProps {
@@ -26,7 +25,7 @@ class TrackerStats extends Component<TrackerStatsProps, TrackerStatsTypes> {
 
     render() {
 
-        console.log(this.props)
+        // console.log(this.props)
 
         return (
             <div className="TrackerStats">
