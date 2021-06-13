@@ -6,15 +6,16 @@ let Santa = {
     location: {},
     getSantaData: () => {
         if (Reindeer.reindeerPick.length > 0) {
-            axios.get(Reindeer.reindeerPick + "/api/gps-data")
+            axios.get(Reindeer.reindeerPick + "/api/location-data")
                 .then(res =>
                     Santa.location = res.data
-                ).then(res =>{
+                ).then(res => {
                     Santa.hasError = false
                 })
                 .catch(err =>
                     Santa.hasError = true
                 )
+            console.log("Getting Santa Data")
         }
     }
 }

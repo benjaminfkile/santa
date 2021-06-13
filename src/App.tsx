@@ -12,30 +12,45 @@ type WimsfoTypes = {
 class App extends Component<{}, WimsfoTypes>{
 
   listenInterval: any
+  interval: any
   constructor(props: any) {
     super(props)
     this.state = {
       preShow: false,
       runShow: true,
-      endShow: false
+      endShow: false,
     }
 
   }
 
   componentDidMount() {
+    Santa.getSantaData()
     this.listen()
-    this.listenInterval = setInterval(this.listen, 5000)
+    this.interval = 5000
+    this.listenInterval = setInterval(this.listen, this.interval)
   }
 
   listen = () => {
-    Santa.getSantaData()    
+    //@ts-ignore
+    console.log(Santa.location.throttle)
+    //@ts-ignore
+    if (Santa.location.throttle + "" !== this.interval + "") {
+      //@ts-ignore
+      this.interval = parseInt(Santa.location.throttle)
+      clearInterval(this.listenInterval)
+      //@ts-ignore
+      this.listenInterval = setInterval(this.listen, this.interval)
+      console.log("new throttle profile")
+    } else {
+      Santa.getSantaData()
+    }
   }
 
   render() {
     return (
       <div className="Wimsfo-Santa">
         {this.state.runShow && <div className="Run-Show">
-          <Map/>
+          <Map />
         </div>}
       </div>
     )
