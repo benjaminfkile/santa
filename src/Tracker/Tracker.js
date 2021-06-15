@@ -26,8 +26,7 @@ class Tracker extends Component {
     map
     mapType = "terrain"
     marker
-    locationInterval
-    locationData
+    updateInterval
     constructor() {
         super();
         this.state = {
@@ -35,26 +34,25 @@ class Tracker extends Component {
             lng: -114.030,
             currentTheme: this.mapThemes[4].title,
             snow: false,
-            santaDat: {error: true}
+            santaDat: {}
         }
     }
 
     componentDidMount() {
-        this.setLocation()
-        this.locationInterval = setInterval(this.setLocation, 1000)
+        Santa.getSantaData()
+        this.updateInterval = setInterval(this.setLocation, 500)
     }
+
+    componentWillUnmount(){
+        clearInterval(this.updateInterval)
+      }
 
     setLocation = () => {
         const santaDat = Santa.location
-        if(santaDat.lat){
-            this.setState({santaDat: santaDat})
-        }else{
-            this.setState({santaDat: {error: true}})
-        }
-        if ((JSON.stringify(santaDat) !== JSON.stringify(this.locationData)) && santaDat.lat) {
-            this.locationData = santaDat
-            this.map.setCenter({ lat: Number(this.locationData.lat), lng: Number(this.locationData.lng) })
-            this.marker.setPosition({ lat: Number(this.locationData.lat), lng: Number(this.locationData.lng) })
+        if ((JSON.stringify(santaDat) !== JSON.stringify(this.state.santaDat)) && santaDat.lat) {
+            this.setState({ santaDat: santaDat })
+            this.map.setCenter({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
+            this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
         }
     }
 
@@ -101,6 +99,8 @@ class Tracker extends Component {
 
     render() {
 
+        console.log("tracker render")
+
         return (
 
             <div className="TrackerContainer">
@@ -117,7 +117,7 @@ class Tracker extends Component {
                         this.marker = marker
                     }}
                 />
-                <TrackerMenu
+                {this.state.currentTheme && <TrackerMenu
                     changeTheme={this.setTheme}
                     availableThemes={this.mapThemes}
                     currentTheme={this.state.currentTheme}
@@ -125,11 +125,12 @@ class Tracker extends Component {
                     mapType={this.mapType}
                     toggleSnow={this.toggleSnow}
 
-                />
-                {Santa.location.accuracy && <TrackerStats
-                santaDat={this.state.santaDat}
-                currentTheme={this.state.currentTheme}
                 />}
+                {Santa.location.accuracy &&
+                    <TrackerStats
+                        santaDat={this.state.santaDat}
+                        currentTheme={this.state.currentTheme}
+                    />}
                 {this.state.snow && <Snow />}
             </div>
         )

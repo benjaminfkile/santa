@@ -29,7 +29,7 @@ class TrackerStats extends Component<TrackerStatsProps, TrackerStatsTypes> {
 
         return (
             <div className="TrackerStats">
-                {this.state.showStats && !this.props.santaDat.error && <div id="stats-accuracy-wrapper">
+                {this.state.showStats && this.props.santaDat.accuracy && <div id="stats-accuracy-wrapper">
                     <div className="TrackerStatsWrapper" id={"tracker-menu-stats-wrapper-" + this.props.currentTheme.toLowerCase()}>
                         <div id="stats-item-wrapper">
                             {/* <p>~</p> */}
