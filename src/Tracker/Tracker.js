@@ -27,6 +27,8 @@ class Tracker extends Component {
     mapType = "terrain"
     marker
     updateInterval
+    userToSantaCoords = [{}, {}]
+    userToSantaFlightPath = null
     constructor() {
         super();
         this.state = {
@@ -34,7 +36,8 @@ class Tracker extends Component {
             lng: -114.030,
             currentTheme: this.mapThemes[4].title,
             snow: false,
-            santaDat: {}
+            santaDat: {},
+            distanceFromUserToSanta: null
         }
     }
 
@@ -43,9 +46,9 @@ class Tracker extends Component {
         this.updateInterval = setInterval(this.setLocation, 500)
     }
 
-    componentWillUnmount(){
+    componentWillUnmount() {
         clearInterval(this.updateInterval)
-      }
+    }
 
     setLocation = () => {
         const santaDat = Santa.location
@@ -53,6 +56,55 @@ class Tracker extends Component {
             this.setState({ santaDat: santaDat })
             this.map.setCenter({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
             this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
+            this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
+            this.userToSantaCoords[1] = { lat: Number(46.910480), lng: Number(-114.052400) }
+            this.drawPoly()
+        }
+    }
+
+    drawPoly = () => {
+        this.removePoly()
+        let iconSequence = [];
+        let circle1 = {
+            "path": "M -2,0 C -1.947018,-2.2209709 1.9520943,-2.1262691 2,0.00422057 2.0378955,1.3546185 1.5682108,2.0631345 1.4372396e-8,2.0560929 -1.7155482,2.0446854 -1.9145886,1.0142836 -2,0.06735507 Z",
+            "fillColor": "#aa253c",
+            "fillOpacity": 0.8,
+            "strokeColor": "#aa253c",
+            "strokeWeight": 20,
+            "scale": 1
+        }
+
+        let circle2 = {
+            "path": "M -2,0 C -1.947018,-2.2209709 1.9520943,-2.1262691 2,0.00422057 2.0378955,1.3546185 1.5682108,2.0631345 1.4372396e-8,2.0560929 -1.7155482,2.0446854 -1.9145886,1.0142836 -2,0.06735507 Z",
+            "fillColor": "#000000",
+            "fillOpacity": .5,
+            "strokeColor": "#000000",
+            "strokeWeight": 0,
+            "scale": 12
+        }
+
+        iconSequence.push({ icon: circle1, offset: "100%", repeat: "0" })
+        iconSequence.push({ icon: circle2, offset: "0%", repeat: "0" })
+
+        this.userToSantaFlightPath = new window.google.maps.Polyline({
+            path: this.userToSantaCoords,
+            color: "#aa253c",
+            strokeColor: "#aa253c",
+            strokeOpacity: 1,
+            strokeWeight: 1.5,
+            icons: iconSequence
+
+        })
+
+        let lengthInMeters = window.google.maps.geometry.spherical.computeLength(this.userToSantaFlightPath.getPath());
+        this.setState({ distanceFromUserToSanta: Math.floor(lengthInMeters * 3.28084) })
+
+        this.userToSantaFlightPath.setMap(this.map);
+    }
+
+    removePoly = () => {
+        if (this.userToSantaFlightPath) {
+            this.userToSantaFlightPath.setMap(null);
         }
     }
 
@@ -100,6 +152,7 @@ class Tracker extends Component {
     render() {
 
         console.log("tracker render")
+        console.log(this.state)
 
         return (
 
@@ -108,12 +161,22 @@ class Tracker extends Component {
                     id="Map"
                     onMapLoad={map => {
                         this.setMapOptions(map)
-                        const marker = new window.google.maps.Marker(
+
+                        let mapIcon = {
+                            url: './res/santa-icon.png' ,
+                            scaledSize: new window.google.maps.Size(50, 50), // scaled size
+                            origin: new window.google.maps.Point(0,0), // origin
+                            anchor: new window.google.maps.Point(22, 28) // anchor
+
+                        }
+                        let marker = new window.google.maps.Marker(
                             {
-                                position: { lat: parseFloat(this.state.lat), lng: parseFloat(this.state.lng) },
+                                position: { lat: parseFloat(this.state.santaDat.lat), lng: parseFloat(this.state.santaDat.lng) },
                                 map: map,
                                 label: '',
+                                icon: mapIcon
                             });
+
                         this.marker = marker
                     }}
                 />
@@ -130,6 +193,7 @@ class Tracker extends Component {
                     <TrackerStats
                         santaDat={this.state.santaDat}
                         currentTheme={this.state.currentTheme}
+                        distanceFromUserToSanta={this.state.distanceFromUserToSanta}
                     />}
                 {this.state.snow && <Snow />}
             </div>

@@ -4,6 +4,7 @@ import "./TrackerStats.css"
 interface TrackerStatsProps {
     santaDat: any
     currentTheme: any
+    distanceFromUserToSanta: number | null
 }
 
 type TrackerStatsTypes = {
@@ -47,6 +48,10 @@ class TrackerStats extends Component<TrackerStatsProps, TrackerStatsTypes> {
                             {/* <p>~</p> */}
                             <p>{this.props.santaDat.speed.split("+")[0]} {this.props.santaDat.speed.split("+")[1]}</p>
                         </div>
+                        {this.props.distanceFromUserToSanta && <div id="stats-item-wrapper">
+                            {/* <p>~</p> */}
+                            <p>{this.props.distanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
+                        </div>}
                     </div>
                 </div>}
             </div>
