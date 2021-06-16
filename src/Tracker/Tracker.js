@@ -74,17 +74,17 @@ class Tracker extends Component {
             "scale": 1
         }
 
-        let circle2 = {
-            "path": "M -2,0 C -1.947018,-2.2209709 1.9520943,-2.1262691 2,0.00422057 2.0378955,1.3546185 1.5682108,2.0631345 1.4372396e-8,2.0560929 -1.7155482,2.0446854 -1.9145886,1.0142836 -2,0.06735507 Z",
-            "fillColor": "#000000",
-            "fillOpacity": .5,
-            "strokeColor": "#000000",
-            "strokeWeight": 0,
-            "scale": 12
-        }
+        // let circle2 = {
+        //     "path": "M -2,0 C -1.947018,-2.2209709 1.9520943,-2.1262691 2,0.00422057 2.0378955,1.3546185 1.5682108,2.0631345 1.4372396e-8,2.0560929 -1.7155482,2.0446854 -1.9145886,1.0142836 -2,0.06735507 Z",
+        //     "fillColor": "#000000",
+        //     "fillOpacity": .5,
+        //     "strokeColor": "#000000",
+        //     "strokeWeight": 0,
+        //     "scale": 12
+        // }
 
         iconSequence.push({ icon: circle1, offset: "100%", repeat: "0" })
-        iconSequence.push({ icon: circle2, offset: "0%", repeat: "0" })
+        // iconSequence.push({ icon: circle2, offset: "0%", repeat: "0" })
 
         this.userToSantaFlightPath = new window.google.maps.Polyline({
             path: this.userToSantaCoords,
