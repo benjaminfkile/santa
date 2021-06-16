@@ -1,6 +1,7 @@
 import { Component } from "react";
 import Map from "./Map/Map"
 import Santa from "../Santa/Santa"
+import userLocation from "../UserLocation/UserLocation";
 import Standard from './Map/MapThemes/Standard'
 import Retro from './Map/MapThemes/Retro'
 import Silver from './Map/MapThemes/Silver'
@@ -57,7 +58,11 @@ class Tracker extends Component {
             this.map.setCenter({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
             this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
             this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
-            this.userToSantaCoords[1] = { lat: Number(46.910480), lng: Number(-114.052400) }
+            if (userLocation.coordinates.lat) {
+                this.userToSantaCoords[1].lat = userLocation.coordinates.lat
+                this.userToSantaCoords[1].lng = userLocation.coordinates.lng
+            }
+            console.log(userLocation.coordinates)
             this.drawPoly()
         }
     }
@@ -163,9 +168,9 @@ class Tracker extends Component {
                         this.setMapOptions(map)
 
                         let mapIcon = {
-                            url: './res/santa-icon.png' ,
+                            url: './res/santa-icon.png',
                             scaledSize: new window.google.maps.Size(50, 50), // scaled size
-                            origin: new window.google.maps.Point(0,0), // origin
+                            origin: new window.google.maps.Point(0, 0), // origin
                             anchor: new window.google.maps.Point(22, 28) // anchor
 
                         }

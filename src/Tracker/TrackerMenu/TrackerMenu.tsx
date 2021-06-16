@@ -1,4 +1,5 @@
 import React, { Component } from "react"
+import LocationPrompt from "../../UserLocation/LocationPrompt"
 import { Button } from "react-bootstrap"
 import "./TrackerMenu.css"
 
@@ -15,6 +16,7 @@ type TrackerMenuTypes = {
     menuOpen: boolean
     mapTypeId: string
     snow: boolean
+    locationPrompt: boolean
 }
 
 class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
@@ -24,7 +26,8 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
         this.state = {
             menuOpen: false,
             mapTypeId: this.props.mapType,
-            snow: false
+            snow: false,
+            locationPrompt: false
         }
     }
 
@@ -52,6 +55,14 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
             this.setState({ snow: true })
         }
         this.props.toggleSnow()
+    }
+
+    toggleLocationPrompt = () => {
+        if (this.state.locationPrompt) {
+            this.setState({ locationPrompt: false })
+        } else {
+            this.setState({ locationPrompt: true })
+        }
     }
 
     render() {
@@ -83,6 +94,10 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                     <br></br>
                     <br></br>
                     <div className="TrackerMenuFooter">
+                        {this.state.locationPrompt && <LocationPrompt
+                            toggleLocationPrompt={this.toggleLocationPrompt}
+                        />}
+                        <Button id="" variant="secondary" onClick={this.toggleLocationPrompt}>Use My Location</Button>
                         <Button id="tracker-menu-close-btn" variant="secondary" onClick={this.toggleMenu}>Close</Button>
                     </div>
                 </div>}
