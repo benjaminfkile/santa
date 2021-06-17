@@ -38,12 +38,14 @@ class Tracker extends Component {
             currentTheme: this.mapThemes[4].title,
             snow: false,
             santaDat: {},
-            distanceFromUserToSanta: null
+            distanceFromUserToSanta: null,
+            inApp: true
         }
     }
 
     componentDidMount() {
         Santa.getSantaData()
+        this.setState({inApp: userLocation.inApp()})
         this.updateInterval = setInterval(this.setLocation, 500)
     }
 
@@ -58,11 +60,14 @@ class Tracker extends Component {
             this.map.setCenter({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
             this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
             this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
-            if (userLocation.coordinates.lat) {
-                this.userToSantaCoords[1].lat = userLocation.coordinates.lat
-                this.userToSantaCoords[1].lng = userLocation.coordinates.lng
-            }
-            console.log(userLocation.coordinates)
+        }
+        if (userLocation.coordinates.lat) {
+            this.userToSantaCoords[1] = { lat: Number(userLocation.coordinates.lat), lng: Number(userLocation.coordinates.lng) }
+        }
+        if(!this.state.inApp && userLocation.coordinates.lat ){
+            userLocation.getUserLocation()
+        }
+        if(this.userToSantaCoords[1].lat){
             this.drawPoly()
         }
     }
@@ -156,8 +161,8 @@ class Tracker extends Component {
 
     render() {
 
-        console.log("tracker render")
-        console.log(this.state)
+        // console.log("tracker render")
+        // console.log(this.state)
 
         return (
 
@@ -169,9 +174,9 @@ class Tracker extends Component {
 
                         let mapIcon = {
                             url: './res/santa-icon.png',
-                            scaledSize: new window.google.maps.Size(50, 50), // scaled size
-                            origin: new window.google.maps.Point(0, 0), // origin
-                            anchor: new window.google.maps.Point(22, 28) // anchor
+                            scaledSize: new window.google.maps.Size(50, 50),
+                            origin: new window.google.maps.Point(0, 0),
+                            anchor: new window.google.maps.Point(22, 28)
 
                         }
                         let marker = new window.google.maps.Marker(

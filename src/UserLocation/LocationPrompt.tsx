@@ -16,6 +16,11 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
 
     }
 
+    handleUserAllowLocation = () => {
+        userLocation.getUserLocation()
+        this.props.toggleLocationPrompt()
+    }
+
     render() {
         return (
             <div className="LocationPrompt">
@@ -24,16 +29,15 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
                     backdrop="static"
                     keyboard={false}
                 >
-                    <Modal.Header closeButton>
-                        <Modal.Title>Modal title</Modal.Title>
+                    <Modal.Header>
+                        <Modal.Title>Real Time Updates</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        I will not close if you click outside me. Don't even try to press
-                        escape key.
+                        If you want to get real time updates about Santas distance from your location, tap the use button and allow the Santa Tracker to access your location
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button variant="primary" onClick={() => this.props.toggleLocationPrompt()}>Quit</Button>
-                        <Button variant="primary" onClick={() => userLocation.getUserLocation()}>Use</Button>
+                        <Button variant="primary" onClick={() => this.handleUserAllowLocation()}>Use</Button>
+                        <Button variant="secondary" onClick={() => this.props.toggleLocationPrompt()}>Back</Button>
                     </Modal.Footer>
                 </Modal>
             </div>
