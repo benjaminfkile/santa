@@ -94,10 +94,12 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                     <br></br>
                     <br></br>
                     <div className="TrackerMenuFooter">
-                        {this.state.locationPrompt && <LocationPrompt
+                        {this.state.locationPrompt &&
+                         <LocationPrompt
                             toggleLocationPrompt={this.toggleLocationPrompt}
+                            theme={this.props.currentTheme}
                         />}
-                        <Button id="" variant="secondary" onClick={this.toggleLocationPrompt}>Use My Location</Button>
+                        <Button id="" variant="secondary" onClick={this.toggleLocationPrompt}>Location Services</Button>
                         <Button id="tracker-menu-close-btn" variant="secondary" onClick={this.toggleMenu}>Close</Button>
                     </div>
                 </div>}

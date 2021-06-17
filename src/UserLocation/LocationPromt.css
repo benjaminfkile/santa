@@ -1,2 +1,22 @@
-.LocationPrompt{
+.LocationPromptCustomModalHeader {
+    font-size: 30px;
+    width: 100%;
+    text-align: center;
 }
+
+#location-prompt-modal-night .modal-content {
+    background-color: #4d5662 !important;
+}
+
+#location-prompt-custom-modal-header-night, #location-prompt-custom-modal-body-night {
+    color: #f6f6f7;
+}
+
+#location-prompt-modal-retro .modal-content {
+    background-color: #ece4ce !important;
+}
+
+#location-prompt-custom-modal-header-retro, #location-prompt-custom-modal-body-retro {
+    color: #53583b;
+}
+
