@@ -31,8 +31,10 @@
 }
 
 ::-webkit-scrollbar {
-    width: 0;  /* Remove scrollbar space */
-    background: transparent;  /* Optional: just make scrollbar invisible */
+    width: 0;
+    /* Remove scrollbar space */
+    background: transparent;
+    /* Optional: just make scrollbar invisible */
 }
 
 .TrackerMenuThemes {
@@ -59,7 +61,6 @@
     border-radius: 8px;
     margin-left: 1px;
     margin-right: 1px;
-
 }
 
 .TrackerMenuTheme img {
@@ -87,7 +88,7 @@
 .TrackerMenuFooter {
     position: absolute;
     display: block;
-    width: 100%;
+    width: calc(100% - 4px);
     bottom: 2px;
     right: 2px;
 }
@@ -95,6 +96,11 @@
 #tracker-menu-close-btn {
     background-color: #3c495a;
     float: right;
+}
+
+#tracker-menu-close-btn p {
+    padding: 0px;
+    margin-bottom: -6px;
 }
 
 #terrain, #roadmap {
@@ -253,6 +259,19 @@
 
 #aubergine-theme-menu-content button {
     background-color: #2d5f75;
+}
+
+#tracker-menu-location-btn-allowed p, #tracker-menu-location-btn-denied p {
+    padding: 0px;
+    margin-bottom: -6px;
+}
+
+#tracker-menu-location-btn-denied span {
+    color: #d9534f;
+}
+
+#tracker-menu-location-btn-allowed span {
+    color: #5cb85c;
 }
 
 @-webkit-keyframes rotate-center {

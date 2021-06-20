@@ -1,9 +1,7 @@
-.TrackerStatsWrapper{
+.TrackerStats{
     position: fixed;
     top: 0px;
     left: 0px;
-    height: 110px;
-    width: 100px;
     border-bottom-right-radius: 10px;
 }
 
@@ -18,8 +16,33 @@
     /* text-align: center; */
 }
 
+.DistanceFromUserToSanta{
+    height: 54px;
+
+}
+
+#distance-from-user-to-santa-content-wrapper{
+    display: flex;
+}
+
+#distance-from-user-to-santa-content-wrapper p{
+    margin-top: 15px;
+    margin-right: 5px;
+}
 
 #tracker-menu-stats-wrapper-night{
+    background-color: #242f3eb3;
+    color: #f4f4f5;
+}
+
+#distance-from-user-to-santa-icon{
+    display: block;
+    width: 50px;
+    height: 50px;
+    margin-top: 2px;
+}
+
+#distance-from-user-to-santa-night{
     background-color: #242f3eb3;
     color: #f4f4f5;
 }

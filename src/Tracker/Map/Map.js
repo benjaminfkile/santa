@@ -32,6 +32,7 @@ class Map extends Component {
     }
 
     render() {
+        console.log("Map Rendered")
         return (
             <div className="Map" style={{ width: "100vw", height: "100vh" }} id={this.props.id} />
         );

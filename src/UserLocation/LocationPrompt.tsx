@@ -17,6 +17,11 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
 
     }
 
+    handleUserRevokeLocation = () =>{
+        userLocation.coordinates.lat = null
+        this.props.toggleLocationPrompt()
+    }
+
     handleUserAllowLocation = () => {
         userLocation.getUserLocation()
         this.props.toggleLocationPrompt()
@@ -25,7 +30,7 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
     render() {
         return (
             <div className="LocationPrompt">
-                <Modal id={`location-prompt-modal-${this.props.theme.toLowerCase()}`}
+                {!userLocation.coordinates.lat && <Modal id={`location-prompt-modal-${this.props.theme.toLowerCase()}`}
                     show={true}
                     keyboard={false}
                 >
@@ -44,7 +49,26 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
                         <Button onClick={() => this.handleUserAllowLocation()}>Allow</Button>
                         <Button onClick={() => this.props.toggleLocationPrompt()}>Back</Button>
                     </Modal.Footer>
-                </Modal>
+                </Modal>}
+                {userLocation.coordinates.lat && <Modal id={`location-prompt-modal-${this.props.theme.toLowerCase()}`}
+                    show={true}
+                    keyboard={false}
+                >
+                    <Modal.Header>
+                        <div className="LocationPromptCustomModalHeader" id={`location-prompt-custom-modal-header-${this.props.theme.toLowerCase()}`}>
+                            <p>Disable Location Services?</p>
+                        </div>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="LocationPromptCustomModalBody" id={`location-prompt-custom-modal-body-${this.props.theme.toLowerCase()}`}>
+                            <p>You can always re-enable location services if you would like.</p>
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button onClick={() => this.handleUserRevokeLocation()}>Disable</Button>
+                        <Button onClick={() => this.props.toggleLocationPrompt()}>Back</Button>
+                    </Modal.Footer>
+                </Modal>}
             </div>
         )
     }

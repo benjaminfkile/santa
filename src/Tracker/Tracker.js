@@ -45,7 +45,7 @@ class Tracker extends Component {
 
     componentDidMount() {
         Santa.getSantaData()
-        this.setState({inApp: userLocation.inApp()})
+        this.setState({ inApp: userLocation.inApp() })
         this.updateInterval = setInterval(this.setLocation, 500)
     }
 
@@ -64,18 +64,21 @@ class Tracker extends Component {
         if (userLocation.coordinates.lat) {
             this.userToSantaCoords[1] = { lat: Number(userLocation.coordinates.lat), lng: Number(userLocation.coordinates.lng) }
         }
-        if(!this.state.inApp && userLocation.coordinates.lat ){
+        if (!this.state.inApp && userLocation.coordinates.lat) {
             userLocation.getUserLocation()
         }
-        if(this.userToSantaCoords[1].lat){
+        if (this.userToSantaCoords[1].lat) {
             this.drawPoly()
+        }
+        if (!userLocation.coordinates.lat) {
+            this.removePoly()
         }
     }
 
     drawPoly = () => {
         this.removePoly()
         let iconSequence = [];
-        let circle1 = {
+        let circle = {
             "path": "M -2,0 C -1.947018,-2.2209709 1.9520943,-2.1262691 2,0.00422057 2.0378955,1.3546185 1.5682108,2.0631345 1.4372396e-8,2.0560929 -1.7155482,2.0446854 -1.9145886,1.0142836 -2,0.06735507 Z",
             "fillColor": "#aa253c",
             "fillOpacity": 0.8,
@@ -84,17 +87,7 @@ class Tracker extends Component {
             "scale": 1
         }
 
-        // let circle2 = {
-        //     "path": "M -2,0 C -1.947018,-2.2209709 1.9520943,-2.1262691 2,0.00422057 2.0378955,1.3546185 1.5682108,2.0631345 1.4372396e-8,2.0560929 -1.7155482,2.0446854 -1.9145886,1.0142836 -2,0.06735507 Z",
-        //     "fillColor": "#000000",
-        //     "fillOpacity": .5,
-        //     "strokeColor": "#000000",
-        //     "strokeWeight": 0,
-        //     "scale": 12
-        // }
-
-        iconSequence.push({ icon: circle1, offset: "100%", repeat: "0" })
-        // iconSequence.push({ icon: circle2, offset: "0%", repeat: "0" })
+        iconSequence.push({ icon: circle, offset: "100%", repeat: "0" })
 
         this.userToSantaFlightPath = new window.google.maps.Polyline({
             path: this.userToSantaCoords,
@@ -134,9 +127,10 @@ class Tracker extends Component {
     }
 
     setMapOptions = (map) => {
+        console.log("asfasfsaf")
         this.map = map
         this.map.setOptions({
-            center: { lat: this.state.lat, lng: this.state.lng },
+            defaultCenter: { lat: this.state.lat, lng: this.state.lng },
             zoom: 10,
             mapTypeControl: false,
             zoomControl: false,
@@ -171,7 +165,6 @@ class Tracker extends Component {
                     id="Map"
                     onMapLoad={map => {
                         this.setMapOptions(map)
-
                         let mapIcon = {
                             url: './res/santa-icon.png',
                             scaledSize: new window.google.maps.Size(50, 50),
@@ -179,6 +172,7 @@ class Tracker extends Component {
                             anchor: new window.google.maps.Point(22, 28)
 
                         }
+
                         let marker = new window.google.maps.Marker(
                             {
                                 position: { lat: parseFloat(this.state.santaDat.lat), lng: parseFloat(this.state.santaDat.lng) },
@@ -186,6 +180,7 @@ class Tracker extends Component {
                                 label: '',
                                 icon: mapIcon
                             });
+
 
                         this.marker = marker
                     }}
@@ -197,6 +192,7 @@ class Tracker extends Component {
                     toggleMapTypes={this.toggleTerrain}
                     mapType={this.mapType}
                     toggleSnow={this.toggleSnow}
+                    userCoords={userLocation.coordinates.lat}
 
                 />}
                 {Santa.location.accuracy &&
