@@ -11,6 +11,7 @@ import Aubergine from './Map/MapThemes/Aubergine'
 import TrackerMenu from "./TrackerMenu/TrackerMenu"
 import TrackerStats from "./TrackerStats/TrackerStats"
 import Snow from "../Snow/Snow"
+import projectedRoute from "../ProjectedRoute/ProjectedRoute";
 import "./Tracker.css"
 
 class Tracker extends Component {
@@ -27,9 +28,12 @@ class Tracker extends Component {
     map
     mapType = "terrain"
     marker
-    updateInterval
+    locationUpdateInterval
     userToSantaCoords = [{}, {}]
     userToSantaFlightPath = null
+    projectedRouteCoords = []
+    projectedFlightPlath = null
+    flightProjectionIndex = -1
     constructor() {
         super();
         this.state = {
@@ -39,25 +43,53 @@ class Tracker extends Component {
             snow: false,
             santaDat: {},
             distanceFromUserToSanta: null,
-            inApp: true
+            inApp: true,
+            centerMap: false,
+            test: true
         }
     }
 
     componentDidMount() {
-        Santa.getSantaData()
         this.setState({ inApp: userLocation.inApp() })
-        this.updateInterval = setInterval(this.setLocation, 500)
+        if (!this.state.test) {
+            Santa.getSantaData()
+            this.locationUpdateInterval = setInterval(this.setLocation, 500)
+        } else {
+            this.locationUpdateInterval = setInterval(this.spoofLocation, 1000)
+        }
     }
 
     componentWillUnmount() {
-        clearInterval(this.updateInterval)
+        clearInterval(this.locationUpdateInterval)
+    }
+
+    spoofLocation = () => {
+        if (this.flightProjectionIndex < projectedRoute.length - 1) {
+            this.flightProjectionIndex += 1
+        } else {
+            this.flightProjectionIndex = 0
+        }
+
+        let temp = {
+            accuracy: projectedRoute[this.flightProjectionIndex].Accuracy,
+            alt: projectedRoute[this.flightProjectionIndex].Elevation,
+            bear: projectedRoute[this.flightProjectionIndex].Bearing,
+            lat: projectedRoute[this.flightProjectionIndex].Lat,
+            lng: projectedRoute[this.flightProjectionIndex].Lon,
+            speed: projectedRoute[this.flightProjectionIndex].Speed,
+            throttle: 60000,
+        }
+
+        this.setState({ santaDat: temp })
+        this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
+        this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
+        this.setLocation()
     }
 
     setLocation = () => {
         const santaDat = Santa.location
-        if ((JSON.stringify(santaDat) !== JSON.stringify(this.state.santaDat)) && santaDat.lat) {
+        if ((JSON.stringify(santaDat) !== JSON.stringify(this.state.santaDat)) && santaDat.lat && !this.state.test) {
             this.setState({ santaDat: santaDat })
-            this.map.setCenter({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
             this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
             this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
         }
@@ -68,14 +100,40 @@ class Tracker extends Component {
             userLocation.getUserLocation()
         }
         if (this.userToSantaCoords[1].lat) {
-            this.drawPoly()
+            this.drawUserToSantaPoly()
         }
         if (!userLocation.coordinates.lat) {
             this.removePoly()
         }
+        if (this.projectedRouteCoords.length === 0) {
+            this.drawRoutePoly()
+        }
+        this.handleMapCenter()
     }
 
-    drawPoly = () => {
+    handleMapCenter = () => {
+        if (this.state.centerMap) {
+            this.map.setCenter({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
+        }
+    }
+
+    drawRoutePoly = () => {
+        for (let i = 0; i < projectedRoute.length; i++) {
+            this.projectedRouteCoords.push({ lat: Number(projectedRoute[i].Lat), lng: Number(projectedRoute[i].Lon) })
+        }
+        this.projectedFlightPlath = new window.google.maps.Polyline({
+            path: this.projectedRouteCoords,
+            color: "#5d5d5d",
+            strokeColor: "#5d5d5d",
+            strokeOpacity: 1,
+            strokeWeight: 1.5,
+
+        })
+        this.projectedFlightPlath.setMap(this.map);
+
+    }
+
+    drawUserToSantaPoly = () => {
         this.removePoly()
         let iconSequence = [];
         let circle = {
@@ -127,10 +185,9 @@ class Tracker extends Component {
     }
 
     setMapOptions = (map) => {
-        console.log("asfasfsaf")
         this.map = map
         this.map.setOptions({
-            defaultCenter: { lat: this.state.lat, lng: this.state.lng },
+            center: { lat: this.state.lat, lng: this.state.lng },
             zoom: 10,
             mapTypeControl: false,
             zoomControl: false,
