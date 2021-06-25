@@ -1,14 +1,15 @@
 import { Component } from "react"
 import Map from "./Tracker/Tracker"
-import Santa from "./Santa/Santa"
 import cookieMonster from "./CookieMonster/CookieMonster"
 import 'bootstrap/dist/css/bootstrap.min.css'
+// import connection from "./Santa/Santa"
 
 type WimsfoTypes = {
   preShow: boolean
   runShow: boolean
   endShow: boolean
   returnUser: boolean
+  signalRMessage: object
 }
 
 class App extends Component<{}, WimsfoTypes>{
@@ -21,37 +22,28 @@ class App extends Component<{}, WimsfoTypes>{
       preShow: false,
       runShow: true,
       endShow: false,
-      returnUser: false
+      returnUser: false,
+      signalRMessage: { blank: true }
     }
   }
 
   componentDidMount() {
-    Santa.getSantaData()
-    this.listen()
-    this.interval = 1000
-    this.listenInterval = setInterval(this.listen, this.interval)
     if (cookieMonster.getCookie("ReturnUser")) {
       this.setState({ returnUser: true })
     } else {
       cookieMonster.setCookie("ReturnUser", "true", 8)
     }
+    // connection.on("newMessage", this.signalRIn)
   }
 
   componentWillUnmount() {
     clearInterval(this.listenInterval)
   }
 
-  listen = () => {
-    //@ts-ignore
-    if (Santa.location.throttle + "" !== this.interval + "") {
-      //@ts-ignore
-      this.interval = parseInt(Santa.location.throttle)
-      clearInterval(this.listenInterval)
-      this.listenInterval = setInterval(this.listen, this.interval)
-      console.log("new throttle profile")
-    }
-    Santa.getSantaData()
+  signalRIn = (input: object) => {
+    this.setState({ signalRMessage: input })
   }
+
 
   render() {
     return (

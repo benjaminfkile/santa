@@ -1,6 +1,6 @@
 import { Component } from "react";
+import connection from "../Santa/Santa"
 import Map from "./Map/Map"
-import Santa from "../Santa/Santa"
 import userLocation from "../UserLocation/UserLocation";
 import Standard from './Map/MapThemes/Standard'
 import Retro from './Map/MapThemes/Retro'
@@ -28,14 +28,13 @@ class Tracker extends Component {
     map
     mapType = "terrain"
     marker
-    locationUpdateInterval
     userToSantaCoords = [{}, {}]
     userToSantaFlightPath = null
     projectedRouteCoords = []
     projectedFlightPlath = null
     flightProjectionIndex = -1
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
         this.state = {
             lat: 46.833,
             lng: -114.030,
@@ -45,22 +44,20 @@ class Tracker extends Component {
             distanceFromUserToSanta: null,
             inApp: true,
             centerMap: false,
-            test: true
+            test: false
         }
     }
 
     componentDidMount() {
-        this.setState({ inApp: userLocation.inApp() })
-        if (!this.state.test) {
-            Santa.getSantaData()
-            this.locationUpdateInterval = setInterval(this.setLocation, 500)
+        if (this.state.test) {
+            this.spoofLocation()
         } else {
-            this.locationUpdateInterval = setInterval(this.spoofLocation, 1000)
+            connection.on("newMessage", this.setLocation)
         }
     }
 
     componentWillUnmount() {
-        clearInterval(this.locationUpdateInterval)
+
     }
 
     spoofLocation = () => {
@@ -86,29 +83,28 @@ class Tracker extends Component {
         this.setLocation()
     }
 
-    setLocation = () => {
-        const santaDat = Santa.location
-        if ((JSON.stringify(santaDat) !== JSON.stringify(this.state.santaDat)) && santaDat.lat && !this.state.test) {
-            this.setState({ santaDat: santaDat })
-            this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
-            this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
+    setLocation = (input) => {
+        if (input) {
+            this.setState({ santaDat: input })
+            this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lon) })
+            this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lon) }
+            if (userLocation.coordinates.lat) {
+                this.userToSantaCoords[1] = { lat: Number(userLocation.coordinates.lat), lng: Number(userLocation.coordinates.lng) }
+            }
+            if (!this.state.inApp && userLocation.coordinates.lat) {
+                userLocation.getUserLocation()
+            }
+            if (this.userToSantaCoords[1].lat) {
+                this.drawUserToSantaPoly()
+            }
+            if (!userLocation.coordinates.lat) {
+                this.removePoly()
+            }
+            if (this.projectedRouteCoords.length === 0) {
+                this.drawRoutePoly()
+            }
+            this.handleMapCenter()
         }
-        if (userLocation.coordinates.lat) {
-            this.userToSantaCoords[1] = { lat: Number(userLocation.coordinates.lat), lng: Number(userLocation.coordinates.lng) }
-        }
-        if (!this.state.inApp && userLocation.coordinates.lat) {
-            userLocation.getUserLocation()
-        }
-        if (this.userToSantaCoords[1].lat) {
-            this.drawUserToSantaPoly()
-        }
-        if (!userLocation.coordinates.lat) {
-            this.removePoly()
-        }
-        if (this.projectedRouteCoords.length === 0) {
-            this.drawRoutePoly()
-        }
-        this.handleMapCenter()
     }
 
     handleMapCenter = () => {
@@ -213,7 +209,7 @@ class Tracker extends Component {
     render() {
 
         // console.log("tracker render")
-        // console.log(this.state)
+        // console.log(this.state.santaDat)
 
         return (
 
@@ -232,7 +228,7 @@ class Tracker extends Component {
 
                         let marker = new window.google.maps.Marker(
                             {
-                                position: { lat: parseFloat(this.state.santaDat.lat), lng: parseFloat(this.state.santaDat.lng) },
+                                position: { lat: parseFloat(this.state.santaDat.lat), lng: parseFloat(this.state.santaDat.lon) },
                                 map: map,
                                 label: '',
                                 icon: mapIcon
@@ -252,12 +248,11 @@ class Tracker extends Component {
                     userCoords={userLocation.coordinates.lat}
 
                 />}
-                {Santa.location.accuracy &&
-                    <TrackerStats
-                        santaDat={this.state.santaDat}
-                        currentTheme={this.state.currentTheme}
-                        distanceFromUserToSanta={this.state.distanceFromUserToSanta}
-                    />}
+                <TrackerStats
+                    santaDat={this.state.santaDat}
+                    currentTheme={this.state.currentTheme}
+                    distanceFromUserToSanta={this.state.distanceFromUserToSanta}
+                />
                 {this.state.snow && <Snow />}
             </div>
         )
