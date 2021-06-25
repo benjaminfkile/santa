@@ -1,6 +1,6 @@
 const signalR = require("@microsoft/signalr");
 const connection = new signalR.HubConnectionBuilder()
-.withUrl("https://elmsigr-fn.azurewebsites.net/api")
+.withUrl("https://wmsfo-fn-app.azurewebsites.net/api")
 .withAutomaticReconnect()
 .configureLogging(signalR.LogLevel.Information)
 .build()
