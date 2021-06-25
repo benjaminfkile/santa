@@ -1,4 +1,5 @@
 import { Component } from "react";
+import axios from "axios";
 import connection from "../Santa/Santa"
 import Map from "./Map/Map"
 import userLocation from "../UserLocation/UserLocation";
@@ -53,6 +54,13 @@ class Tracker extends Component {
             this.spoofLocation()
         } else {
             connection.on("newMessage", this.setLocation)
+            axios.get(`https://wmsfo-dasher.herokuapp.com/api/location-data`)
+                .then(res => {
+                    let temp = res.data
+                    temp.lon = res.data.lng
+                    this.setLocation(temp)
+                })
+
         }
     }
 
@@ -85,9 +93,11 @@ class Tracker extends Component {
 
     setLocation = (input) => {
         if (input) {
-            this.setState({ santaDat: input })
-            this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lon) })
-            this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lon) }
+            let temp = input
+            temp.lng = input.lon
+            this.setState({ santaDat: temp })
+            this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
+            this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
             if (userLocation.coordinates.lat) {
                 this.userToSantaCoords[1] = { lat: Number(userLocation.coordinates.lat), lng: Number(userLocation.coordinates.lng) }
             }
@@ -226,7 +236,7 @@ class Tracker extends Component {
 
                         let marker = new window.google.maps.Marker(
                             {
-                                position: { lat: parseFloat(this.state.santaDat.lat || 46.833), lng: parseFloat(this.state.santaDat.lon || -114.030) },
+                                position: { lat: parseFloat(this.state.santaDat.lat), lng: parseFloat(this.state.santaDat.lon) },
                                 map: map,
                                 label: '',
                                 icon: mapIcon
