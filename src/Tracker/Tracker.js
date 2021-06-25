@@ -100,9 +100,6 @@ class Tracker extends Component {
             if (!userLocation.coordinates.lat) {
                 this.removePoly()
             }
-            if (this.projectedRouteCoords.length === 0) {
-                this.drawRoutePoly()
-            }
             this.handleMapCenter()
         }
     }
@@ -196,6 +193,7 @@ class Tracker extends Component {
             },
             styles: this.mapThemes[4].mapTheme
         })
+        this.drawRoutePoly()
     }
 
     toggleSnow = () => {
@@ -228,7 +226,7 @@ class Tracker extends Component {
 
                         let marker = new window.google.maps.Marker(
                             {
-                                position: { lat: parseFloat(this.state.santaDat.lat), lng: parseFloat(this.state.santaDat.lon) },
+                                position: { lat: parseFloat(this.state.santaDat.lat || 46.833), lng: parseFloat(this.state.santaDat.lon || -114.030) },
                                 map: map,
                                 label: '',
                                 icon: mapIcon
