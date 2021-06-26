@@ -1,7 +1,10 @@
 let userLocation = {
     coordinates: { lat: null, lng: null },
+    disable: true,
     getUserLocation: () => {
-        navigator.geolocation.getCurrentPosition(userLocation.showPosition);
+        if (!userLocation.disable) {
+            navigator.geolocation.getCurrentPosition(userLocation.showPosition);
+        }
     },
     showPosition: (position: any) => {
         userLocation.coordinates = { lat: position.coords.latitude, lng: position.coords.longitude }

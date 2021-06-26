@@ -17,20 +17,20 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
 
     }
 
-    handleUserRevokeLocation = () =>{
-        userLocation.coordinates.lat = null
+    handleUserRevokeLocation = () => {
+        userLocation.disable = true
         this.props.toggleLocationPrompt()
     }
 
     handleUserAllowLocation = () => {
-        userLocation.getUserLocation()
+        userLocation.disable = false
         this.props.toggleLocationPrompt()
     }
 
     render() {
         return (
             <div className="LocationPrompt">
-                {!userLocation.coordinates.lat && <Modal id={`location-prompt-modal-${this.props.theme.toLowerCase()}`}
+                {userLocation.disable && <Modal id={`location-prompt-modal-${this.props.theme.toLowerCase()}`}
                     show={true}
                     keyboard={false}
                 >
@@ -50,7 +50,7 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
                         <Button onClick={() => this.props.toggleLocationPrompt()}>Back</Button>
                     </Modal.Footer>
                 </Modal>}
-                {userLocation.coordinates.lat && <Modal id={`location-prompt-modal-${this.props.theme.toLowerCase()}`}
+                {!userLocation.disable && <Modal id={`location-prompt-modal-${this.props.theme.toLowerCase()}`}
                     show={true}
                     keyboard={false}
                 >

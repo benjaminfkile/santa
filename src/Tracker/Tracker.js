@@ -10,7 +10,6 @@ import Dark from './Map/MapThemes/Dark'
 import Night from './Map/MapThemes/Night'
 import Aubergine from './Map/MapThemes/Aubergine'
 import TrackerMenu from "./TrackerMenu/TrackerMenu"
-import TrackerStats from "./TrackerStats/TrackerStats"
 import Snow from "../Snow/Snow"
 import projectedRoute from "../ProjectedRoute/ProjectedRoute";
 import "./Tracker.css"
@@ -34,6 +33,7 @@ class Tracker extends Component {
     projectedRouteCoords = []
     projectedFlightPlath = null
     flightProjectionIndex = -1
+    userLocationInterval
     constructor(props) {
         super(props);
         this.state = {
@@ -62,10 +62,12 @@ class Tracker extends Component {
                 })
 
         }
+        this.userLocationInterval = setInterval(this.listen4UserLocation, 500)
+        this.setState({ inApp: userLocation.inApp() })
     }
 
     componentWillUnmount() {
-
+        clearInterval(this.userLocationInterval)
     }
 
     spoofLocation = () => {
@@ -98,19 +100,23 @@ class Tracker extends Component {
             this.setState({ santaDat: temp })
             this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
             this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
-            if (userLocation.coordinates.lat) {
-                this.userToSantaCoords[1] = { lat: Number(userLocation.coordinates.lat), lng: Number(userLocation.coordinates.lng) }
-            }
-            if (!this.state.inApp && userLocation.coordinates.lat) {
-                userLocation.getUserLocation()
-            }
-            if (this.userToSantaCoords[1].lat) {
-                this.drawUserToSantaPoly()
-            }
-            if (!userLocation.coordinates.lat) {
-                this.removePoly()
-            }
             this.handleMapCenter()
+        }
+    }
+
+    listen4UserLocation = () => {
+        userLocation.getUserLocation()
+        if (userLocation.coordinates.lat
+            && userLocation.coordinates.lat !== this.userToSantaCoords[1].lat
+            && userLocation.coordinates.lng !== this.userToSantaCoords[1].lng) {
+            this.userToSantaCoords[1] = { lat: Number(userLocation.coordinates.lat), lng: Number(userLocation.coordinates.lng) }
+        }
+        if (this.userToSantaCoords[1].lat && !userLocation.disable) {
+            this.drawUserToSantaPoly()
+        }
+        if (userLocation.disable) {
+            this.removePoly()
+            this.setState({ distanceFromUserToSanta: false })
         }
     }
 
@@ -217,7 +223,7 @@ class Tracker extends Component {
     render() {
 
         // console.log("tracker render")
-        // console.log(this.state.santaDat)
+        // console.log(this.state)
 
         return (
 
@@ -231,7 +237,6 @@ class Tracker extends Component {
                             scaledSize: new window.google.maps.Size(50, 50),
                             origin: new window.google.maps.Point(0, 0),
                             anchor: new window.google.maps.Point(22, 28)
-
                         }
 
                         let marker = new window.google.maps.Marker(
@@ -254,14 +259,36 @@ class Tracker extends Component {
                     mapType={this.mapType}
                     toggleSnow={this.toggleSnow}
                     userCoords={userLocation.coordinates.lat}
+                    listenForUserLocation={this.listenForUserLocation}
 
                 />}
-                <TrackerStats
-                    santaDat={this.state.santaDat}
-                    currentTheme={this.state.currentTheme}
-                    distanceFromUserToSanta={this.state.distanceFromUserToSanta}
-                />
+
+                {!userLocation.disable && this.state.distanceFromUserToSanta && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
+                    {this.state.distanceFromUserToSanta < 5281 &&
+                        <div id="distance-from-user-to-santa-content-wrapper">
+                            <div className="radar">
+                                <div className="circle"></div>
+                                <div className="circle"></div>
+                                <div className="circle"></div>
+                                <div className="circle"></div>
+                            </div>
+                            <p>{this.state.distanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
+                        </div>}
+                    {this.state.distanceFromUserToSanta > 5280 &&
+                        <div id="distance-from-user-to-santa-content-wrapper">
+                            <div className="radar">
+                                <div className="circle"></div>
+                                <div className="circle"></div>
+                                <div className="circle"></div>
+                                <div className="circle"></div>
+                            </div>
+                            <p> {((this.state.distanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
+                        </div>}
+
+                </div>}
+
                 {this.state.snow && <Snow />}
+
             </div>
         )
     }

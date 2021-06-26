@@ -2,6 +2,7 @@ import { Component } from "react"
 import LocationPrompt from "../../UserLocation/LocationPrompt"
 import { Button } from "react-bootstrap"
 import "./TrackerMenu.css"
+import userLocation from "../../UserLocation/UserLocation"
 
 interface TrackerMenuProps {
     changeTheme: Function
@@ -11,6 +12,7 @@ interface TrackerMenuProps {
     currentTheme: string
     toggleSnow: Function
     userCoords: any
+    listenForUserLocation: Function
 }
 
 type TrackerMenuTypes = {
@@ -100,8 +102,8 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                                 toggleLocationPrompt={this.toggleLocationPrompt}
                                 theme={this.props.currentTheme}
                             />}
-                        {this.props.userCoords && <Button id="tracker-menu-location-btn-allowed" variant="secondary" onClick={this.toggleLocationPrompt}><p><span className="material-icons">my_location</span></p></Button>}
-                        {!this.props.userCoords &&<Button id="tracker-menu-location-btn-denied" variant="secondary" onClick={this.toggleLocationPrompt}><p><span className="material-icons">location_disabled</span></p></Button>}
+                        {!userLocation.disable && <Button id="tracker-menu-location-btn-allowed" variant="secondary" onClick={this.toggleLocationPrompt}><p><span className="material-icons">my_location</span></p></Button>}
+                        {userLocation.disable &&<Button id="tracker-menu-location-btn-denied" variant="secondary" onClick={this.toggleLocationPrompt}><p><span className="material-icons">location_disabled</span></p></Button>}
                         <Button id="tracker-menu-close-btn" variant="secondary" onClick={this.toggleMenu}><p><span className="material-icons">clear</span></p></Button>
                     </div>
                 </div>}
