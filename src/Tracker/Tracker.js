@@ -250,6 +250,7 @@ class Tracker extends Component {
 
                         this.marker = marker
                     }}
+                    
                 />
                 {this.state.currentTheme && <TrackerMenu
                     changeTheme={this.setTheme}
@@ -286,9 +287,7 @@ class Tracker extends Component {
                         </div>}
 
                 </div>}
-
                 {this.state.snow && <Snow />}
-
             </div>
         )
     }

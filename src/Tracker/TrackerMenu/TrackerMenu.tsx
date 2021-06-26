@@ -91,8 +91,8 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                         {this.state.mapTypeId === "terrain" && <Button className="TerrainToggle" id="terrain-toggled-on" disabled={true}><span className="material-icons">terrain</span><p>Terrain</p></Button>}
                         {this.state.mapTypeId === "roadmap" && <Button className="RoadMapToggle" id="terrain-toggled-on" disabled={true}><span className="material-icons">map</span><p>Roadmap</p></Button>}
                         {this.state.mapTypeId !== "roadmap" && <Button className="RoadMapToggle" id="terrain-toggled-off" onClick={() => this.toggleMapTypes()}><span className="material-icons">map</span><p>Roadmap</p></Button>}
-                        {!this.state.snow && <Button id="snow-toggled-off" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons">ac_unit</span><p>Snow</p></Button>}
-                        {this.state.snow && <Button id="snow-toggled-on" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons">ac_unit</span><p>Snow</p></Button>}
+                        {!this.state.snow && <Button id="snow-toggled-off" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons" onClick={this.toggleSnow}>ac_unit</span><p>Snow</p></Button>}
+                        {this.state.snow && <Button id="snow-toggled-on" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons" onClick={this.toggleSnow}>ac_unit</span><p>Snow</p></Button>}
                     </div>
                     <br></br>
                     <br></br>
@@ -103,7 +103,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                                 theme={this.props.currentTheme}
                             />}
                         {!userLocation.disable && <Button id="tracker-menu-location-btn-allowed" variant="secondary" onClick={this.toggleLocationPrompt}><p><span className="material-icons">my_location</span></p></Button>}
-                        {userLocation.disable &&<Button id="tracker-menu-location-btn-denied" variant="secondary" onClick={this.toggleLocationPrompt}><p><span className="material-icons">location_disabled</span></p></Button>}
+                        {userLocation.disable && <Button id="tracker-menu-location-btn-denied" variant="secondary" onClick={this.toggleLocationPrompt}><p><span className="material-icons">location_disabled</span></p></Button>}
                         <Button id="tracker-menu-close-btn" variant="secondary" onClick={this.toggleMenu}><p><span className="material-icons">clear</span></p></Button>
                     </div>
                 </div>}
