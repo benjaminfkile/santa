@@ -44,7 +44,7 @@ class Tracker extends Component {
             santaDat: {},
             distanceFromUserToSanta: null,
             inApp: true,
-            centerMap: false,
+            mapCentered: true,
             zoom: 10,
             test: false
         }
@@ -101,7 +101,7 @@ class Tracker extends Component {
             this.setState({ santaDat: temp })
             this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
             this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
-            this.handleMapCenter()
+            this.autoRecenter()
         }
     }
 
@@ -121,13 +121,18 @@ class Tracker extends Component {
         }
     }
 
-    handleMapCenter = () => {
-        if (this.state.centerMap) {
+    autoRecenter = () => {
+        if (this.state.mapCentered) {
             this.map.setCenter({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
         }
     }
 
-    handleMapZoom = (direction) => {
+    userRecenter = () => {
+        this.map.setCenter({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
+        this.setState({ mapCentered: true })
+    }
+
+    handleZoomClick = (direction) => {
         if (direction === "+") {
             this.map.setZoom(this.state.zoom + 1)
             this.setState({ zoom: this.state.zoom + 1 })
@@ -135,6 +140,20 @@ class Tracker extends Component {
             this.map.setZoom(this.state.zoom - 1)
             this.setState({ zoom: this.state.zoom - 1 })
         }
+    }
+
+    handleZoomPinch = () => {
+        let zoom = this.map.getZoom()
+        if(this.state.zoom !== zoom ){
+            this.setState({zoom: zoom})
+        }
+    }
+
+    handleMapDrag = () => {
+        if (this.state.mapCentered) {
+            this.setState({ mapCentered: false })
+        }
+        this.handleZoomPinch()
     }
 
     drawRoutePoly = () => {
@@ -225,6 +244,8 @@ class Tracker extends Component {
             styles: this.mapThemes[4].mapTheme
         })
         this.drawRoutePoly()
+        const self = this
+        window.google.maps.event.addListener(map, 'dragend', function () { self.handleMapDrag() });
     }
 
     toggleSnow = () => {
@@ -264,7 +285,8 @@ class Tracker extends Component {
 
 
                         this.marker = marker
-                    }}
+                    }
+                    }
 
                 />
                 {this.state.currentTheme && <TrackerMenu
@@ -278,7 +300,6 @@ class Tracker extends Component {
                     listenForUserLocation={this.listenForUserLocation}
 
                 />}
-
                 {!userLocation.disable && this.state.distanceFromUserToSanta && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
                     {this.state.distanceFromUserToSanta < 5281 &&
                         <div id="distance-from-user-to-santa-content-wrapper">
@@ -290,12 +311,14 @@ class Tracker extends Component {
                             <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
                             <p> {((this.state.distanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
                         </div>}
-
                 </div>}
                 <div className="FooterControls">
-                    <div className="MapZoomWrapper">
-                        <div id="zoom-in-btn" onClick={() => this.handleMapZoom("+")}><span className="material-icons">zoom_in</span></div>
-                        <div id="zoom-out-btn" onClick={() => this.handleMapZoom("-")}><span className="material-icons">zoom_out</span></div>
+                    {!this.state.mapCentered && <div className="CenterMapBtnWrapper" id={"center-map-btn-wrapper" + this.state.currentTheme.toLowerCase()}>
+                        <div id="center-map-btn"><span className="material-icons" onClick={() => this.userRecenter()}>center_focus_weak</span></div>
+                    </div>}
+                    <div className="MapZoomWrapper" id={"map-zoom-wrapper-" + this.state.currentTheme.toLowerCase()}>
+                        <div id="zoom-in-btn" onClick={() => this.handleZoomClick("+")}><span className="material-icons">zoom_in</span></div>
+                        <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">zoom_out</span></div>
                     </div>
                 </div>
                 {this.state.snow && <Snow />}

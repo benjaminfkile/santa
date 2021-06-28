@@ -81,29 +81,59 @@ body {
 
 .MapZoomWrapper {
   position: fixed;
-  bottom: 60px;
-  right: 5px;
-  height: 80px;
-  width: 40px;
+  bottom: 15px;
+  right: 0px;
+  height: 110px;
+  width: 45px;
   background-color: rgba(0, 0, 0, .3);
 }
 
-.MapZoomWrapper span{
-  color: white;
+#map-zoom-wrapper-night{
+  border: solid 1px #ca8e6075;
+  border-bottom-left-radius: 5px;
+  border-top-left-radius: 5px;
+  border-right: none;
+}
+
+
+#map-zoom-wrapper-night span{
+  color: #5d5d5d;
+}
+
+
+
+#zoom-in-btn, #zoom-out-btn{
+  position: absolute;
+  width: 40px;
+
+}
+
+#zoom-in-btn span, #zoom-out-btn span{
+  font-size: 45px;
+
 }
 
 #zoom-in-btn {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  width: 40px;
+  top: 5px;
+  left: 2px;
 }
 
 #zoom-out-btn {
-  position: absolute;
   bottom: 0px;
+  left: 2px;
+}
+
+.CenterMapBtnWrapper{
+  position: fixed;
+  bottom: 75px;
   left: 0px;
-  width: 40px;
+  width: 50px;
+  height: 50px;
+}
+
+#center-map-btn span{
+  color: #5d5d5d;
+  font-size: 45px;
 }
 
 @keyframes radar {
