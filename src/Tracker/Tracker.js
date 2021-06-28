@@ -45,6 +45,7 @@ class Tracker extends Component {
             distanceFromUserToSanta: null,
             inApp: true,
             centerMap: false,
+            zoom: 10,
             test: false
         }
     }
@@ -126,6 +127,16 @@ class Tracker extends Component {
         }
     }
 
+    handleMapZoom = (direction) => {
+        if (direction === "+") {
+            this.map.setZoom(this.state.zoom + 1)
+            this.setState({ zoom: this.state.zoom + 1 })
+        } else {
+            this.map.setZoom(this.state.zoom - 1)
+            this.setState({ zoom: this.state.zoom - 1 })
+        }
+    }
+
     drawRoutePoly = () => {
         for (let i = 0; i < projectedRoute.length; i++) {
             this.projectedRouteCoords.push({ lat: Number(projectedRoute[i].Lat), lng: Number(projectedRoute[i].Lon) })
@@ -139,7 +150,6 @@ class Tracker extends Component {
 
         })
         this.projectedFlightPlath.setMap(this.map);
-
     }
 
     drawUserToSantaPoly = () => {
@@ -154,13 +164,18 @@ class Tracker extends Component {
             "scale": 1
         }
 
-        iconSequence.push({ icon: circle, offset: "100%", repeat: "0" })
+        iconSequence.push(
+            {
+                icon: circle,
+                offset: "100%",
+                repeat: "0"
+            })
 
         this.userToSantaFlightPath = new window.google.maps.Polyline({
             path: this.userToSantaCoords,
             color: "#aa253c",
             strokeColor: "#aa253c",
-            strokeOpacity: 1,
+            strokeOpacity: .8,
             strokeWeight: 1.5,
             icons: iconSequence
 
@@ -250,7 +265,7 @@ class Tracker extends Component {
 
                         this.marker = marker
                     }}
-                    
+
                 />
                 {this.state.currentTheme && <TrackerMenu
                     changeTheme={this.setTheme}
@@ -267,26 +282,22 @@ class Tracker extends Component {
                 {!userLocation.disable && this.state.distanceFromUserToSanta && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
                     {this.state.distanceFromUserToSanta < 5281 &&
                         <div id="distance-from-user-to-santa-content-wrapper">
-                            <div className="radar">
-                                <div className="circle"></div>
-                                <div className="circle"></div>
-                                <div className="circle"></div>
-                                <div className="circle"></div>
-                            </div>
+                            <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
                             <p>{this.state.distanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
                         </div>}
                     {this.state.distanceFromUserToSanta > 5280 &&
                         <div id="distance-from-user-to-santa-content-wrapper">
-                            <div className="radar">
-                                <div className="circle"></div>
-                                <div className="circle"></div>
-                                <div className="circle"></div>
-                                <div className="circle"></div>
-                            </div>
+                            <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
                             <p> {((this.state.distanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
                         </div>}
 
                 </div>}
+                <div className="FooterControls">
+                    <div className="MapZoomWrapper">
+                        <div id="zoom-in-btn" onClick={() => this.handleMapZoom("+")}><span className="material-icons">zoom_in</span></div>
+                        <div id="zoom-out-btn" onClick={() => this.handleMapZoom("-")}><span className="material-icons">zoom_out</span></div>
+                    </div>
+                </div>
                 {this.state.snow && <Snow />}
             </div>
         )
