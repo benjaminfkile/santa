@@ -63,7 +63,7 @@ class Tracker extends Component {
                 })
 
         }
-        this.userLocationInterval = setInterval(this.listen4UserLocation, 500)
+        this.userLocationInterval = setInterval(this.listen4UserLocation, 1000)
         this.setState({ inApp: userLocation.inApp() })
     }
 
@@ -313,13 +313,13 @@ class Tracker extends Component {
                         </div>}
                 </div>}
                 <div className="FooterControls">
-                    {!this.state.mapCentered && <div className="CenterMapBtnWrapper" id={"center-map-btn-wrapper" + this.state.currentTheme.toLowerCase()}>
+                    {!this.state.mapCentered && <div className="CenterMapBtnWrapper" id={"center-map-btn-wrapper-" + this.state.currentTheme.toLowerCase()}>
                         <div id="center-map-btn"><span className="material-icons" onClick={() => this.userRecenter()}>center_focus_weak</span></div>
                     </div>}
-                    <div className="MapZoomWrapper" id={"map-zoom-wrapper-" + this.state.currentTheme.toLowerCase()}>
+                    {this.state.mapCentered && <div className="MapZoomWrapper" id={"map-zoom-wrapper-" + this.state.currentTheme.toLowerCase()}>
                         <div id="zoom-in-btn" onClick={() => this.handleZoomClick("+")}><span className="material-icons">zoom_in</span></div>
                         <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">zoom_out</span></div>
-                    </div>
+                    </div>}
                 </div>
                 {this.state.snow && <Snow />}
             </div>
