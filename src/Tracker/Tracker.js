@@ -46,6 +46,7 @@ class Tracker extends Component {
             inApp: true,
             mapCentered: true,
             zoom: 10,
+            menuOpen: false,
             test: false
         }
     }
@@ -144,8 +145,8 @@ class Tracker extends Component {
 
     handleZoomPinch = () => {
         let zoom = this.map.getZoom()
-        if(this.state.zoom !== zoom ){
-            this.setState({zoom: zoom})
+        if (this.state.zoom !== zoom) {
+            this.setState({ zoom: zoom })
         }
     }
 
@@ -256,6 +257,10 @@ class Tracker extends Component {
         }
     }
 
+    menuOpen = (isOpen) => {
+        this.setState({ menuOpen: isOpen })
+    }
+
     render() {
 
         // console.log("tracker render")
@@ -298,6 +303,7 @@ class Tracker extends Component {
                     toggleSnow={this.toggleSnow}
                     userCoords={userLocation.coordinates.lat}
                     listenForUserLocation={this.listenForUserLocation}
+                    menuOpen={this.menuOpen}
                 />}
                 {!userLocation.disable && this.state.distanceFromUserToSanta && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
                     {this.state.distanceFromUserToSanta < 5281 &&
@@ -311,7 +317,7 @@ class Tracker extends Component {
                             <p> {((this.state.distanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
                         </div>}
                 </div>}
-                <div className="FooterControls">
+                {!this.state.menuOpen && <div className="FooterControls">
                     {!this.state.mapCentered && <div className="CenterMapBtnWrapper" id={"center-map-btn-wrapper-" + this.state.currentTheme.toLowerCase()}>
                         <div id="center-map-btn"><span className="material-icons" onClick={() => this.userRecenter()}>center_focus_weak</span></div>
                     </div>}
@@ -319,7 +325,7 @@ class Tracker extends Component {
                         <div id="zoom-in-btn" onClick={() => this.handleZoomClick("+")}><span className="material-icons">add_circle_outline</span></div>
                         <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">remove_circle_outline</span></div>
                     </div>}
-                </div>
+                </div>}
                 {this.state.snow && <Snow />}
             </div>
         )

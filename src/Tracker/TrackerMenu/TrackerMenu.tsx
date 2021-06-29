@@ -13,6 +13,7 @@ interface TrackerMenuProps {
     toggleSnow: Function
     userCoords: any
     listenForUserLocation: Function
+    menuOpen: Function
 }
 
 type TrackerMenuTypes = {
@@ -36,9 +37,11 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
 
     toggleMenu = () => {
         if (this.state.menuOpen) {
-            this.setState({ locationPrompt: false })
+            this.setState({ menuOpen: false })
+            this.props.menuOpen(false)
         } else {
-            this.setState({ locationPrompt: true })
+            this.setState({ menuOpen: true })
+            this.props.menuOpen(true)
         }
     }
 
@@ -62,6 +65,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
 
     toggleLocationPrompt = () => {
         if (this.state.locationPrompt) {
+            this.setState({ locationPrompt: false })
         } else {
             this.setState({ locationPrompt: true })
         }
