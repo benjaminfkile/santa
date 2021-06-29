@@ -298,7 +298,6 @@ class Tracker extends Component {
                     toggleSnow={this.toggleSnow}
                     userCoords={userLocation.coordinates.lat}
                     listenForUserLocation={this.listenForUserLocation}
-
                 />}
                 {!userLocation.disable && this.state.distanceFromUserToSanta && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
                     {this.state.distanceFromUserToSanta < 5281 &&
@@ -317,8 +316,8 @@ class Tracker extends Component {
                         <div id="center-map-btn"><span className="material-icons" onClick={() => this.userRecenter()}>center_focus_weak</span></div>
                     </div>}
                     {this.state.mapCentered && <div className="MapZoomWrapper" id={"map-zoom-wrapper-" + this.state.currentTheme.toLowerCase()}>
-                        <div id="zoom-in-btn" onClick={() => this.handleZoomClick("+")}><span className="material-icons">zoom_in</span></div>
-                        <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">zoom_out</span></div>
+                        <div id="zoom-in-btn" onClick={() => this.handleZoomClick("+")}><span className="material-icons">add_circle_outline</span></div>
+                        <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">remove_circle_outline</span></div>
                     </div>}
                 </div>
                 {this.state.snow && <Snow />}

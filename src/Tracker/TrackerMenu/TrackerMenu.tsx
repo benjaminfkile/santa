@@ -36,9 +36,9 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
 
     toggleMenu = () => {
         if (this.state.menuOpen) {
-            this.setState({ menuOpen: false })
+            this.setState({ locationPrompt: false })
         } else {
-            this.setState({ menuOpen: true })
+            this.setState({ locationPrompt: true })
         }
     }
 
@@ -62,7 +62,6 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
 
     toggleLocationPrompt = () => {
         if (this.state.locationPrompt) {
-            this.setState({ locationPrompt: false })
         } else {
             this.setState({ locationPrompt: true })
         }

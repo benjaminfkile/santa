@@ -81,16 +81,17 @@ body {
 
 .MapZoomWrapper {
   position: fixed;
-  bottom: 0px;
-  right: 0px;
-  height: 140px;
-  width: 60px;
+  bottom: 10px;
+  right: 5px;
+  height: 95px;
+  width: 40px;
   border: solid 1px;
-  border-bottom-left-radius: 3px;
+  /* border-bottom-left-radius: 3px;
   border-top-left-radius: 3px;
-  border-right: none;
-  -webkit-animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
-  animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+  border-right: none; */
+  border-radius: 3px;
+  -webkit-animation: slide-in-right 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+  animation: slide-in-right 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
 
 #map-zoom-wrapper-night{
@@ -122,26 +123,27 @@ body {
 }
 
 #zoom-in-btn span, #zoom-out-btn span{
-  font-size: 58px;
+  font-size: 35px;
 
 }
 
 .CenterMapBtnWrapper{
   position: fixed;
-  bottom: 0px;
-  right: 0px;
-  width: 60px;
-  height: 60px;
+  bottom: 10px;
+  right: 5px;
+  width: 40px;
+  height: 40px;
   border: solid 1px;
-  border-bottom-left-radius: 3px;
+  /* border-bottom-left-radius: 3px;
   border-top-left-radius: 3px;
-  border-right: none;
-  -webkit-animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
-  animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+  border-right: none; */
+  border-radius: 3px;
+  -webkit-animation: slide-in-right 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+  animation: slide-in-right 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
 
 .CenterMapBtnWrapper span{
-  font-size: 60px;
+  font-size: 38px;
 
 }
 
