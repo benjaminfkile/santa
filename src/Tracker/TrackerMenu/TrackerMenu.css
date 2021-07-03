@@ -153,25 +153,27 @@
 }
 
 #standard-theme-menu-btn {
-    color: #53aef5;
+    color: #ffffff;
 }
 
 #standard-theme-menu-content {
-    background-color: #aadaffb8;
+    background-color: #ffffffcf;
 }
 
 #standard-theme-menu-content .TrackerMenuTheme {
-    background-color: #e8e8e8;
+    background-color: #bdd8bb;
     border: none;
 }
 
 #standard-theme-menu-content button {
-    background-color: #e8e8e8;
+    background-color: #bdd8bb;
     color: black;
 }
 
 #retro-theme-menu-btn {
-    color: #4e4e4c;
+    background-color: #dfd2ae;
+    color: #666666;
+    border: none;
 }
 
 #retro-theme-menu-content {
@@ -184,7 +186,7 @@
 }
 
 #retro-theme-menu-content button {
-    background-color: #ece4ce;
+    background-color: #dfd2ae;
     color: black;
 }
 

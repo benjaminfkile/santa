@@ -47,23 +47,17 @@ class Tracker extends Component {
             mapCentered: true,
             zoom: 10,
             menuOpen: false,
-            test: false
+            test: true
         }
     }
 
     componentDidMount() {
-        if (this.state.test) {
-            this.spoofLocation()
-        } else {
-            connection.on("newMessage", this.setLocation)
-            axios.get(`https://wmsfo-dasher.herokuapp.com/api/location-data`)
-                .then(res => {
-                    let temp = res.data
-                    temp.lon = res.data.lng
-                    this.setLocation(temp)
-                })
-
-        }
+        connection.on("newMessage", this.setLocation)
+        axios.get(`https://wmsfo-location-data.herokuapp.com/api/location-data`)
+        // axios.get(`http://localhost:8000/api/location-data`)
+            .then(res => {
+                this.setLocation(res.data)
+            })
         this.userLocationInterval = setInterval(this.listen4UserLocation, 1000)
         this.setState({ inApp: userLocation.inApp() })
     }
@@ -72,34 +66,10 @@ class Tracker extends Component {
         clearInterval(this.userLocationInterval)
     }
 
-    spoofLocation = () => {
-        if (this.flightProjectionIndex < projectedRoute.length - 1) {
-            this.flightProjectionIndex += 1
-        } else {
-            this.flightProjectionIndex = 0
-        }
-
-        let temp = {
-            accuracy: projectedRoute[this.flightProjectionIndex].Accuracy,
-            alt: projectedRoute[this.flightProjectionIndex].Elevation,
-            bear: projectedRoute[this.flightProjectionIndex].Bearing,
-            lat: projectedRoute[this.flightProjectionIndex].Lat,
-            lng: projectedRoute[this.flightProjectionIndex].Lon,
-            speed: projectedRoute[this.flightProjectionIndex].Speed,
-            throttle: 60000,
-        }
-
-        this.setState({ santaDat: temp })
-        this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
-        this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
-        this.setLocation()
-    }
-
     setLocation = (input) => {
+        console.log(input)
         if (input) {
-            let temp = input
-            temp.lng = input.lon
-            this.setState({ santaDat: temp })
+            this.setState({ santaDat: input })
             this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
             this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
             this.autoRecenter()
@@ -282,7 +252,7 @@ class Tracker extends Component {
 
                         let marker = new window.google.maps.Marker(
                             {
-                                position: { lat: parseFloat(this.state.santaDat.lat), lng: parseFloat(this.state.santaDat.lon) },
+                                position: { lat: parseFloat(this.state.santaDat.lat), lng: parseFloat(this.state.santaDat.lng) },
                                 map: map,
                                 label: '',
                                 icon: mapIcon
@@ -322,8 +292,8 @@ class Tracker extends Component {
                         <div id="center-map-btn"><span className="material-icons" onClick={() => this.userRecenter()}>center_focus_weak</span></div>
                     </div>}
                     {this.state.mapCentered && <div className="MapZoomWrapper" id={"map-zoom-wrapper-" + this.state.currentTheme.toLowerCase()}>
-                        <div id="zoom-in-btn" onClick={() => this.handleZoomClick("+")}><span className="material-icons">add_circle_outline</span></div>
-                        <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">remove_circle_outline</span></div>
+                        <div id="zoom-in-btn" onClick={() => this.handleZoomClick("+")}><span className="material-icons">add</span></div>
+                        <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">remove</span></div>
                     </div>}
                 </div>}
                 {this.state.snow && <Snow />}

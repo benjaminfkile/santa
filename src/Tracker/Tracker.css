@@ -10,9 +10,9 @@
 
 .DistanceFromUserToSanta {
   position: fixed;
-  top: 0px;
-  left: 0px;
-  border-bottom-right-radius: 10px;
+  top: 5px;
+  left: 5px;
+  border-radius: 10px;
 }
 
 #stats-item-wrapper {
@@ -55,9 +55,17 @@
   background-color: rgba(0, 0, 0, .5);
   /* background-color: #242f3eb3; */
   color: #f4f4f5;
-  border-bottom: solid 1px #ca8e6075;
-  border-right: solid 1px #ca8e6075;
+  border-bottom: solid 2px #5d5d5d;
+  border-right: solid 2px #5d5d5d;
   border-bottom-right-radius: 5px;
+}
+
+#distance-from-user-to-santa-standard {
+  background-color: rgba(255, 255, 255, 1);
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
+  color: #666666;
+  font-weight: 500;
 }
 
 html {
@@ -72,7 +80,7 @@ body {
   align-items: center;
 }
 
-#santa-hat{
+#santa-hat {
   height: 30px;
   margin-top: 2px;
   margin-left: 0px;
@@ -83,100 +91,129 @@ body {
   position: fixed;
   bottom: 20px;
   right: 5px;
-  height: 105px;
   width: 45px;
-  border: solid 1px;
-  /* border-bottom-left-radius: 3px;
-  border-top-left-radius: 3px;
-  border-right: none; */
-  border-radius: 3px;
+  height: 105px;
+  box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
+  border-radius: 8px;
   -webkit-animation: slide-in-right 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
   animation: slide-in-right 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
 
-#map-zoom-wrapper-night{
+#map-zoom-wrapper-night {
   background-color: rgba(0, 0, 0, .5);
   border-color: #4d5662;
 }
 
-
-#map-zoom-wrapper-night span{
+#map-zoom-wrapper-night span {
   color: #5d5d5d;
 }
 
+#map-zoom-wrapper-standard {
+  background-color: rgba(255, 255, 255, 1);
+}
 
+#map-zoom-wrapper-standard span {
+  color: #666666;
+}
 
-#zoom-in-btn, #zoom-out-btn{
+#map-zoom-wrapper-retro {
+  background-color: #dfd2ae;
+}
+
+#map-zoom-wrapper-retro span {
+  color: #666666;
+}
+
+#zoom-in-btn, #zoom-out-btn {
   position: absolute;
-  width: 40px;
-
+  width: 37px;
 }
 
 #zoom-in-btn {
   top: 5px;
-  left: 2px;
+  left: 4px;
+  height: 48px;
+  border-bottom: 2px solid #666666;
 }
 
 #zoom-out-btn {
   bottom: 0px;
-  left: 2px;
+  left: 4px;
 }
 
-#zoom-in-btn span, #zoom-out-btn span{
-  font-size: 40px;
-
+#zoom-in-btn span, #zoom-out-btn span {
+  font-size: 38px;
 }
 
-.CenterMapBtnWrapper{
+.CenterMapBtnWrapper {
   position: fixed;
   bottom: 20px;
   right: 5px;
   width: 45px;
   height: 45px;
-  border: solid 1px;
-  /* border-bottom-left-radius: 3px;
-  border-top-left-radius: 3px;
-  border-right: none; */
-  border-radius: 3px;
   -webkit-animation: slide-in-right 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
   animation: slide-in-right 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
 
-.CenterMapBtnWrapper span{
-  font-size: 43px;
-
+.CenterMapBtnWrapper span {
+  font-size: 45px;
 }
 
-#center-map-btn-wrapper-night{
+#center-map-btn-wrapper-night {
   background-color: rgba(0, 0, 0, .5);
   border-color: #4d5662;
 }
 
-#center-map-btn span{
+#center-map-btn-wrapper-night span {
   color: #5d5d5d;
 }
 
- @-webkit-keyframes slide-in-right {
+#center-map-btn-wrapper-standard {
+  background-color: rgba(255, 255, 255, 1);
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
+  display: block;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background-color 0.16s
+}
+
+#center-map-btn-wrapper-retro {
+  background-color: #dfd2ae;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
+  display: block;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background-color 0.16s
+}
+
+#center-map-btn-wrapper-standard span, #center-map-btn-wrapper-retro span {
+  color: #666666;
+}
+
+@-webkit-keyframes slide-in-right {
   0% {
     -webkit-transform: translateX(1000px);
-            transform: translateX(1000px);
+    transform: translateX(1000px);
     opacity: 0;
   }
   100% {
     -webkit-transform: translateX(0);
-            transform: translateX(0);
+    transform: translateX(0);
     opacity: 1;
   }
 }
+
 @keyframes slide-in-right {
   0% {
     -webkit-transform: translateX(1000px);
-            transform: translateX(1000px);
+    transform: translateX(1000px);
     opacity: 0;
   }
   100% {
     -webkit-transform: translateX(0);
-            transform: translateX(0);
+    transform: translateX(0);
     opacity: 1;
   }
 }
