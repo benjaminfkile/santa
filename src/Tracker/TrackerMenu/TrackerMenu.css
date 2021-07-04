@@ -8,16 +8,16 @@
     width: 50px;
     height: 50px;
     text-align: center;
-    border: 2px solid;
-    border-radius: 50%;
-    background-color: rgba(0, 0, 0, .5);
+    /* border: 2px solid; */
+    /* border-radius: 50%; */
+    /* background-color: rgba(0, 0, 0, .5); */
 }
 
 .TrackerMenuBtn span {
     font-size: 40px;
-    margin-top: 3px;
-    -webkit-animation: rotate-center 3s ease-in-out both;
-    animation: rotate-center 3s ease-in-out both;
+    margin-top: 5px;
+    /* -webkit-animation: rotate-center .5s ease-in-out both;
+    animation: rotate-center .5s ease-in-out both; */
 }
 
 .TrackerMenuContent {
@@ -153,7 +153,10 @@
 }
 
 #standard-theme-menu-btn {
-    color: #ffffff;
+    background-color: rgba(255, 255, 255, 1);
+    color: #666666;
+    box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
+    border-radius: 8px;
 }
 
 #standard-theme-menu-content {
@@ -173,15 +176,16 @@
 #retro-theme-menu-btn {
     background-color: #dfd2ae;
     color: #666666;
-    border: none;
+    box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
+    border-radius: 8px;
 }
 
 #retro-theme-menu-content {
-    background-color: #dfd2aea8;
+    background-color: #868f60d1;
 }
 
 #retro-theme-menu-content .TrackerMenuTheme {
-    background-color: #ece4ce;
+    background-color: #dfd2ae;
     border: none;
 }
 
@@ -191,25 +195,31 @@
 }
 
 #silver-theme-menu-btn {
-    color: #737373;
+    background-color: #737372;
+    color: #f7f7f7;
+    box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
+    border-radius: 8px;
 }
 
 #silver-theme-menu-content {
-    background-color: #f7f7f7d6;
+    background-color: #868686c9;
 }
 
 #silver-theme-menu-content .TrackerMenuTheme {
-    background-color: #a2a29d;
+    background-color: #737372;
     border: none;
 }
 
 #silver-theme-menu-content button {
-    background-color: #a2a29d;
+    background-color: #737373;
     color: black;
 }
 
 #dark-theme-menu-btn {
-    color: #737373;
+    background-color: #ffffff1c;
+    color: #929292;
+    box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
+    border-radius: 8px;
 }
 
 #dark-theme-menu-content {
@@ -228,7 +238,10 @@
 }
 
 #night-theme-menu-btn {
-    color: #5d5d5d;
+    background-color: rgba(0, 0, 0, .5);
+    color: #666666;
+    box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
+    border-radius: 8px;
 }
 
 #night-theme-menu-content {
@@ -247,7 +260,10 @@
 }
 
 #aubergine-theme-menu-btn {
-    color: #5d5d5d;
+    color: #929292;
+    background-color: #21556cad;
+    box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
+    border-radius: 8px;
 }
 
 #aubergine-theme-menu-content {

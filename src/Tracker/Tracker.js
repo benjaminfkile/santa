@@ -18,12 +18,12 @@ class Tracker extends Component {
 
     mapThemes =
         [
-            { mapTheme: Standard, title: "Standard" },
-            { mapTheme: Retro, title: "Retro" },
-            { mapTheme: Silver, title: "Silver" },
-            { mapTheme: Dark, title: "Dark" },
-            { mapTheme: Night, title: "Night" },
-            { mapTheme: Aubergine, title: "Aubergine" }
+            { mapTheme: Standard, title: "Standard", nickName: "Standard" },
+            { mapTheme: Retro, title: "Retro", nickName: "Retro" },
+            { mapTheme: Silver, title: "Silver", nickName: "Whiteout" },
+            { mapTheme: Dark, title: "Dark", nickName: "Blackout" },
+            { mapTheme: Night, title: "Night", nickName: "Night" },
+            { mapTheme: Aubergine, title: "Aubergine", nickName: "Ultraviolet" }
         ]
     map
     mapType = "terrain"
@@ -54,7 +54,7 @@ class Tracker extends Component {
     componentDidMount() {
         connection.on("newMessage", this.setLocation)
         axios.get(`https://wmsfo-location-data.herokuapp.com/api/location-data`)
-        // axios.get(`http://localhost:8000/api/location-data`)
+            // axios.get(`http://localhost:8000/api/location-data`)
             .then(res => {
                 this.setLocation(res.data)
             })
@@ -168,7 +168,6 @@ class Tracker extends Component {
             strokeOpacity: .8,
             strokeWeight: 1.5,
             icons: iconSequence
-
         })
 
         let lengthInMeters = window.google.maps.geometry.spherical.computeLength(this.userToSantaFlightPath.getPath());
@@ -257,12 +256,9 @@ class Tracker extends Component {
                                 label: '',
                                 icon: mapIcon
                             });
-
-
                         this.marker = marker
                     }
                     }
-
                 />
                 {this.state.currentTheme && <TrackerMenu
                     changeTheme={this.setTheme}
