@@ -133,10 +133,10 @@ class Tracker extends Component {
         }
         this.projectedFlightPlath = new window.google.maps.Polyline({
             path: this.projectedRouteCoords,
-            color: "#5d5d5d",
-            strokeColor: "#5d5d5d",
+            color: "#dc35454d",
+            strokeColor: "#dc35454d",
             strokeOpacity: 1,
-            strokeWeight: 1.5,
+            strokeWeight: 2,
 
         })
         this.projectedFlightPlath.setMap(this.map);
@@ -147,10 +147,10 @@ class Tracker extends Component {
         let iconSequence = [];
         let circle = {
             "path": "M -2,0 C -1.947018,-2.2209709 1.9520943,-2.1262691 2,0.00422057 2.0378955,1.3546185 1.5682108,2.0631345 1.4372396e-8,2.0560929 -1.7155482,2.0446854 -1.9145886,1.0142836 -2,0.06735507 Z",
-            "fillColor": "#aa253c",
+            "fillColor": "#28a745",
             "fillOpacity": 0.8,
-            "strokeColor": "#aa253c",
-            "strokeWeight": 20,
+            "strokeColor": "#28a745",
+            "strokeWeight": 13,
             "scale": 1
         }
 
@@ -163,10 +163,10 @@ class Tracker extends Component {
 
         this.userToSantaFlightPath = new window.google.maps.Polyline({
             path: this.userToSantaCoords,
-            color: "#aa253c",
-            strokeColor: "#aa253c",
-            strokeOpacity: .8,
-            strokeWeight: 1.5,
+            color: "#28a745c7",
+            strokeColor: "#28a745c7",
+            strokeOpacity: 1,
+            strokeWeight: 2,
             icons: iconSequence
         })
 
@@ -244,7 +244,7 @@ class Tracker extends Component {
                         this.setMapOptions(map)
                         let mapIcon = {
                             url: './res/santa-icon.png',
-                            scaledSize: new window.google.maps.Size(50, 50),
+                            scaledSize: new window.google.maps.Size(60, 60),
                             origin: new window.google.maps.Point(0, 0),
                             anchor: new window.google.maps.Point(22, 28)
                         }
