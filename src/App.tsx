@@ -48,6 +48,7 @@ class App extends Component<{}, WimsfoTypes>{
   render() {
     return (
       <div className="Wimsfo-Santa">
+        {/* <input type="button" id="toggle" value="Wake Lock is disabled" style={{display: "none"}} /> */}
         {this.state.runShow && <div className="Run-Show">
           <Map />
         </div>}

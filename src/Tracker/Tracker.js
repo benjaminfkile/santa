@@ -1,5 +1,6 @@
 import { Component } from "react";
 import axios from "axios";
+import NoSleep from 'nosleep.js';
 import connection from "../Santa/Santa"
 import Map from "./Map/Map"
 import userLocation from "../UserLocation/UserLocation";
@@ -34,6 +35,7 @@ class Tracker extends Component {
     projectedFlightPlath = null
     flightProjectionIndex = -1
     userLocationInterval
+    wakeLock
     constructor(props) {
         super(props);
         this.state = {
@@ -60,10 +62,12 @@ class Tracker extends Component {
             })
         this.userLocationInterval = setInterval(this.listen4UserLocation, 1000)
         this.setState({ inApp: userLocation.inApp() })
+        this.keepAwake()
     }
 
     componentWillUnmount() {
         clearInterval(this.userLocationInterval)
+        this.wakeLock = false
     }
 
     setLocation = (input) => {
@@ -127,13 +131,20 @@ class Tracker extends Component {
         this.handleZoomPinch()
     }
 
+    keepAwake = () => {
+        if (!this.wakeLock) {
+            let noSleep = new NoSleep();
+            noSleep.enable()
+        }
+    }
+
     drawRoutePoly = () => {
 
         let color = ""
         let step = -1
 
         for (let i = 0; i < projectedRoute.length; i++) {
-            step ++
+            step++
             // this.projectedRouteCoords.push({ lat: Number(projectedRoute[i].Lat), lng: Number(projectedRoute[i].Lon) })
             if (step === 0) {
                 color = "#cc2626"
