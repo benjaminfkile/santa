@@ -128,18 +128,43 @@ class Tracker extends Component {
     }
 
     drawRoutePoly = () => {
-        for (let i = 0; i < projectedRoute.length; i++) {
-            this.projectedRouteCoords.push({ lat: Number(projectedRoute[i].Lat), lng: Number(projectedRoute[i].Lon) })
-        }
-        this.projectedFlightPlath = new window.google.maps.Polyline({
-            path: this.projectedRouteCoords,
-            color: "#dc35454d",
-            strokeColor: "#dc35454d",
-            strokeOpacity: 1,
-            strokeWeight: 2,
 
-        })
-        this.projectedFlightPlath.setMap(this.map);
+        let color = ""
+        let step = -1
+
+        for (let i = 0; i < projectedRoute.length; i++) {
+            step ++
+            // this.projectedRouteCoords.push({ lat: Number(projectedRoute[i].Lat), lng: Number(projectedRoute[i].Lon) })
+            if (step === 0) {
+                color = "#cc2626"
+            }
+            if (step === 1) {
+                color = "#9acd32"
+            }
+            if (step === 2) {
+                color = "#ffffff"
+                step = -1
+            }
+
+            if (i < projectedRoute.length - 1) {
+                let coords = []
+                coords.push({ lat: Number(projectedRoute[i].Lat), lng: Number(projectedRoute[i].Lon) })
+                coords.push({ lat: Number(projectedRoute[i + 1].Lat), lng: Number(projectedRoute[i + 1].Lon) })
+                coords = new window.google.maps.Polyline({
+                    path: coords,
+                    color: color,
+                    strokeColor: color,
+                    strokeOpacity: .7,
+                    strokeWeight: 1,
+
+                })
+                coords.setMap(this.map);
+
+            }
+
+
+        }
+
     }
 
     drawUserToSantaPoly = () => {
@@ -147,9 +172,9 @@ class Tracker extends Component {
         let iconSequence = [];
         let circle = {
             "path": "M -2,0 C -1.947018,-2.2209709 1.9520943,-2.1262691 2,0.00422057 2.0378955,1.3546185 1.5682108,2.0631345 1.4372396e-8,2.0560929 -1.7155482,2.0446854 -1.9145886,1.0142836 -2,0.06735507 Z",
-            "fillColor": "#28a745",
-            "fillOpacity": 0.8,
-            "strokeColor": "#28a745",
+            "fillColor": "#cc2626",
+            "fillOpacity": 0.7,
+            "strokeColor": "#cc2626",
             "strokeWeight": 13,
             "scale": 1
         }
@@ -163,10 +188,10 @@ class Tracker extends Component {
 
         this.userToSantaFlightPath = new window.google.maps.Polyline({
             path: this.userToSantaCoords,
-            color: "#28a745c7",
-            strokeColor: "#28a745c7",
-            strokeOpacity: 1,
-            strokeWeight: 2,
+            color: "#cc2626",
+            strokeColor: "#cc2626",
+            strokeOpacity: 0.7,
+            strokeWeight: 1,
             icons: iconSequence
         })
 
