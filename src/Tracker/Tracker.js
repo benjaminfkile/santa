@@ -139,13 +139,10 @@ class Tracker extends Component {
     }
 
     drawRoutePoly = () => {
-
         let color = ""
         let step = -1
-
         for (let i = 0; i < projectedRoute.length; i++) {
             step++
-            // this.projectedRouteCoords.push({ lat: Number(projectedRoute[i].Lat), lng: Number(projectedRoute[i].Lon) })
             if (step === 0) {
                 color = "#cc2626"
             }
@@ -156,7 +153,6 @@ class Tracker extends Component {
                 color = "#ffffff"
                 step = -1
             }
-
             if (i < projectedRoute.length - 1) {
                 let coords = []
                 coords.push({ lat: Number(projectedRoute[i].Lat), lng: Number(projectedRoute[i].Lon) })
@@ -167,15 +163,10 @@ class Tracker extends Component {
                     strokeColor: color,
                     strokeOpacity: .7,
                     strokeWeight: 1,
-
                 })
-                coords.setMap(this.map);
-
+                coords.setMap(this.map)
             }
-
-
         }
-
     }
 
     drawUserToSantaPoly = () => {
