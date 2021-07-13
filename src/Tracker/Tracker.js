@@ -140,18 +140,18 @@ class Tracker extends Component {
 
     drawRoutePoly = () => {
         let color = ""
-        let step = -1
+        let colorDex = -1
         for (let i = 0; i < projectedRoute.length; i++) {
-            step++
-            if (step === 0) {
+            colorDex++
+            if (colorDex === 0) {
                 color = "#cc2626"
             }
-            if (step === 1) {
+            if (colorDex === 1) {
                 color = "#9acd32"
             }
-            if (step === 2) {
+            if (colorDex === 2) {
                 color = "#ffffff"
-                step = -1
+                colorDex = -1
             }
             if (i < projectedRoute.length - 1) {
                 let coords = []
