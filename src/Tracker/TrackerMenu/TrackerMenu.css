@@ -83,11 +83,11 @@
 }
 
 .TrackerMenuFooter {
-    position: absolute;
+    /* position: absolute; */
     display: block;
-    width: calc(100% - 4px);
-    bottom: 2px;
-    right: 2px;
+    width: 290px;
+    margin-left: 5px;
+    margin-bottom: 10px;
 }
 
 #tracker-menu-close-btn {
@@ -292,7 +292,7 @@
 .TrackerMenuSantaDatWrapper{
     display: flex;
     margin-top: 5px;
-    margin-bottom: 50px;
+    margin-bottom: 10px;
     width: 290px;
     margin-left: 5px;
     border-radius: 5px;
@@ -321,16 +321,59 @@
     margin-left: 10px;
 }
 
-#tracker-menu-santa-dat-wrapper-night{
-    background-color: #4d56627a;
-    color: #ffffff;
+#tracker-menu-santa-dat-wrapper-standard{
+    background-color: #bdd8bb;
+    color: #000000;
+}
 
+#tracker-menu-santa-dat-wrapper-standard span{
+    color: #000000;
+}
+
+#tracker-menu-santa-dat-wrapper-retro{
+    background-color: #dfd2ae;
+    color: #000000;
+}
+
+#tracker-menu-santa-dat-wrapper-retro span{
+    color: #000000;
+}
+
+#tracker-menu-santa-dat-wrapper-silver{
+    background-color: #737373;
+    color: #000000;
+}
+
+#tracker-menu-santa-dat-wrapper-silver span{
+    color: #000000;
+}
+
+#tracker-menu-santa-dat-wrapper-dark{
+    background-color: #434343;
+    color: #b5b5b5;
+}
+
+#tracker-menu-santa-dat-wrapper-dark span{
+    color: #b5b5b5;
+}
+
+#tracker-menu-santa-dat-wrapper-night{
+    background-color: #4d5662;
+    color: #ffffff;
 }
 
 #tracker-menu-santa-dat-wrapper-night span{
-    color: #d59563;
+    color: #ffffff;
 }
 
+#tracker-menu-santa-dat-wrapper-aubergine{
+    background-color: #2d5f75;
+    color: #ffffff;
+}
+
+#tracker-menu-santa-dat-wrapper-aubergine span{
+    color: #ffffff;
+}
 
 @-webkit-keyframes rotate-center {
     0% {

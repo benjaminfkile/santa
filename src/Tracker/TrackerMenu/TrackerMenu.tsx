@@ -106,7 +106,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                     <div className="TrackerMenuSantaDatWrapper" id={"tracker-menu-santa-dat-wrapper-" + this.props.currentTheme.toLowerCase()}>
                         <div className="TrackerMenuSantaDatWrapperLeft">
                             {this.props.santaDat.accuracy && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
-                                <span className="material-icons">compass_calibration</span>
+                                <span className="material-icons">360</span>
                                 <p>{this.props.santaDat.accuracy.split("+")[0]} ft</p>
                             </div>}
                             {this.props.santaDat.bear && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
@@ -116,7 +116,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                         </div>
                         <div className="TrackerMenuSantaDatWrapperRight">
                             {this.props.santaDat.alt && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
-                                <span className="material-icons">landscape</span>
+                                <span className="material-icons">flight_takeoff</span>
                                 <p>{this.props.santaDat.alt.split("+")[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
                             </div>}
                             {this.props.santaDat.speed && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
