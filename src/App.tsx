@@ -14,9 +14,7 @@ type WimsfoTypes = {
 
 class App extends Component<{}, WimsfoTypes>{
 
-  listenInterval: any
-  interval: any
-  constructor(props: any) {
+  constructor(props: {}) {
     super(props)
     this.state = {
       preShow: false,
@@ -36,10 +34,6 @@ class App extends Component<{}, WimsfoTypes>{
     // connection.on("newMessage", this.signalRIn)
   }
 
-  componentWillUnmount() {
-    clearInterval(this.listenInterval)
-  }
-
   signalRIn = (input: object) => {
     this.setState({ signalRMessage: input })
   }
@@ -48,7 +42,6 @@ class App extends Component<{}, WimsfoTypes>{
   render() {
     return (
       <div className="Wimsfo-Santa">
-        {/* <input type="button" id="toggle" value="Wake Lock is disabled" style={{display: "none"}} /> */}
         {this.state.runShow && <div className="Run-Show">
           <Map />
         </div>}

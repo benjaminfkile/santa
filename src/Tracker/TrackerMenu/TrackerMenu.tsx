@@ -8,12 +8,18 @@ interface TrackerMenuProps {
     changeTheme: Function
     toggleMapTypes: Function
     mapType: string
-    availableThemes: Array<any>
+    availableThemes: Array<{ title: string, nickName: string }>
     currentTheme: string
     toggleSnow: Function
-    userCoords: any
-    listenForUserLocation: Function
     menuOpen: Function
+    santaDat: {
+        accuracy: string,
+        alt: string,
+        bear: string,
+        lat: string,
+        lng: string,
+        speed: string
+    }
 }
 
 type TrackerMenuTypes = {
@@ -73,7 +79,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
 
     render() {
 
-        // console.log(this.props)
+        console.log(this.props.santaDat)
 
         return (
             <div className="TrackerMenu">
@@ -82,7 +88,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                 </div>}
                 {this.state.menuOpen && <div className="TrackerMenuContent" id={this.props.currentTheme.toLowerCase() + "-theme-menu-content"}>
                     <div className="TrackerMenuThemes" id={"tracker-menu-themes-" + this.props.currentTheme.toLowerCase()}>
-                        {this.props.availableThemes.map((theme: any, index: number) =>
+                        {this.props.availableThemes.map((theme, index) =>
                             <div className="TrackerMenuTheme" id={"tracker-menu-theme-" + this.props.currentTheme.toLowerCase()} key={"tracker-menu-theme-" + index} onClick={() => this.props.changeTheme(index)}>
                                 <img src={"./res/map-theme-icons/" + theme.title.toLowerCase() + ".PNG"} alt=""></img>
                                 <p>{theme.nickName}</p>
@@ -94,11 +100,31 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                         {this.state.mapTypeId === "terrain" && <Button className="TerrainToggle" id="terrain-toggled-on" disabled={true}><span className="material-icons">terrain</span><p>Terrain</p></Button>}
                         {this.state.mapTypeId === "roadmap" && <Button className="RoadMapToggle" id="terrain-toggled-on" disabled={true}><span className="material-icons">map</span><p>Roadmap</p></Button>}
                         {this.state.mapTypeId !== "roadmap" && <Button className="RoadMapToggle" id="terrain-toggled-off" onClick={() => this.toggleMapTypes()}><span className="material-icons">map</span><p>Roadmap</p></Button>}
-                        {!this.state.snow && <Button id="snow-toggled-off" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons" onClick={this.toggleSnow}>ac_unit</span><p>Snow</p></Button>}
-                        {this.state.snow && <Button id="snow-toggled-on" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons" onClick={this.toggleSnow}>ac_unit</span><p>Snow</p></Button>}
+                        {!this.state.snow && <Button id="snow-toggled-off" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons">ac_unit</span><p>Snow</p></Button>}
+                        {this.state.snow && <Button id="snow-toggled-on" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons">ac_unit</span><p>Snow</p></Button>}
                     </div>
-                    <br></br>
-                    <br></br>
+                    <div className="TrackerMenuSantaDatWrapper" id={"tracker-menu-santa-dat-wrapper-" + this.props.currentTheme.toLowerCase()}>
+                        <div className="TrackerMenuSantaDatWrapperLeft">
+                            {this.props.santaDat.accuracy && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
+                                <span className="material-icons">compass_calibration</span>
+                                <p>{this.props.santaDat.accuracy.split("+")[0]} ft</p>
+                            </div>}
+                            {this.props.santaDat.bear && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
+                                <span className="material-icons">explore</span>
+                                <p>{this.props.santaDat.bear.split("+")[0]}</p>
+                            </div>}
+                        </div>
+                        <div className="TrackerMenuSantaDatWrapperRight">
+                            {this.props.santaDat.alt && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
+                                <span className="material-icons">landscape</span>
+                                <p>{this.props.santaDat.alt.split("+")[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
+                            </div>}
+                            {this.props.santaDat.speed && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
+                                <span className="material-icons">speed</span>
+                                <p>{this.props.santaDat.speed.split("+")[0]} mph</p>
+                            </div>}
+                        </div>
+                    </div>
                     <div className="TrackerMenuFooter">
                         {this.state.locationPrompt &&
                             <LocationPrompt

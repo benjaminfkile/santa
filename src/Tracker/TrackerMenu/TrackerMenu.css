@@ -25,23 +25,20 @@
     top: 0px;
     right: 0px;
     width: 300px;
-    height: 70%;
     border-bottom-left-radius: 10px;
     -webkit-animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
     animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
 
-::-webkit-scrollbar {
-    width: 0;
-    /* Remove scrollbar space */
+/* ::-webkit-scrollbar {
+    width: 20;
     background: transparent;
-    /* Optional: just make scrollbar invisible */
-}
+} */
 
 .TrackerMenuThemes {
     display: flex;
     width: 100%;
-    height: 110px;
+    height: 100px;
     margin-top: 3px;
     overflow-x: scroll;
     overflow-y: hidden;
@@ -83,7 +80,6 @@
     display: flex;
     width: 300px;
     height: 40px;
-    margin-top: -15px;
 }
 
 .TrackerMenuFooter {
@@ -292,6 +288,49 @@
 #tracker-menu-location-btn-allowed span {
     color: #5cb85c;
 }
+
+.TrackerMenuSantaDatWrapper{
+    display: flex;
+    margin-top: 5px;
+    margin-bottom: 50px;
+    width: 290px;
+    margin-left: 5px;
+    border-radius: 5px;
+}
+
+.TrackerMenuSantaDatWrapperLeft, .TrackerMenuSantaDatWrapperRight{
+    width: 50%;
+}
+
+.TrackerMenuSantaDatItem{
+    display: flex;
+    /* align-items: center;
+    justify-content: center; */
+    width: 100%;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.TrackerMenuSantaDatItem span, .TrackerMenuSantaDatItem p{
+    margin: 0px;
+    padding: 0px
+}
+
+.TrackerMenuSantaDatItem span{
+    margin-right: 10px;
+    margin-left: 10px;
+}
+
+#tracker-menu-santa-dat-wrapper-night{
+    background-color: #4d56627a;
+    color: #ffffff;
+
+}
+
+#tracker-menu-santa-dat-wrapper-night span{
+    color: #d59563;
+}
+
 
 @-webkit-keyframes rotate-center {
     0% {

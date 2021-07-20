@@ -294,9 +294,8 @@ class Tracker extends Component {
                     toggleMapTypes={this.toggleTerrain}
                     mapType={this.mapType}
                     toggleSnow={this.toggleSnow}
-                    userCoords={userLocation.coordinates.lat}
-                    listenForUserLocation={this.listenForUserLocation}
                     menuOpen={this.menuOpen}
+                    santaDat={this.state.santaDat}
                 />}
                 {!userLocation.disable && this.state.distanceFromUserToSanta && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
                     {this.state.distanceFromUserToSanta < 5281 &&
