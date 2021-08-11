@@ -9,7 +9,6 @@ type WimsfoTypes = {
   runShow: boolean
   endShow: boolean
   returnUser: boolean
-  signalRMessage: object
 }
 
 class App extends Component<{}, WimsfoTypes>{
@@ -21,7 +20,6 @@ class App extends Component<{}, WimsfoTypes>{
       runShow: true,
       endShow: false,
       returnUser: false,
-      signalRMessage: { blank: true }
     }
   }
 
@@ -33,11 +31,6 @@ class App extends Component<{}, WimsfoTypes>{
     }
     // connection.on("newMessage", this.signalRIn)
   }
-
-  signalRIn = (input: object) => {
-    this.setState({ signalRMessage: input })
-  }
-
 
   render() {
     return (

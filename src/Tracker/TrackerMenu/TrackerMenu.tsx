@@ -79,7 +79,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
 
     render() {
 
-        console.log(this.props.santaDat)
+        // console.log(this.props.santaDat)
 
         return (
             <div className="TrackerMenu">

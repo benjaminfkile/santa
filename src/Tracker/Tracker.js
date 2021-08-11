@@ -1,7 +1,6 @@
 import { Component } from "react";
 import axios from "axios";
 import NoSleep from 'nosleep.js';
-import connection from "../Santa/Santa"
 import Map from "./Map/Map"
 import userLocation from "../UserLocation/UserLocation";
 import Standard from './Map/MapThemes/Standard'
@@ -35,6 +34,8 @@ class Tracker extends Component {
     projectedFlightPlath = null
     flightProjectionIndex = -1
     userLocationInterval
+    getSantaInterval
+    updateInterval = 5000
     wakeLock
     constructor(props) {
         super(props);
@@ -54,30 +55,39 @@ class Tracker extends Component {
     }
 
     componentDidMount() {
-        connection.on("newMessage", this.setLocation)
-        axios.get(`https://wmsfo-location-data.herokuapp.com/api/location-data`)
-            // axios.get(`http://localhost:8000/api/location-data`)
-            .then(res => {
-                this.setLocation(res.data)
-            })
         this.userLocationInterval = setInterval(this.listen4UserLocation, 1000)
+        this.getSantaInterval = setInterval(this.getSanta, this.updateInterval)
+        this.getSanta()
         this.setState({ inApp: userLocation.inApp() })
         this.keepAwake()
     }
 
     componentWillUnmount() {
         clearInterval(this.userLocationInterval)
+        clearInterval(this.getSantaInterval)
         this.wakeLock = false
     }
 
-    setLocation = (input) => {
-        console.log(input)
-        if (input) {
-            this.setState({ santaDat: input })
-            this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
-            this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
-            this.autoRecenter()
-        }
+    getSanta = () => {
+        axios.get(`https://wmsfo-location-data.herokuapp.com/api/location-data`)
+            // axios.get(`http://localhost:8000/api/location-data`)
+            .then(res => {
+                // this.getSanta(res.data)
+                // console.log(res.data)
+                if (res.data) {
+                    this.setState({ santaDat: res.data })
+                    this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
+                    this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
+                    this.autoRecenter()
+                }
+                if (parseInt(res.data.throttle) !== this.updateInterval) {
+                    clearInterval(this.getSantaInterval)
+                    this.updateInterval = parseInt(res.data.throttle)
+                    this.getSantaInterval = setInterval(this.getSanta, this.updateInterval)
+                }
+                console.log("Online: " + parseInt(res.data.rps) * parseInt(res.data.dynos))
+            })
+
     }
 
     listen4UserLocation = () => {
