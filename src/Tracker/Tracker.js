@@ -85,7 +85,7 @@ class Tracker extends Component {
                     this.updateInterval = parseInt(res.data.throttle)
                     this.getSantaInterval = setInterval(this.getSanta, this.updateInterval)
                 }
-                console.log("Online: " + parseInt(res.data.rps) * parseInt(res.data.dynos))
+                console.log("Online: " + Math.floor(parseInt(res.data.rps) * (parseInt(res.data.dynos))))
             })
 
     }
@@ -327,6 +327,10 @@ class Tracker extends Component {
                         <div id="zoom-in-btn" onClick={() => this.handleZoomClick("+")}><span className="material-icons">add</span></div>
                         <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">remove</span></div>
                     </div>}
+                </div>}
+                {this.state.santaDat.rps && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
+                    <span className="material-icons">people</span>
+                    <p>{(Math.floor(parseInt(this.state.santaDat.rps) * (parseInt(this.state.santaDat.dynos))) + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",") || "0"}</p>
                 </div>}
                 {this.state.snow && <Snow />}
             </div>

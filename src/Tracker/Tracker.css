@@ -229,7 +229,7 @@ body {
 }
 
 #center-map-btn-wrapper-night span {
-  color: #5d5d5d;
+  color: #d4c7c7;
 }
 
 #center-map-btn-wrapper-standard {
@@ -292,6 +292,40 @@ body {
 
 #center-map-btn-wrapper-dark span, #center-map-btn-wrapper-aubergine span {
   color: #929292;
+}
+
+.OnlineUsers{
+  position: fixed;
+  display: flex;
+  bottom: 10px;
+  left: 5px;
+  height: 40px;
+  margin-bottom: 20px;
+  box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
+  border-radius: 8px;
+  padding-top: 5px;
+  /* -webkit-animation: slide-in-right 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+  animation: slide-in-right 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; */
+}
+
+.OnlineUsers span{
+  font-size: 30px;
+  margin-right: 10px;
+  color: #d4c7c7;
+}
+
+.OnlineUsers p{
+  margin-right: 10px;
+}
+
+#online-users-night{
+  background-color: rgba(0, 0, 0, .5);
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
+  overflow: hidden;
+  cursor: pointer;
+  transition: background-color 0.16s;
+  color: #f4f4f5;
 }
 
 @-webkit-keyframes slide-in-right {
