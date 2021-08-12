@@ -13,10 +13,6 @@ type LocationPromptTypes = {
 
 class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes> {
 
-    state = {
-
-    }
-
     handleUserRevokeLocation = () => {
         userLocation.disable = true
         this.props.toggleLocationPrompt()

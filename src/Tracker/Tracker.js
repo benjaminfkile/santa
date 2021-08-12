@@ -54,10 +54,12 @@ class Tracker extends Component {
     }
 
     componentDidMount() {
-        this.setState({ inApp: userLocation.inApp() })
-        this.userLocationInterval = setInterval(this.listen4UserLocation, 1000)
-        this.getSantaInterval = setInterval(this.getSanta, this.updateInterval)
         this.getSanta()
+        this.setState({ inApp: userLocation.inApp() })
+        if (!userLocation.inApp) {
+            this.userLocationInterval = setInterval(this.listen4UserLocation, 1000)
+        }
+        this.getSantaInterval = setInterval(this.getSanta, this.updateInterval)
     }
 
     componentWillUnmount() {
@@ -138,7 +140,7 @@ class Tracker extends Component {
     }
 
     averageUsers = () => {
-        if(this.rpsHistory.length > 9){
+        if (this.rpsHistory.length > 9) {
             this.rpsHistory.length = 10
         }
         let total = 0;
