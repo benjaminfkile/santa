@@ -229,7 +229,7 @@ body {
 }
 
 #center-map-btn-wrapper-night span {
-  color: #d4c7c7;
+  color: #5d5d5d;
 }
 
 #center-map-btn-wrapper-standard {
@@ -297,25 +297,28 @@ body {
 .OnlineUsers{
   position: fixed;
   display: flex;
-  bottom: 10px;
+  bottom: 0px;
   left: 5px;
   height: 40px;
   margin-bottom: 20px;
   box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
   border-radius: 8px;
   padding-top: 5px;
-  /* -webkit-animation: slide-in-right 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
-  animation: slide-in-right 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; */
+  -webkit-animation: slide-in-left 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+  animation: slide-in-left 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
 
 .OnlineUsers span{
   font-size: 30px;
-  margin-right: 10px;
-  color: #d4c7c7;
+  margin-right: 8px;
+  margin-left: 10px;
 }
 
 .OnlineUsers p{
+  margin: 0px;
   margin-right: 10px;
+  margin-top: 3px;
+  font-weight: 500;
 }
 
 #online-users-night{
@@ -325,7 +328,10 @@ body {
   overflow: hidden;
   cursor: pointer;
   transition: background-color 0.16s;
-  color: #f4f4f5;
+  color: #5d5d5d;
+}
+
+#online-users-night span{
 }
 
 @-webkit-keyframes slide-in-right {

@@ -36,7 +36,8 @@ class Tracker extends Component {
     userLocationInterval
     getSantaInterval
     updateInterval = 5000
-    wakeLock
+    wakeLock = true
+    rpsHistory = []
     constructor(props) {
         super(props);
         this.state = {
@@ -70,14 +71,12 @@ class Tracker extends Component {
 
     getSanta = () => {
         axios.get(`https://wmsfo-location-data.herokuapp.com/api/location-data`)
-            // axios.get(`http://localhost:8000/api/location-data`)
             .then(res => {
-                // this.getSanta(res.data)
-                // console.log(res.data)
                 if (res.data) {
                     this.setState({ santaDat: res.data })
                     this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
                     this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
+                    this.rpsHistory.unshift(res.data.rps)
                     this.autoRecenter()
                 }
                 if (parseInt(res.data.throttle) !== this.updateInterval) {
@@ -146,6 +145,18 @@ class Tracker extends Component {
             let noSleep = new NoSleep();
             noSleep.enable()
         }
+    }
+
+    averageUsers = () => {
+        if(this.rpsHistory.length > 9){
+            this.rpsHistory.length = 10
+        }
+        let total = 0;
+        for (let i = 0; i < this.rpsHistory.length; i++) {
+            total += this.rpsHistory[i]
+        }
+        total = Math.floor(((parseInt(total) * (parseInt(this.state.santaDat.dynos))) / this.rpsHistory.length)) + ""
+        return total.replace(/\B(?=(\d{3})+(?!\d))/g, ",") || "0"
     }
 
     drawRoutePoly = () => {
@@ -271,6 +282,7 @@ class Tracker extends Component {
 
         // console.log("tracker render")
         // console.log(this.state)
+        console.log(this.rpsHistory)
 
         return (
 
@@ -330,7 +342,7 @@ class Tracker extends Component {
                 </div>}
                 {this.state.santaDat.rps && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
                     <span className="material-icons">people</span>
-                    <p>{(Math.floor(parseInt(this.state.santaDat.rps) * (parseInt(this.state.santaDat.dynos))) + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",") || "0"}</p>
+                    <p>{this.averageUsers()}</p>
                 </div>}
                 {this.state.snow && <Snow />}
             </div>
