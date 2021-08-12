@@ -1,6 +1,5 @@
 import { Component } from "react";
 import axios from "axios";
-import NoSleep from 'nosleep.js';
 import Map from "./Map/Map"
 import userLocation from "../UserLocation/UserLocation";
 import Standard from './Map/MapThemes/Standard'
@@ -36,7 +35,6 @@ class Tracker extends Component {
     userLocationInterval
     getSantaInterval
     updateInterval = 5000
-    wakeLock = true
     rpsHistory = []
     constructor(props) {
         super(props);
@@ -56,11 +54,10 @@ class Tracker extends Component {
     }
 
     componentDidMount() {
+        this.setState({ inApp: userLocation.inApp() })
         this.userLocationInterval = setInterval(this.listen4UserLocation, 1000)
         this.getSantaInterval = setInterval(this.getSanta, this.updateInterval)
         this.getSanta()
-        this.setState({ inApp: userLocation.inApp() })
-        this.keepAwake()
     }
 
     componentWillUnmount() {
@@ -84,7 +81,7 @@ class Tracker extends Component {
                     this.updateInterval = parseInt(res.data.throttle)
                     this.getSantaInterval = setInterval(this.getSanta, this.updateInterval)
                 }
-                console.log("Online: " + Math.floor(parseInt(res.data.rps) * (parseInt(res.data.dynos))))
+                // console.log("Online: " + Math.floor(parseInt(res.data.rps) * (parseInt(res.data.dynos))))
             })
 
     }
@@ -138,13 +135,6 @@ class Tracker extends Component {
             this.setState({ mapCentered: false })
         }
         this.handleZoomPinch()
-    }
-
-    keepAwake = () => {
-        if (!this.wakeLock) {
-            let noSleep = new NoSleep();
-            noSleep.enable()
-        }
     }
 
     averageUsers = () => {
@@ -282,7 +272,6 @@ class Tracker extends Component {
 
         // console.log("tracker render")
         // console.log(this.state)
-        console.log(this.rpsHistory)
 
         return (
 

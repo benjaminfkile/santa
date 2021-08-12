@@ -1,8 +1,9 @@
 import { Component } from "react"
 import Map from "./Tracker/Tracker"
-import cookieMonster from "./CookieMonster/CookieMonster"
+import cookies from "./Cookies/Cookies"
+import NoSleep from 'nosleep.js';
+
 import 'bootstrap/dist/css/bootstrap.min.css'
-// import connection from "./Santa/Santa"
 
 type WimsfoTypes = {
   preShow: boolean
@@ -12,6 +13,8 @@ type WimsfoTypes = {
 }
 
 class App extends Component<{}, WimsfoTypes>{
+
+  noSleep = new NoSleep();
 
   constructor(props: {}) {
     super(props)
@@ -24,19 +27,25 @@ class App extends Component<{}, WimsfoTypes>{
   }
 
   componentDidMount() {
-    if (cookieMonster.getCookie("ReturnUser")) {
+    if (cookies.getCookie("ReturnUser")) {
       this.setState({ returnUser: true })
     } else {
-      cookieMonster.setCookie("ReturnUser", "true", 8)
+      cookies.setCookie("ReturnUser", "true", 8)
     }
-    // connection.on("newMessage", this.signalRIn)
+    this.noSleep.enable()
+  }
+
+  componentWillUnmount(){
+    this.noSleep.disable()
   }
 
   render() {
     return (
       <div className="Wimsfo-Santa">
         {this.state.runShow && <div className="Run-Show">
-          <Map />
+
+          <Map/>
+        
         </div>}
       </div>
     )

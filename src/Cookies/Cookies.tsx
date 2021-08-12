@@ -1,4 +1,4 @@
-const cookieMonster = {
+const cookies = {
     getCookie: (cname: string) => {
         var name = cname + "=";
         var decodedCookie = decodeURIComponent(document.cookie);
@@ -23,4 +23,4 @@ const cookieMonster = {
         console.log("New User" )
     }
 }
-export default cookieMonster
+export default cookies

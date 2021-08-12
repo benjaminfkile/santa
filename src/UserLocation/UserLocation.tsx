@@ -11,7 +11,7 @@ let userLocation = {
     },
     inApp: () => {
         //@ts-ignore
-        let ua = navigator.userAgent || navigator.vendor || window.opera;
+        let ua = navigator.userAgent || navigator.vendor || window.opera
         if ((ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf('Instagram') > -1)) {
             return true
         } else {
