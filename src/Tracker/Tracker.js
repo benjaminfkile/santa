@@ -85,17 +85,21 @@ class Tracker extends Component {
 
     getUserLocation = () => {
         userLocation.getUserLocation()
-        if (userLocation.coordinates.lat
-            && userLocation.coordinates.lat !== this.userToSantaCoords[1].lat
-            && userLocation.coordinates.lng !== this.userToSantaCoords[1].lng) {
-            this.userToSantaCoords[1] = { lat: Number(userLocation.coordinates.lat), lng: Number(userLocation.coordinates.lng) }
-        }
-        if (this.userToSantaCoords[1].lat && !userLocation.disable) {
-            this.drawUserToSantaPoly()
-        }
-        if (userLocation.disable) {
-            this.removePoly()
-            this.setState({ distanceFromUserToSanta: false })
+        if(this.state.inApp && this.userLocationInterval){
+            clearInterval(this.userLocationInterval)
+        }else{
+            if (userLocation.coordinates.lat
+                && userLocation.coordinates.lat !== this.userToSantaCoords[1].lat
+                && userLocation.coordinates.lng !== this.userToSantaCoords[1].lng) {
+                this.userToSantaCoords[1] = { lat: Number(userLocation.coordinates.lat), lng: Number(userLocation.coordinates.lng) }
+            }
+            if (this.userToSantaCoords[1].lat && !userLocation.disable) {
+                this.drawUserToSantaPoly()
+            }
+            if (userLocation.disable) {
+                this.removePoly()
+                this.setState({ distanceFromUserToSanta: false })
+            }
         }
     }
 
