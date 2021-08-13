@@ -22,7 +22,13 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
     handleUserAllowLocation = () => {
         userLocation.disable = false
         this.props.toggleLocationPrompt()
-        this.props.getUserLocation()
+        if(!userLocation.inApp()){
+            setInterval(() =>{
+                userLocation.getUserLocation()
+            }, 1000)
+        }else{
+            userLocation.getUserLocation()
+        }
     }
 
     render() {

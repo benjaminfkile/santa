@@ -54,7 +54,7 @@ class Tracker extends Component {
     componentDidMount() {
         this.getSanta()
         this.setState({ inApp: userLocation.inApp() })
-        this.userLocationInterval = setInterval(this.getUserLocation, 10000)
+        this.userLocationInterval = setInterval(this.getUserLocation, 1000)
         this.getSantaInterval = setInterval(this.getSanta, this.updateInterval)
     }
 
@@ -84,23 +84,19 @@ class Tracker extends Component {
     }
 
     getUserLocation = () => {
-        userLocation.getUserLocation()
-        if(this.state.inApp && this.userLocationInterval){
-            clearInterval(this.userLocationInterval)
-        }else{
-            if (userLocation.coordinates.lat
-                && userLocation.coordinates.lat !== this.userToSantaCoords[1].lat
-                && userLocation.coordinates.lng !== this.userToSantaCoords[1].lng) {
-                this.userToSantaCoords[1] = { lat: Number(userLocation.coordinates.lat), lng: Number(userLocation.coordinates.lng) }
-            }
-            if (this.userToSantaCoords[1].lat && !userLocation.disable) {
-                this.drawUserToSantaPoly()
-            }
-            if (userLocation.disable) {
-                this.removePoly()
-                this.setState({ distanceFromUserToSanta: false })
-            }
+        if (userLocation.coordinates.lat
+            && userLocation.coordinates.lat !== this.userToSantaCoords[1].lat
+            && userLocation.coordinates.lng !== this.userToSantaCoords[1].lng) {
+            this.userToSantaCoords[1] = { lat: Number(userLocation.coordinates.lat), lng: Number(userLocation.coordinates.lng) }
         }
+        if (this.userToSantaCoords[1].lat && !userLocation.disable) {
+            this.drawUserToSantaPoly()
+        }
+        if (userLocation.disable) {
+            this.removePoly()
+            this.setState({ distanceFromUserToSanta: false })
+        }
+        console.log("getting user location")
     }
 
     autoRecenter = () => {
