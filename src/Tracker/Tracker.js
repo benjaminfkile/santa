@@ -43,17 +43,16 @@ class Tracker extends Component {
             snow: false,
             santaDat: {},
             distanceFromUserToSanta: null,
-            inApp: true,
             mapCentered: true,
             zoom: 10,
             menuOpen: false,
-            test: true
+            test: true,
+            online: "0"
         }
     }
 
     componentDidMount() {
         this.getSanta()
-        this.setState({ inApp: userLocation.inApp() })
         this.userLocationInterval = setInterval(this.getUserLocation, 1000)
         this.getSantaInterval = setInterval(this.getSanta, this.updateInterval)
     }
@@ -62,6 +61,7 @@ class Tracker extends Component {
         clearInterval(this.userLocationInterval)
         clearInterval(this.getSantaInterval)
         this.wakeLock = false
+        this.setState({})
     }
 
     getSanta = () => {
@@ -96,7 +96,7 @@ class Tracker extends Component {
             this.removePoly()
             this.setState({ distanceFromUserToSanta: false })
         }
-        console.log("getting user location")
+        this.setState({online: this.averageUsers()})
     }
 
     autoRecenter = () => {
@@ -142,8 +142,12 @@ class Tracker extends Component {
         for (let i = 0; i < this.rpsHistory.length; i++) {
             total += this.rpsHistory[i]
         }
-        total = Math.floor(((parseInt(total) * (parseInt(this.state.santaDat.dynos))) / this.rpsHistory.length)) + ""
-        return total.replace(/\B(?=(\d{3})+(?!\d))/g, ",") || "0"
+        total = (Math.floor(((parseInt(total) * (parseInt(this.state.santaDat.dynos))) / this.rpsHistory.length)) + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        if(total){
+            return total
+        }else{
+            return "?"
+        }
     }
 
     drawRoutePoly = () => {
@@ -327,9 +331,9 @@ class Tracker extends Component {
                         <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">remove</span></div>
                     </div>}
                 </div>}
-                {this.state.santaDat.rps && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
+                {!this.state.menuOpen && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
                     <span className="material-icons">people</span>
-                    <p>{this.averageUsers()}</p>
+                    <p>{this.state.online}</p>
                 </div>}
                 {this.state.snow && <Snow />}
             </div>
