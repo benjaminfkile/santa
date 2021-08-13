@@ -20,6 +20,7 @@ interface TrackerMenuProps {
         lng: string,
         speed: string
     }
+    getUserLocation: Function
 }
 
 type TrackerMenuTypes = {
@@ -130,6 +131,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                             <LocationPrompt
                                 toggleLocationPrompt={this.toggleLocationPrompt}
                                 theme={this.props.currentTheme}
+                                getUserLocation={this.props.getUserLocation}
                             />}
                         {!userLocation.disable && <Button id="tracker-menu-location-btn-allowed" variant="secondary" onClick={this.toggleLocationPrompt}><p><span className="material-icons">my_location</span></p></Button>}
                         {userLocation.disable && <Button id="tracker-menu-location-btn-denied" variant="secondary" onClick={this.toggleLocationPrompt}><p><span className="material-icons">location_disabled</span></p></Button>}

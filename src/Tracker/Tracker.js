@@ -29,13 +29,11 @@ class Tracker extends Component {
     marker
     userToSantaCoords = [{}, {}]
     userToSantaFlightPath = null
-    projectedRouteCoords = []
-    projectedFlightPlath = null
-    flightProjectionIndex = -1
     userLocationInterval
     getSantaInterval
     updateInterval = 5000
     rpsHistory = []
+
     constructor(props) {
         super(props);
         this.state = {
@@ -56,9 +54,7 @@ class Tracker extends Component {
     componentDidMount() {
         this.getSanta()
         this.setState({ inApp: userLocation.inApp() })
-        if (!userLocation.inApp) {
-            this.userLocationInterval = setInterval(this.listen4UserLocation, 1000)
-        }
+        this.userLocationInterval = setInterval(this.getUserLocation, 10000)
         this.getSantaInterval = setInterval(this.getSanta, this.updateInterval)
     }
 
@@ -85,10 +81,9 @@ class Tracker extends Component {
                 }
                 // console.log("Online: " + Math.floor(parseInt(res.data.rps) * (parseInt(res.data.dynos))))
             })
-
     }
 
-    listen4UserLocation = () => {
+    getUserLocation = () => {
         userLocation.getUserLocation()
         if (userLocation.coordinates.lat
             && userLocation.coordinates.lat !== this.userToSantaCoords[1].lat
@@ -309,6 +304,7 @@ class Tracker extends Component {
                     toggleSnow={this.toggleSnow}
                     menuOpen={this.menuOpen}
                     santaDat={this.state.santaDat}
+                    getUserLocation={this.getUserLocation}
                 />}
                 {!userLocation.disable && this.state.distanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
                     {this.state.distanceFromUserToSanta < 5281 &&

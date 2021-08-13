@@ -6,6 +6,7 @@ import "./LocationPromt.css"
 interface LocationPromptProps {
     toggleLocationPrompt: Function
     theme: string
+    getUserLocation: Function
 }
 
 type LocationPromptTypes = {
@@ -21,6 +22,7 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
     handleUserAllowLocation = () => {
         userLocation.disable = false
         this.props.toggleLocationPrompt()
+        this.props.getUserLocation()
     }
 
     render() {
