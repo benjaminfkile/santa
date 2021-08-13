@@ -35,7 +35,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
     constructor(props: TrackerMenuProps) {
         super(props)
         this.state = {
-            menuOpen: false,
+            menuOpen: true,
             mapTypeId: this.props.mapType,
             snow: false,
             locationPrompt: false
@@ -99,13 +99,12 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                     <div className="TrackerMenuMapTypeWrapper">
                         {this.state.mapTypeId !== "terrain" && <Button className="TerrainToggle" id="terrain-toggled-off" onClick={() => this.toggleMapTypes()}><span className="material-icons">terrain</span><p>Terrain</p></Button>}
                         {this.state.mapTypeId === "terrain" && <Button className="TerrainToggle" id="terrain-toggled-on" disabled={true}><span className="material-icons">terrain</span><p>Terrain</p></Button>}
-                        {this.state.mapTypeId === "roadmap" && <Button className="RoadMapToggle" id="terrain-toggled-on" disabled={true}><span className="material-icons">map</span><p>Roadmap</p></Button>}
-                        {this.state.mapTypeId !== "roadmap" && <Button className="RoadMapToggle" id="terrain-toggled-off" onClick={() => this.toggleMapTypes()}><span className="material-icons">map</span><p>Roadmap</p></Button>}
+                        {this.state.mapTypeId === "roadmap" && <Button className="RoadMapToggle" id="roadmap-toggled-on" disabled={true}><span className="material-icons">map</span><p>Roadmap</p></Button>}
+                        {this.state.mapTypeId !== "roadmap" && <Button className="RoadMapToggle" id="roadmap-toggled-off" onClick={() => this.toggleMapTypes()}><span className="material-icons">map</span><p>Roadmap</p></Button>}
                         {!this.state.snow && <Button id="snow-toggled-off" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons">ac_unit</span><p>Snow</p></Button>}
                         {this.state.snow && <Button id="snow-toggled-on" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons">ac_unit</span><p>Snow</p></Button>}
                     </div>
                     <div className="TrackerMenuSantaDatWrapper" id={"tracker-menu-santa-dat-wrapper-" + this.props.currentTheme.toLowerCase()}>
-                        <div className="TrackerMenuSantaDatWrapperLeft">
                             {this.props.santaDat.accuracy && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
                                 <span className="material-icons">360</span>
                                 <p>{this.props.santaDat.accuracy.split("+")[0]} ft</p>
@@ -114,8 +113,6 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                                 <span className="material-icons">explore</span>
                                 <p>{this.props.santaDat.bear.split("+")[0]}</p>
                             </div>}
-                        </div>
-                        <div className="TrackerMenuSantaDatWrapperRight">
                             {this.props.santaDat.alt && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
                                 <span className="material-icons">flight_takeoff</span>
                                 <p>{this.props.santaDat.alt.split("+")[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
@@ -124,7 +121,6 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                                 <span className="material-icons">speed</span>
                                 <p>{this.props.santaDat.speed.split("+")[0]} mph</p>
                             </div>}
-                        </div>
                     </div>
                     <div className="TrackerMenuFooter">
                         {this.state.locationPrompt &&
@@ -137,7 +133,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                         {userLocation.disable && <Button id="tracker-menu-location-btn-denied" variant="secondary" onClick={this.toggleLocationPrompt}><p><span className="material-icons">location_disabled</span></p></Button>}
                         <Button id="tracker-menu-close-btn" variant="secondary" onClick={this.toggleMenu}><p><span className="material-icons">clear</span></p></Button>
                     </div>
-                </div>}
+                </div>} 
             </div>
         )
     }

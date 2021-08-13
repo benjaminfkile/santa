@@ -271,9 +271,6 @@ class Tracker extends Component {
 
     render() {
 
-        // console.log("tracker render")
-        // console.log(this.state)
-
         return (
 
             <div className="TrackerContainer">
