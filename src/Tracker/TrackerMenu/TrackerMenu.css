@@ -4,7 +4,6 @@
     overflow-y: hidden;
     overflow-x: hidden;
 }
-
 .TrackerMenuBtn {
     width: 50px;
     height: 50px;
@@ -28,7 +27,6 @@
 
 .TrackerMenuContent {
     display: block;
-
     border-bottom-left-radius: 10px;
     -webkit-animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
     animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
