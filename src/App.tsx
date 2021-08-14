@@ -32,7 +32,11 @@ class App extends Component<{}, WimsfoTypes>{
     } else {
       cookies.setCookie("ReturnUser", "true", 8)
     }
-    this.noSleep.enable()
+    try{
+      this.noSleep.enable()
+    }catch{
+      console.log("failed to enable no-sleep")
+    }
   }
 
   componentWillUnmount(){

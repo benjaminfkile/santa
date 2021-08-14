@@ -105,22 +105,22 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                         {this.state.snow && <Button id="snow-toggled-on" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons">ac_unit</span><p>Snow</p></Button>}
                     </div>
                     <div className="TrackerMenuSantaDatWrapper" id={"tracker-menu-santa-dat-wrapper-" + this.props.currentTheme.toLowerCase()}>
-                            {this.props.santaDat.accuracy && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
-                                <span className="material-icons">360</span>
-                                <p>{this.props.santaDat.accuracy.split("+")[0]} ft</p>
-                            </div>}
-                            {this.props.santaDat.bear && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
-                                <span className="material-icons">explore</span>
-                                <p>{this.props.santaDat.bear.split("+")[0]}</p>
-                            </div>}
-                            {this.props.santaDat.alt && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
-                                <span className="material-icons">flight_takeoff</span>
-                                <p>{this.props.santaDat.alt.split("+")[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
-                            </div>}
-                            {this.props.santaDat.speed && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
-                                <span className="material-icons">speed</span>
-                                <p>{this.props.santaDat.speed.split("+")[0]} mph</p>
-                            </div>}
+                        {this.props.santaDat.accuracy && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
+                            <span className="material-icons">360</span>
+                            <p>{this.props.santaDat.accuracy.split("+")[0]} ft</p>
+                        </div>}
+                        {this.props.santaDat.bear && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
+                            <span className="material-icons">explore</span>
+                            <p>{this.props.santaDat.bear.split("+")[0]}</p>
+                        </div>}
+                        {this.props.santaDat.alt && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
+                            <span className="material-icons">flight_takeoff</span>
+                            <p>{this.props.santaDat.alt.split("+")[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
+                        </div>}
+                        {this.props.santaDat.speed && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
+                            <span className="material-icons">speed</span>
+                            <p>{this.props.santaDat.speed.split("+")[0]} mph</p>
+                        </div>}
                     </div>
                     <div className="TrackerMenuFooter">
                         {this.state.locationPrompt &&
@@ -129,15 +129,14 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                                 theme={this.props.currentTheme}
                                 getUserLocation={this.props.getUserLocation}
                             />}
-                        {!userLocation.disable && <Button id="tracker-menu-location-btn-allowed" variant="secondary" onClick={this.toggleLocationPrompt}><p><span className="material-icons">my_location</span></p></Button>}
-                        {userLocation.disable && <Button id="tracker-menu-location-btn-denied" variant="secondary" onClick={this.toggleLocationPrompt}><p><span className="material-icons">location_disabled</span></p></Button>}
-                        <Button id="tracker-menu-close-btn" variant="secondary" onClick={this.toggleMenu}><p><span className="material-icons">clear</span></p></Button>
+                        {!userLocation.disable && <div className="TrackerMenuLocationAllowed" id={"tracker-menu-location-btn-allowed-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">my_location</span></div>}
+                        {userLocation.disable && <div className="TrackerMenuLocationDenied" id={"tracker-menu-location-btn-denied-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">location_disabled</span></div>}
+                        <div className="TrackerMenuCloseBtn" id={"tracker-menu-close-btn-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleMenu}><p><span className="material-icons">clear</span></p></div>
                     </div>
-                </div>} 
+                </div>}
             </div>
         )
     }
-
 }
 
 export default TrackerMenu

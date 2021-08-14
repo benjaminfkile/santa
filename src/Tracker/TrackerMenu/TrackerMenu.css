@@ -1,8 +1,8 @@
 .TrackerMenu {
     position: fixed;
-    top: 0px;
-    right: 0px;
     width: 300px;
+    overflow-y: hidden;
+    overflow-x: hidden;
 }
 
 .TrackerMenuBtn {
@@ -12,6 +12,8 @@
     position: fixed;
     top: 5px;
     right: 5px;
+    cursor: pointer;
+    user-select: none;
     /* border: 2px solid; */
     /* border-radius: 50%; */
     /* background-color: rgba(0, 0, 0, .5); */
@@ -26,6 +28,7 @@
 
 .TrackerMenuContent {
     display: block;
+
     border-bottom-left-radius: 10px;
     -webkit-animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
     animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
@@ -85,17 +88,93 @@
     width: 290px; */
     margin-left: 3px;
     margin-right: 3px;
-    margin-bottom: 5px;
+    height: 45px;
 }
 
-#tracker-menu-close-btn {
-    background-color: #3c495a;
-    float: right;
+.TrackerMenuCloseBtn {
+    position: absolute;
+    right: 0px;
+    bottom: -18px;
 }
 
-#tracker-menu-close-btn p {
+.TrackerMenuCloseBtn span {
     padding: 0px;
-    margin-bottom: -6px;
+    margin: 0px;
+    font-size: 30px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.TrackerMenuLocationAllowed, .TrackerMenuLocationDenied {
+    position: absolute;
+    left: 5px;
+    bottom: 0px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.TrackerMenuLocationAllowed span, .TrackerMenuLocationDenied span {
+    font-size: 30px;
+}
+
+#tracker-menu-location-btn-allowed-night {
+    color: #28a745;
+}
+
+#tracker-menu-location-btn-denied-night {
+    color: #dc3545
+}
+
+#tracker-menu-location-btn-allowed-aubergine {
+    color: #28a745;
+}
+
+#tracker-menu-location-btn-denied-aubergine {
+    color: #dc3545
+}
+
+#tracker-menu-location-btn-allowed-retro {
+    color: #dfd2ae;
+}
+
+#tracker-menu-location-btn-denied-retro {
+    color: #dc3545
+}
+
+#tracker-menu-location-btn-allowed-silver {
+    color: #f7f7f7;
+}
+
+#tracker-menu-location-btn-denied-silver {
+    color: #dc3545
+}
+
+#tracker-menu-location-btn-allowed-dark {
+    color: #b5b5b5;
+}
+
+#tracker-menu-location-btn-denied-dark {
+    color: #dc3545
+}
+
+#tracker-menu-location-btn-allowed-standard {
+    color: #28a745;
+}
+
+#tracker-menu-location-btn-denied-standard {
+    color: #dc3545
+}
+
+#tracker-menu-close-btn-night {
+    color: #ffffff;
+}
+
+#tracker-menu-close-btn-dark {
+    color: #b5b5b5;
+}
+
+#tracker-menu-close-btn-aubergine{
+    color: #FFFFFF;
 }
 
 .TerrainToggle, .RoadMapToggle, .SnowToggle {
@@ -150,11 +229,11 @@
     margin-left: -2px;
 }
 
-#snow-toggled-on span, #snow-toggled-off span{
+#snow-toggled-on span, #snow-toggled-off span {
     margin-left: 2px;
 }
 
-#roadmap-toggled-on span, #roadmap-toggled-off span{
+#roadmap-toggled-on span, #roadmap-toggled-off span {
     margin-left: -10px;
 }
 
@@ -286,25 +365,11 @@
     background-color: #2d5f75;
 }
 
-#tracker-menu-location-btn-allowed p, #tracker-menu-location-btn-denied p {
-    padding: 0px;
-    margin-bottom: -6px;
-}
-
-#tracker-menu-location-btn-denied span {
-    color: #d9534f;
-}
-
-#tracker-menu-location-btn-allowed span {
-    color: #5cb85c;
-}
-
 .TrackerMenuSantaDatWrapper {
     display: grid;
     grid-template-columns: auto auto auto;
     margin-bottom: 4px;
     padding: 3px;
-
 }
 
 .TrackerMenuSantaDatWrapperLeft, .TrackerMenuSantaDatWrapperRight {
@@ -315,10 +380,9 @@
     display: flex;
     /* align-items: center;
     justify-content: center; */
-
 }
 
-.TrackerMenuSantaDatItem p{
+.TrackerMenuSantaDatItem p {
     font-size: 14px;
 }
 
@@ -333,7 +397,7 @@
 }
 
 #tracker-menu-santa-dat-wrapper-standard {
-    background-color: #bdd8bb;
+    /* background-color: #bdd8bb; */
     color: #000000;
 }
 
@@ -342,7 +406,7 @@
 }
 
 #tracker-menu-santa-dat-wrapper-retro {
-    background-color: #dfd2ae;
+    /* background-color: #dfd2ae; */
     color: #000000;
 }
 
@@ -351,7 +415,7 @@
 }
 
 #tracker-menu-santa-dat-wrapper-silver {
-    background-color: #737373;
+    /* background-color: #737373; */
     color: #000000;
 }
 
@@ -360,7 +424,7 @@
 }
 
 #tracker-menu-santa-dat-wrapper-dark {
-    background-color: #434343;
+    /* background-color: #434343; */
     color: #b5b5b5;
 }
 
@@ -377,7 +441,7 @@
 }
 
 #tracker-menu-santa-dat-wrapper-aubergine {
-    background-color: #2d5f75;
+    /* background-color: #2d5f75; */
     color: #ffffff;
 }
 
