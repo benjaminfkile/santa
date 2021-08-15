@@ -31,7 +31,7 @@ class Tracker extends Component {
     userToSantaFlightPath = null
     userLocationInterval
     getSantaInterval
-    updateInterval = 5000
+    updateInterval = 1000
     rpsHistory = []
 
     constructor(props) {
@@ -67,6 +67,7 @@ class Tracker extends Component {
     getSanta = () => {
         axios.get(`https://wmsfo-location-data.herokuapp.com/api/location-data`)
             .then(res => {
+                console.log(res.data)
                 if (res.data) {
                     this.setState({ santaDat: res.data })
                     this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
@@ -74,9 +75,9 @@ class Tracker extends Component {
                     this.rpsHistory.unshift(res.data.rps)
                     this.autoRecenter()
                 }
-                if (parseInt(res.data.throttle) !== this.updateInterval) {
+                if (res.data.throttle !== this.updateInterval) {
                     clearInterval(this.getSantaInterval)
-                    this.updateInterval = parseInt(res.data.throttle)
+                    this.updateInterval = res.data.throttle * 1000
                     this.getSantaInterval = setInterval(this.getSanta, this.updateInterval)
                 }
                 // console.log("Online: " + Math.floor(parseInt(res.data.rps) * (parseInt(res.data.dynos))))
@@ -96,7 +97,7 @@ class Tracker extends Component {
             this.removePoly()
             this.setState({ distanceFromUserToSanta: false })
         }
-        this.setState({online: this.averageUsers()})
+        this.setState({ online: this.averageUsers() })
     }
 
     autoRecenter = () => {
@@ -139,14 +140,17 @@ class Tracker extends Component {
             this.rpsHistory.length = 10
         }
         let total = 0;
+        let rps = this.state.santaDat.rps
+        let dynos = this.state.santaDat.dynos
+        let throttle = this.state.santaDat.throttle
         for (let i = 0; i < this.rpsHistory.length; i++) {
             total += this.rpsHistory[i]
         }
-        total = (Math.floor(((parseInt(total) * (parseInt(this.state.santaDat.dynos))) / this.rpsHistory.length)) + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-        if(total){
-            return total
-        }else{
-            return "?"
+        total = (rps * dynos) * throttle
+        if (!isNaN(total) && total > 100) {
+            return (total + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        } else {
+            return "< 100"
         }
     }
 
