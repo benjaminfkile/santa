@@ -32,7 +32,7 @@ class Tracker extends Component {
     userLocationInterval
     getSantaInterval
     updateInterval = 1000
-    rpsHistory = []
+    // rpsHistory = []
 
     constructor(props) {
         super(props);
@@ -135,16 +135,16 @@ class Tracker extends Component {
     }
 
     averageUsers = () => {
-        if (this.rpsHistory.length > 9) {
-            this.rpsHistory.length = 10
-        }
+        // if (this.rpsHistory.length > 9) {
+        //     this.rpsHistory.length = 10
+        // }
         let total = 0;
         let rps = this.state.santaDat.rps
         let dynos = this.state.santaDat.dynos
         let throttle = this.state.santaDat.throttle
-        for (let i = 0; i < this.rpsHistory.length; i++) {
-            total += this.rpsHistory[i]
-        }
+        // for (let i = 0; i < this.rpsHistory.length; i++) {
+        //     total += this.rpsHistory[i]
+        // }
         total = Math.ceil((rps * dynos) * throttle)
         if (!isNaN(total) && total > 0) {
             return (total + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
