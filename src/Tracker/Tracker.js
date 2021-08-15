@@ -149,23 +149,30 @@ class Tracker extends Component {
         if (!isNaN(total) && total > 0) {
             return (total + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
         } else {
-            return null
+            return 1
         }
     }
 
     drawRoutePoly = () => {
+        console.log("drawing route poly")
         let color = ""
         let colorDex = -1
+        let c1 = "#cc2626"
+        let c2 = "#9acd32"
+        let c3 = "#ffffff"
+
+
+
         for (let i = 0; i < projectedRoute.length; i++) {
             colorDex++
             if (colorDex === 0) {
-                color = "#cc2626"
+                color = c1
             }
             if (colorDex === 1) {
-                color = "#9acd32"
+                color = c2
             }
             if (colorDex === 2) {
-                color = "#ffffff"
+                color = c3
                 colorDex = -1
             }
             if (i < projectedRoute.length - 1) {
@@ -227,6 +234,7 @@ class Tracker extends Component {
     setTheme = (index) => {
         this.map.setOptions({ styles: this.mapThemes[index].mapTheme })
         this.setState({ currentTheme: this.mapThemes[index].title })
+        this.drawRoutePoly()
     }
 
     toggleTerrain = () => {
