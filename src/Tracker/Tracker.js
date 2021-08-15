@@ -71,7 +71,7 @@ class Tracker extends Component {
                     this.setState({ santaDat: res.data })
                     this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
                     this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
-                    this.rpsHistory.unshift(res.data.rps)
+                    // this.rpsHistory.unshift(res.data.rps)
                     this.autoRecenter()
                 }
                 if (res.data.throttle !== this.updateInterval) {
