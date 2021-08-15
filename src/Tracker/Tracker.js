@@ -146,7 +146,7 @@ class Tracker extends Component {
         for (let i = 0; i < this.rpsHistory.length; i++) {
             total += this.rpsHistory[i]
         }
-        total = (rps * dynos) * throttle
+        total = Math.ceil((rps * dynos) * throttle)
         if (!isNaN(total) && total > 100) {
             return (total + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
         } else {
