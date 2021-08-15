@@ -47,7 +47,7 @@ class Tracker extends Component {
             zoom: 10,
             menuOpen: false,
             test: true,
-            online: "0"
+            online: null
         }
     }
 
@@ -67,7 +67,6 @@ class Tracker extends Component {
     getSanta = () => {
         axios.get(`https://wmsfo-location-data.herokuapp.com/api/location-data`)
             .then(res => {
-                console.log(res.data)
                 if (res.data) {
                     this.setState({ santaDat: res.data })
                     this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
@@ -147,10 +146,10 @@ class Tracker extends Component {
             total += this.rpsHistory[i]
         }
         total = Math.ceil((rps * dynos) * throttle)
-        if (!isNaN(total) && total > 100) {
+        if (!isNaN(total) && total > 0) {
             return (total + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
         } else {
-            return "< 100"
+            return null
         }
     }
 
@@ -281,6 +280,7 @@ class Tracker extends Component {
                 <Map
                     id="Map"
                     onMapLoad={map => {
+                        console.log("map load")
                         this.setMapOptions(map)
                         let mapIcon = {
                             url: './res/santa-icon.png',
@@ -332,7 +332,7 @@ class Tracker extends Component {
                         <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">remove</span></div>
                     </div>}
                 </div>}
-                {!this.state.menuOpen && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
+                {!this.state.menuOpen && this.state.online && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
                     <span className="material-icons">people</span>
                     <p>{this.state.online}</p>
                 </div>}
