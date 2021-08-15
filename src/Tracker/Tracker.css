@@ -55,7 +55,7 @@
 
 #distance-from-user-to-santa-night {
   background-color: rgba(0, 0, 0, .5);
-  color: #f4f4f5;
+  color: #5d5d5d;
   border-radius: 8px;
   box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
   font-weight: 500;
@@ -89,7 +89,7 @@
   background-color: #ffffff1c;
   border-radius: 8px;
   box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
-  color: #f7f7f7;
+  color: #929292;
   font-weight: 500;
 }
 
@@ -97,7 +97,7 @@
   background-color: #21556cad;
   border-radius: 8px;
   box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
-  color: #f7f7f7;
+  color: #929292;
   font-weight: 500;
 }
 
@@ -122,7 +122,7 @@ body {
 
 .MapZoomWrapper {
   position: fixed;
-  bottom: 0px;
+  bottom: 7px;
   right: 5px;
   width: 45px;
   height: 105px;
@@ -205,7 +205,7 @@ body {
 
 .CenterMapBtnWrapper {
   position: fixed;
-  bottom: 0px;
+  bottom: 7px;
   right: 5px;
   width: 45px;
   height: 45px;
@@ -339,7 +339,7 @@ body {
   overflow: hidden;
   cursor: pointer;
   transition: background-color 0.16s;
-  color: #5d5d5d;
+  color: #929292;
 }
 
 #center-map-btn-wrapper-standard span, #center-map-btn-wrapper-retro span {
