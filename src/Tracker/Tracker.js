@@ -265,7 +265,7 @@ class Tracker extends Component {
         })
         this.drawRoutePoly()
         const self = this
-        window.google.maps.event.addListener(map, 'dragend', function () { self.handleMapDrag() });
+        window.google.maps.event.addListener(map, 'dragstart', function () { self.handleMapDrag() });
     }
 
     toggleSnow = () => {
