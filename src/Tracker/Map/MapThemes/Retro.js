@@ -34,6 +34,14 @@ const Retro = [
     },
     {
         "featureType": "administrative.land_parcel",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "administrative.land_parcel",
         "elementType": "geometry.stroke",
         "stylers": [
             {
@@ -47,6 +55,14 @@ const Retro = [
         "stylers": [
             {
                 "color": "#ae9e90"
+            }
+        ]
+    },
+    {
+        "featureType": "administrative.neighborhood",
+        "stylers": [
+            {
+                "visibility": "off"
             }
         ]
     },
@@ -70,10 +86,27 @@ const Retro = [
     },
     {
         "featureType": "poi",
+        "elementType": "labels.text",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "poi",
         "elementType": "labels.text.fill",
         "stylers": [
             {
                 "color": "#93817c"
+            }
+        ]
+    },
+    {
+        "featureType": "poi.business",
+        "stylers": [
+            {
+                "visibility": "off"
             }
         ]
     },
@@ -101,6 +134,24 @@ const Retro = [
         "stylers": [
             {
                 "color": "#f5f1e6"
+            }
+        ]
+    },
+    {
+        "featureType": "road",
+        "elementType": "labels",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "road",
+        "elementType": "labels.icon",
+        "stylers": [
+            {
+                "visibility": "off"
             }
         ]
     },
@@ -159,6 +210,14 @@ const Retro = [
         ]
     },
     {
+        "featureType": "transit",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
         "featureType": "transit.line",
         "elementType": "geometry",
         "stylers": [
@@ -205,6 +264,15 @@ const Retro = [
     },
     {
         "featureType": "water",
+        "elementType": "labels.text",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "water",
         "elementType": "labels.text.fill",
         "stylers": [
             {
@@ -213,5 +281,4 @@ const Retro = [
         ]
     }
 ]
-
 export default Retro

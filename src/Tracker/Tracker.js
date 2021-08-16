@@ -234,7 +234,7 @@ class Tracker extends Component {
     setTheme = (index) => {
         this.map.setOptions({ styles: this.mapThemes[index].mapTheme })
         this.setState({ currentTheme: this.mapThemes[index].title })
-        this.drawRoutePoly()
+        // this.drawRoutePoly()
     }
 
     toggleTerrain = () => {

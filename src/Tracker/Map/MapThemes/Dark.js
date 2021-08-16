@@ -67,11 +67,36 @@ const Dark = [
         ]
     },
     {
+        "featureType": "administrative.neighborhood",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "poi",
+        "elementType": "labels.text",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
         "featureType": "poi",
         "elementType": "labels.text.fill",
         "stylers": [
             {
                 "color": "#757575"
+            }
+        ]
+    },
+    {
+        "featureType": "poi.business",
+        "stylers": [
+            {
+                "visibility": "off"
             }
         ]
     },
@@ -108,6 +133,24 @@ const Dark = [
         "stylers": [
             {
                 "color": "#2c2c2c"
+            }
+        ]
+    },
+    {
+        "featureType": "road",
+        "elementType": "labels",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "road",
+        "elementType": "labels.icon",
+        "stylers": [
+            {
+                "visibility": "off"
             }
         ]
     },
@@ -158,6 +201,14 @@ const Dark = [
     },
     {
         "featureType": "transit",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "transit",
         "elementType": "labels.text.fill",
         "stylers": [
             {
@@ -176,6 +227,15 @@ const Dark = [
     },
     {
         "featureType": "water",
+        "elementType": "labels.text",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "water",
         "elementType": "labels.text.fill",
         "stylers": [
             {
@@ -184,5 +244,4 @@ const Dark = [
         ]
     }
 ]
-
 export default Dark
