@@ -122,11 +122,11 @@ body {
 
 .MapZoomWrapper {
   position: fixed;
-  bottom: 7px;
+  bottom: 0px;
   right: 5px;
   width: 45px;
   height: 105px;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
   border-radius: 8px;
   -webkit-animation: slide-in-right 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
@@ -205,11 +205,11 @@ body {
 
 .CenterMapBtnWrapper {
   position: fixed;
-  bottom: 7px;
+  bottom: 0px;
   right: 5px;
   width: 45px;
   height: 45px;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   -webkit-animation: slide-in-right 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
   animation: slide-in-right 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
@@ -357,10 +357,10 @@ body {
 .OnlineUsers{
   position: fixed;
   display: flex;
-  bottom: 7px;
+  bottom: 0px;
   left: 5px;
   height: 40px;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
   border-radius: 8px;
   padding-top: 5px;
