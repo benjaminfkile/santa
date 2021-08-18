@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import '../Snow/Snow.css'
+import './Snow.css'
 
 class Snow extends Component {
     

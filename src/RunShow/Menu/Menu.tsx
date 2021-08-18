@@ -1,8 +1,8 @@
 import { Component } from "react"
-import LocationPrompt from "../../UserLocation/LocationPrompt"
+import LocationPrompt from "../../Utils/UserLocation/LocationPrompt"
 import { Button } from "react-bootstrap"
-import "./TrackerMenu.css"
-import userLocation from "../../UserLocation/UserLocation"
+import "./Menu.css"
+import userLocation from "../../Utils/UserLocation/UserLocation"
 
 interface TrackerMenuProps {
     changeTheme: Function

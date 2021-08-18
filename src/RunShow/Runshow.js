@@ -1,17 +1,16 @@
 import { Component } from "react";
-import axios from "axios";
-import Map from "./Map/Map"
-import userLocation from "../UserLocation/UserLocation";
-import Standard from './Map/MapThemes/Standard'
-import Retro from './Map/MapThemes/Retro'
-import Silver from './Map/MapThemes/Silver'
-import Dark from './Map/MapThemes/Dark'
-import Night from './Map/MapThemes/Night'
-import Aubergine from './Map/MapThemes/Aubergine'
-import TrackerMenu from "./TrackerMenu/TrackerMenu"
-import Snow from "../Snow/Snow"
-import projectedRoute from "../ProjectedRoute/ProjectedRoute";
-import "./Tracker.css"
+import Map from "./Map"
+import userLocation from "../Utils/UserLocation/UserLocation";
+import Standard from './MapThemes/Standard'
+import Retro from './MapThemes/Retro'
+import Silver from './MapThemes/Silver'
+import Dark from './MapThemes/Dark'
+import Night from './MapThemes/Night'
+import Aubergine from './MapThemes/Aubergine'
+import TrackerMenu from "./Menu/Menu"
+import Snow from "../Utils/Snow/Snow"
+import projectedRoute from "../Utils/ProjectedRoute";
+import "./Runshow.css"
 
 class Tracker extends Component {
 
@@ -26,13 +25,10 @@ class Tracker extends Component {
         ]
     map
     mapType = "terrain"
-    marker
+    marker = null
     userToSantaCoords = [{}, {}]
     userToSantaFlightPath = null
-    userLocationInterval
-    getSantaInterval
-    updateInterval = 1000
-    // rpsHistory = []
+    updateinterval = 1000
 
     constructor(props) {
         super(props);
@@ -52,41 +48,27 @@ class Tracker extends Component {
     }
 
     componentDidMount() {
-        this.getSanta()
-        this.userLocationInterval = setInterval(this.getUserLocation, 1000)
-        this.getSantaInterval = setInterval(this.getSanta, this.updateInterval)
+        setInterval(this.update, this.updateinterval)
     }
 
     componentWillUnmount() {
-        clearInterval(this.userLocationInterval)
-        clearInterval(this.getSantaInterval)
+        clearInterval(this.updateinterval)
+        this.updateinterval = null
         this.wakeLock = false
         this.setState({})
     }
 
-    getSanta = () => {
-        axios.get(`https://wmsfo-location-data.herokuapp.com/api/location-data`)
-            .then(res => {
-                if (res.data) {
-                    this.setState({ santaDat: res.data })
-                    this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
-                    this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
-                    // this.rpsHistory.unshift(res.data.rps)
-                    this.autoRecenter()
-                }
-                if (res.data.throttle !== this.updateInterval) {
-                    clearInterval(this.getSantaInterval)
-                    this.updateInterval = res.data.throttle * 1000
-                    this.getSantaInterval = setInterval(this.getSanta, this.updateInterval)
-                }
-                // console.log("Online: " + Math.floor(parseInt(res.data.rps) * (parseInt(res.data.dynos))))
-            })
+    update = () => {
+        this.averageUsers()
+        this.getUserLocation()
     }
 
     getUserLocation = () => {
         if (userLocation.coordinates.lat
+            && this.props.santaDat.lat
             && userLocation.coordinates.lat !== this.userToSantaCoords[1].lat
             && userLocation.coordinates.lng !== this.userToSantaCoords[1].lng) {
+            this.userToSantaCoords[0] = { lat: Number(this.props.santaDat.lat), lng: Number(this.props.santaDat.lng) }
             this.userToSantaCoords[1] = { lat: Number(userLocation.coordinates.lat), lng: Number(userLocation.coordinates.lng) }
         }
         if (this.userToSantaCoords[1].lat && !userLocation.disable) {
@@ -96,17 +78,16 @@ class Tracker extends Component {
             this.removePoly()
             this.setState({ distanceFromUserToSanta: false })
         }
-        this.setState({ online: this.averageUsers() })
     }
 
     autoRecenter = () => {
-        if (this.state.mapCentered) {
-            this.map.setCenter({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
+        if (this.state.mapCentered && this.props.santaDat) {
+            this.map.setCenter({ lat: Number(this.props.santaDat.lat), lng: Number(this.props.santaDat.lng) })
         }
     }
 
     userRecenter = () => {
-        this.map.setCenter({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
+        this.map.setCenter({ lat: Number(this.props.santaDat.lat), lng: Number(this.props.santaDat.lng) })
         this.setState({ mapCentered: true })
     }
 
@@ -135,33 +116,25 @@ class Tracker extends Component {
     }
 
     averageUsers = () => {
-        // if (this.rpsHistory.length > 9) {
-        //     this.rpsHistory.length = 10
-        // }
         let total = 0;
-        let rps = this.state.santaDat.rps
-        let dynos = this.state.santaDat.dynos
-        let throttle = this.state.santaDat.throttle
-        // for (let i = 0; i < this.rpsHistory.length; i++) {
-        //     total += this.rpsHistory[i]
-        // }
+        let rps = this.props.santaDat.rps
+        let dynos = this.props.santaDat.dynos
+        let throttle = this.props.santaDat.throttle
         total = (rps * dynos) * throttle
         if (!isNaN(total) && total > 0) {
-            return (total + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            this.setState({ online: (total + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",") })
         } else {
-            return 1
+            this.setState({ online: 1 })
         }
     }
 
     drawRoutePoly = () => {
-        console.log("drawing route poly")
+        // console.log("drawing route poly")
         let color = ""
         let colorDex = -1
         let c1 = "#cc2626"
         let c2 = "#9acd32"
         let c3 = "#ffffff"
-
-
 
         for (let i = 0; i < projectedRoute.length; i++) {
             colorDex++
@@ -282,13 +255,18 @@ class Tracker extends Component {
 
     render() {
 
+        if (this.marker) {
+            this.marker.setPosition({ lat: Number(this.props.santaDat.lat), lng: Number(this.props.santaDat.lng) })
+            this.autoRecenter()
+        }
+
         return (
 
             <div className="TrackerContainer">
                 <Map
                     id="Map"
                     onMapLoad={map => {
-                        console.log("map load")
+                        // console.log("map load")
                         this.setMapOptions(map)
                         let mapIcon = {
                             url: './res/santa-icon.png',
@@ -299,7 +277,7 @@ class Tracker extends Component {
 
                         let marker = new window.google.maps.Marker(
                             {
-                                position: { lat: parseFloat(this.state.santaDat.lat), lng: parseFloat(this.state.santaDat.lng) },
+                                position: { lat: parseFloat(this.props.santaDat.lat), lng: parseFloat(this.props.santaDat.lng) },
                                 map: map,
                                 label: '',
                                 icon: mapIcon
@@ -316,7 +294,7 @@ class Tracker extends Component {
                     mapType={this.mapType}
                     toggleSnow={this.toggleSnow}
                     menuOpen={this.menuOpen}
-                    santaDat={this.state.santaDat}
+                    santaDat={this.props.santaDat}
                     getUserLocation={this.getUserLocation}
                 />}
                 {!userLocation.disable && this.state.distanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>

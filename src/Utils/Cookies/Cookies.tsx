@@ -9,7 +9,7 @@ const cookies = {
                 c = c.substring(1);
             }
             if (c.indexOf(name) === 0) {
-                console.log("Returning User" )
+                // console.log("Returning User" )
                 return true
             }
         }
@@ -20,7 +20,7 @@ const cookies = {
         d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
         var expires = "expires=" + d.toUTCString();
         document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-        console.log("New User" )
+        // console.log("New User" )
     }
 }
 export default cookies
