@@ -16,30 +16,6 @@
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	user-select: none;
-	/* background-image: -webkit-radial-gradient(
-		center,
-		circle farthest-corner,
-		rgba(255, 255, 255, 1) 40%,
-		rgba(255, 255, 255, 0) 100%
-	);
-	background-image: -moz-radial-gradient(
-		center,
-		circle farthest-corner,
-		rgba(255, 255, 255, 1) 40%,
-		rgba(255, 255, 255, 0) 100%
-	);
-	background-image: -ms-radial-gradient(
-		center,
-		circle farthest-corner,
-		rgba(255, 255, 255, 1) 40%,
-		rgba(255, 255, 255, 0) 100%
-	);
-	background-image: radial-gradient(
-		center,
-		circle farthest-corner,
-		rgba(255, 255, 255, 1) 40%,
-		rgba(255, 255, 255, 0) 100%
-	); */
 	background-color: white;
 }
 
@@ -49,4 +25,5 @@
 	height: 0px;
 	top: 0px;
 	left: 0px;
+	display: none;
 }

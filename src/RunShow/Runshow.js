@@ -40,7 +40,7 @@ class Tracker extends Component {
             lat: 46.833,
             lng: -114.030,
             currentTheme: this.mapThemes[4].title,
-            snow: true,
+            snow: false,
             santaDat: {},
             distanceFromUserToSanta: null,
             mapCentered: true,

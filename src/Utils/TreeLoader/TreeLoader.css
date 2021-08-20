@@ -39,7 +39,7 @@
 .tree svg .p {
     stroke-dashoffset: 700;
     stroke-dasharray: 70;
-    animation: svganimation 40s linear forwards infinite;
+    animation: svganimation 20s linear forwards infinite;
 }
 
 .tree svg .c {
@@ -48,36 +48,36 @@
 }
 
 .tree svg .c1 {
-    animation: svganimation 100s linear forwards infinite;
+    animation: svganimation 50s linear forwards infinite;
 }
 
 .tree svg .c2 {
-    animation: svganimation 100s linear forwards infinite;
+    animation: svganimation 50s linear forwards infinite;
     animation-delay: .05s;
 }
 
 .tree svg .c3 {
-    animation: svganimation 100s linear forwards infinite;
+    animation: svganimation 50s linear forwards infinite;
     animation-delay: .25s;
 }
 
 .tree svg .c4 {
-    animation: svganimation 100s linear forwards infinite;
+    animation: svganimation 50s linear forwards infinite;
     animation-delay: .30s;
 }
 
 .tree svg .c5 {
-    animation: svganimation 100s linear forwards infinite;
-    animation-delay: .20s;
+    animation: svganimation 50s linear forwards infinite;
+    animation-delay: .50s;
 }
 
 .tree svg .c6 {
-    animation: svganimation 100s linear forwards infinite;
+    animation: svganimation 50s linear forwards infinite;
     animation-delay: .10s;
 }
 
 .tree svg .c7 {
-    animation: svganimation 100s linear forwards infinite;
+    animation: svganimation 50s linear forwards infinite;
     animation-delay: .15s;
 }
 
