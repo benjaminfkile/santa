@@ -269,7 +269,7 @@ class Tracker extends Component {
 
     loadHandler = () => {
         this.loadHandlerStep++
-        if (this.props.santaDat && this.loadHandlerStep > 2) {
+        if (this.props.santaDat && this.loadHandlerStep > 3) {
             this.setState({ loading: false })
             clearInterval(this.loadHandlerInterval)
         }
