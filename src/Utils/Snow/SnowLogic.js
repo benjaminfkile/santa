@@ -46,9 +46,9 @@ const snow = {
                 this.melt = false;
             }
 
-            // var dx = mouseX - this.x;
-            // var dy = mouseY - this.y;
-            // this.hit = !this.melt && this.y < mouseY && dx * dx + dy * dy < 2400;
+            var dx = mouseX - this.x;
+            var dy = mouseY - this.y;
+            this.hit = !this.melt && this.y < mouseY && dx * dx + dy * dy < 2400;
         };
 
         Snowflake.prototype.draw = function () {

@@ -8,7 +8,6 @@ class Snow extends Component {
         snow.renderSnow("snow")
     }
 
-
     render() {
 
         return (
