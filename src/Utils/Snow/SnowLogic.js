@@ -4,7 +4,7 @@ const snow = {
     Snowflake: (function () {
 
         var flakes;
-        var flakesTotal = 50;
+        var flakesTotal = 25;
         var wind = 0;
         var mouseX;
         var mouseY;
@@ -70,7 +70,7 @@ const snow = {
             flakes = [];
 
             for (var i = flakesTotal; i--;) {
-                var size = (Math.random() + 0.2) * 12 + 1;
+                var size = (Math.random() + 0.2) * 6 + 1;
                 var flake = new Snowflake(
                     size,
                     Math.random() * window.innerWidth,
@@ -82,17 +82,17 @@ const snow = {
                 flakes.push(flake);
             }
 
-            container.onmousemove = function (event) {
-                mouseX = event.clientX;
-                mouseY = event.clientY;
-                wind = (mouseX - window.innerWidth / 2) / window.innerWidth * 6;
-            };
+            // container.onmousemove = function (event) {
+            //     mouseX = event.clientX;
+            //     mouseY = event.clientY;
+            //     wind = (mouseX - window.innerWidth / 2) / window.innerWidth * 6;
+            // };
 
-            container.ontouchstart = function (event) {
-                mouseX = event.targetTouches[0].clientX;
-                mouseY = event.targetTouches[0].clientY;
-                event.preventDefault();
-            };
+            // container.ontouchstart = function (event) {
+            //     mouseX = event.targetTouches[0].clientX;
+            //     mouseY = event.targetTouches[0].clientY;
+            //     event.preventDefault();
+            // };
 
             window.ondeviceorientation = function (event) {
                 if (event) {
