@@ -249,9 +249,16 @@ class Tracker extends Component {
     }
 
     toggleSnow = () => {
+        let snow = document.getElementById("snow")
         if (this.state.snow) {
+            if (snow) {
+                snow.style.display = "none"
+            }
             this.setState({ snow: false })
         } else {
+            if (snow) {
+                snow.style.display = "block"
+            }
             this.setState({ snow: true })
         }
     }
@@ -282,7 +289,6 @@ class Tracker extends Component {
                     <Map
                         id="Map"
                         onMapLoad={map => {
-                            // console.log("map load")
                             this.setMapOptions(map)
                             let mapIcon = {
                                 url: './res/santa-icon.png',
@@ -338,12 +344,12 @@ class Tracker extends Component {
                         <span className="material-icons">people</span>
                         <p>{this.state.online}</p>
                     </div>}
-                    {this.state.snow && <Snow />}
                 </div>}
                 {this.state.loading &&
                     <div className="TrackerLoading">
                         <TreeLoader />
                     </div>}
+                <Snow />
             </div>
         )
     }
