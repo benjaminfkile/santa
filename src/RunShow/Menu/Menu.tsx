@@ -37,7 +37,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
         this.state = {
             menuOpen: false,
             mapTypeId: this.props.mapType,
-            snow: false,
+            snow: true,
             locationPrompt: false
         }
     }

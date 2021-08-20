@@ -40,7 +40,7 @@ class Tracker extends Component {
             lat: 46.833,
             lng: -114.030,
             currentTheme: this.mapThemes[4].title,
-            snow: false,
+            snow: true,
             santaDat: {},
             distanceFromUserToSanta: null,
             mapCentered: true,
@@ -251,13 +251,13 @@ class Tracker extends Component {
     toggleSnow = () => {
         let snow = document.getElementById("snow")
         if (this.state.snow) {
-            if (snow) {
-                snow.style.display = "none"
+            if(snow){
+                snow.style.display  = "none"
             }
             this.setState({ snow: false })
         } else {
-            if (snow) {
-                snow.style.display = "block"
+            if(snow){
+                snow.style.display  = "block"
             }
             this.setState({ snow: true })
         }
@@ -283,7 +283,6 @@ class Tracker extends Component {
         }
 
         return (
-
             <div className="Runshow">
                 {!this.state.loading && <div>
                     <Map
@@ -349,7 +348,7 @@ class Tracker extends Component {
                     <div className="TrackerLoading">
                         <TreeLoader />
                     </div>}
-                <Snow />
+                {!this.state.loading && <Snow />}
             </div>
         )
     }

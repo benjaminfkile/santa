@@ -4,10 +4,8 @@ const snow = {
     Snowflake: (function () {
 
         var flakes;
-        var flakesTotal = 25;
+        var flakesTotal = 18;
         var wind = 0;
-        var mouseX;
-        var mouseY;
 
         function Snowflake(size, x, y, vx, vy) {
             this.size = size;
@@ -45,10 +43,6 @@ const snow = {
                 this.y -= window.innerHeight + this.size * 2;
                 this.melt = false;
             }
-
-            var dx = mouseX - this.x;
-            var dy = mouseY - this.y;
-            this.hit = !this.melt && this.y < mouseY && dx * dx + dy * dy < 2400;
         };
 
         Snowflake.prototype.draw = function () {
@@ -107,7 +101,6 @@ const snow = {
 
     }()),
     renderSnow: (id) => {
-        console.log(id)
         setTimeout(function() {
             snow.Snowflake.init(document.getElementById(id));
         }, 500);
