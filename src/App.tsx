@@ -27,8 +27,7 @@ class App extends Component<{}, WimsfoTypes>{
       runShow: true,
       endShow: false,
       returnUser: false,
-      santaDat: null
-
+      santaDat: null,
     }
   }
 
@@ -53,6 +52,7 @@ class App extends Component<{}, WimsfoTypes>{
 
   componentWillUnmount() {
     this.noSleep.disable()
+    clearInterval(this.getSantaInterval)
   }
 
   getSanta = () => {
@@ -60,17 +60,12 @@ class App extends Component<{}, WimsfoTypes>{
       .then(res => {
         if (res.data) {
           this.setState({ santaDat: res.data })
-          // this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
-          // this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
-          // this.rpsHistory.unshift(res.data.rps)
-          // this.autoRecenter()
         }
         if (res.data.throttle !== this.updateInterval) {
           clearInterval(this.getSantaInterval)
           this.updateInterval = res.data.throttle * 1000
           this.getSantaInterval = setInterval(this.getSanta, this.updateInterval)
         }
-        // console.log("Online: " + Math.floor(parseInt(res.data.rps) * (parseInt(res.data.dynos))))
       })
   }
 
