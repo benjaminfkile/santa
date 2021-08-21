@@ -1,10 +1,11 @@
 import { Component } from "react"
+import 'bootstrap/dist/css/bootstrap.min.css'
 import Runshow from "./RunShow/Runshow"
 import cookies from "./Utils/Cookies/Cookies"
 import NoSleep from 'nosleep.js';
-
-import 'bootstrap/dist/css/bootstrap.min.css'
 import axios from "axios";
+import Preshow from "./PreShow/PreShow";
+import Snow from "./Utils/Snow/Snow";
 
 type WimsfoTypes = {
   preShow: boolean
@@ -41,7 +42,9 @@ class App extends Component<{}, WimsfoTypes>{
     }
     try {
       setTimeout(() => {
-        this.noSleep.enable()
+        if (this.state.runShow) {
+          this.noSleep.enable()
+        }
       }, 5000)
     } catch (err) {
       console.log("failed to enable no-sleep")
@@ -77,6 +80,12 @@ class App extends Component<{}, WimsfoTypes>{
             santaDat={this.state.santaDat}
           />
         </div>}
+        {this.state.preShow && <div className="PreShow">
+          <Preshow
+            santaDat={this.state.santaDat}
+          />
+        </div>}
+        <Snow/>
       </div>
     )
   }

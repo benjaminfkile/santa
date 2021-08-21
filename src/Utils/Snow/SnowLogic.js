@@ -76,18 +76,6 @@ const snow = {
                 flakes.push(flake);
             }
 
-            // container.onmousemove = function (event) {
-            //     mouseX = event.clientX;
-            //     mouseY = event.clientY;
-            //     wind = (mouseX - window.innerWidth / 2) / window.innerWidth * 6;
-            // };
-
-            // container.ontouchstart = function (event) {
-            //     mouseX = event.targetTouches[0].clientX;
-            //     mouseY = event.targetTouches[0].clientY;
-            //     event.preventDefault();
-            // };
-
             window.ondeviceorientation = function (event) {
                 if (event) {
                     wind = event.gamma / 10;

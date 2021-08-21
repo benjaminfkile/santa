@@ -8,7 +8,6 @@ import Dark from './MapThemes/Dark'
 import Night from './MapThemes/Night'
 import Aubergine from './MapThemes/Aubergine'
 import TrackerMenu from "./Menu/Menu"
-import Snow from "../Utils/Snow/Snow"
 import projectedRoute from "../Utils/ProjectedRoute";
 import TreeLoader from "../Utils/TreeLoader/TreeLoader";
 import "./Runshow.css"
@@ -251,13 +250,13 @@ class Tracker extends Component {
     toggleSnow = () => {
         let snow = document.getElementById("snow")
         if (this.state.snow) {
-            if(snow){
-                snow.style.display  = "none"
+            if (snow) {
+                snow.style.display = "none"
             }
             this.setState({ snow: false })
         } else {
-            if(snow){
-                snow.style.display  = "block"
+            if (snow) {
+                snow.style.display = "block"
             }
             this.setState({ snow: true })
         }
@@ -272,6 +271,10 @@ class Tracker extends Component {
         if (this.props.santaDat && this.loadHandlerStep > 3) {
             this.setState({ loading: false })
             clearInterval(this.loadHandlerInterval)
+            let snow = document.getElementById("snow")
+            if (snow) {
+                snow.style.display = "none"
+            }
         }
     }
 
@@ -348,7 +351,6 @@ class Tracker extends Component {
                     <div className="TrackerLoading">
                         <TreeLoader />
                     </div>}
-                {!this.state.loading && <Snow />}
             </div>
         )
     }
