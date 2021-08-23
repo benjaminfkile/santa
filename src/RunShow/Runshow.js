@@ -220,7 +220,7 @@ class Tracker extends Component {
         }
     }
 
-    setMapOptions = (map) => {
+    setMapOptions = (map) => {//wtf just trytin to roll back
         this.map = map
         this.map.setOptions({
             center: { lat: this.state.lat, lng: this.state.lng },
