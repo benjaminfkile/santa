@@ -5,7 +5,6 @@ import cookies from "./Utils/Cookies/Cookies"
 import NoSleep from 'nosleep.js';
 import axios from "axios";
 import Preshow from "./PreShow/PreShow";
-import Snow from "./Utils/Snow/Snow";
 
 type WimsfoTypes = {
   preShow: boolean
@@ -85,7 +84,6 @@ class App extends Component<{}, WimsfoTypes>{
             santaDat={this.state.santaDat}
           />
         </div>}
-        <Snow/>
       </div>
     )
   }

@@ -11,6 +11,7 @@ import TrackerMenu from "./Menu/Menu"
 import projectedRoute from "../Utils/ProjectedRoute";
 import TreeLoader from "../Utils/TreeLoader/TreeLoader";
 import "./Runshow.css"
+import Snow from "../Utils/Snow/Snow";
 
 class Tracker extends Component {
 
@@ -248,16 +249,9 @@ class Tracker extends Component {
     }
 
     toggleSnow = () => {
-        let snow = document.getElementById("snow")
         if (this.state.snow) {
-            if (snow) {
-                snow.style.display = "none"
-            }
             this.setState({ snow: false })
         } else {
-            if (snow) {
-                snow.style.display = "block"
-            }
             this.setState({ snow: true })
         }
     }
@@ -271,10 +265,6 @@ class Tracker extends Component {
         if (this.props.santaDat && this.loadHandlerStep > 3) {
             this.setState({ loading: false })
             clearInterval(this.loadHandlerInterval)
-            let snow = document.getElementById("snow")
-            if (snow) {
-                snow.style.display = "none"
-            }
         }
     }
 
@@ -351,6 +341,7 @@ class Tracker extends Component {
                     <div className="TrackerLoading">
                         <TreeLoader />
                     </div>}
+                {this.state.snow && <Snow />}
             </div>
         )
     }

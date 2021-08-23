@@ -1,19 +1,56 @@
-import { Component } from 'react'
-import snow from "./SnowLogic"
-import './Snow.css'
+import React, { Component } from 'react'
+import '../Snow/Snow.css'
 
 class Snow extends Component {
-
-    componentDidMount() {
-        snow.renderSnow("snow")
-    }
-
+    
+    //make it snow
     render() {
 
         return (
-            <div id="snow"></div>
+
+            <div className="Snow">
+                <div className="snowflakes" aria-hidden="true">
+                    <div className="snowflake" key={Math.random}>
+                        ❅
+            </div>
+                    <div className="snowflake">
+                        ❆
+            </div>
+                    <div className="snowflake">
+                        ❅
+            </div>
+                    <div className="snowflake">
+                        ❆
+            </div>
+                    <div className="snowflake">
+                        ❅
+            </div>
+                    <div className="snowflake">
+                        ❆
+            </div>
+                    <div className="snowflake">
+                        ❅
+            </div>
+                    <div className="snowflake">
+                        ❆
+            </div>
+                    <div className="snowflake">
+                        ❅
+            </div>
+                    <div className="snowflake">
+                        ❆
+            </div>
+                    <div className="snowflake">
+                        ❅
+            </div>
+                    <div className="snowflake">
+                        ❆
+            </div>
+                </div>
+            </div>
+
         )
     }
 }
 
-export default Snow
+export default Snow;
