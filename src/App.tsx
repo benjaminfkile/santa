@@ -48,7 +48,7 @@ class App extends Component<{}, WimsfoTypes>{
       console.log("failed to enable no-sleep")
     }
     //eslint-disable-next-line
-    console.log("  .-\"\"-.\r\n \/,..___\\\r\n() {_____}\r\n  (\/-@-@-\\)\r\n  {`-=^=-\'}\r\n  {  `-\'  }\r\n   {     }\r\n    `---\'")
+    console.log("\n  .-\"\"-.\r\n \/,..___\\\r\n() {_____}\r\n  (\/-@-@-\\)\r\n  {`-=^=-\'}\r\n  {  `-\'  }\r\n   {     }\r\n    `---\'\n\nDeveloped by Ben Kile\n\n")
   }
 
   componentWillUnmount() {
@@ -60,17 +60,12 @@ class App extends Component<{}, WimsfoTypes>{
       .then(res => {
         if (res.data) {
           this.setState({ santaDat: res.data })
-          // this.marker.setPosition({ lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) })
-          // this.userToSantaCoords[0] = { lat: Number(this.state.santaDat.lat), lng: Number(this.state.santaDat.lng) }
-          // this.rpsHistory.unshift(res.data.rps)
-          // this.autoRecenter()
         }
         if (res.data.throttle !== this.updateInterval) {
           clearInterval(this.getSantaInterval)
           this.updateInterval = res.data.throttle * 1000
           this.getSantaInterval = setInterval(this.getSanta, this.updateInterval)
         }
-        // console.log("Online: " + Math.floor(parseInt(res.data.rps) * (parseInt(res.data.dynos))))
       })
   }
 

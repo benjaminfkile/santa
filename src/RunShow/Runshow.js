@@ -9,6 +9,7 @@ import Night from './MapThemes/Night'
 import Aubergine from './MapThemes/Aubergine'
 import TrackerMenu from "./Menu/Menu"
 import Snow from "../Utils/Snow/Snow"
+import TreeLoader from "../Utils/TreeLoader/TreeLoader";
 import projectedRoute from "../Utils/ProjectedRoute";
 import "./Runshow.css"
 
@@ -29,6 +30,9 @@ class Tracker extends Component {
     userToSantaCoords = [{}, {}]
     userToSantaFlightPath = null
     updateinterval = 1000
+    loadHandlerInterval
+    loadHandlerSpeed = 1000
+    loadHandlerStep = 0;
 
     constructor(props) {
         super(props);
@@ -43,12 +47,14 @@ class Tracker extends Component {
             zoom: 10,
             menuOpen: false,
             test: true,
-            online: null
+            online: null,
+            loading: true,
         }
     }
 
     componentDidMount() {
         setInterval(this.update, this.updateinterval)
+        this.loadHandlerInterval = setInterval(this.loadHandler, this.loadHandlerSpeed)
     }
 
     componentWillUnmount() {
@@ -220,7 +226,7 @@ class Tracker extends Component {
         }
     }
 
-    setMapOptions = (map) => {//wtf just trytin to roll back
+    setMapOptions = (map) => {
         this.map = map
         this.map.setOptions({
             center: { lat: this.state.lat, lng: this.state.lng },
@@ -253,6 +259,15 @@ class Tracker extends Component {
         this.setState({ menuOpen: isOpen })
     }
 
+    loadHandler = () => {
+        this.loadHandlerStep++
+        if (this.props.santaDat && this.loadHandlerStep > 2) {
+            this.setState({ loading: false })
+            clearInterval(this.loadHandlerInterval)
+        }
+    }
+
+
     render() {
 
         if (this.marker) {
@@ -263,65 +278,71 @@ class Tracker extends Component {
         return (
 
             <div className="TrackerContainer">
-                <Map
-                    id="Map"
-                    onMapLoad={map => {
-                        // console.log("map load")
-                        this.setMapOptions(map)
-                        let mapIcon = {
-                            url: './res/santa-icon.png',
-                            scaledSize: new window.google.maps.Size(60, 60),
-                            origin: new window.google.maps.Point(0, 0),
-                            anchor: new window.google.maps.Point(22, 28)
-                        }
+                {!this.state.loading && <div>
+                    <Map
+                        id="Map"
+                        onMapLoad={map => {
+                            // console.log("map load")
+                            this.setMapOptions(map)
+                            let mapIcon = {
+                                url: './res/santa-icon.png',
+                                scaledSize: new window.google.maps.Size(60, 60),
+                                origin: new window.google.maps.Point(0, 0),
+                                anchor: new window.google.maps.Point(22, 28)
+                            }
 
-                        let marker = new window.google.maps.Marker(
-                            {
-                                position: { lat: parseFloat(this.props.santaDat.lat), lng: parseFloat(this.props.santaDat.lng) },
-                                map: map,
-                                label: '',
-                                icon: mapIcon
-                            });
-                        this.marker = marker
-                    }
-                    }
-                />
-                {this.state.currentTheme && <TrackerMenu
-                    changeTheme={this.setTheme}
-                    availableThemes={this.mapThemes}
-                    currentTheme={this.state.currentTheme}
-                    toggleMapTypes={this.toggleTerrain}
-                    mapType={this.mapType}
-                    toggleSnow={this.toggleSnow}
-                    menuOpen={this.menuOpen}
-                    santaDat={this.props.santaDat}
-                    getUserLocation={this.getUserLocation}
-                />}
-                {!userLocation.disable && this.state.distanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
-                    {this.state.distanceFromUserToSanta < 5281 &&
-                        <div id="distance-from-user-to-santa-content-wrapper">
-                            <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
-                            <p>{this.state.distanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
-                        </div>}
-                    {this.state.distanceFromUserToSanta > 5280 &&
-                        <div id="distance-from-user-to-santa-content-wrapper">
-                            <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
-                            <p> {((this.state.distanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
-                        </div>}
-                </div>}
-                {!this.state.menuOpen && <div className="FooterControls">
-                    {!this.state.mapCentered && <div className="CenterMapBtnWrapper" id={"center-map-btn-wrapper-" + this.state.currentTheme.toLowerCase()}>
-                        <div id="center-map-btn"><span className="material-icons" onClick={() => this.userRecenter()}>center_focus_weak</span></div>
+                            let marker = new window.google.maps.Marker(
+                                {
+                                    position: { lat: parseFloat(this.props.santaDat.lat), lng: parseFloat(this.props.santaDat.lng) },
+                                    map: map,
+                                    label: '',
+                                    icon: mapIcon
+                                });
+                            this.marker = marker
+                        }
+                        }
+                    />
+                    {this.state.currentTheme && <TrackerMenu
+                        changeTheme={this.setTheme}
+                        availableThemes={this.mapThemes}
+                        currentTheme={this.state.currentTheme}
+                        toggleMapTypes={this.toggleTerrain}
+                        mapType={this.mapType}
+                        toggleSnow={this.toggleSnow}
+                        menuOpen={this.menuOpen}
+                        santaDat={this.props.santaDat}
+                        getUserLocation={this.getUserLocation}
+                    />}
+                    {!userLocation.disable && this.state.distanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
+                        {this.state.distanceFromUserToSanta < 5281 &&
+                            <div id="distance-from-user-to-santa-content-wrapper">
+                                <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
+                                <p>{this.state.distanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
+                            </div>}
+                        {this.state.distanceFromUserToSanta > 5280 &&
+                            <div id="distance-from-user-to-santa-content-wrapper">
+                                <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
+                                <p> {((this.state.distanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
+                            </div>}
                     </div>}
-                    {this.state.mapCentered && <div className="MapZoomWrapper" id={"map-zoom-wrapper-" + this.state.currentTheme.toLowerCase()}>
-                        <div id="zoom-in-btn" onClick={() => this.handleZoomClick("+")}><span className="material-icons">add</span></div>
-                        <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">remove</span></div>
+                    {!this.state.menuOpen && <div className="FooterControls">
+                        {!this.state.mapCentered && <div className="CenterMapBtnWrapper" id={"center-map-btn-wrapper-" + this.state.currentTheme.toLowerCase()}>
+                            <div id="center-map-btn"><span className="material-icons" onClick={() => this.userRecenter()}>center_focus_weak</span></div>
+                        </div>}
+                        {this.state.mapCentered && <div className="MapZoomWrapper" id={"map-zoom-wrapper-" + this.state.currentTheme.toLowerCase()}>
+                            <div id="zoom-in-btn" onClick={() => this.handleZoomClick("+")}><span className="material-icons">add</span></div>
+                            <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">remove</span></div>
+                        </div>}
+                    </div>}
+                    {!this.state.menuOpen && this.state.online && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
+                        <span className="material-icons">people</span>
+                        <p>{this.state.online}</p>
                     </div>}
                 </div>}
-                {!this.state.menuOpen && this.state.online && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
-                    <span className="material-icons">people</span>
-                    <p>{this.state.online}</p>
-                </div>}
+                {this.state.loading &&
+                    <div className="TrackerLoading">
+                        <TreeLoader />
+                    </div>}
                 {this.state.snow && <Snow />}
             </div>
         )
