@@ -56,6 +56,11 @@ class App extends Component<{}, WimsfoTypes>{
   }
 
   getSanta = () => {
+    // //@ts-ignore
+    // if (this.noSleep._wakeLock) {
+    //   //@ts-ignore
+    //   console.log(this.noSleep._wakeLock.released)
+    // }
     axios.get(`https://wmsfo-location-data.herokuapp.com/api/location-data`)
       .then(res => {
         if (res.data) {

@@ -3,6 +3,7 @@ import LocationPrompt from "../../Utils/UserLocation/LocationPrompt"
 import { Button } from "react-bootstrap"
 import "./Menu.css"
 import userLocation from "../../Utils/UserLocation/UserLocation"
+import Donate from "../../Utils/Donate/Donate"
 
 interface TrackerMenuProps {
     changeTheme: Function
@@ -28,6 +29,7 @@ type TrackerMenuTypes = {
     mapTypeId: string
     snow: boolean
     locationPrompt: boolean
+    donate: boolean
 }
 
 class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
@@ -38,7 +40,8 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
             menuOpen: false,
             mapTypeId: this.props.mapType,
             snow: false,
-            locationPrompt: false
+            locationPrompt: false,
+            donate: false
         }
     }
 
@@ -75,6 +78,14 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
             this.setState({ locationPrompt: false })
         } else {
             this.setState({ locationPrompt: true })
+        }
+    }
+
+    toggleDonate = () => {
+        if (this.state.donate) {
+            this.setState({ donate: false })
+        } else {
+            this.setState({ donate: true })
         }
     }
 
@@ -123,17 +134,23 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                         </div>}
                     </div>
                     <div className="TrackerMenuFooter">
-                        {this.state.locationPrompt &&
-                            <LocationPrompt
-                                toggleLocationPrompt={this.toggleLocationPrompt}
-                                theme={this.props.currentTheme}
-                                getUserLocation={this.props.getUserLocation}
-                            />}
                         {!userLocation.disable && <div className="TrackerMenuLocationAllowed" id={"tracker-menu-location-btn-allowed-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">my_location</span></div>}
                         {userLocation.disable && <div className="TrackerMenuLocationDenied" id={"tracker-menu-location-btn-denied-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">location_disabled</span></div>}
+                        {/* <div className="TrackerMenuDonateBtn" id={"tracker-menu-donate-btn-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleDonate}><p><span className="material-icons">attach_money</span></p></div> */}
                         <div className="TrackerMenuCloseBtn" id={"tracker-menu-close-btn-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleMenu}><p><span className="material-icons">clear</span></p></div>
                     </div>
                 </div>}
+                {this.state.locationPrompt &&
+                    <LocationPrompt
+                        toggleLocationPrompt={this.toggleLocationPrompt}
+                        theme={this.props.currentTheme}
+                        getUserLocation={this.props.getUserLocation}
+                    />}
+                {this.state.donate &&
+                    <Donate
+                        toggleDonatePrompt={this.toggleDonate}
+                        theme={this.props.currentTheme}
+                    />}
             </div>
         )
     }

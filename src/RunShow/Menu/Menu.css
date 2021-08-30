@@ -4,6 +4,7 @@
     overflow-y: hidden;
     overflow-x: hidden;
 }
+
 .TrackerMenuBtn {
     width: 50px;
     height: 50px;
@@ -97,7 +98,13 @@
     bottom: -18px;
 }
 
-.TrackerMenuCloseBtn span {
+.TrackerMenuDonateBtn {
+    position: absolute;
+    right: 30px;
+    bottom: -18px;
+}
+
+.TrackerMenuCloseBtn span, .TrackerMenuDonateBtn span {
     padding: 0px;
     margin: 0px;
     font-size: 30px;
@@ -165,15 +172,15 @@
     color: #dc3545
 }
 
-#tracker-menu-close-btn-night {
+#tracker-menu-close-btn-night, #tracker-menu-donate-btn-night {
     color: #ffffff;
 }
 
-#tracker-menu-close-btn-dark {
+#tracker-menu-close-btn-dark, #tracker-menu-donate-btn-dark {
     color: #b5b5b5;
 }
 
-#tracker-menu-close-btn-aubergine{
+#tracker-menu-close-btn-aubergine , #tracker-menu-donate-btn-aubergine {
     color: #FFFFFF;
 }
 
