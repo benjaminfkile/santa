@@ -1,6 +1,6 @@
 import { Component } from "react";
 import Map from "./Map"
-import userLocation from "../Utils/UserLocation/UserLocation";
+import userLocation from "../../Utils/UserLocation/UserLocation";
 import Standard from './MapThemes/Standard'
 import Retro from './MapThemes/Retro'
 import Silver from './MapThemes/Silver'
@@ -8,9 +8,9 @@ import Dark from './MapThemes/Dark'
 import Night from './MapThemes/Night'
 import Aubergine from './MapThemes/Aubergine'
 import TrackerMenu from "./Menu/Menu"
-import Snow from "../Utils/Snow/Snow"
-import TreeLoader from "../Utils/TreeLoader/TreeLoader";
-import projectedRoute from "../Utils/ProjectedRoute";
+import Snow from "../../Utils/Snow/Snow"
+import TreeLoader from "../../Utils/TreeLoader/TreeLoader";
+import projectedRoute from "../../Utils/ProjectedRoute";
 import "./Runshow.css"
 
 class Tracker extends Component {
@@ -34,24 +34,22 @@ class Tracker extends Component {
     loadHandlerSpeed = 1000
     loadHandlerStep = 0;
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            lat: 46.833,
-            lng: -114.030,
-            currentTheme: this.mapThemes[4].title,
-            snow: false,
-            santaDat: {},
-            distanceFromUserToSanta: null,
-            mapCentered: true,
-            zoom: 10,
-            menuOpen: false,
-            test: true,
-            online: null,
-            loading: true,
-            donate: false
-        }
+    state = {
+        lat: 46.833,
+        lng: -114.030,
+        currentTheme: this.mapThemes[4].title,
+        snow: false,
+        santaDat: {},
+        distanceFromUserToSanta: null,
+        mapCentered: true,
+        zoom: 10,
+        menuOpen: false,
+        test: true,
+        online: null,
+        loading: true,
+        donate: false
     }
+
 
     componentDidMount() {
         setInterval(this.update, this.updateinterval)

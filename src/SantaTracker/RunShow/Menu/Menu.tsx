@@ -1,9 +1,9 @@
 import { Component } from "react"
-import LocationPrompt from "../../Utils/UserLocation/LocationPrompt"
+import LocationPrompt from "../../../Utils/UserLocation/LocationPrompt"
 import { Button } from "react-bootstrap"
 import "./Menu.css"
-import userLocation from "../../Utils/UserLocation/UserLocation"
-import Donate from "../../Utils/Donate/Donate"
+import userLocation from "../../../Utils/UserLocation/UserLocation"
+import Donate from "../../../Utils/Donate/Donate"
 
 interface TrackerMenuProps {
     changeTheme: Function
@@ -34,15 +34,12 @@ type TrackerMenuTypes = {
 
 class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
 
-    constructor(props: TrackerMenuProps) {
-        super(props)
-        this.state = {
-            menuOpen: false,
-            mapTypeId: this.props.mapType,
-            snow: false,
-            locationPrompt: false,
-            donate: false
-        }
+    state = {
+        menuOpen: false,
+        mapTypeId: this.props.mapType,
+        snow: false,
+        locationPrompt: false,
+        donate: false
     }
 
     toggleMenu = () => {

@@ -1,66 +1,37 @@
 import { Component } from "react"
-import Runshow from "./RunShow/Runshow"
-import cookies from "./Utils/Cookies/Cookies"
-import NoSleep from 'nosleep.js';
-
+import { Route, Switch } from "react-router-dom"
+import axios from "axios"
+// import Home from "./Home/Home"
+import SantaTracker from "./SantaTracker/SantaTracker"
 import 'bootstrap/dist/css/bootstrap.min.css'
-import axios from "axios";
 
-type WimsfoTypes = {
-  preShow: boolean
-  runShow: boolean
-  endShow: boolean
-  returnUser: boolean
+
+type AppTypes = {
   santaDat: any
 }
 
-class App extends Component<{}, WimsfoTypes>{
+class App extends Component<{}, AppTypes>{
 
-  noSleep = new NoSleep();
+  state = {
+    santaDat: null
+  }
+
   updateInterval = 5000
   getSantaInterval: any
-
-  constructor(props: {}) {
-    super(props)
-    this.state = {
-      preShow: false,
-      runShow: true,
-      endShow: false,
-      returnUser: false,
-      santaDat: null
-
-    }
-  }
 
   componentDidMount() {
     this.getSanta()
     this.getSantaInterval = setInterval(this.getSanta, this.updateInterval)
-    if (cookies.getCookie("ReturnUser")) {
-      this.setState({ returnUser: true })
-    } else {
-      cookies.setCookie("ReturnUser", "true", 8)
-    }
-    try {
-      setTimeout(() => {
-        this.noSleep.enable()
-      }, 5000)
-    } catch (err) {
-      console.log("failed to enable no-sleep")
-    }
     //eslint-disable-next-line
     console.log("\n  .-\"\"-.\r\n \/,..___\\\r\n() {_____}\r\n  (\/-@-@-\\)\r\n  {`-=^=-\'}\r\n  {  `-\'  }\r\n   {     }\r\n    `---\'\n\nDeveloped by Ben Kile\n\n")
   }
 
   componentWillUnmount() {
-    this.noSleep.disable()
+    clearInterval(this.updateInterval)
   }
 
   getSanta = () => {
-    // //@ts-ignore
-    // if (this.noSleep._wakeLock) {
-    //   //@ts-ignore
-    //   console.log(this.noSleep._wakeLock.released)
-    // }
+    // console.log("updating every " + this.updateInterval)
     axios.get(`https://wmsfo-location-data.herokuapp.com/api/location-data`)
       .then(res => {
         if (res.data) {
@@ -77,11 +48,22 @@ class App extends Component<{}, WimsfoTypes>{
   render() {
     return (
       <div className="WimsfoSanta">
-        {this.state.runShow && this.state.santaDat && <div className="RunShow">
-          <Runshow
-            santaDat={this.state.santaDat}
+        <Switch>
+          <Route
+            exact path='/'
+            render={() => <SantaTracker santaDat={this.state.santaDat} />}
           />
-        </div>}
+          <Route
+            path='/santa'
+            render={() => <SantaTracker santaDat={this.state.santaDat} />}
+          />
+          {/* <Route path='/skills' component={Skills} />
+          <Route path='/projects' component={Projects} />
+          <Route path='/contact' component={Contact} /> */}
+          <Route
+            render={() => <SantaTracker santaDat={this.state.santaDat} />}
+          />
+        </Switch>
       </div>
     )
   }
