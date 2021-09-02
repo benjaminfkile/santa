@@ -51,7 +51,7 @@ class App extends Component<{}, AppTypes>{
         <Switch>
           <Route
             exact path='/'
-            render={() => <Home santaDat={this.state.santaDat} />}
+            render={() => <SantaTracker santaDat={this.state.santaDat} />}
           />
           <Route
             path='/santa'
@@ -61,7 +61,7 @@ class App extends Component<{}, AppTypes>{
           <Route path='/projects' component={Projects} />
           <Route path='/contact' component={Contact} /> */}
           <Route
-            render={() => <Home santaDat={this.state.santaDat} />}
+            render={() => <SantaTracker santaDat={this.state.santaDat} />}
           />
         </Switch>
       </div>
