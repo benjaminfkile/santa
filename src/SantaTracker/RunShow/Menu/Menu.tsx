@@ -3,7 +3,7 @@ import LocationPrompt from "../../../Utils/UserLocation/LocationPrompt"
 import { Button } from "react-bootstrap"
 import "./Menu.css"
 import userLocation from "../../../Utils/UserLocation/UserLocation"
-import Donate from "../../../Utils/Donate/Donate"
+// import Donate from "../../../Utils/Donate/Donate"
 
 interface TrackerMenuProps {
     changeTheme: Function

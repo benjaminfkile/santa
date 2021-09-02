@@ -1,6 +1,5 @@
 import { Component } from "react"
 import { FormControl, Modal } from "react-bootstrap"
-import Select from "react-select"
 import { Elements } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
 import Cards from "react-credit-cards"
