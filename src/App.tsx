@@ -1,7 +1,7 @@
 import { Component } from "react"
 import { Route, Switch } from "react-router-dom"
 import axios from "axios"
-import Home from "./Home/Home"
+// import Home from "./Home/Home"
 import SantaTracker from "./SantaTracker/SantaTracker"
 import 'bootstrap/dist/css/bootstrap.min.css'
 
