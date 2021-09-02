@@ -143,11 +143,11 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                         theme={this.props.currentTheme}
                         getUserLocation={this.props.getUserLocation}
                     />}
-                {this.state.donate &&
+                {/* {this.state.donate &&
                     <Donate
                         toggleDonatePrompt={this.toggleDonate}
                         theme={this.props.currentTheme}
-                    />}
+                    />} */}
             </div>
         )
     }

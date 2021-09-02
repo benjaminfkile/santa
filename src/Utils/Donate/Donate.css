@@ -1,4 +1,11 @@
 .PaymentForm{
-    height: 500px;
-    width: 100%;
+    width: 80%;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 15px;
+}
+
+#pay-form-row-exp-csv{
+    display: flex;
 }
