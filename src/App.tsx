@@ -32,7 +32,7 @@ class App extends Component<{}, AppTypes>{
 
   getSanta = () => {
     // console.log("updating every " + this.updateInterval)
-    axios.get(`https://wmsfo-location-data.herokuapp.com/api/location-data`)
+    axios.get(`${process.env.REACT_APP_WMSFO_LOCATION_DATA}/api/location-data`)
       .then(res => {
         if (res.data) {
           this.setState({ santaDat: res.data })

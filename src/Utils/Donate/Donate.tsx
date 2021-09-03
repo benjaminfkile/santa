@@ -52,7 +52,7 @@ class Donate extends Component<DonateProps, DonateTypes> {
     }
 
     componentDidMount() {
-        this.stripePromise = loadStripe("pk_live_51JTboZABqjRIuDCyK9iKUaVFynwY3b50oRwecfW6qaQeyZgyBcamBdfdB3jIBk00ihKh89AmPZSuSsih4I1MFORc00uJr4aAJP")
+        this.stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || "")
     }
 
     setInfo = (info: any) => {
@@ -71,7 +71,7 @@ class Donate extends Component<DonateProps, DonateTypes> {
             postalCode: this.state.postal
         }
         console.log(rb)
-        axios.post("https://wmsfo-ms-claus.herokuapp.com/api/donate/createCharge", rb)
+        axios.post(`${process.env.REACT_APP_MRS_CLAUS}/api/donate/createCharge`, rb)
             .then(res => {
                 console.log(res.data)
             }).catch(err => {
