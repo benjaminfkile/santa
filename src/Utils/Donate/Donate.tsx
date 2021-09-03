@@ -1,48 +1,44 @@
 import { Component } from "react"
-import { FormControl, Modal } from "react-bootstrap"
+import axios from "axios"
+import { Button, FormControl, Modal } from "react-bootstrap"
 import { Elements } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
 import Cards from "react-credit-cards"
 import "react-credit-cards/es/styles-compiled.css"
 import "./Donate.css"
 
+interface DonateProps {
+    // toggleDonate: Function
+}
+
 type DonateTypes = {
     cvc: string
-    expiry: string
+    expiryMonth: string
+    expiryYear: string
     focus: string
     name: string
     number: string
     email: string
     zip: string
+    amt: string
+    postal: string
 }
 
-class Donate extends Component<{}, DonateTypes> {
+class Donate extends Component<DonateProps, DonateTypes> {
 
     stripePromise: any = null
-    months: Array<{ id: number, text: string }> =
-        [
-            { id: 1, text: "January" },
-            { id: 2, text: "February" },
-            { id: 3, text: "March" },
-            { id: 4, text: "April" },
-            { id: 5, text: "May" },
-            { id: 6, text: "June" },
-            { id: 7, text: "July" },
-            { id: 8, text: "August" },
-            { id: 9, text: "September" },
-            { id: 10, text: "October" },
-            { id: 11, text: "November" },
-            { id: 12, text: "December" }
-        ]
 
     state = {
         cvc: "",
-        expiry: "",
+        expiryMonth: "",
+        expiryYear: "",
         focus: "",
         name: "",
         number: "",
         email: "",
-        zip: ""
+        zip: "",
+        amt: "",
+        postal: ""
     }
 
     handleInputFocus = (e: any) => {
@@ -51,9 +47,6 @@ class Donate extends Component<{}, DonateTypes> {
 
     handleInputChange = (e: any) => {
         let { name, value } = e.target
-        if (name === "expiry" && name.length > 2) {
-
-        }
         //@ts-ignore
         this.setState({ [name]: value })
     }
@@ -64,6 +57,26 @@ class Donate extends Component<{}, DonateTypes> {
 
     setInfo = (info: any) => {
         console.log(info)
+    }
+
+    submit = () => {
+        let rb = {
+            oneTime: true,
+            amount: this.state.amt,
+            cardNumber: this.state.number,
+            cardExpMonth: this.state.expiryMonth,
+            cardExpYear: `20${this.state.expiryYear}`,
+            cardCVC: this.state.cvc,
+            country: "US", //fix this
+            postalCode: this.state.postal
+        }
+        console.log(rb)
+        axios.post("https://wmsfo-ms-claus.herokuapp.com/api/donate/createCharge", rb)
+            .then(res => {
+                console.log(res.data)
+            }).catch(err => {
+                console.log(err)
+            })
     }
 
     render() {
@@ -78,18 +91,18 @@ class Donate extends Component<{}, DonateTypes> {
                             <p>Donate</p>
                         </div>
                     </Modal.Header>
-                    <Elements stripe={this.stripePromise}>
-                        <Cards
-                            cvc={this.state.cvc}
-                            expiry={this.state.expiry}
-                            //@ts-ignore
-                            focused={this.state.focus}
-                            name={this.state.name}
-                            number={this.state.number}
-                        />
+                    <div className="PaymentForm">
+                        <Elements stripe={this.stripePromise}>
+                            <Cards
+                                cvc={this.state.cvc}
+                                expiry={`${this.state.expiryMonth}/${this.state.expiryYear}`}
+                                //@ts-ignore
+                                focused={this.state.focus}
+                                name={this.state.name}
+                                number={this.state.number}
+                            />
 
-                        <div className="PaymentForm">
-                            <div className="PayFormRow">
+                            <div className="PayFormRow" id="pay-form-row-1">
                                 <FormControl
                                     type="email"
                                     name="email"
@@ -101,6 +114,8 @@ class Donate extends Component<{}, DonateTypes> {
                             </div>
                             <div className="PayFormRow">
                                 <FormControl
+                                    type="text"
+                                    name="name"
                                     placeholder="Name"
                                     onChange={this.handleInputChange}
                                     onFocus={this.handleInputFocus}
@@ -125,8 +140,8 @@ class Donate extends Component<{}, DonateTypes> {
                                     autoComplete="cc-exp-month"
                                     x-autocompletetype="cc-exp-month"
                                     type="text"
-                                    name="expiry"
-                                    placeholder="Month"
+                                    name="expiryMonth"
+                                    placeholder="MM"
                                     onChange={this.handleInputChange}
                                     onFocus={this.handleInputFocus}
                                 />
@@ -134,8 +149,8 @@ class Donate extends Component<{}, DonateTypes> {
                                     autoComplete="cc-exp-year"
                                     x-autocompletetype="cc-exp-year"
                                     type="number"
-                                    name="expiry"
-                                    placeholder="Year"
+                                    name="expiryYear"
+                                    placeholder="YY"
                                     onChange={this.handleInputChange}
                                     onFocus={this.handleInputFocus}
                                 />
@@ -143,17 +158,38 @@ class Donate extends Component<{}, DonateTypes> {
                                     autoComplete="cc-csc"
                                     x-autocompletetype="cc-csc"
                                     type="text"
-                                    name="expiry"
+                                    name="cvc"
                                     placeholder="CSC"
                                     onChange={this.handleInputChange}
                                     onFocus={this.handleInputFocus}
                                 />
                             </div>
-                        </div>
-                    </Elements>
+                            <div className="PayFormRow">
+                                <FormControl
+                                    type="number"
+                                    min="1"
+                                    step="any"
+                                    name="amt"
+                                    placeholder="Amount"
+                                    onChange={this.handleInputChange}
+                                    onFocus={this.handleInputFocus}
+                                />
+                            </div>
+                            <div className="PayFormRow">
+                                <FormControl
+                                    type="number"
+                                    name="postal"
+                                    pattern="^(?(^00000(|-0000))|(\d{5}(|-\d{4})))$"
+                                    placeholder="Zip"
+                                    onChange={this.handleInputChange}
+                                    onFocus={this.handleInputFocus}
+                                />
+                            </div>
+                        </Elements>
+                    </div>
                     <Modal.Footer>
-                        {/* <Button onClick={() => this.handleUserAllowLocation()}>Allow</Button> */}
-                        {/* <Button onClick={() => this.props.toggleDonatePrompt()}>Back</Button> */}
+                        <Button onClick={() => this.submit()}>Submit</Button>
+                        {/* <Button onClick={() => this.props.toggleDonate()}>Back</Button> */}
                     </Modal.Footer>
                 </Modal>
             </div>

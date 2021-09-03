@@ -1,7 +1,7 @@
 import { Component } from "react"
 import { Route, Switch } from "react-router-dom"
 import axios from "axios"
-// import Home from "./Home/Home"
+import Home from "./Home/Home"
 import SantaTracker from "./SantaTracker/SantaTracker"
 import 'bootstrap/dist/css/bootstrap.min.css'
 
@@ -56,6 +56,10 @@ class App extends Component<{}, AppTypes>{
           <Route
             path='/santa'
             render={() => <SantaTracker santaDat={this.state.santaDat} />}
+          />
+          <Route
+            path='/donate'
+            render={() => <Home santaDat={this.state.santaDat} />}
           />
           {/* <Route path='/skills' component={Skills} />
           <Route path='/projects' component={Projects} />
