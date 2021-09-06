@@ -6,6 +6,7 @@ import SantaTracker from "./SantaTracker/SantaTracker"
 import 'bootstrap/dist/css/bootstrap.min.css'
 
 
+
 type AppTypes = {
   santaDat: any
 }
