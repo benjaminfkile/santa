@@ -1,15 +1,14 @@
-import React from "react";
 import { CardElement } from "@stripe/react-stripe-js";
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
     base: {
-      color: "#303238",
+      color: "#6c757d",
       fontSize: "16px",
       fontFamily: "sans-serif",
       fontSmoothing: "antialiased",
       "::placeholder": {
-        color: "#CFD7DF"
+        color: "#6c757d",
       }
     },
     invalid: {
@@ -23,8 +22,10 @@ const CARD_ELEMENT_OPTIONS = {
 
 function CardSection() {
   return (
+    <div id="card-element-wrapper">
       <CardElement options={CARD_ELEMENT_OPTIONS} />
-  );
+    </div>
+  )
 }
 
 export default CardSection;

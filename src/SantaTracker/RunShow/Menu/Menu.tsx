@@ -1,9 +1,9 @@
 import { Component } from "react"
 import LocationPrompt from "../../../Utils/UserLocation/LocationPrompt"
 import { Button } from "react-bootstrap"
-import "./Menu.css"
 import userLocation from "../../../Utils/UserLocation/UserLocation"
-// import Donate from "../../../Utils/Donate/Donate"
+import DonateToolKit from "../../../Utils/Donate/DonateToolkit"
+import "./Menu.css"
 
 interface TrackerMenuProps {
     changeTheme: Function
@@ -22,6 +22,7 @@ interface TrackerMenuProps {
         speed: string
     }
     getUserLocation: Function
+    toggleDonate: Function
 }
 
 type TrackerMenuTypes = {
@@ -78,14 +79,6 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
         }
     }
 
-    toggleDonate = () => {
-        if (this.state.donate) {
-            this.setState({ donate: false })
-        } else {
-            this.setState({ donate: true })
-        }
-    }
-
     render() {
 
         // console.log(this.props.santaDat)
@@ -133,7 +126,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                     <div className="TrackerMenuFooter">
                         {!userLocation.disable && <div className="TrackerMenuLocationAllowed" id={"tracker-menu-location-btn-allowed-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">my_location</span></div>}
                         {userLocation.disable && <div className="TrackerMenuLocationDenied" id={"tracker-menu-location-btn-denied-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">location_disabled</span></div>}
-                        {/* <div className="TrackerMenuDonateBtn" id={"tracker-menu-donate-btn-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleDonate}><p><span className="material-icons">attach_money</span></p></div> */}
+                        <div className="TrackerMenuDonateBtn" id={"tracker-menu-donate-btn-" + this.props.currentTheme.toLowerCase()} onClick={() => DonateToolKit.toggleDonate()}><p><span className="material-icons">attach_money</span></p></div>
                         <div className="TrackerMenuCloseBtn" id={"tracker-menu-close-btn-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleMenu}><p><span className="material-icons">clear</span></p></div>
                     </div>
                 </div>}
@@ -143,11 +136,6 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                         theme={this.props.currentTheme}
                         getUserLocation={this.props.getUserLocation}
                     />}
-                {/* {this.state.donate &&
-                    <Donate
-                        toggleDonatePrompt={this.toggleDonate}
-                        theme={this.props.currentTheme}
-                    />} */}
             </div>
         )
     }
