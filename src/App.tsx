@@ -5,7 +5,7 @@ import axios from "axios"
 // import Home from "./Home/Home"
 import SantaTracker from "./SantaTracker/SantaTracker"
 import 'bootstrap/dist/css/bootstrap.min.css'
-import Donate from "./Utils/Donate/Donate";
+import Donate from "./Utils/Donate/Checkout/Donate";
 //so we only load stripe once and can have a reusable donate component
 
 type AppTypes = {

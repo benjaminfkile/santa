@@ -1,0 +1,42 @@
+.confirm-dialog-header{
+    width: 100%;
+    height: 25px;
+}
+.confirm-dialog-header p{
+    text-align: center;
+    font-size: 25px;
+}
+
+.confirm-content-name-email{
+    /* display: flex; */
+    width: 100%;
+    margin-top: 272px;
+}
+.confirm-content-name-email p{
+    font-size: 20px;
+}
+
+.confirm-content-amount{
+    display: flex;
+    margin-bottom: -20px;
+}
+
+.confirm-content-amount{
+    display: flex;
+    font-size: 20px;
+}
+
+.confirm-content-amount-green{
+    color: #28a745;
+    font-size: 40px !important;
+    margin-top: -20px;
+    margin-bottom: 5px;
+}
+
+.confirm-dialog-footer{
+    width: 100%;
+    display: flex; 
+}
+#confirm-dialog-footer-back{
+    margin-right: auto;
+}

@@ -4,7 +4,10 @@ import Cards from "react-credit-cards"
 import { ElementsConsumer, CardElement } from "@stripe/react-stripe-js"
 import CardSection from "./CardSection"
 import { Button, Modal } from "react-bootstrap"
-import DonateToolkit from "./DonateToolkit"
+import DonateToolkit from "../DonateToolkit"
+import Confirm from "../Confirm/Confirm"
+import Success from "../Success/Success"
+import Fail from "./Fail/Fail"
 import 'react-credit-cards/es/styles-compiled.css'
 import "./CheckoutForm.css"
 
@@ -25,7 +28,9 @@ class CheckoutForm extends Component {
         validEmail: false,
         validName: false,
         validAmount: false,
-        confirm: false
+        confirm: false,
+        success: false,
+        fail: false
     }
 
     componentDidMount() {
@@ -42,7 +47,7 @@ class CheckoutForm extends Component {
 
     listenForValidCard = () => {
         let cardElement = document.getElementById("card-element-wrapper")
-        if (cardElement.getElementsByClassName("StripeElement--complete").length > 0) {
+        if (cardElement && cardElement.getElementsByClassName("StripeElement--complete").length > 0) {
             if (!this.state.validCard) {
                 this.setState({ validCard: true })
             }
@@ -98,7 +103,7 @@ class CheckoutForm extends Component {
     }
 
     handleSubmit = async event => {
-        event.preventDefault()
+        // event.preventDefault()
         if (this.state.name.length !== "" && this.state.email !== "" && this.state.amount !== "") {
             let rb = {}
             rb.name = this.state.name
@@ -113,10 +118,19 @@ class CheckoutForm extends Component {
             const result = await stripe.createToken(card)
             if (result.error) {
                 console.log(result.error.message)
+                this.setState({ fail: true, success: false })
             } else {
                 rb.token = result.token
                 axios.post(`${process.env.REACT_APP_MRS_CLAUS_API_URL}/api/donate/createCharge`, rb).then(res => {
-                    DonateToolkit.toggleDonate()
+                    console.log(res.data)
+                    if (res.data.message.status === "succeeded") {
+                        this.setState({ success: true, fail: false })
+                    } else {
+                        this.setState({ fail: true, success: false })
+                    }
+                    console.log("success: ", this.state.success)
+                    console.log("fail: ", this.state.fail)
+                    // DonateToolkit.toggleDonate()
                     this.setState({
                         email: "",
                         name: "",
@@ -133,9 +147,14 @@ class CheckoutForm extends Component {
                     })
                 }).catch(err => {
                     console.log(err)
+                    this.setState({ fail: true, success: false })
                 })
             }
         }
+    }
+
+    cancelConfirm = () => {
+        this.setState({ confirm: false })
     }
 
     toggleConfirm = () => {
@@ -144,7 +163,6 @@ class CheckoutForm extends Component {
 
         } else {
             this.setState({ confirm: true })
-
         }
     }
 
@@ -153,6 +171,10 @@ class CheckoutForm extends Component {
         // console.log("Valid Name: ", this.state.validName)
         // console.log("Valid Email: ", this.state.validEmail)
         // console.log("Form Complete: ", this.state.validCard)
+
+        const cardSection = (
+            <CardSection />
+        )
 
         return (
             <div>
@@ -236,7 +258,7 @@ class CheckoutForm extends Component {
                                 {!this.state.validCard && <span className="material-icons field-invalid">close</span>}
                             </div>
                             <div id="card-section-wrapper">
-                                <CardSection />
+                                {cardSection}
                             </div>
                         </div>
                     </Modal.Body>
@@ -248,20 +270,17 @@ class CheckoutForm extends Component {
                         </div>
                     </Modal.Footer>
                 </Modal>
-                {this.state.confirm && <Modal
-                    show={true}
-                    keyboard={false}
-                >
-                    <Modal.Header>
-                        confirm
-                    </Modal.Header>
-                    <Modal.Body>
-
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button onClick={this.handleSubmit}>Confirm</Button>
-                    </Modal.Footer>
-                </Modal>}
+                {this.state.confirm &&
+                    <Confirm
+                        card={cardSection}
+                        confirm={this.handleSubmit}
+                        cancelConfirm={this.cancelConfirm}
+                        name={this.state.name}
+                        email={this.state.email}
+                        amount={this.state.formattedAmount}
+                    />}
+                {this.state.success && <Success />}
+                {this.state.fail && <Fail/>}
             </div>
         )
     }
