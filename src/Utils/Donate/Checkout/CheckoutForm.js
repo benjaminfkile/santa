@@ -122,15 +122,12 @@ class CheckoutForm extends Component {
             } else {
                 rb.token = result.token
                 axios.post(`${process.env.REACT_APP_MRS_CLAUS_API_URL}/api/donate/createCharge`, rb).then(res => {
-                    console.log(res.data)
+                    // axios.post(`http://localhost:8000/api/donate/createCharge`, rb).then(res => {
                     if (res.data.message.status === "succeeded") {
-                        this.setState({ success: true, fail: false })
+                        this.setState({ success: true, confirm: false, fail: false })
                     } else {
                         this.setState({ fail: true, success: false })
                     }
-                    console.log("success: ", this.state.success)
-                    console.log("fail: ", this.state.fail)
-                    // DonateToolkit.toggleDonate()
                     this.setState({
                         email: "",
                         name: "",
@@ -270,7 +267,7 @@ class CheckoutForm extends Component {
                         </div>
                     </Modal.Footer>
                 </Modal>
-                {this.state.confirm &&
+                {this.state.confirm && !this.state.success &&
                     <Confirm
                         card={cardSection}
                         confirm={this.handleSubmit}
@@ -280,7 +277,7 @@ class CheckoutForm extends Component {
                         amount={this.state.formattedAmount}
                     />}
                 {this.state.success && <Success />}
-                {this.state.fail && <Fail/>}
+                {this.state.fail && <Fail />}
             </div>
         )
     }
