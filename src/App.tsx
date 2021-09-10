@@ -2,7 +2,7 @@ import { Component } from "react"
 import { Route, Switch } from "react-router-dom"
 import DonateToolkit from "./Utils/Donate/DonateToolkit";
 import axios from "axios"
-// import Home from "./Home/Home"
+import Home from "./Home/Home"
 import SantaTracker from "./SantaTracker/SantaTracker"
 import 'bootstrap/dist/css/bootstrap.min.css'
 import Donate from "./Utils/Donate/Checkout/Donate";
@@ -79,7 +79,7 @@ class App extends Component<{}, AppTypes>{
         <Switch>
           <Route
             exact path='/'
-            render={() => <SantaTracker
+            render={() => <Home
               santaDat={this.state.santaDat}
             />}
           />

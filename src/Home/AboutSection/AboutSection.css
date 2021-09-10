@@ -1,0 +1,9 @@
+.AboutSection{
+    color: white;
+    text-align: center;
+    padding: 10px;
+    max-height: 400px;
+    overflow-y: auto;
+    border-top: 1px solid gray;
+    border-bottom: 1px solid gray;
+}
