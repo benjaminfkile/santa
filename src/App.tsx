@@ -7,8 +7,6 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import Donate from "./Utils/Donate/Checkout/Donate";
 import AboutSection from "./AboutSection/AboutSection";
 import NavMenu from "./NavMenu/NavMenu";
-import JumpingElf from "./Utils/JumpingElf/JumpingElf";
-//so we only load stripe once and can have a reusable donate component
 
 type AppTypes = {
   santaDat: any
