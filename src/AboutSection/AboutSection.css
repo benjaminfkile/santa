@@ -34,7 +34,7 @@
     overflow-y: auto;
     padding-left: 15px;
     padding-right: 15px;
-    max-height: 400px;
+    max-height: calc(100% - 340px)
 }
 .AboutContent p{
     color: white;

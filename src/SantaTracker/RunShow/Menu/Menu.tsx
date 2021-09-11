@@ -127,7 +127,6 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                     <div className="TrackerMenuFooter">
                         {!userLocation.disable && <div className="TrackerMenuLocationAllowed" id={"tracker-menu-location-btn-allowed-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">my_location</span></div>}
                         {userLocation.disable && <div className="TrackerMenuLocationDenied" id={"tracker-menu-location-btn-denied-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">location_disabled</span></div>}
-                        <div className="TrackerMenuRoutes">
                             <div className="TrackerMenuRoutesBtnWrapper">
                                 <div className="TrackerMenuDonateBtn" id={"tracker-menu-donate-btn-" + this.props.currentTheme.toLowerCase()} onClick={() => DonateToolKit.toggleDonate()}><p><span className="material-icons">attach_money</span></p></div>
                                 <div className="TrackerMenuHomeBtn">
@@ -136,8 +135,6 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                                     </Link>
                                 </div>
                             </div>
-
-                        </div>
                         <div className="TrackerMenuCloseBtn" id={"tracker-menu-close-btn-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleMenu}><p><span className="material-icons">clear</span></p></div>
                     </div>
                 </div>}

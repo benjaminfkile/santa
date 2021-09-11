@@ -5,6 +5,7 @@ import NavMenu from "../NavMenu/NavMenu"
 import "./AboutSection.css"
 
 class AboutSection extends Component {
+
     render() {
         return (
             <div className="AboutSection">

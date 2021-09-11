@@ -16,6 +16,14 @@ class NavMenu extends Component<NavProps, NavTypes> {
         menuOpen: false
     }
 
+    componentDidMount() {
+        this.setState({ menuOpen: false })
+    }
+
+    componentWillUnmount() {
+        this.setState({ menuOpen: false })
+    }
+
     toggleMenu = () => {
         if (this.state.menuOpen) {
             this.setState({ menuOpen: false })
@@ -32,7 +40,7 @@ class NavMenu extends Component<NavProps, NavTypes> {
                 </div>}
                 {this.state.menuOpen && <div className="NavMenuContent">
                     <div className="NavMenuRoutes">
-                    {/* <div className="DonateRoute" tabIndex={1}>
+                        {/* <div className="DonateRoute" tabIndex={1}>
                             <Link to='/santa'>
                                 <div id="donate-route-btn-wrapper">
                                     <img id="donate-route-icon" src="./res/santa-icon.png" alt=""></img>

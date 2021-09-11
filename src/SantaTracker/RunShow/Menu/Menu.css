@@ -84,12 +84,14 @@
 }
 
 .TrackerMenuFooter {
-    /* position: absolute;
-    display: block;
-    width: 290px; */
+    display: flex;
     margin-left: 3px;
     margin-right: 3px;
     height: 45px;
+}
+
+.TrackerMenuFooter span{
+    font-size: 40px !important;
 }
 
 .TrackerMenuRoutes{
@@ -103,19 +105,15 @@
 .TrackerMenuRoutesBtnWrapper{
     display: flex;
     width: 60px;
-    margin-left: 35px;
 }
 
 .TrackerMenuRoutesBtnWrapper span{
-    font-size: 30px;
     text-decoration: none;
     color: white;
 }
 
 .TrackerMenuCloseBtn {
-    position: absolute;
-    right: 0px;
-    bottom: -18px;
+    margin-left: auto;
 }
 
 
@@ -133,9 +131,6 @@
 }
 
 .TrackerMenuLocationAllowed, .TrackerMenuLocationDenied {
-    position: absolute;
-    left: 5px;
-    bottom: 0px;
     cursor: pointer;
     user-select: none;
 }
