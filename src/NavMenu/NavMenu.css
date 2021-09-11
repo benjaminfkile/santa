@@ -1,0 +1,103 @@
+.NavMenuBtn {
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    position: fixed;
+    top: 5px;
+    right: 5px;
+    cursor: pointer;
+    user-select: none;
+    background-color: rgba(0, 0, 0, .5);
+    color: #666666;
+    box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
+    border-radius: 8px;
+}
+
+.NavMenuBtn span {
+    font-size: 40px;
+    margin-top: 5px;
+}
+
+.NavMenuContent{
+    position: fixed;
+    top: 3px;
+    right: 3px;
+    width: 190px;
+    height: 300px;
+    user-select: none;
+    background-color: rgba(0, 0, 0, .5);
+    color: #666666;
+    box-shadow: 0px 4px 4px rgb(0 0 0 / 30%);
+    border-bottom-left-radius: 5px;
+    -webkit-animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+    animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+}
+
+.NavMenuFooter{
+    position: absolute;
+    display: flex;
+    height: 30px;
+    width: 100%;
+    bottom: 0px;
+}
+
+#nav-menu-close-btn{
+    color: #FFFFFF;
+    font-size: 30px;
+    margin-left: auto;
+}
+
+.NavMenuRoutes{
+    padding: 3px;
+}
+
+.TrackerRoute{
+    height: 60px;
+    background-color: #4d5662;
+    border-radius: 5px;
+
+}
+
+#tracker-route-btn-wrapper{
+    display: flex;
+    text-decoration: none;
+    user-select: none;
+    color: #FFFFFF;
+}
+
+#tracker-route-text{
+    margin-top: 15px;
+    width: 100%;
+    text-align: left;
+    font-size: 18px;
+}
+
+#tracker-route-icon{
+    height: 60px;
+}
+
+@-webkit-keyframes slide-in-right {
+    0% {
+        -webkit-transform: translateX(1000px);
+        transform: translateX(1000px);
+        opacity: 0;
+    }
+    100% {
+        -webkit-transform: translateX(0);
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slide-in-right {
+    0% {
+        -webkit-transform: translateX(1000px);
+        transform: translateX(1000px);
+        opacity: 0;
+    }
+    100% {
+        -webkit-transform: translateX(0);
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

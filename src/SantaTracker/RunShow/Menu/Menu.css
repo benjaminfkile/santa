@@ -92,16 +92,36 @@
     height: 45px;
 }
 
+.TrackerMenuRoutes{
+    position: absolute;
+    width: 100%;
+    bottom: -18px;
+
+
+}
+
+.TrackerMenuRoutesBtnWrapper{
+    display: flex;
+    width: 60px;
+    margin-left: 35px;
+}
+
+.TrackerMenuRoutesBtnWrapper span{
+    font-size: 30px;
+    text-decoration: none;
+    color: white;
+}
+
 .TrackerMenuCloseBtn {
     position: absolute;
     right: 0px;
     bottom: -18px;
 }
 
+
+
 .TrackerMenuDonateBtn {
-    position: absolute;
-    right: 30px;
-    bottom: -18px;
+
 }
 
 .TrackerMenuCloseBtn span, .TrackerMenuDonateBtn span {

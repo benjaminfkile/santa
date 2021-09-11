@@ -2,10 +2,12 @@ import { Component } from "react"
 import { Route, Switch } from "react-router-dom"
 import DonateToolkit from "./Utils/Donate/DonateToolkit";
 import axios from "axios"
-import Home from "./Home/Home"
 import SantaTracker from "./SantaTracker/SantaTracker"
 import 'bootstrap/dist/css/bootstrap.min.css'
 import Donate from "./Utils/Donate/Checkout/Donate";
+import AboutSection from "./AboutSection/AboutSection";
+import NavMenu from "./NavMenu/NavMenu";
+import JumpingElf from "./Utils/JumpingElf/JumpingElf";
 //so we only load stripe once and can have a reusable donate component
 
 type AppTypes = {
@@ -76,10 +78,22 @@ class App extends Component<{}, AppTypes>{
   render() {
     return (
       <div className="WimsfoSanta">
+        <NavMenu />
         <Switch>
           <Route
             exact path='/'
-            render={() => <Home
+            render={() => <AboutSection
+            />}
+          />
+          <Route
+            path='/about'
+            render={() => <AboutSection
+            // santaDat={this.state.santaDat}
+            />}
+          />
+          <Route
+            path='/donate'
+            render={() => <SantaTracker
               santaDat={this.state.santaDat}
             />}
           />
@@ -89,13 +103,8 @@ class App extends Component<{}, AppTypes>{
               santaDat={this.state.santaDat}
             />}
           />
-          {/* <Route
-            path='/donate'
-            render={() => <Home santaDat={this.state.santaDat} />}
-          /> */}
           <Route
-            render={() => <SantaTracker
-              santaDat={this.state.santaDat}
+            render={() => <AboutSection
             />}
           />
         </Switch>

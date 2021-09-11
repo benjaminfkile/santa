@@ -1,0 +1,42 @@
+.AboutSection {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    max-width: 800px;
+    height: 100%;
+}
+
+.LaughingSantaWrapper {
+    position: absolute;
+    top: -75px;
+    left: -75px;
+    width: 300px;
+    height: 300px;
+    transform: scale(.5);
+}
+
+.AboutHeader{
+    position: fixed;
+    width: 250px;
+    height: 50px;
+    top: 75px;
+    left: 150px;
+    color: white;
+}
+
+.AboutHeader p{
+    font-size: 22px;
+    text-decoration: underline;
+}
+
+.AboutContent{
+    margin-top: 150px;
+    overflow-y: auto;
+    padding-left: 15px;
+    padding-right: 15px;
+    max-height: 400px;
+}
+.AboutContent p{
+    color: white;
+    text-align: center;
+}
