@@ -7,7 +7,7 @@
     right: 5px;
     cursor: pointer;
     user-select: none;
-    background-color: rgba(0, 0, 0, .5);
+    background-color: rgba(0, 0, 0);
     color: #666666;
     box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
     border-radius: 8px;
@@ -18,14 +18,15 @@
     margin-top: 5px;
 }
 
-.NavMenuContent{
+.NavMenuContent {
     position: fixed;
     top: 3px;
     right: 3px;
-    width: 190px;
-    height: 300px;
+    width: 120px;
+    height: 230px;
+    z-index: 1000;
     user-select: none;
-    background-color: rgba(0, 0, 0, .5);
+    background-color: rgba(0, 0, 0, .8);
     color: #666666;
     box-shadow: 0px 4px 4px rgb(0 0 0 / 30%);
     border-bottom-left-radius: 5px;
@@ -33,7 +34,7 @@
     animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
 
-.NavMenuFooter{
+.NavMenuFooter {
     position: absolute;
     display: flex;
     height: 30px;
@@ -41,39 +42,48 @@
     bottom: 0px;
 }
 
-#nav-menu-close-btn{
+#nav-menu-close-btn {
     color: #FFFFFF;
     font-size: 30px;
     margin-left: auto;
+    cursor: pointer;
+    user-select: none;
 }
 
-.NavMenuRoutes{
+.NavMenuRoutes {
     padding: 3px;
 }
 
-.TrackerRoute{
-    height: 60px;
+.AboutRoute, .TrackerRoute, .DonateRoute {
+    height: 48px;
     background-color: #4d5662;
     border-radius: 5px;
-
+    margin-bottom: 3px;
 }
 
-#tracker-route-btn-wrapper{
+#about-route-btn-wrapper, #tracker-route-btn-wrapper, #donate-route-btn-wrapper {
     display: flex;
     text-decoration: none;
     user-select: none;
     color: #FFFFFF;
 }
 
-#tracker-route-text{
-    margin-top: 15px;
+#about-route-text, #tracker-route-text, #donate-route-text {
+    margin-top: 10px;
+    margin-right: 10px;
     width: 100%;
-    text-align: left;
+    text-align: center;
     font-size: 18px;
 }
 
-#tracker-route-icon{
-    height: 60px;
+#about-route-icon, #tracker-route-icon, #donate-route-icon {
+    height: 48px;
+}
+
+.NavMenuCandyCane {
+    margin-top: 5px;
+    width: 55px;
+    height: 45px;
 }
 
 @-webkit-keyframes slide-in-right {

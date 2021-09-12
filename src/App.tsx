@@ -6,7 +6,7 @@ import SantaTracker from "./SantaTracker/SantaTracker"
 import 'bootstrap/dist/css/bootstrap.min.css'
 import Donate from "./Utils/Donate/Checkout/Donate";
 import AboutSection from "./AboutSection/AboutSection";
-import NavMenu from "./NavMenu/NavMenu";
+import DonateSection from "./DonateSection/DonateSection";
 
 type AppTypes = {
   santaDat: any
@@ -76,24 +76,18 @@ class App extends Component<{}, AppTypes>{
   render() {
     return (
       <div className="WimsfoSanta">
-        <NavMenu />
         <Switch>
           <Route
             exact path='/'
-            render={() => <AboutSection
-            />}
+            render={() => <AboutSection />}
           />
           <Route
             path='/about'
-            render={() => <AboutSection
-            // santaDat={this.state.santaDat}
-            />}
+            render={() => <AboutSection />}
           />
           <Route
             path='/donate'
-            render={() => <SantaTracker
-              santaDat={this.state.santaDat}
-            />}
+            render={() => <DonateSection />}
           />
           <Route
             path='/santa'

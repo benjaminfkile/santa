@@ -1,5 +1,6 @@
 import { Component } from "react"
 import { Link } from "react-router-dom"
+import CandyCane from "../SVG/CandyCane/CandyCane"
 import "./NavMenu.css"
 
 interface NavProps {
@@ -40,19 +41,29 @@ class NavMenu extends Component<NavProps, NavTypes> {
                 </div>}
                 {this.state.menuOpen && <div className="NavMenuContent">
                     <div className="NavMenuRoutes">
-                        {/* <div className="DonateRoute" tabIndex={1}>
-                            <Link to='/santa'>
-                                <div id="donate-route-btn-wrapper">
-                                    <img id="donate-route-icon" src="./res/santa-icon.png" alt=""></img>
-                                    <p id="donate-route-text">Santa Tracker</p>
+                        <div className="AboutRoute" tabIndex={1} onClick={this.toggleMenu}>
+                            <Link to='/about'>
+                                <div id="about-route-btn-wrapper">
+                                    <div className="NavMenuCandyCane">
+                                        <CandyCane />
+                                    </div>
+                                    <p id="about-route-text">About</p>
                                 </div>
                             </Link>
-                        </div> */}
-                        <div className="TrackerRoute" tabIndex={1}>
+                        </div>
+                        <div className="DonateRoute" tabIndex={1} onClick={this.toggleMenu}>
+                            <Link to='/donate'>
+                                <div id="donate-route-btn-wrapper">
+                                    <img id="donate-route-icon" src="./res/santa-icon.png" alt=""></img>
+                                    <p id="donate-route-text">Donate</p>
+                                </div>
+                            </Link>
+                        </div>
+                        <div className="TrackerRoute" tabIndex={2} onClick={this.toggleMenu}>
                             <Link to='/santa'>
                                 <div id="tracker-route-btn-wrapper">
                                     <img id="tracker-route-icon" src="./res/santa-icon.png" alt=""></img>
-                                    <p id="tracker-route-text">Santa Tracker</p>
+                                    <p id="tracker-route-text">Santa</p>
                                 </div>
                             </Link>
                         </div>

@@ -3,6 +3,7 @@ import JumpingElf from "../Utils/JumpingElf/JumpingElf"
 import LaughingSanta from "../Utils/LaughingSanta/LaughingSanta"
 import NavMenu from "../NavMenu/NavMenu"
 import "./AboutSection.css"
+import Ornaments from "../Utils/Ornaments/Ornaments"
 
 class AboutSection extends Component {
 
@@ -11,9 +12,10 @@ class AboutSection extends Component {
             <div className="AboutSection">
                 <NavMenu />
                 <JumpingElf />
+                <Ornaments />
                 <div className="LaughingSantaWrapper">
                     <LaughingSanta
-                        message="About"
+                        message="406"
                     />
                 </div>
                 <div className="AboutHeader">
