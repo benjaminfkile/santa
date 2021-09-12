@@ -74,3 +74,12 @@
         margin-bottom: 40px;
     }
 }
+
+@media only screen and (max-height: 568px) {
+    .JumpingElf{
+        display: none;
+    }
+    .DonateSectionText{
+        min-height: calc(100% - 280px);
+    }
+}

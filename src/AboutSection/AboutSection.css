@@ -67,3 +67,12 @@
         margin-bottom: 40px;
     }
 }
+
+@media only screen and (max-height: 568px) {
+    .JumpingElf{
+        display: none;
+    }
+    .AboutContent{
+        min-height: calc(100% - 200px);
+    }
+}
