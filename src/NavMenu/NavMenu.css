@@ -23,7 +23,7 @@
     top: 3px;
     right: 3px;
     width: 120px;
-    height: 230px;
+    height: 190px;
     z-index: 1000;
     user-select: none;
     background-color: rgba(0, 0, 0);
@@ -93,28 +93,3 @@
     margin-right: 20px;
 }
 
-@-webkit-keyframes slide-in-right {
-    0% {
-        -webkit-transform: translateX(1000px);
-        transform: translateX(1000px);
-        opacity: 0;
-    }
-    100% {
-        -webkit-transform: translateX(0);
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-@keyframes slide-in-right {
-    0% {
-        -webkit-transform: translateX(1000px);
-        transform: translateX(1000px);
-        opacity: 0;
-    }
-    100% {
-        -webkit-transform: translateX(0);
-        transform: translateX(0);
-        opacity: 1;
-    }
-}

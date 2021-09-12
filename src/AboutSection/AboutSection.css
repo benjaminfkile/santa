@@ -12,7 +12,6 @@
     top: 0px;
     left: 0px;
     width: 80px;
-    height: 80px;
 }
 
 .LaughingSantaWrapper {
@@ -30,18 +29,18 @@
 }
 
 .AboutHeader p {
-    font-size: 22px;
+    font-size: 28px;
     text-decoration: underline;
+    font-family: 'Mountains of Christmas', cursive;
 }
 
 .AboutContent {
     width: 100%;
-    margin-top: 00px;
-    margin-left: auto;
-    margin-right: auto;
+    margin: auto;
     overflow-y: auto;
     padding-left: 15px;
     padding-right: 15px;
+    max-width: 600px;
     max-height: calc(100% - 350px);
     border-bottom: 1px solid gray
 }
@@ -51,12 +50,20 @@
     text-align: center;
 }
 
-@media only screen and (min-height: 600px) {
-    /* .LaughingSantaWrapper {
-        display: block;
-        position: absolute;
-        width: 300px;
-        height: 300px;
-        transform: scale(.5);
-    } */
+@media only screen and (min-width: 600px) {
+    .AboutHeader {
+        margin-bottom: 20px;
+    }
+    .AboutHeader p{
+        font-size: 40px;
+    }
+    .AboutContent p{
+        font-size: 20px;
+    }
+}
+
+@media only screen and (max-width: 348px) {
+    .AboutHeader {
+        margin-bottom: 40px;
+    }
 }

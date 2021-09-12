@@ -9,10 +9,9 @@
 
 .DonateSectionStocking{
     position: absolute;
-    top: 0px;
+    top: 10px;
     left: 0px;
-    width: 80px;
-    height: 80px;
+    width: 60px;
 }
 
 .DonateSectionHeader {
@@ -26,18 +25,18 @@
 }
 
 .DonateSectionHeader p {
-    font-size: 22px;
+    font-size: 28px;
     text-decoration: underline;
+    font-family: 'Mountains of Christmas', cursive;
 }
 
 .DonateSectionText {
     width: 100%;
-    margin-top: 00px;
-    margin-left: auto;
-    margin-right: auto;
+    margin: auto;
     overflow-y: auto;
     padding-left: 15px;
     padding-right: 15px;
+    max-width: 600px;
     max-height: calc(100% - 350px);
     border-bottom: 1px solid gray
 }
@@ -56,4 +55,22 @@
     display: block;
     margin-left: auto;
     margin-right: auto;
+}
+
+@media only screen and (min-width: 600px) {
+    .DonateSectionHeader {
+        margin-bottom: 20px;
+    }
+    .DonateSectionHeader p{
+        font-size: 40px;
+    }
+    .DonateSectionText p{
+        font-size: 20px;
+    }
+}
+
+@media only screen and (max-width: 376px) {
+    .DonateSectionHeader {
+        margin-bottom: 40px;
+    }
 }
