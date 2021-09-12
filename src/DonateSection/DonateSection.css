@@ -49,6 +49,7 @@
 .DonateSectionDonateBtn {
     width: 100%;
     margin-top: 15px;
+    z-index: 1000;
 }
 
 #donate-section-donate-btn {
@@ -72,6 +73,12 @@
 @media only screen and (max-width: 376px) {
     .DonateSectionHeader {
         margin-bottom: 40px;
+    }
+    .JumpingElf{
+        display: none;
+    }
+    .DonateSectionText{
+        min-height: calc(100% - 280px);
     }
 }
 
