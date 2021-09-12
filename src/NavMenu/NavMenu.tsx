@@ -1,6 +1,8 @@
 import { Component } from "react"
 import { Link } from "react-router-dom"
-import CandyCane from "../SVG/CandyCane/CandyCane"
+import Mistletoe from "../SVG/Mistletoe/Mistletoe"
+import Stocking from "../SVG/Stocking/Stocking"
+import LaughingSanta from "../Utils/LaughingSanta/LaughingSanta"
 import "./NavMenu.css"
 
 interface NavProps {
@@ -44,8 +46,8 @@ class NavMenu extends Component<NavProps, NavTypes> {
                         <div className="AboutRoute" tabIndex={1} onClick={this.toggleMenu}>
                             <Link to='/about'>
                                 <div id="about-route-btn-wrapper">
-                                    <div className="NavMenuCandyCane">
-                                        <CandyCane />
+                                    <div className="NavMenuMistletoe">
+                                        <Mistletoe/>
                                     </div>
                                     <p id="about-route-text">About</p>
                                 </div>
@@ -54,7 +56,9 @@ class NavMenu extends Component<NavProps, NavTypes> {
                         <div className="DonateRoute" tabIndex={1} onClick={this.toggleMenu}>
                             <Link to='/donate'>
                                 <div id="donate-route-btn-wrapper">
-                                    <img id="donate-route-icon" src="./res/santa-icon.png" alt=""></img>
+                                    <div className="NavMenuStocking">
+                                        <Stocking />
+                                    </div>
                                     <p id="donate-route-text">Donate</p>
                                 </div>
                             </Link>
@@ -62,7 +66,11 @@ class NavMenu extends Component<NavProps, NavTypes> {
                         <div className="TrackerRoute" tabIndex={2} onClick={this.toggleMenu}>
                             <Link to='/santa'>
                                 <div id="tracker-route-btn-wrapper">
-                                    <img id="tracker-route-icon" src="./res/santa-icon.png" alt=""></img>
+                                    <div className="NavMenuLaughingSantaWrapper">
+                                        <LaughingSanta
+                                            message="406"
+                                        />
+                                    </div>
                                     <p id="tracker-route-text">Santa</p>
                                 </div>
                             </Link>

@@ -4,6 +4,7 @@ import LaughingSanta from "../Utils/LaughingSanta/LaughingSanta"
 import NavMenu from "../NavMenu/NavMenu"
 import "./AboutSection.css"
 import Ornaments from "../Utils/Ornaments/Ornaments"
+import Mistletoe from "../SVG/Mistletoe/Mistletoe"
 
 class AboutSection extends Component {
 
@@ -11,6 +12,9 @@ class AboutSection extends Component {
         return (
             <div className="AboutSection">
                 <NavMenu />
+                <div className="AboutSectionMistletoe">
+                    <Mistletoe />
+                </div>
                 <JumpingElf />
                 <Ornaments />
                 <div className="LaughingSantaWrapper">
