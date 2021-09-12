@@ -7,7 +7,7 @@
     overflow-y: auto;
 }
 
-.AboutSectionMistletoe{
+.AboutSectionMistletoe {
     position: absolute;
     top: 0px;
     left: 0px;
@@ -54,10 +54,10 @@
     .AboutHeader {
         margin-bottom: 20px;
     }
-    .AboutHeader p{
+    .AboutHeader p {
         font-size: 40px;
     }
-    .AboutContent p{
+    .AboutContent p {
         font-size: 20px;
     }
 }
@@ -68,11 +68,15 @@
     }
 }
 
-@media only screen and (max-height: 568px) {
-    .JumpingElf{
+@media only screen and (max-height: 568px){
+    .JumpingElf {
         display: none;
     }
-    .AboutContent{
-        min-height: calc(100% - 200px);
+    .AboutHeader {
+        margin-top: 25px;
+    }
+    .AboutContent {
+        min-height: calc(100% - 105px);
     }
 }
+

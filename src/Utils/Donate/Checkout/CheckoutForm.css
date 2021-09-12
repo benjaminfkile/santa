@@ -1,4 +1,4 @@
-#checkout-form{
+#checkout-form {
     display: none;
 }
 
@@ -106,7 +106,7 @@
     border-bottom: 1px solid #6c757d !important;
 }
 
-#donate-form-complete-btn{
+#donate-form-complete-btn {
     -webkit-animation: rotate-in-2-ccw 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
     animation: rotate-in-2-ccw 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
@@ -117,54 +117,14 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
     -webkit-box-shadow: 0 0 0 30px white inset !important;
 }
 
-@-webkit-keyframes rotate-in-2-fwd-ccw {
-    0% {
-        -webkit-transform: translateZ(-200px) rotate(45deg);
-        transform: translateZ(-200px) rotate(45deg);
-        opacity: 0;
+@media only screen and (max-width: 340px) {
+    .rccs__card--unknown>div {
+        max-width: 230px;
     }
-    100% {
-        -webkit-transform: translateZ(0) rotate(0);
-        transform: translateZ(0) rotate(0);
-        opacity: 1;
+    .donate-form-wrapper{
+        width: 230px;
     }
-}
-
-@keyframes rotate-in-2-fwd-ccw {
-    0% {
-        -webkit-transform: translateZ(-200px) rotate(45deg);
-        transform: translateZ(-200px) rotate(45deg);
-        opacity: 0;
-    }
-    100% {
-        -webkit-transform: translateZ(0) rotate(0);
-        transform: translateZ(0) rotate(0);
-        opacity: 1;
+    #card-section-wrapper {
+        width: 205px;
     }
 }
-
- @-webkit-keyframes rotate-in-2-ccw {
-    0% {
-      -webkit-transform: rotate(45deg);
-              transform: rotate(45deg);
-      opacity: 0;
-    }
-    100% {
-      -webkit-transform: rotate(0);
-              transform: rotate(0);
-      opacity: 1;
-    }
-  }
-  @keyframes rotate-in-2-ccw {
-    0% {
-      -webkit-transform: rotate(45deg);
-              transform: rotate(45deg);
-      opacity: 0;
-    }
-    100% {
-      -webkit-transform: rotate(0);
-              transform: rotate(0);
-      opacity: 1;
-    }
-  }
-  
