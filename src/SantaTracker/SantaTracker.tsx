@@ -1,7 +1,7 @@
 import { Component } from "react";
 import Runshow from "./RunShow/Runshow"
-import cookies from "../Utils/Cookies/Cookies"
-import NoSleep from 'nosleep.js';
+// import cookies from "../Utils/Cookies/Cookies"
+// import NoSleep from 'nosleep.js';
 
 interface SantaTrackerProps {
     santaDat: any
@@ -16,7 +16,7 @@ type SantaTrackerTypes = {
 
 class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
 
-    noSleep = new NoSleep();
+    // noSleep = new NoSleep();
 
     state = {
         preShow: false,
@@ -27,23 +27,23 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
 
     componentDidMount() {
 
-        if (cookies.getCookie("ReturnUser")) {
-            this.setState({ returnUser: true })
-        } else {
-            cookies.setCookie("ReturnUser", "true", 8)
-        }
-        try {
-            setTimeout(() => {
-                this.noSleep.enable()
-            }, 5000)
-        } catch (err) {
-            console.log("failed to enable no-sleep")
-        }
+        // if (cookies.getCookie("ReturnUser")) {
+        //     this.setState({ returnUser: true })
+        // } else {
+        //     cookies.setCookie("ReturnUser", "true", 8)
+        // }
+        // try {
+        //     setTimeout(() => {
+        //         this.noSleep.enable()
+        //     }, 5000)
+        // } catch (err) {
+        //     console.log("failed to enable no-sleep")
+        // }
     }
 
-    componentWillUnmount() {
-        this.noSleep.disable()
-    }
+    // componentWillUnmount() {
+    //     this.noSleep.disable()
+    // }
 
     render() {
         return (
