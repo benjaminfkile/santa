@@ -1,6 +1,6 @@
 import { Component } from "react"
 import { Modal, Button } from "react-bootstrap"
-import LaughingSanta from "../../LaughingSanta/LaughingSanta"
+import LaughingSanta from "../../../LaughingSanta/LaughingSanta"
 import "./Confirm.css"
 
 interface ConfirmProps {

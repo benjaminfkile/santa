@@ -65,7 +65,7 @@ class App extends Component<{}, AppTypes>{
     if (this.noSleep._wakeLock) {
       if (!this.noSleep._wakeLock.released) {
         this.getSanta()
-      }else{
+      } else {
         clearInterval(this.checkActiveInterval)
         this.checkActiveInterval = setInterval(this.checkActive, 1000)
       }
@@ -89,13 +89,6 @@ class App extends Component<{}, AppTypes>{
       })
   }
 
-  toggleDonate = () => {
-    if (this.state.donate) {
-      this.setState({ donate: false })
-    } else {
-      this.setState({ donate: true })
-    }
-  }
 
   render() {
     return (

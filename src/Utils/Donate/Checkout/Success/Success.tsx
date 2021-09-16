@@ -1,8 +1,8 @@
 import { Component } from "react"
 import { Modal, Button } from "react-bootstrap"
-import DonateToolkit from "../DonateToolkit"
+import DonateToolkit from "../../DonateToolkit"
 import Confetti from 'react-confetti'
-import LaughingSanta from "../../LaughingSanta/LaughingSanta"
+import LaughingSanta from "../../../LaughingSanta/LaughingSanta"
 import "./Success.css"
 
 type SuccessTypes = {

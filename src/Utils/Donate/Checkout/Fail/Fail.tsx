@@ -13,10 +13,15 @@ class Fail extends Component {
                     keyboard={false}
                 >
                     <Modal.Header>
-                        Fail
+                        <div className="donate-fail-header">
+                            <p>Error</p>
+                        </div>
                     </Modal.Header>
                     <Modal.Body>
-
+                        <div className="donate-fail-body">
+                            <p id="donate-fail-thing">(˚Δ˚)b</p>
+                            <p id="donate-fail-description">Sorry, we cant process your card right now.  Please try again later.</p>
+                        </div>
                     </Modal.Body>
                     <Modal.Footer>
                         <Button onClick={() => DonateToolkit.toggleDonate()}>Ok</Button>
