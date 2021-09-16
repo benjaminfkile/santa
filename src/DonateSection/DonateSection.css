@@ -40,6 +40,8 @@
     max-height: calc(100% - 350px);
     border-top: 1px solid gray;
     border-bottom: 1px solid gray;
+    -webkit-animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+    animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
 
 .DonateSectionText p {

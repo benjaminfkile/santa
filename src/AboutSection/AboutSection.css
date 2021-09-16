@@ -44,6 +44,8 @@
     max-height: calc(100% - 350px);
     border-top: 1px solid gray;
     border-bottom: 1px solid gray;
+    -webkit-animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+    animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
 
 .AboutContent p {
@@ -51,35 +53,6 @@
     text-align: center;
 }
 
-/* @media only screen and (min-width: 600px) {
-    .AboutHeader {
-        margin-bottom: 20px;
-    }
-    .AboutHeader p {
-        font-size: 40px;
-    }
-    .AboutContent p {
-        font-size: 20px;
-    }
-}
-
-@media only screen and (max-width: 348px) {
-    .AboutHeader {
-        margin-bottom: 40px;
-    }
-}
-
-@media only screen and (max-height: 568px){
-    .JumpingElf {
-        display: none;
-    }
-    .AboutHeader {
-        margin-top: 25px;
-    }
-    .AboutContent {
-        min-height: calc(100% - 105px);
-    }
-} */
 
 @media only screen and (min-width: 600px) {
     .AboutHeader {
