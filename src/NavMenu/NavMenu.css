@@ -22,8 +22,8 @@
     position: fixed;
     top: 3px;
     right: 3px;
-    width: 120px;
-    height: 190px;
+    width: 190px;
+    height: 310px;
     z-index: 1000;
     user-select: none;
     background-color: rgba(0, 0, 0);
@@ -39,23 +39,26 @@
     display: flex;
     height: 30px;
     width: 100%;
-    bottom: 0px;
+    bottom: 8px;
 }
 
 #nav-menu-close-btn {
     color: #FFFFFF;
     font-size: 30px;
     margin-left: auto;
+    margin-right: 8px;
     cursor: pointer;
     user-select: none;
 }
+
+
 
 .NavMenuRoutes {
     padding: 3px;
 }
 
 .AboutRoute, .TrackerRoute, .DonateRoute {
-    height: 48px;
+    height: 85px;
     background-color: #4d566299;
     border-radius: 5px;
     margin-bottom: 3px;
@@ -69,11 +72,11 @@
 }
 
 #about-route-text, #tracker-route-text, #donate-route-text {
-    margin-top: 10px;
+    margin-top: 20px;
     margin-right: 10px;
     width: 100%;
     text-align: center;
-    font-size: 18px;
+    font-size: 25px;
 }
 
 #about-route-icon, #tracker-route-icon, #donate-route-icon {
@@ -81,15 +84,13 @@
 }
 
 .NavMenuMistletoe, .NavMenuStocking {
-    margin-top: 5px;
-    width: 55px;
-    height: 45px;
+    margin-top: 0px;
+    width: 155px;
 }
 
-.NavMenuLaughingSantaWrapper{
-    transform: scale(.13);
-    margin-top: -30px;
-    margin-left: 23px;
-    margin-right: 20px;
+.NavMenuLaughingSantaWrapper {
+    transform: scale(.27);
+    margin-top: -37px;
+    margin-left: 46px;
+    margin-right: 35px;
 }
-
