@@ -9,6 +9,8 @@
     background-repeat: no-repeat;
     background-position: center center;
     user-select: none;
+    overflow-x: hidden;
+    overflow-y: hidden;
 }
 
 .preshow-info-card {

@@ -75,15 +75,15 @@
     }
 }
 
-@media only screen and (max-width: 376px) {
+@media only screen and (max-width: 470px) {
     .DonateSectionHeader {
         margin-bottom: 40px;
     }
-    .JumpingElf{
+    /* .JumpingElf{
         display: none;
-    }
+    } */
     .DonateSectionText{
-        min-height: calc(100% - 280px);
+        min-height: calc(100% - 420px);
     }
 }
 
