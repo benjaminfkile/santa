@@ -86,3 +86,25 @@
 
     }
 }
+
+@media screen and (orientation:landscape) and (max-height: 570px) {
+    .preshow-info-card{
+        height: 300px;
+        max-width: 100%;
+        width: calc(100% - 150px);
+        top: 40%
+    }
+    .preshow-info-card-header{
+        margin-top: 50px;
+        border: none;
+    }
+    #preshow-info-card-header-p1{
+        font-size: 40px;
+    }
+    #preshow-info-card-header-p2{
+        font-size: 25px;
+    }
+    .preshow-info-card-message{
+        display: none;
+    }
+ }
