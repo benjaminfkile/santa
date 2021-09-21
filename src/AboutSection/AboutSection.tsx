@@ -33,7 +33,6 @@ class AboutSection extends Component {
                         Aliquam faucibus purus in massa tempor nec feugiat nisl. Tincidunt praesent semper feugiat nibh sed pulvinar. Elit eget gravida cum sociis. Quam nulla porttitor massa id. Vestibulum rhoncus est pellentesque elit. Metus vulputate eu scelerisque felis. Risus feugiat in ante metus dictum at tempor. Justo nec ultrices dui sapien eget mi proin sed libero. Purus gravida quis blandit turpis.
                     </p>
                 </div>
-                <JumpingElf />
             </div>
         )
     }
