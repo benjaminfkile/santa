@@ -64,7 +64,7 @@ class App extends Component<{}, AppTypes>{
   checkActive = () => {
     if (this.noSleep._wakeLock) {
       if (!this.noSleep._wakeLock.released) {
-        this.getSanta()
+        // this.getSanta()
       } else {
         clearInterval(this.checkActiveInterval)
         this.checkActiveInterval = setInterval(this.checkActive, 1000)
