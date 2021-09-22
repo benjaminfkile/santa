@@ -26,12 +26,15 @@ class AboutSection extends Component {
                     <p>Western Montana Santa Flyover</p>
                 </div>
                 <div className="AboutContent">
-                    <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ornare aenean euismod elementum nisi quis eleifend quam adipiscing vitae. Amet luctus venenatis lectus magna fringilla urna. Vel quam elementum pulvinar etiam non. Dictum varius duis at consectetur lorem. Tempor nec feugiat nisl pretium fusce. Adipiscing at in tellus integer feugiat scelerisque. Mauris augue neque gravida in. Tortor aliquam nulla facilisi cras fermentum odio eu feugiat. Eu augue ut lectus arcu bibendum.
-                    </p>
-                    <p>
-                        Aliquam faucibus purus in massa tempor nec feugiat nisl. Tincidunt praesent semper feugiat nibh sed pulvinar. Elit eget gravida cum sociis. Quam nulla porttitor massa id. Vestibulum rhoncus est pellentesque elit. Metus vulputate eu scelerisque felis. Risus feugiat in ante metus dictum at tempor. Justo nec ultrices dui sapien eget mi proin sed libero. Purus gravida quis blandit turpis.
-                    </p>
+                    <div className="AboutContentR1">
+                        <p>
+                            Western Montana Santa Flyover is a non-profit organization devout to bringing back and keeping the tradition of the Santa Flyover in Missoula Mt.  Last year Missoula resident Lynn Lease started a Facebook group to get more people interested in seeing Santa fly again.  The group grew rapidly and received a tremendous amount of support throughout the community. With the help of volunteers and donations, Santa flew over Missoula for the first time in over a decade.
+                        </p>
+                    </div>
+                    <div className="AboutContentR2">
+                        <img src="https://i.ibb.co/YPh5L5k/133191519-10221868573215723-5050912979703431593-n.jpg" alt="Picture of Santa"></img>
+                        <img src="https://i.ibb.co/8gWYKhz/132043373-10221837913769256-4996238142914810894-n.jpg" alt="Picture of Helicopter"></img>
+                    </div>
                 </div>
             </div>
         )

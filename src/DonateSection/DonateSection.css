@@ -8,7 +8,7 @@
     overflow-x: hidden;
 }
 
-.DonateSectionStocking{
+.DonateSectionStocking {
     position: absolute;
     top: 10px;
     left: 0px;
@@ -16,34 +16,34 @@
 }
 
 .DonateSectionHeader {
-    width: 70%;
-    margin-left: auto;
+    width: 200px;
     margin-right: auto;
+    margin-left: auto;
+    margin-top: 15px;
     padding-left: 15px;
     padding-right: 15px;
-    margin-top: 20%;
     text-align: center;
     color: white;
 }
 
 .DonateSectionHeader p {
     font-size: 28px;
+    margin-bottom: 0px;
     /* text-decoration: underline; */
-    /* font-family: 'Mountains of Christmas', cursive; */
+    font-family: 'Mountains of Christmas', cursive;
 }
 
 .DonateSectionText {
-    width: 90%;
+    width: 95%;
+    /* max-width: 414px; */
     margin: auto;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-left: 15px;
     padding-right: 15px;
-    max-width: 600px;
-    max-height: 50%;
+    padding-left: 15px;
+    height: calc(100% - 210px);
     border-top: 1px solid gray;
     border-bottom: 1px solid gray;
-
 }
 
 .DonateSectionText p {
@@ -66,33 +66,59 @@
     margin-right: auto;
 }
 
-.JumpingElf{
-    display: none;
+.JumpingElf {
+    transform: scale(.3);
+    left: 0px;
+    bottom: -150px;
 }
 
-@media screen and (orientation:landscape) {
+@media screen and (min-width: 360px) {
     .DonateSectionHeader {
-        margin-top: 20px;
-        width: 100%;
+        width: 210px;
     }
-    .DonateSectionText{
-        max-height: 58%;
-
+    .DonateSectionText {
+        height: calc(100% - 170px);
     }
 }
 
-@media screen and (orientation:landscape) and (min-height: 501px) {
+@media screen and (min-width: 470px) {
     .DonateSectionHeader {
-        width: 100%;
-        margin-top: 10%;
+        width: 210px;
     }
-
+    .DonateSectionText {
+        width: 80%;
+    }
 }
 
-@media screen and (min-height: 720px) and (min-width: 375px) {
-    .JumpingElf{
+@media screen and (min-width: 600px) {
+    .DonateSectionHeader {
+        width: 450px;
+    }
+    .DonateSectionHeader p {
+        font-size: 50px;
+    }
+    .DonateSectionText {
+        width: 80%;
+        height: calc(100% - 375px);
+    }
+    .DonateSectionText p {
+        font-size: 21px;
+    }
+}
+
+@media screen and (min-width: 900px) {
+    .DonateSectionHeader {
+        width: 700px;
+    }
+    .DonateSectionText {
+        width: 50%;
+        height: calc(100% - 200px);
+        /* display: flex; */
+    }
+    .DonateSectionText p {
+        font-size: 20px;
+    }
+    .JumpingElf {
         display: block;
     }
 }
-
-

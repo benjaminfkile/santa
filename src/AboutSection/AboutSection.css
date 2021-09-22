@@ -20,12 +20,12 @@
 }
 
 .AboutHeader {
-    width: 70%;
+    width: 200px;
     margin-right: auto;
     margin-left: auto;
+    margin-top: 15px;
     padding-left: 15px;
     padding-right: 15px;
-    margin-top: 20%;
     text-align: center;
     color: white;
 }
@@ -33,21 +33,21 @@
 .AboutHeader p {
     font-size: 28px;
     /* text-decoration: underline; */
-    /* font-family: 'Mountains of Christmas', cursive; */
+    margin-bottom: 0px;
+    font-family: 'Mountains of Christmas', cursive;
 }
 
 .AboutContent {
-    width: 90%;
+    width: 95%;
+    /* max-width: 414px; */
     margin: auto;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-left: 15px;
     padding-right: 15px;
-    max-width: 600px;
-    max-height: 50%;
+    padding-left: 15px;
+    height: calc(100% - 145px);
     border-top: 1px solid gray;
     border-bottom: 1px solid gray;
-    
 }
 
 .AboutContent p {
@@ -58,30 +58,69 @@
     animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; */
 }
 
+.AboutContent img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 10px;
+    width: 100%;
+    max-width: 400px;
+    /* border: 1px solid gray; */
+    border-radius: 3px;
+}
+
 .JumpingElf{
     display: none;
 }
 
-
-@media screen and (orientation:landscape) and (max-height: 500px) {
+@media screen and (min-width: 360px) {
     .AboutHeader {
-        width: 100%;
-        margin-top: 20px;
+        width: 210px;
     }
-    .AboutContent{
-        max-height: 70%;
+    .AboutContent {
+        height: calc(100% - 110px);
     }
 }
 
-@media screen and (orientation:landscape) and (min-height: 501px) {
+@media screen and (min-width: 470px) {
     .AboutHeader {
-        width: 100%;
-        margin-top: 10%;
+        width: 210px;
+    }
+    .AboutContent {
+        width: 80%;
     }
 }
 
-@media screen and (min-height: 720px) {
+@media screen and (min-width: 600px) {
+    .AboutHeader {
+        width: 450px;
+    }
+    .AboutHeader p {
+        font-size: 50px;
+    }
+    .AboutContent {
+        width: 80%;
+        height: calc(100% - 210px);
+    }
+    .AboutContent p {
+        font-size: 21px;
+    }
+}
+
+@media screen and (min-width: 900px) {
+    .AboutHeader {
+        width: 700px;
+    }
+    .AboutContent {
+        width: 50%;
+        height: calc(100% - 150px);
+        /* display: flex; */
+    }
+    .AboutContent p {
+        font-size: 20px;
+    }
     .JumpingElf{
         display: block;
+
     }
 }

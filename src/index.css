@@ -6,23 +6,25 @@ html, body{
 }
 
 ::-webkit-scrollbar {
-  width: 5px;
+  width: 3px;
+  height: 3px;
 }
 
 ::-webkit-scrollbar-track {
-  box-shadow: inset 0 0 5px grey;
+  /* box-shadow: inset 0 0 5px grey; */
   border-radius: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: url("https://i.ibb.co/f0gsh1R/0FYDzt.jpg");
+  background-image: linear-gradient(rgba(0,0,0,.5), rgba(0,0,0,0.5)), url("https://i.ibb.co/f0gsh1R/0FYDzt.jpg");
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center center;
-  border-radius: 10px;
+  /* background-color: gray; */
+  border-radius: 5px;
 }
-
-
 
 
 @-webkit-keyframes slide-in-right {
