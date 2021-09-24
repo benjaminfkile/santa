@@ -20,9 +20,12 @@ class DonateSection extends Component {
                 <div className="DonateSectionHeader">
                     <p>Help Raise Money for Santas Flight</p>
                 </div>
-                <div className="DonateSectionText">
+                <div className="DonateSectionContent">
+                    <div className="DonateSectionContentImg1">
+                    <img src="https://i.ibb.co/CHQgfv8/glass-jar-full-of-cois-with-donate-written-on-it-charity-donation-philanthropy-large.jpg" alt=""/>
+                    </div>
                     <p>
-                        uismod quis viverra nibh cras pulvinar mattis nunc. Morbi tempus iaculis urna id volutpat lacus laoreet non curabitur. Et netus et malesuada fames ac turpis. Luctus venenatis lectus magna fringilla urna porttitor. Tellus rutrum tellus pellentesque eu tincidunt tortor aliquam nulla. Fringilla phasellus faucibus scelerisque eleifend. Lacus sed viverra tellus in hac habitasse platea dictumst. Nunc sed velit dignissim sodales ut eu sem. At erat pellentesque adipiscing commodo elit. In nibh mauris cursus mattis molestie a. Tincidunt nunc pulvinar sapien et ligula ullamcorper malesuada proin. Volutpat maecenas volutpat blandit aliquam etiam erat velit. Vel risus commodo viverra maecenas accumsan lacus vel facilisis volutpat. At in tellus integer feugiat.
+                    As a non-profit organization, we depend on donations to help pay for the cost of the flight, the cost of storing Santa, and the cost of materials such as lights and generators.  100% of all donations go toward funding Santas flight.  Any donation made is tax-deductible.
                     </p>
                 </div>
                 <div className="DonateSectionDonateBtn">

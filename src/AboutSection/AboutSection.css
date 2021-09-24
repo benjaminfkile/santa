@@ -15,10 +15,6 @@
     width: 80px;
 }
 
-.LaughingSantaWrapper {
-    display: none;
-}
-
 .AboutHeader {
     width: 200px;
     margin-right: auto;
@@ -38,14 +34,14 @@
 }
 
 .AboutContent {
-    width: 95%;
+    width: 80%;
     /* max-width: 414px; */
     margin: auto;
     overflow-y: auto;
     overflow-x: hidden;
     padding-right: 15px;
     padding-left: 15px;
-    height: calc(100% - 145px);
+    max-height: calc(100% - 145px);
     border-top: 1px solid gray;
     border-bottom: 1px solid gray;
 }
@@ -73,12 +69,26 @@
     display: none;
 }
 
+.AboutSectionContentImg1 img {
+    display: block;
+    width: 100%;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#how-started{
+    font-family: 'Mountains of Christmas', cursive;
+    font-size: 30px;
+    text-align: left;
+}
+
 @media screen and (min-width: 360px) {
     .AboutHeader {
         width: 210px;
     }
     .AboutContent {
-        height: calc(100% - 110px);
+        max-height: calc(100% - 110px);
     }
 }
 
@@ -100,7 +110,7 @@
     }
     .AboutContent {
         width: 80%;
-        height: calc(100% - 210px);
+        max-height: calc(100% - 210px);
     }
     .AboutContent p {
         font-size: 21px;
@@ -113,7 +123,7 @@
     }
     .AboutContent {
         width: 50%;
-        height: calc(100% - 150px);
+        max-height: calc(100% - 150px);
         /* display: flex; */
     }
     .AboutContent p {
