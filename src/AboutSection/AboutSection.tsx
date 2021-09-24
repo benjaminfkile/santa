@@ -1,6 +1,5 @@
 import { Component } from "react"
 import JumpingElf from "../Utils/JumpingElf/JumpingElf"
-import LaughingSanta from "../Utils/LaughingSanta/LaughingSanta"
 import NavMenu from "../NavMenu/NavMenu"
 import "./AboutSection.css"
 import Ornaments from "../Utils/Ornaments/Ornaments"
