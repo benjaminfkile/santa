@@ -77,10 +77,11 @@
     margin-right: auto;
 }
 
-#how-started{
-    font-family: 'Mountains of Christmas', cursive;
-    font-size: 30px;
+#img-credit-about-i-1{
+    font-size: 10px;
+    color: gray;
     text-align: left;
+    margin-top: -10px;
 }
 
 @media screen and (min-width: 360px) {

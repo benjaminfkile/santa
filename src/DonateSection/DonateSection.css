@@ -81,6 +81,12 @@
     margin-right: auto;
 }
 
+#img-credit-donate-i-1{
+    font-size: 10px;
+    color: gray;
+    text-align: left;
+}
+
 @media screen and (min-width: 360px) {
     .DonateSectionHeader {
         width: 210px;

@@ -23,6 +23,7 @@ class DonateSection extends Component {
                 <div className="DonateSectionContent">
                     <div className="DonateSectionContentImg1">
                     <img src="https://i.ibb.co/CHQgfv8/glass-jar-full-of-cois-with-donate-written-on-it-charity-donation-philanthropy-large.jpg" alt=""/>
+                    <p id="img-credit-donate-i-1">Credit: The Motley Fool</p>
                     </div>
                     <p>
                     As a non-profit organization, we depend on donations to help pay for the cost of the flight, the cost of storing Santa, and the cost of materials such as lights and generators.  100% of all donations go toward funding Santas flight.  Any donation made is tax-deductible.
