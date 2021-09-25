@@ -310,6 +310,7 @@ class Tracker extends Component {
                         menuOpen={this.menuOpen}
                         santaDat={this.props.santaDat}
                         getUserLocation={this.getUserLocation}
+                        distanceFromUserToSanta={this.state.distanceFromUserToSanta}
                     />}
                     {!userLocation.disable && this.state.distanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
                         {this.state.distanceFromUserToSanta < 5281 &&

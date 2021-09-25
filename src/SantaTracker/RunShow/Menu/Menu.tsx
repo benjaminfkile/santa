@@ -24,6 +24,7 @@ interface TrackerMenuProps {
     }
     getUserLocation: Function
     toggleDonate: Function
+    distanceFromUserToSanta: any
 }
 
 type TrackerMenuTypes = {
@@ -107,10 +108,10 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                         {this.state.snow && <Button id="snow-toggled-on" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons">ac_unit</span><p>Snow</p></Button>}
                     </div>
                     <div className="TrackerMenuSantaDatWrapper" id={"tracker-menu-santa-dat-wrapper-" + this.props.currentTheme.toLowerCase()}>
-                        {this.props.santaDat.accuracy && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
+                        {/* {this.props.santaDat.accuracy && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
                             <span className="material-icons">360</span>
                             <p>{this.props.santaDat.accuracy.split("+")[0]} ft</p>
-                        </div>}
+                        </div>} */}
                         {this.props.santaDat.bear && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
                             <span className="material-icons">explore</span>
                             <p>{this.props.santaDat.bear.split("+")[0]}</p>
@@ -124,17 +125,32 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                             <p>{this.props.santaDat.speed.split("+")[0]} mph</p>
                         </div>}
                     </div>
+                    {!userLocation.disable && this.props.distanceFromUserToSanta && <div className="DistanceFromUserToSantaTrackerMenu" id={"distance-from-user-to-santa-tracker-menu-" + this.props.currentTheme.toLowerCase()}>
+                        {this.props.distanceFromUserToSanta < 5281 &&
+                            <div id="distance-from-user-to-santa-menu-pill-wrapper">
+                                <img id="santa-hat-menu-user-loc" src="./res/santa-hat.png" alt=""></img>
+                                <p>{this.props.distanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
+                            </div>}
+                        {this.props.distanceFromUserToSanta > 5280 &&
+                            <div id="distance-from-user-to-santa-menu-pill-wrapper">
+                                <img id="santa-hat-menu-user-loc" src="./res/santa-hat.png" alt=""></img>
+                                <p> {((this.props.distanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
+                            </div>}
+                    </div>}
+
+
+
                     <div className="TrackerMenuFooter">
                         {!userLocation.disable && <div className="TrackerMenuLocationAllowed" id={"tracker-menu-location-btn-allowed-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">my_location</span></div>}
                         {userLocation.disable && <div className="TrackerMenuLocationDenied" id={"tracker-menu-location-btn-denied-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">location_disabled</span></div>}
-                            <div className="TrackerMenuRoutesBtnWrapper">
-                                <div className="TrackerMenuDonateBtn" id={"tracker-menu-donate-btn-" + this.props.currentTheme.toLowerCase()} onClick={() => DonateToolKit.toggleDonate()}><p><span className="material-icons">attach_money</span></p></div>
-                                <div className="TrackerMenuHomeBtn">
-                                    <Link to='/about'>
-                                        <span id={"tracker-menu-home-btn-" + this.props.currentTheme.toLowerCase()} className="material-icons">home</span>
-                                    </Link>
-                                </div>
+                        <div className="TrackerMenuRoutesBtnWrapper">
+                            <div className="TrackerMenuDonateBtn" id={"tracker-menu-donate-btn-" + this.props.currentTheme.toLowerCase()} onClick={() => DonateToolKit.toggleDonate()}><p><span className="material-icons">attach_money</span></p></div>
+                            <div className="TrackerMenuHomeBtn">
+                                <Link to='/about'>
+                                    <span id={"tracker-menu-home-btn-" + this.props.currentTheme.toLowerCase()} className="material-icons">home</span>
+                                </Link>
                             </div>
+                        </div>
                         <div className="TrackerMenuCloseBtn" id={"tracker-menu-close-btn-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleMenu}><p><span className="material-icons">clear</span></p></div>
                     </div>
                 </div>}

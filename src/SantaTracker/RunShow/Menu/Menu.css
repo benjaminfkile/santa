@@ -90,36 +90,28 @@
     height: 45px;
 }
 
-.TrackerMenuFooter span{
+.TrackerMenuFooter span {
     font-size: 40px !important;
 }
 
-.TrackerMenuRoutes{
+.TrackerMenuRoutes {
     position: absolute;
     width: 100%;
     bottom: -18px;
-
-
 }
 
-.TrackerMenuRoutesBtnWrapper{
+.TrackerMenuRoutesBtnWrapper {
     display: flex;
     width: 60px;
 }
 
-.TrackerMenuRoutesBtnWrapper span{
+.TrackerMenuRoutesBtnWrapper span {
     text-decoration: none;
     color: white;
 }
 
 .TrackerMenuCloseBtn {
     margin-left: auto;
-}
-
-
-
-.TrackerMenuDonateBtn {
-
 }
 
 .TrackerMenuCloseBtn span, .TrackerMenuDonateBtn span {
@@ -156,7 +148,7 @@
 }
 
 #tracker-menu-location-btn-allowed-retro {
-    color: #dfd2ae;
+    color: #28a745;
 }
 
 #tracker-menu-location-btn-denied-retro {
@@ -164,7 +156,7 @@
 }
 
 #tracker-menu-location-btn-allowed-silver {
-    color: #f7f7f7;
+    color: #28a745;
 }
 
 #tracker-menu-location-btn-denied-silver {
@@ -187,16 +179,64 @@
     color: #dc3545
 }
 
-#tracker-menu-close-btn-night, #tracker-menu-donate-btn-night {
+#tracker-menu-close-btn-night {
     color: #ffffff;
 }
 
-#tracker-menu-close-btn-dark, #tracker-menu-donate-btn-dark {
+#tracker-menu-close-btn-dark {
     color: #b5b5b5;
 }
 
-#tracker-menu-close-btn-aubergine , #tracker-menu-donate-btn-aubergine {
+#tracker-menu-close-btn-aubergine {
     color: #FFFFFF;
+}
+
+#tracker-menu-donate-btn-standard span {
+    color: #000000;
+}
+
+#tracker-menu-donate-btn-retro span {
+    color: #000000;
+}
+
+#tracker-menu-donate-btn-silver span {
+    color: #000000;
+}
+
+#tracker-menu-donate-btn-dark span {
+    color: #b5b5b5;
+}
+
+#tracker-menu-donate-btn-night span {
+    color: #ffffff;
+}
+
+#tracker-menu-donate-btn-aubergine span {
+    color: #ffffff;
+}
+
+#tracker-menu-home-btn-standard {
+    color: #000000;
+}
+
+#tracker-menu-home-btn-retro {
+    color: #000000;
+}
+
+#tracker-menu-home-btn-silver {
+    color: #000000;
+}
+
+#tracker-menu-home-btn-dark {
+    color: #b5b5b5;
+}
+
+#tracker-menu-home-btn-night {
+    color: #ffffff;
+}
+
+#tracker-menu-home-btn-aubergine {
+    color: #ffffff;
 }
 
 .TerrainToggle, .RoadMapToggle, .SnowToggle {
@@ -288,7 +328,7 @@
 }
 
 #retro-theme-menu-content {
-    background-color: #868f60d1;
+    background-color: #646f37d1;
 }
 
 #retro-theme-menu-content .TrackerMenuTheme {
@@ -309,7 +349,7 @@
 }
 
 #silver-theme-menu-content {
-    background-color: #868686c9;
+    background-color: #ffffffab;
 }
 
 #silver-theme-menu-content .TrackerMenuTheme {
@@ -318,7 +358,7 @@
 }
 
 #silver-theme-menu-content button {
-    background-color: #737373;
+    background-color: #737372b8;
     color: black;
 }
 
@@ -471,4 +511,44 @@
     color: #ffffff;
 }
 
+#distance-from-user-to-santa-menu-pill-wrapper {
+    height: 28px;
+    display: flex;
+    width: calc(50% - 1px);
+}
 
+#distance-from-user-to-santa-menu-pill-wrapper p {
+    font-size: 17px;
+    color: #FFFFFF;
+    float: left;
+    white-space: nowrap;
+}
+
+#santa-hat-menu-user-loc {
+    height: 28px;
+    margin-left: 10px;
+}
+
+#distance-from-user-to-santa-tracker-menu-standard p {
+    color: #000000;
+}
+
+#distance-from-user-to-santa-tracker-menu-retro p {
+    color: #000000;
+}
+
+#distance-from-user-to-santa-tracker-menu-silver p {
+    color: #000000;
+}
+
+#distance-from-user-to-santa-tracker-menu-dark p {
+    color: #b5b5b5;
+}
+
+#distance-from-user-to-santa-tracker-menu-night p {
+    color: #FFFFFF;
+}
+
+#distance-from-user-to-santa-tracker-menu-aubergine p {
+    color: #FFFFFF;
+}
