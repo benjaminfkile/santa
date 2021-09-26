@@ -9,8 +9,9 @@ import Night from './MapThemes/Night'
 import Aubergine from './MapThemes/Aubergine'
 import TrackerMenu from "./Menu/Menu"
 import Snow from "../../Utils/Snow/Snow"
-import TreeLoader from "../../Utils/TreeLoader/TreeLoader";
-import projectedRoute from "../../Utils/ProjectedRoute";
+import TreeLoader from "../../Utils/TreeLoader/TreeLoader"
+import projectedRoute from "../../Utils/ProjectedRoute"
+// import Compass from "../../Utils/Compass/Compass"
 import "./Runshow.css"
 
 class Tracker extends Component {
@@ -280,7 +281,6 @@ class Tracker extends Component {
                     <Map
                         id="Map"
                         onMapLoad={map => {
-                            // console.log("map load")
                             this.setMapOptions(map)
                             let mapIcon = {
                                 url: './res/santa-icon.png',
@@ -338,6 +338,10 @@ class Tracker extends Component {
                         <p>{this.state.online}</p>
                     </div>}
                 </div>}
+                {/* <Compass 
+                direction={240}
+                theme={this.state.currentTheme}
+                /> */}
                 {this.state.loading &&
                     <div className="TrackerLoading">
                         <TreeLoader />
