@@ -13,7 +13,6 @@ import TreeLoader from "../../Utils/TreeLoader/TreeLoader"
 import projectedRoute from "../../Utils/ProjectedRoute"
 import Compass from "../../Utils/Compass/Compass"
 import "./Runshow.css"
-import { distanceAndSkiddingToXY } from "@popperjs/core/lib/modifiers/offset";
 
 class Tracker extends Component {
 
