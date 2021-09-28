@@ -292,7 +292,7 @@ class Tracker extends Component {
     startCompass = () => {
         const self = this
         window.addEventListener("deviceorientation", function (event) {
-            self.setState({compassValue: Math.abs(event.alpha)})
+            self.setState({compassValue: Math.abs(event.alpha - 360)})
         })
     }
 
