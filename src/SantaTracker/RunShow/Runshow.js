@@ -11,8 +11,9 @@ import TrackerMenu from "./Menu/Menu"
 import Snow from "../../Utils/Snow/Snow"
 import TreeLoader from "../../Utils/TreeLoader/TreeLoader"
 import projectedRoute from "../../Utils/ProjectedRoute"
-// import Compass from "../../Utils/Compass/Compass"
+import Compass from "../../Utils/Compass/Compass"
 import "./Runshow.css"
+import { distanceAndSkiddingToXY } from "@popperjs/core/lib/modifiers/offset";
 
 class Tracker extends Component {
 
@@ -34,6 +35,8 @@ class Tracker extends Component {
     loadHandlerInterval
     loadHandlerSpeed = 1000
     loadHandlerStep = 0;
+    compass
+    isIOS
 
     state = {
         lat: 46.833,
@@ -48,13 +51,19 @@ class Tracker extends Component {
         test: true,
         online: null,
         loading: true,
-        donate: false
+        donate: false,
+        compass: false,
+        compassValue: 0
     }
 
 
     componentDidMount() {
         setInterval(this.update, this.updateinterval)
         this.loadHandlerInterval = setInterval(this.loadHandler, this.loadHandlerSpeed)
+        this.isIOS = !(
+            navigator.userAgent.match(/(iPod|iPhone|iPad)/) &&
+            navigator.userAgent.match(/AppleWebKit/)
+        )
     }
 
     componentWillUnmount() {
@@ -267,6 +276,34 @@ class Tracker extends Component {
         }
     }
 
+    toggleCompass = () => {
+        if (this.state.compass) {
+            this.setState({ compass: false })
+            this.stopCompass()
+        } else {
+            this.setState({ compass: true })
+            this.startCompass()
+        }
+    }
+
+    stopCompass = () =>{
+        window.removeEventListener("deviceorientation")
+    }
+
+    startCompass = () => {
+        const self = this
+        window.addEventListener("deviceorientation", function (event) {
+            self.setState({compassValue: event.alpha})
+        })
+    }
+
+    compassHandler = (e) => {
+        console.log(e)
+        // this.compass = e.webkitCompassHeading || Math.abs(e.alpha - 360);
+        // console.log(this.compass)
+
+    }
+
     render() {
 
         if (this.marker) {
@@ -311,6 +348,7 @@ class Tracker extends Component {
                         santaDat={this.props.santaDat}
                         getUserLocation={this.getUserLocation}
                         distanceFromUserToSanta={this.state.distanceFromUserToSanta}
+                        toggleCompass={this.toggleCompass}
                     />}
                     {!userLocation.disable && this.state.distanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
                         {this.state.distanceFromUserToSanta < 5281 &&
@@ -338,10 +376,10 @@ class Tracker extends Component {
                         <p>{this.state.online}</p>
                     </div>}
                 </div>}
-                {/* <Compass 
-                direction={240}
-                theme={this.state.currentTheme}
-                /> */}
+                {!this.state.menuOpen && this.state.compass && <Compass
+                    direction={this.state.compassValue}
+                    theme={this.state.currentTheme}
+                />}
                 {this.state.loading &&
                     <div className="TrackerLoading">
                         <TreeLoader />

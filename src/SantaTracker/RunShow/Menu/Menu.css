@@ -552,3 +552,7 @@
 #distance-from-user-to-santa-tracker-menu-aubergine p {
     color: #FFFFFF;
 }
+
+.TrackerMenuCompassBtn span{
+    color: #FFFFFF;
+}
