@@ -12,6 +12,7 @@ import Snow from "../../Utils/Snow/Snow"
 import TreeLoader from "../../Utils/TreeLoader/TreeLoader"
 import projectedRoute from "../../Utils/ProjectedRoute"
 import Compass from "../../Utils/Compass/Compass"
+import DeviceOrientation from 'react-device-orientation';
 import "./Runshow.css"
 
 class Tracker extends Component {
@@ -285,14 +286,14 @@ class Tracker extends Component {
         }
     }
 
-    stopCompass = () =>{
+    stopCompass = () => {
         window.removeEventListener("deviceorientation")
     }
 
     startCompass = () => {
         const self = this
         window.addEventListener("deviceorientation", function (event) {
-            self.setState({compassValue: Math.abs(event.alpha - 360)})
+            self.setState({ compassValue: Math.abs(event.alpha - 360) })
         })
     }
 
@@ -368,10 +369,15 @@ class Tracker extends Component {
                         <p>{this.state.online}</p>
                     </div>}
                 </div>}
-                {!this.state.menuOpen && this.state.compass && <Compass
-                    direction={this.state.compassValue}
-                    theme={this.state.currentTheme}
-                />}
+                {!this.state.menuOpen && this.state.compass &&
+                    <DeviceOrientation>
+                        {({ absolute, alpha, beta, gamma }) => (
+                            <Compass
+                                direction={alpha}
+                                theme={this.state.currentTheme}
+                            />
+                        )}
+                    </DeviceOrientation>}
                 {this.state.loading &&
                     <div className="TrackerLoading">
                         <TreeLoader />
