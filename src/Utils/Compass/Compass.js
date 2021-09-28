@@ -94,7 +94,7 @@ export default class Compass extends React.Component {
                                 <div className="compass__arrow"></div>
                                 <div className="compass__labels">
                                     <span>{name}</span>
-                                    <span>{alpha}<sup>o</sup></span>
+                                    <span>{Math.trunc(alpha)}<sup>o</sup></span>
                                 </div>
                             </div>
                         </div>
