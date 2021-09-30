@@ -90,8 +90,8 @@ export default class Compass extends React.Component {
 
                 const draw = () => {
                     if (deviceOrientation) {
-                        const quaternion = deviceOrientation.getScreenAdjustedQuaternion();
-                        const matrix = deviceOrientation.getScreenAdjustedMatrix();
+                        // const quaternion = deviceOrientation.getScreenAdjustedQuaternion();
+                        // const matrix = deviceOrientation.getScreenAdjustedMatrix();
                         const euler = deviceOrientation.getScreenAdjustedEuler();
 
                         console.log(
