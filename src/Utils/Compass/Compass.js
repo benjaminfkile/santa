@@ -79,27 +79,20 @@ export default class Compass extends React.Component {
             name = this.directionName(dir);
 
         return (
-            <div>
-                <DeviceOrientation>
-                    {({ absolute, alpha, beta, gamma }) => (
-                        <div className="compass" style={this.props.style} id={`compass-${this.props.theme.toLowerCase()}`}>
-                            {alpha}
-                            <div className="compass__windrose"
-                                style={styleNormalizer({ transform: `rotate(-${alpha}deg)` })}>
-                                {[...Array(10)].map((k, i) => <div className="compass__mark" key={i + 1}></div>)}
-                                <div className="compass__mark--direction-h"></div>
-                                <div className="compass__mark--direction-v"></div>
-                            </div>
-                            <div className="compass__arrow-container">
-                                <div className="compass__arrow"></div>
-                                <div className="compass__labels">
-                                    <span>{name}</span>
-                                    <span>{Math.trunc(alpha)}<sup>o</sup></span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </DeviceOrientation>
+            <div className="compass" style={this.props.style} id={`compass-${this.props.theme.toLowerCase()}`}>
+                <div className="compass__windrose"
+                    style={styleNormalizer({ transform: `rotate(-${this.props.direction}deg)` })}>
+                    {[...Array(10)].map((k, i) => <div className="compass__mark" key={i + 1}></div>)}
+                    <div className="compass__mark--direction-h"></div>
+                    <div className="compass__mark--direction-v"></div>
+                </div>
+                <div className="compass__arrow-container">
+                    <div className="compass__arrow"></div>
+                    <div className="compass__labels">
+                        <span>{name}</span>
+                        <span>{Math.trunc(this.props.direction)}<sup>o</sup></span>
+                    </div>
+                </div>
             </div>
         );
     }

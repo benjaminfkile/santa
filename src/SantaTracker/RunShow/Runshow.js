@@ -350,10 +350,14 @@ class Tracker extends Component {
                     </div>}
                 </div>}
                 {!this.state.menuOpen && this.state.compass &&
-
-                    <Compass
-                        theme={this.state.currentTheme}
-                    />}
+                    <DeviceOrientation>
+                        {({ absolute, alpha, beta, gamma }) => (
+                            <Compass
+                                theme={this.state.currentTheme}
+                                direction={alpha}
+                            />
+                        )}
+                    </DeviceOrientation>}
                 {this.state.loading &&
                     <div className="TrackerLoading">
                         <TreeLoader />
