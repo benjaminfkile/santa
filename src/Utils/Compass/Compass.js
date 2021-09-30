@@ -12,7 +12,7 @@
 
 import React from 'react';
 import { FULLTILT } from 'fulltilt-ng';
-// import styleNormalizer from 'react-style-normalizer';
+import styleNormalizer from 'react-style-normalizer';
 import 'react-compass/src/styles.scss';
 import "./Compass.css"
 
@@ -28,7 +28,7 @@ export default class Compass extends React.Component {
 
         this.oldAngle = 0;
 
-        this.state = { quaternion: 0, matrix: 0, euler: 0, supported: false }
+        this.state = { quaternion: 0, matrix: 0, euler: {alpha: 0}, supported: false }
 
     }
 
@@ -100,7 +100,7 @@ export default class Compass extends React.Component {
                             euler
                         );
 
-                        this.setState({ quaternion: quaternion, matrix: matrix, euler: euler, supported: true })
+                        this.setState({ /*quaternion: quaternion, matrix: matrix,*/ euler: euler, supported: true })
                     }
 
                     requestAnimationFrame(draw);
@@ -116,14 +116,14 @@ export default class Compass extends React.Component {
     }
 
     render() {
-        // let dir = this.normalizeAngle(this.state.euler),
-        //     name = this.directionName(dir);
+        let dir = this.normalizeAngle(this.state.euler),
+            name = this.directionName(dir);
 
         return (
             <div className>
-                {/* {this.state.supported && <div className="compass" style={this.state.euler} id={`compass-${this.props.theme.toLowerCase()}`}>
+                {this.state.supported && <div className="compass" style={this.state.euler.alpha} id={`compass-${this.props.theme.toLowerCase()}`}>
                     <div className="compass__windrose"
-                        style={styleNormalizer({ transform: `rotate(-${this.state.euler}deg)` })}>
+                        style={styleNormalizer({ transform: `rotate(-${this.state.euler.alpha}deg)` })}>
                         {[...Array(10)].map((k, i) => <div className="compass__mark" key={i + 1}></div>)}
                         <div className="compass__mark--direction-h"></div>
                         <div className="compass__mark--direction-v"></div>
@@ -132,15 +132,15 @@ export default class Compass extends React.Component {
                         <div className="compass__arrow"></div>
                         <div className="compass__labels">
                             <span>{name}</span>
-                            <span>{Math.trunc(this.state.euler)}<sup>o</sup></span>
+                            <span>{Math.trunc(this.state.euler.alpha)}<sup>o</sup></span>
                         </div>
                     </div>
-                </div>} */}
+                </div>}
 
                 <div className="FML">
                     <p>{`quaternion: ${this.state.quaternion}`}</p>
                     <p>{`matrix: ${this.state.matrix}`}</p>
-                    <p>{`euler: ${this.state.euler}`}</p>
+                    <p>{`euler: ${this.state.euler.alpha}`}</p>
                 </div>
             </div>
 
