@@ -12,7 +12,7 @@
 
 import React from 'react';
 import { FULLTILT } from 'fulltilt-ng';
-import styleNormalizer from 'react-style-normalizer';
+// import styleNormalizer from 'react-style-normalizer';
 import 'react-compass/src/styles.scss';
 import "./Compass.css"
 
@@ -116,8 +116,8 @@ export default class Compass extends React.Component {
     }
 
     render() {
-        let dir = this.normalizeAngle(this.state.euler),
-            name = this.directionName(dir);
+        // let dir = this.normalizeAngle(this.state.euler),
+        //     name = this.directionName(dir);
 
         return (
             <div className>
