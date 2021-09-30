@@ -35,9 +35,6 @@ class Tracker extends Component {
     loadHandlerInterval
     loadHandlerSpeed = 1000
     loadHandlerStep = 0;
-    compass
-    isIOS
-
     state = {
         lat: 46.833,
         lng: -114.030,
@@ -53,17 +50,13 @@ class Tracker extends Component {
         loading: true,
         donate: false,
         compass: false,
-        compassValue: 0
+        psi: 0
     }
 
 
     componentDidMount() {
         setInterval(this.update, this.updateinterval)
         this.loadHandlerInterval = setInterval(this.loadHandler, this.loadHandlerSpeed)
-        this.isIOS = !(
-            navigator.userAgent.match(/(iPod|iPhone|iPad)/) &&
-            navigator.userAgent.match(/AppleWebKit/)
-        )
     }
 
     componentWillUnmount() {
@@ -85,6 +78,7 @@ class Tracker extends Component {
             && userLocation.coordinates.lng !== this.userToSantaCoords[1].lng) {
             this.userToSantaCoords[0] = { lat: Number(this.props.santaDat.lat), lng: Number(this.props.santaDat.lng) }
             this.userToSantaCoords[1] = { lat: Number(userLocation.coordinates.lat), lng: Number(userLocation.coordinates.lng) }
+            this.calcDegreeToPoint(Number(userLocation.coordinates.lat), Number(userLocation.coordinates.lng))
         }
         if (this.userToSantaCoords[1].lat && !userLocation.disable) {
             this.drawUserToSantaPoly()
@@ -279,23 +273,44 @@ class Tracker extends Component {
     toggleCompass = () => {
         if (this.state.compass) {
             this.setState({ compass: false })
-            this.stopCompass()
         } else {
             this.setState({ compass: true })
-            this.startCompass()
         }
     }
 
-    stopCompass = () => {
-        window.removeEventListener("deviceorientation")
+    // locationHandler = (position) => {
+    //     const { latitude, longitude } = position.coords;
+    //     this.pointDegree = this.calcDegreeToPoint(latitude, longitude);
+
+    //     if (this.pointDegree < 0) {
+    //         this.pointDegree = this.pointDegree + 360;
+    //     }
+    // }
+
+    calcDegreeToPoint = (latitude, longitude) => {
+        // Qibla geolocation
+        const point = {
+            lat: 21.422487,
+            lng: 39.826206,
+        };
+
+        const phiK = (point.lat * Math.PI) / 180.0;
+        const lambdaK = (point.lng * Math.PI) / 180.0;
+        const phi = (latitude * Math.PI) / 180.0;
+        const lambda = (longitude * Math.PI) / 180.0;
+        const psi =
+            (180.0 / Math.PI) *
+            Math.atan2(
+                Math.sin(lambdaK - lambda),
+                Math.cos(phi) * Math.tan(phiK) -
+                Math.sin(phi) * Math.cos(lambdaK - lambda)
+            );
+        console.log(Math.round(psi))
+        this.setState({psi: psi})
+        return Math.round(psi);
     }
 
-    startCompass = () => {
-        const self = this
-        window.addEventListener("deviceorientation", function (event) {
-            self.setState({ compassValue: Math.abs(event.alpha - 360) })
-        })
-    }
+
 
     render() {
 
@@ -373,7 +388,7 @@ class Tracker extends Component {
                     <DeviceOrientation>
                         {({ absolute, alpha, beta, gamma }) => (
                             <Compass
-                                direction={alpha}
+                                direction={this.state.psi - alpha}
                                 theme={this.state.currentTheme}
                             />
                         )}
