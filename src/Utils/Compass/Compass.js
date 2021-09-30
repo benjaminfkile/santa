@@ -95,8 +95,6 @@ export default class Compass extends React.Component {
                         const euler = deviceOrientation.getScreenAdjustedEuler();
 
                         console.log(
-                            quaternion,
-                            matrix,
                             euler
                         );
 
