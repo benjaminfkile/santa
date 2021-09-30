@@ -12,7 +12,7 @@
 
 import React from 'react';
 import { FULLTILT } from 'fulltilt-ng';
-import styleNormalizer from 'react-style-normalizer';
+// import styleNormalizer from 'react-style-normalizer';
 import 'react-compass/src/styles.scss';
 import "./Compass.css"
 
@@ -116,12 +116,12 @@ export default class Compass extends React.Component {
     }
 
     render() {
-        let dir = this.normalizeAngle(this.state.euler),
-            name = this.directionName(dir);
+        // let dir = this.normalizeAngle(this.state.euler),
+        //     name = this.directionName(dir);
 
         return (
             <div className>
-                {this.state.supported && <div className="compass" style={this.state.euler.alpha} id={`compass-${this.props.theme.toLowerCase()}`}>
+                {/* {this.state.supported && <div className="compass" style={this.state.euler.alpha} id={`compass-${this.props.theme.toLowerCase()}`}>
                     <div className="compass__windrose"
                         style={styleNormalizer({ transform: `rotate(-${this.state.euler.alpha}deg)` })}>
                         {[...Array(10)].map((k, i) => <div className="compass__mark" key={i + 1}></div>)}
@@ -135,12 +135,12 @@ export default class Compass extends React.Component {
                             <span>{Math.trunc(this.state.euler.alpha)}<sup>o</sup></span>
                         </div>
                     </div>
-                </div>}
+                </div>} */}
 
                 <div className="FML">
                     <p>{`quaternion: ${this.state.quaternion}`}</p>
                     <p>{`matrix: ${this.state.matrix}`}</p>
-                    <p>{`euler: ${this.state.euler.alpha}`}</p>
+                    <p>{`euler: ${this.state.euler}`}</p>
                 </div>
             </div>
 
