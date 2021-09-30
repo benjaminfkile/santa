@@ -5,3 +5,10 @@
     transform-origin: top left;
     transform: scale(.3);
 }
+.FML{
+    position: fixed;
+    top: 50%;
+    right: 15px;
+    background-color: white;
+    width: 200px;
+}

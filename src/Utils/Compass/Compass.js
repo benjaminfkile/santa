@@ -120,8 +120,8 @@ export default class Compass extends React.Component {
             name = this.directionName(dir);
 
         return (
-            <div>
-                {this.state.supported && <div className="compass" style={this.state.euler} id={`compass-${this.props.theme.toLowerCase()}`}>
+            <div className>
+                {/* {this.state.supported && <div className="compass" style={this.state.euler} id={`compass-${this.props.theme.toLowerCase()}`}>
                     <div className="compass__windrose"
                         style={styleNormalizer({ transform: `rotate(-${this.state.euler}deg)` })}>
                         {[...Array(10)].map((k, i) => <div className="compass__mark" key={i + 1}></div>)}
@@ -135,7 +135,13 @@ export default class Compass extends React.Component {
                             <span>{Math.trunc(this.state.euler)}<sup>o</sup></span>
                         </div>
                     </div>
-                </div>}
+                </div>} */}
+
+                <div className="FML">
+                    <p>{`quaternion: ${this.state.quaternion}`}</p>
+                    <p>{`matrix: ${this.state.matrix}`}</p>
+                    <p>{`euler: ${this.state.euler}`}</p>
+                </div>
             </div>
 
 
