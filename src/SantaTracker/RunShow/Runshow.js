@@ -78,7 +78,6 @@ class Tracker extends Component {
             && userLocation.coordinates.lng !== this.userToSantaCoords[1].lng) {
             this.userToSantaCoords[0] = { lat: Number(this.props.santaDat.lat), lng: Number(this.props.santaDat.lng) }
             this.userToSantaCoords[1] = { lat: Number(userLocation.coordinates.lat), lng: Number(userLocation.coordinates.lng) }
-            this.calcDegreeToPoint(Number(userLocation.coordinates.lat), Number(userLocation.coordinates.lng))
         }
         if (this.userToSantaCoords[1].lat && !userLocation.disable) {
             this.drawUserToSantaPoly()
@@ -278,40 +277,6 @@ class Tracker extends Component {
         }
     }
 
-    // locationHandler = (position) => {
-    //     const { latitude, longitude } = position.coords;
-    //     this.pointDegree = this.calcDegreeToPoint(latitude, longitude);
-
-    //     if (this.pointDegree < 0) {
-    //         this.pointDegree = this.pointDegree + 360;
-    //     }
-    // }
-
-    calcDegreeToPoint = (latitude, longitude) => {
-        // Qibla geolocation
-        const point = {
-            lat: 21.422487,
-            lng: 39.826206,
-        };
-
-        const phiK = (point.lat * Math.PI) / 180.0;
-        const lambdaK = (point.lng * Math.PI) / 180.0;
-        const phi = (latitude * Math.PI) / 180.0;
-        const lambda = (longitude * Math.PI) / 180.0;
-        const psi =
-            (180.0 / Math.PI) *
-            Math.atan2(
-                Math.sin(lambdaK - lambda),
-                Math.cos(phi) * Math.tan(phiK) -
-                Math.sin(phi) * Math.cos(lambdaK - lambda)
-            );
-        console.log(Math.round(psi))
-        this.setState({psi: psi})
-        return Math.round(psi);
-    }
-
-
-
     render() {
 
         if (this.marker) {
@@ -385,14 +350,10 @@ class Tracker extends Component {
                     </div>}
                 </div>}
                 {!this.state.menuOpen && this.state.compass &&
-                    <DeviceOrientation>
-                        {({ absolute, alpha, beta, gamma }) => (
-                            <Compass
-                                direction={this.state.psi - alpha}
-                                theme={this.state.currentTheme}
-                            />
-                        )}
-                    </DeviceOrientation>}
+
+                    <Compass
+                        theme={this.state.currentTheme}
+                    />}
                 {this.state.loading &&
                     <div className="TrackerLoading">
                         <TreeLoader />
