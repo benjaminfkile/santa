@@ -388,7 +388,7 @@ class Tracker extends Component {
                     <DeviceOrientation>
                         {({ absolute, alpha, beta, gamma }) => (
                             <Compass
-                                direction={alpha - this.state.psi}
+                                direction={this.state.psi - alpha}
                                 theme={this.state.currentTheme}
                             />
                         )}
