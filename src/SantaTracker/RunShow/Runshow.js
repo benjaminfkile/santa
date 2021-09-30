@@ -12,7 +12,6 @@ import Snow from "../../Utils/Snow/Snow"
 import TreeLoader from "../../Utils/TreeLoader/TreeLoader"
 import projectedRoute from "../../Utils/ProjectedRoute"
 import Compass from "../../Utils/Compass/Compass"
-import DeviceOrientation from 'react-device-orientation';
 import "./Runshow.css"
 
 class Tracker extends Component {
@@ -350,14 +349,9 @@ class Tracker extends Component {
                     </div>}
                 </div>}
                 {!this.state.menuOpen && this.state.compass &&
-                    <DeviceOrientation>
-                        {({ absolute, alpha, beta, gamma }) => (
-                            <Compass
-                                theme={this.state.currentTheme}
-                                direction={alpha}
-                            />
-                        )}
-                    </DeviceOrientation>}
+                    <Compass
+                        theme={this.state.currentTheme}
+                    />}
                 {this.state.loading &&
                     <div className="TrackerLoading">
                         <TreeLoader />
