@@ -163,8 +163,8 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                                 </Link>
                             </div>
                         </div>
+                        <div className="TrackerMenuCompassBtn" onClick={() => this.toggleCompass()}><span className="material-icons">explore</span></div>
                         <div className="TrackerMenuCloseBtn" id={"tracker-menu-close-btn-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleMenu}><p><span className="material-icons">clear</span></p></div>
-                        {/* <div className="TrackerMenuCompassBtn" onClick={() => this.toggleCompass()}><span className="material-icons">explore</span></div> */}
                     </div>
                 </div>}
                 {this.state.locationPrompt &&

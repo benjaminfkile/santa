@@ -553,6 +553,10 @@
     color: #FFFFFF;
 }
 
+.TrackerMenuCompassBtn{
+    margin-left: 25px;
+}
+
 .TrackerMenuCompassBtn span{
     color: #FFFFFF;
 }
