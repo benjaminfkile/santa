@@ -381,7 +381,14 @@ body {
   font-weight: 500;
 }
 
-
+.RunShowFullScreenBtn{
+  position: fixed;
+  top: 60px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  background-color: white;
+}
 
 @-webkit-keyframes slide-in-right {
   0% {

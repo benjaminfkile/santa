@@ -13,6 +13,7 @@ import TreeLoader from "../../Utils/TreeLoader/TreeLoader"
 import projectedRoute from "../../Utils/ProjectedRoute"
 import Compass from "../../Utils/Compass/Compass"
 import "./Runshow.css"
+import fullScreen from "../../Utils/FullScreen/FullScreen";
 
 class Tracker extends Component {
 
@@ -34,6 +35,7 @@ class Tracker extends Component {
     loadHandlerInterval
     loadHandlerSpeed = 1000
     loadHandlerStep = 0;
+    fullScreenInterval = 100
     state = {
         lat: 46.833,
         lng: -114.030,
@@ -49,12 +51,13 @@ class Tracker extends Component {
         loading: true,
         donate: false,
         compass: false,
-        psi: 0
+        fullScreenView: false
     }
 
 
     componentDidMount() {
         setInterval(this.update, this.updateinterval)
+        // setInterval(this.listen4FullScreen, this.fullScreenInterval)
         this.loadHandlerInterval = setInterval(this.loadHandler, this.loadHandlerSpeed)
     }
 
@@ -276,6 +279,20 @@ class Tracker extends Component {
         }
     }
 
+    toggleFullScreen = () => {
+        if (this.state.fullScreenView) {
+            this.setState({ fullScreenView: false })
+            fullScreen.close()
+        } else {
+            this.setState({ fullScreenView: true })
+            fullScreen.open()
+        }
+    }
+
+    listen4FullScreen = () => {
+        console.log(fullScreen.checkIfOpen())
+    }
+
     render() {
 
         if (this.marker) {
@@ -348,15 +365,20 @@ class Tracker extends Component {
                         <p>{this.state.online}</p>
                     </div>}
                 </div>}
-                {!this.state.menuOpen && this.state.compass &&
+                {!this.state.menuOpen && this.state.compass && !isNaN(parseInt(this.props.santaDat.bearraw)) &&
                     <Compass
                         theme={this.state.currentTheme}
+                        degree={parseInt(this.props.santaDat.bearraw)}
                     />}
                 {this.state.loading &&
                     <div className="TrackerLoading">
                         <TreeLoader />
                     </div>}
                 {this.state.snow && <Snow />}
+                <div className="RunShowFullScreenBtn" onClick={() => this.toggleFullScreen()}>
+                    {!this.state.fullScreenView && <span className="material-icons">fullscreen</span>}
+                    {this.state.fullScreenView && <span className="material-icons">fullscreen_exit</span>}
+                </div>
             </div>
         )
     }
