@@ -25,8 +25,11 @@ export default class Compass extends React.Component {
     init = () => {
         this.startBtn.addEventListener("click", this.startCompass);
         this.startCompass()
-        navigator.geolocation.getCurrentPosition(this.locationHandler);
+        const self = this
 
+        setInterval(() => {
+            navigator.geolocation.getCurrentPosition(self.locationHandler);
+        }, 1000)
         if (!this.isIOS) {
             window.addEventListener("deviceorientationabsolute", this.handler, true);
         }
@@ -36,6 +39,7 @@ export default class Compass extends React.Component {
         if (this.isIOS) {
             DeviceOrientationEvent.requestPermission()
                 .then((response) => {
+                    console.log(response)
                     if (response === "granted") {
                         window.addEventListener("deviceorientation", this.handler, true);
                     } else {
@@ -65,6 +69,7 @@ export default class Compass extends React.Component {
 
 
     locationHandler = (position) => {
+        console.log(position)
         const { latitude, longitude } = position.coords;
         this.pointDegree = this.calcDegreeToPoint(latitude, longitude);
 
