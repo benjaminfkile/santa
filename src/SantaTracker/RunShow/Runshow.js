@@ -35,7 +35,6 @@ class Tracker extends Component {
     loadHandlerInterval
     loadHandlerSpeed = 1000
     loadHandlerStep = 0;
-    fullScreenInterval = 100
     state = {
         lat: 46.833,
         lng: -114.030,
@@ -51,13 +50,11 @@ class Tracker extends Component {
         loading: true,
         donate: false,
         compass: false,
-        fullScreenView: false
     }
 
 
     componentDidMount() {
         setInterval(this.update, this.updateinterval)
-        // setInterval(this.listen4FullScreen, this.fullScreenInterval)
         this.loadHandlerInterval = setInterval(this.loadHandler, this.loadHandlerSpeed)
     }
 
@@ -279,20 +276,6 @@ class Tracker extends Component {
         }
     }
 
-    toggleFullScreen = () => {
-        if (this.state.fullScreenView) {
-            this.setState({ fullScreenView: false })
-            fullScreen.close()
-        } else {
-            this.setState({ fullScreenView: true })
-            fullScreen.open()
-        }
-    }
-
-    listen4FullScreen = () => {
-        console.log(fullScreen.checkIfOpen())
-    }
-
     render() {
 
         if (this.marker) {
@@ -375,10 +358,6 @@ class Tracker extends Component {
                         <TreeLoader />
                     </div>}
                 {this.state.snow && <Snow />}
-                <div className="RunShowFullScreenBtn" onClick={() => this.toggleFullScreen()}>
-                    {!this.state.fullScreenView && <span className="material-icons">fullscreen</span>}
-                    {this.state.fullScreenView && <span className="material-icons">fullscreen_exit</span>}
-                </div>
             </div>
         )
     }
