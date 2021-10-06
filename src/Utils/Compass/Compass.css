@@ -1,6 +1,6 @@
 .compass {
     position: fixed;
-    top: 10px;
+    top: 20px;
     left: calc(50% - 78px);
     transform-origin: top left;
     transform: scale(.3);
