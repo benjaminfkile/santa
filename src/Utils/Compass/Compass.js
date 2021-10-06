@@ -171,7 +171,7 @@ export default class Compass extends React.Component {
         return (
             <div className="compass" id={`compass-${this.props.theme.toLowerCase()}`}>
                 <div className="SantaRing"
-                    style={styleNormalizer({ transform: `rotate(${this.props.santaBearing}deg)` })}>
+                    style={styleNormalizer({ transform: `rotate(${dir - this.props.santaBearing}deg)` })}>
                     <div className="SantaRingMark">
                         <img id="santa-ring-icon" src="./res/santa-hat.png" alt=""></img>
                     </div>
