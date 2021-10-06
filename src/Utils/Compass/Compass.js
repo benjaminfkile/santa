@@ -1,14 +1,31 @@
 import React from 'react'
-import 'react-compass/src/styles.scss'
+import styleNormalizer from 'react-style-normalizer';
+import 'react-compass/src/styles.scss';
 import "./Compass.css"
 
 export default class Compass extends React.Component {
+
+    static defaultProps = {
+        direction: 0,
+        directionNames: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
+        theme: "night"
+    };
 
     compassCircle
     myPoint
     startBtn
     isIOS
     pointDegree;
+
+    constructor(props) {
+        super(props);
+
+        this.oldAngle = 0;
+
+        this.state = {
+            compassValue: 0
+        }
+    }
 
 
     componentDidMount() {
@@ -23,7 +40,7 @@ export default class Compass extends React.Component {
     }
 
     init = () => {
-        this.startBtn.addEventListener("click", this.startCompass);
+        // this.startBtn.addEventListener("click", this.startCompass);
         this.startCompass()
         const self = this
 
@@ -52,19 +69,19 @@ export default class Compass extends React.Component {
 
     handler = (e) => {
         let compass = e.webkitCompassHeading || Math.abs(e.alpha - 360);
-        this.compassCircle.style.transform = `translate(-50%, -50%) rotate(${-compass}deg)`;
-
+        // this.compassCircle.style.transform = `translate(-50%, -50%) rotate(${-compass}deg)`;
+        this.setState({ compassValue: -compass })
         // ±15 degree
-        if (
-            (this.pointDegree < Math.abs(compass) &&
-                this.pointDegree + 15 > Math.abs(compass)) ||
-            this.pointDegree > Math.abs(compass + 15) ||
-            this.pointDegree < Math.abs(compass)
-        ) {
-            this.myPoint.style.opacity = 0;
-        } else if (this.pointDegree) {
-            this.myPoint.style.opacity = 1;
-        }
+        // if (
+        //     (this.pointDegree < Math.abs(compass) &&
+        //         this.pointDegree + 15 > Math.abs(compass)) ||
+        //     this.pointDegree > Math.abs(compass + 15) ||
+        //     this.pointDegree < Math.abs(compass)
+        // ) {
+        //     this.myPoint.style.opacity = 0;
+        // } else if (this.pointDegree) {
+        //     this.myPoint.style.opacity = 1;
+        // }
     }
 
 
@@ -99,20 +116,74 @@ export default class Compass extends React.Component {
         return Math.round(psi);
     }
 
+    directionName(dir) {
+        let sections = this.props.directionNames.length,
+            sect = 360 / sections,
+            x = Math.floor((dir + sect / 2) / sect);
+
+        x = x >= sections ? 0 : x;
+
+        return this.props.directionNames[x];
+    }
+
+    normalizeAngle(direction) {
+        let newAngle = direction,
+            rot = this.oldAngle || 0,
+            ar = rot % 360;
+
+        while (newAngle < 0) {
+            newAngle += 360;
+        }
+        while (newAngle > 360) {
+            newAngle -= 360;
+        }
+        while (rot < 0) {
+            rot += 360;
+        }
+        while (rot > 360) {
+            rot -= 360;
+        }
+
+        if (ar < 0) {
+            ar += 360;
+        }
+        if (ar < 180 && newAngle > ar + 180) {
+            rot -= 360;
+        }
+        if (ar >= 180 && newAngle <= ar - 180) {
+            rot += 360;
+        }
+
+        rot += newAngle - ar;
+        this.oldAngle = rot;
+
+        return rot;
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////    
+
 
     render() {
+        let dir = this.normalizeAngle(this.state.compassValue),
+            name = this.directionName(dir);
 
         return (
-            <div>
-                <div className="compass" id={`compass-${this.props.theme.toLowerCase()}`}>
-                    <div className="arrow"></div>
-                    <div className="compass-circle"></div>
-                    <div className="my-point"></div>
+            <div className="compass" id={`compass-${this.props.theme.toLowerCase()}`}>
+                <div className="compass__windrose"
+                    style={styleNormalizer({ transform: `rotate(-${dir}deg)` })}>
+                    {[...Array(10)].map((k, i) => <div className="compass__mark" key={i + 1}></div>)}
+                    <div className="compass__mark--direction-h"></div>
+                    <div className="compass__mark--direction-v"></div>
                 </div>
-                <button className="start-btn">Start compass</button>
-
+                <div className="compass__arrow-container">
+                    <div className="compass__arrow"></div>
+                    <div className="compass__labels">
+                        <span>{name}</span>
+                        <span>{Math.trunc(dir)}<sup>o</sup></span>
+                    </div>
+                </div>
             </div>
-
-        )
+        );
     }
 }
