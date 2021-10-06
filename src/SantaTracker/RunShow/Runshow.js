@@ -13,7 +13,7 @@ import TreeLoader from "../../Utils/TreeLoader/TreeLoader"
 import projectedRoute from "../../Utils/ProjectedRoute"
 import Compass from "../../Utils/Compass/Compass"
 import "./Runshow.css"
-import fullScreen from "../../Utils/FullScreen/FullScreen";
+// import fullScreen from "../../Utils/FullScreen/FullScreen";
 
 class Tracker extends Component {
 
