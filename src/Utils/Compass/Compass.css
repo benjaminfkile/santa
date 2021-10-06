@@ -1,7 +1,26 @@
 .compass {
-    position: fixed;
+    position: absolute;
     top: 20px;
     left: calc(50% - 78px);
     transform-origin: top left;
     transform: scale(.3);
+}
+
+.SantaRing {
+    width: 565px;
+    height: 565px;
+    border: 2px solid rgb(124, 124, 124);
+    border-radius: 50%;
+    position: absolute;
+    margin-top: -22px;
+    margin-left: -22px;
+}
+
+.SantaRingMark img{
+    color: red;
+    position: fixed;
+    bottom: 91%;
+    right: 35%;
+    height: 150px;
+    transform: rotate(-10deg);
 }

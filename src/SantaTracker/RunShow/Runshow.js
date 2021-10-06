@@ -351,7 +351,7 @@ class Tracker extends Component {
                 {!this.state.menuOpen && this.state.compass && !isNaN(parseInt(this.props.santaDat.bearraw)) &&
                     <Compass
                         theme={this.state.currentTheme}
-                        degree={parseInt(this.props.santaDat.bearraw)}
+                        santaBearing={parseInt(this.props.santaDat.bearraw)}
                     />}
                 {this.state.loading &&
                     <div className="TrackerLoading">

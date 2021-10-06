@@ -170,6 +170,12 @@ export default class Compass extends React.Component {
 
         return (
             <div className="compass" id={`compass-${this.props.theme.toLowerCase()}`}>
+                <div className="SantaRing"
+                    style={styleNormalizer({ transform: `rotate(${this.props.santaBearing}deg)` })}>
+                    <div className="SantaRingMark">
+                        <img id="santa-ring-icon" src="./res/santa-hat.png" alt=""></img>
+                    </div>
+                </div>
                 <div className="compass__windrose"
                     style={styleNormalizer({ transform: `rotate(${dir}deg)` })}>
                     {[...Array(10)].map((k, i) => <div className="compass__mark" key={i + 1}></div>)}
