@@ -16,8 +16,6 @@
     position: absolute;
     margin-top: -22px;
     margin-left: -22px;
-    -webkit-animation: rotate-in-center 1s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
-    animation: rotate-in-center 1s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
 
 .SantaRingMark img {
