@@ -175,7 +175,7 @@ export default class Compass extends React.Component {
             <div className="compass" id={`compass-${this.props.theme.toLowerCase()}`}>
 
                 <div className="compass__windrose"
-                    style={styleNormalizer({ transform: `rotate(-${dir}deg)` })}>
+                    style={styleNormalizer({ transform: `rotate(${dir}deg)` })}>
                     {[...Array(10)].map((k, i) => <div className="compass__mark" key={i + 1}></div>)}
                     <div className="compass__mark--direction-h"></div>
                     <div className="compass__mark--direction-v"></div>
