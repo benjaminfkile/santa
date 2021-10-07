@@ -86,7 +86,7 @@ export default class Compass extends React.Component {
 
 
     locationHandler = (position) => {
-        console.log(position)
+        // console.log(position)
         const { latitude, longitude } = position.coords;
         this.pointDegree = this.calcDegreeToPoint(latitude, longitude);
 
@@ -166,10 +166,10 @@ export default class Compass extends React.Component {
 
     render() {
 
-        console.log(this.state.compassValue)
+        // console.log(this.state.compassValue)
 
         // let dir = this.normalizeAngle(this.state.compassValue),
-        let name = this.directionName(this.state.compassValue);
+        let name = this.directionName(-this.state.compassValue);
 
         return (
             <div className="compass" id={`compass-${this.props.theme.toLowerCase()}`}>
@@ -190,7 +190,7 @@ export default class Compass extends React.Component {
                     <div className="compass__arrow"></div>
                     <div className="compass__labels">
                         <span>{name}</span>
-                        <span>{Math.trunc(this.state.compassValue)}<sup>o</sup></span>
+                        <span>{Math.trunc(-this.state.compassValue)}<sup>o</sup></span>
                     </div>
                 </div>
             </div>
