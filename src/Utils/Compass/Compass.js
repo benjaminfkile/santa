@@ -23,7 +23,7 @@ export default class Compass extends React.Component {
         this.oldAngle = 0;
 
         this.state = {
-            compassValue: 0
+            compassValue: 85
         }
     }
 
@@ -165,22 +165,26 @@ export default class Compass extends React.Component {
 
 
     render() {
+
+        console.log(this.state.compassValue)
+
         let dir = this.normalizeAngle(this.state.compassValue),
             name = this.directionName(dir);
 
         return (
             <div className="compass" id={`compass-${this.props.theme.toLowerCase()}`}>
-                <div className="SantaRing"
+
+                <div className="compass__windrose"
+                    style={styleNormalizer({ transform: `rotate(-${dir}deg)` })}>
+                    {[...Array(10)].map((k, i) => <div className="compass__mark" key={i + 1}></div>)}
+                    <div className="compass__mark--direction-h"></div>
+                    <div className="compass__mark--direction-v"></div>
+                    <div className="SantaRing"
                     style={styleNormalizer({ transform: `rotate(${this.props.santaBearing}deg)` })}>
                     <div className="SantaRingMark">
                         <img id="santa-ring-icon" src="./res/santa-hat.png" alt=""></img>
                     </div>
                 </div>
-                <div className="compass__windrose"
-                    style={styleNormalizer({ transform: `rotate(${dir}deg)` })}>
-                    {[...Array(10)].map((k, i) => <div className="compass__mark" key={i + 1}></div>)}
-                    <div className="compass__mark--direction-h"></div>
-                    <div className="compass__mark--direction-v"></div>
                 </div>
                 <div className="compass__arrow-container">
                     <div className="compass__arrow"></div>
