@@ -168,29 +168,29 @@ export default class Compass extends React.Component {
 
         console.log(this.state.compassValue)
 
-        let dir = this.normalizeAngle(this.state.compassValue),
-            name = this.directionName(dir);
+        // let dir = this.normalizeAngle(this.state.compassValue),
+        let name = this.directionName(this.state.compassValue);
 
         return (
             <div className="compass" id={`compass-${this.props.theme.toLowerCase()}`}>
 
                 <div className="compass__windrose"
-                    style={styleNormalizer({ transform: `rotate(${dir}deg)` })}>
+                    style={styleNormalizer({ transform: `rotate(${this.state.compassValue}deg)` })}>
                     {[...Array(10)].map((k, i) => <div className="compass__mark" key={i + 1}></div>)}
                     <div className="compass__mark--direction-h"></div>
                     <div className="compass__mark--direction-v"></div>
                     <div className="SantaRing"
-                    style={styleNormalizer({ transform: `rotate(${this.props.santaBearing}deg)` })}>
-                    <div className="SantaRingMark">
-                        <img id="santa-ring-icon" src="./res/santa-hat.png" alt=""></img>
+                        style={styleNormalizer({ transform: `rotate(${this.props.santaBearing}deg)` })}>
+                        <div className="SantaRingMark">
+                            <img id="santa-ring-icon" src="./res/santa-hat.png" alt=""></img>
+                        </div>
                     </div>
-                </div>
                 </div>
                 <div className="compass__arrow-container">
                     <div className="compass__arrow"></div>
                     <div className="compass__labels">
                         <span>{name}</span>
-                        <span>{Math.trunc(dir)}<sup>o</sup></span>
+                        <span>{Math.trunc(this.state.compassValue)}<sup>o</sup></span>
                     </div>
                 </div>
             </div>
