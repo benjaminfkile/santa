@@ -559,4 +559,6 @@
 
 .TrackerMenuCompassBtn span{
     color: #FFFFFF;
+    cursor: pointer;
+    user-select: none;
 }
