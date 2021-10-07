@@ -165,8 +165,8 @@ export default class Compass extends React.Component {
 
 
     render() {
-        let dir = this.normalizeAngle(this.state.compassValue),
-            name = this.directionName(-dir);
+        let dir = this.normalizeAngle(-this.state.compassValue),
+            name = this.directionName(dir);
 
         return (
             <div className="compass" id={`compass-${this.props.theme.toLowerCase()}`}>
