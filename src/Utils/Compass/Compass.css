@@ -4,6 +4,7 @@
     left: calc(50% - 78px);
     transform-origin: top left;
     transform: scale(.3);
+    opacity: .9;
 }
 
 .SantaRing {
@@ -16,11 +17,15 @@
     margin-left: -22px;
 }
 
-.SantaRingMark img{
-    color: red;
+.SantaRingMark img {
     position: fixed;
     bottom: 91%;
     right: 35%;
     height: 150px;
     transform: rotate(-10deg);
+}
+
+.compass__mark--direction-h:before, .compass__mark--direction-h:after, .compass__mark--direction-v:before, .compass__mark--direction-v:after {
+    font-size: 60px;
+    margin-left: -5px;
 }
