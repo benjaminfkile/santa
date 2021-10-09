@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">wmsfosanta</string>
+    <string name="title_activity_main">wmsfosanta</string>
+    <string name="package_name">io.ionic.wmsfosanta</string>
+    <string name="custom_url_scheme">io.ionic.wmsfosanta</string>
+</resources>

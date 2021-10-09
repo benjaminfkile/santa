@@ -1,0 +1,7 @@
+{
+    "name": "wmsfosanta",
+    "integrations": {
+      "capacitor": {}
+    },
+    "type": "react"
+  }
