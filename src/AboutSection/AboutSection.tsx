@@ -1,9 +1,9 @@
 import { Component } from "react"
 import JumpingElf from "../Utils/JumpingElf/JumpingElf"
 import NavMenu from "../NavMenu/NavMenu"
-import "./AboutSection.css"
 import Ornaments from "../Utils/Ornaments/Ornaments"
 import Mistletoe from "../SVG/Mistletoe/Mistletoe"
+import "./AboutSection.css"
 
 class AboutSection extends Component {
 
@@ -16,7 +16,6 @@ class AboutSection extends Component {
                 </div>
                 <JumpingElf />
                 <Ornaments />
-
                 <div className="AboutHeader">
                     <p>Western Montana Santa Flyover</p>
                 </div>
