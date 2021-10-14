@@ -39,8 +39,10 @@ class App extends Component<{}, AppTypes>{
     } catch (err) {
       console.log("failed to enable no-sleep")
     }
+    console.log("bump to test vercel build")
     //eslint-disable-next-line
     console.log("\n  .-\"\"-.\r\n \/,..___\\\r\n() {_____}\r\n  (\/-@-@-\\)\r\n  {`-=^=-\'}\r\n  {  `-\'  }\r\n   {     }\r\n    `---\'\n\nDeveloped by Ben Kile\n\n")
+
   }
 
   componentWillUnmount() {
