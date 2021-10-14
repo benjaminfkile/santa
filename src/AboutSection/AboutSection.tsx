@@ -29,7 +29,7 @@ class AboutSection extends Component {
                         <p id="img-credit-about-i-1">Credit: Getty Images/iStockphoto</p>
                     </div>
                     <p>
-                    Last year Missoula resident Lynn Lease started a Facebook group to get more people interested in seeing Santa fly again.  The group grew rapidly and received a tremendous amount of support throughout the community. With the help of volunteers and donations, Santa flew over Missoula for the first time in over a decade.
+                    In 2020, after a rough year of lockdowns and school closures, a group of Missoula residents started a Facebook group to get more people interested in seeing Santa fly again. The group grew rapidly and received a tremendous amount of support throughout the community. With the help of volunteers and donations, Santa flew over Missoula for the first time in over a decade. This group has now gone on to create a non-profit for the purpose of bringing Joy and Christmas Spirit to Missoula and as many surrounding Cities as possible.
                     </p>
                 </div>
             </div>
