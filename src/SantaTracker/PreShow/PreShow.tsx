@@ -25,7 +25,6 @@ class PreShow extends Component {
                         />
                     </div>
                 </div>
-
             </div>
         )
     }
