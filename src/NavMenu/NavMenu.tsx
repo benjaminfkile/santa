@@ -2,7 +2,6 @@ import { Component } from "react"
 import { Link } from "react-router-dom"
 import Mistletoe from "../SVG/Mistletoe/Mistletoe"
 import Stocking from "../SVG/Stocking/Stocking"
-// import ChristmasTree from "../Utils/ChristmasTree/ChristmasTree"
 import LaughingSanta from "../Utils/LaughingSanta/LaughingSanta"
 import "./NavMenu.css"
 
