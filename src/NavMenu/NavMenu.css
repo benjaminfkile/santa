@@ -22,8 +22,8 @@
     position: fixed;
     top: 3px;
     right: 3px;
-    width: 190px;
-    height: 310px;
+    width: 210px;
+    height: 480px;
     z-index: 1000;
     user-select: none;
     background-color: rgba(0, 0, 0);
@@ -51,27 +51,25 @@
     user-select: none;
 }
 
-
-
 .NavMenuRoutes {
     padding: 3px;
 }
 
-.AboutRoute, .TrackerRoute, .DonateRoute {
+.AboutRoute, .TrackerRoute, .DonateRoute, .SponsorsRoute, .ContactRoute {
     height: 85px;
     background-color: #4d566299;
     border-radius: 5px;
     margin-bottom: 3px;
 }
 
-#about-route-btn-wrapper, #tracker-route-btn-wrapper, #donate-route-btn-wrapper {
+#about-route-btn-wrapper, #tracker-route-btn-wrapper, #donate-route-btn-wrapper, #sponsors-route-btn-wrapper, #contact-route-btn-wrapper {
     display: flex;
     text-decoration: none;
     user-select: none;
     color: #FFFFFF;
 }
 
-#about-route-text, #tracker-route-text, #donate-route-text {
+#about-route-text, #tracker-route-text, #donate-route-text, #sponsors-route-text {
     margin-top: 20px;
     margin-right: 10px;
     width: 100%;
@@ -93,4 +91,26 @@
     margin-top: -37px;
     margin-left: 46px;
     margin-right: 35px;
+}
+
+#sponsors-route-btn-wrapper img {
+    margin-top: 7px;
+    margin-left: 10px;
+    margin-right: 10px;
+    height: 70px;
+}
+
+#contact-route-btn-wrapper img {
+    margin-top: 5px;
+    margin-left: 10px;
+    margin-right: 10px;
+    height: 70px;
+}
+
+#contact-route-btn-wrapper span {
+    position: fixed;
+    margin-top: 25px;
+    margin-left: 25px;
+    font-size: 35px;
+    color: #00000075;
 }

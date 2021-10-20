@@ -8,6 +8,7 @@ import AboutSection from "./AboutSection/AboutSection";
 import DonateSection from "./DonateSection/DonateSection";
 import NoSleep from 'nosleep.js';
 import 'bootstrap/dist/css/bootstrap.min.css'
+import SponsorsSection from "./SponsorsSection/SponsorsSection";
 
 type AppTypes = {
   santaDat: any
@@ -114,8 +115,12 @@ class App extends Component<{}, AppTypes>{
             />}
           />
           <Route
-            render={() => <AboutSection
-            />}
+            path='/sponsors'
+            render={() => <SponsorsSection />}
+          />
+          <Route
+            path='/contact'
+            render={() => <SponsorsSection />}
           />
         </Switch>
         {this.state.donate && <Donate />}

@@ -123,7 +123,8 @@ class CheckoutForm extends Component {
                 rb.token = result.token
                 axios.post(`${process.env.REACT_APP_MRS_CLAUS_API_URL}/api/donate/createCharge`, rb).then(res => {
                     // axios.post(`http://localhost:8000/api/donate/createCharge`, rb).then(res => {
-                    if (res.data.message.status === "succeeded") {
+                        console.log(res.data)
+                    if (res.data.status === "succeeded") {
                         this.setState({ success: true, confirm: false, fail: false })
                     } else {
                         this.setState({ fail: true, success: false })

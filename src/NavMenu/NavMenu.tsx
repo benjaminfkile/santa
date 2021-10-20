@@ -2,18 +2,15 @@ import { Component } from "react"
 import { Link } from "react-router-dom"
 import Mistletoe from "../SVG/Mistletoe/Mistletoe"
 import Stocking from "../SVG/Stocking/Stocking"
+import ChristmasTree from "../Utils/ChristmasTree/ChristmasTree"
 import LaughingSanta from "../Utils/LaughingSanta/LaughingSanta"
 import "./NavMenu.css"
-
-interface NavProps {
-
-}
 
 type NavTypes = {
     menuOpen: boolean
 }
 
-class NavMenu extends Component<NavProps, NavTypes> {
+class NavMenu extends Component<{}, NavTypes> {
 
     state = {
         menuOpen: false
@@ -47,7 +44,7 @@ class NavMenu extends Component<NavProps, NavTypes> {
                             <Link to='/about'>
                                 <div id="about-route-btn-wrapper">
                                     <div className="NavMenuMistletoe">
-                                        <Mistletoe/>
+                                        <Mistletoe />
                                     </div>
                                     <p id="about-route-text">About</p>
                                 </div>
@@ -63,6 +60,14 @@ class NavMenu extends Component<NavProps, NavTypes> {
                                 </div>
                             </Link>
                         </div>
+                        {/* <div className="SponsorsRoute" tabIndex={1} onClick={this.toggleMenu}>
+                            <Link to='/sponsors'>
+                                <div id="sponsors-route-btn-wrapper">
+                                    <img src="/res/sponsors-icon.png" alt="" />
+                                    <p id="sponsors-route-text">Sponsors</p>
+                                </div>
+                            </Link>
+                        </div> */}
                         <div className="TrackerRoute" tabIndex={2} onClick={this.toggleMenu}>
                             <Link to='/santa'>
                                 <div id="tracker-route-btn-wrapper">
@@ -75,6 +80,15 @@ class NavMenu extends Component<NavProps, NavTypes> {
                                 </div>
                             </Link>
                         </div>
+                        {/* <div className="ContactRoute" tabIndex={2} onClick={this.toggleMenu}>
+                            <Link to='/contact'>
+                                <div id="contact-route-btn-wrapper">
+                                    <span className="material-icons">mail</span>
+                                    <img src="/res/wishlist.png" alt="" />
+                                    <p id="tracker-route-text">Contact</p>
+                                </div>
+                            </Link>
+                        </div> */}
                     </div>
                     <div className="NavMenuFooter">
                         <span id="nav-menu-close-btn" className="material-icons" onClick={this.toggleMenu}>clear</span>
