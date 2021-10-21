@@ -59,14 +59,14 @@ class NavMenu extends Component<{}, NavTypes> {
                                 </div>
                             </Link>
                         </div>
-                        {/* <div className="SponsorsRoute" tabIndex={1} onClick={this.toggleMenu}>
+                        <div className="SponsorsRoute" tabIndex={1} onClick={this.toggleMenu}>
                             <Link to='/sponsors'>
                                 <div id="sponsors-route-btn-wrapper">
                                     <img src="/res/sponsors-icon.png" alt="" />
                                     <p id="sponsors-route-text">Sponsors</p>
                                 </div>
                             </Link>
-                        </div> */}
+                        </div>
                         <div className="TrackerRoute" tabIndex={2} onClick={this.toggleMenu}>
                             <Link to='/santa'>
                                 <div id="tracker-route-btn-wrapper">
@@ -79,7 +79,7 @@ class NavMenu extends Component<{}, NavTypes> {
                                 </div>
                             </Link>
                         </div>
-                        {/* <div className="ContactRoute" tabIndex={2} onClick={this.toggleMenu}>
+                        <div className="ContactRoute" tabIndex={2} onClick={this.toggleMenu}>
                             <Link to='/contact'>
                                 <div id="contact-route-btn-wrapper">
                                     <span className="material-icons">mail</span>
@@ -87,7 +87,7 @@ class NavMenu extends Component<{}, NavTypes> {
                                     <p id="tracker-route-text">Contact</p>
                                 </div>
                             </Link>
-                        </div> */}
+                        </div>
                     </div>
                     <div className="NavMenuFooter">
                         <span id="nav-menu-close-btn" className="material-icons" onClick={this.toggleMenu}>clear</span>
