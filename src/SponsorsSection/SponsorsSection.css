@@ -1,17 +1,28 @@
 .SponsorsSection {
     position: fixed;
-    top: 75px;
+    top: 10px;
     left: 20px;
     height: 100%;
     width: calc(100% - 40px);
     overflow-y: none;
+    color: #FFFFFF;
+}
+
+.SponsorsHeader{
+    text-align: center;
+}
+
+.SponsorsHeader p{
+    margin: 0px;
+    margin-bottom: 15px;
+    font-size: 35px;
+    font-family: 'Mountains of Christmas', cursive;
 }
 
 .SponsorList {
     max-height: calc(100% - 95px);
     /* padding: 5px; */
     overflow-y: auto;
-    color: #FFFFFF;
 }
 
 .SponsorItem {
