@@ -7,6 +7,19 @@
     overflow-y: none;
 }
 
+.SponsorSectionMarker{
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    top: -5px;
+    left: 0px;
+}
+
+.SponsorSectionMarker img{
+    height: 100%;
+    transform: scale(.8);
+}
+
 .SponsorsHeader {
     text-align: center;
 }
@@ -60,7 +73,7 @@
 
 .SponsorLogoWrapper img {
     display: block;
-    max-width: 250px;
+    max-width: 100%;
     margin-left: auto;
     margin-right: auto;
 }
