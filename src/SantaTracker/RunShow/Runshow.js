@@ -24,7 +24,7 @@ class Tracker extends Component {
             { mapTheme: Silver, title: "Silver", nickName: "Blizzard" },
             { mapTheme: Dark, title: "Dark", nickName: "Blackout" },
             { mapTheme: Night, title: "Night", nickName: "Night" },
-            { mapTheme: Aubergine, title: "Aubergine", nickName: "Calypso" }
+            { mapTheme: Aubergine, title: "Aubergine", nickName: "Aubergine" }
         ]
     map
     mapType = "terrain"

@@ -42,7 +42,7 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionTyp
                 <JumpingElf />
                 <Ornaments />
                 <div className="SponsorsHeader">
-                    <p>Sponsors</p>
+                    <p>Our Sponsors</p>
                 </div>
                 {this.state.sponsors.length > 0 && <div className="SponsorList">
                     {this.state.sponsors.map((sponsor: SponsorTypes, i: number) =>
