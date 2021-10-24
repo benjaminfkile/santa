@@ -2,9 +2,8 @@ import { Component } from "react"
 import JumpingElf from "../Utils/JumpingElf/JumpingElf"
 import NavMenu from "../NavMenu/NavMenu"
 import Ornaments from "../Utils/Ornaments/Ornaments"
-import InfoSVG from "../SVG/Info/InfoSVG"
-import "./AboutSection.css"
 import Mistletoe from "../SVG/Mistletoe/Mistletoe"
+import "./AboutSection.css"
 
 class AboutSection extends Component {
 
@@ -12,9 +11,6 @@ class AboutSection extends Component {
         return (
             <div className="AboutSection">
                 <NavMenu />
-                {/* <div className="PageMarkerSVG">
-                    <InfoSVG />
-                </div> */}
                 <JumpingElf />
                 <Ornaments />
                 <div className="AboutHeader">

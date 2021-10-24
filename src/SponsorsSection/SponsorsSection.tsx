@@ -41,9 +41,6 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionTyp
                 <NavMenu />
                 <JumpingElf />
                 <Ornaments />
-                {/* <div className="SponsorSectionMarker">
-                    <img src="/res/sponsors-icon.png" alt="" />
-                </div> */}
                 <div className="SponsorsHeader">
                     <p>Our Sponsors</p>
                 </div>
@@ -58,7 +55,7 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionTyp
                             </div>
                             {(sponsor.website_url || sponsor.fb_url) && <div className="SponsorFooter">
                                 {/* {sponsor.website_url && <span className="material-icons" onClick={() => this.openLink(sponsor.website_url)}>link</span>} */}
-                                {sponsor.website_url && <a href={sponsor.website_url} target="_blank">{sponsor.name}</a>}
+                                {sponsor.website_url && <a href={sponsor.website_url} target="_blank" rel="noreferrer">{sponsor.name}</a>}
                                 {sponsor.fb_url && <img src="/res/fb-icon.png" alt="" onClick={() => this.openLink(sponsor.fb_url)} />}
                             </div>}
                         </div>

@@ -1,7 +1,6 @@
 import { Component } from "react"
 import { Button } from "react-bootstrap"
 import NavMenu from "../NavMenu/NavMenu"
-import MoneyTransferSVG from "../SVG/MoneyTransfer/MoneyTransferSVG"
 import DonateToolkit from "../Utils/Donate/DonateToolkit"
 import JumpingElf from "../Utils/JumpingElf/JumpingElf"
 import Ornaments from "../Utils/Ornaments/Ornaments"
@@ -14,9 +13,6 @@ class DonateSection extends Component {
                 <NavMenu />
                 <JumpingElf />
                 <Ornaments />
-                {/* <div className="PageMarkerSVG">
-                    <MoneyTransferSVG />
-                </div> */}
                 <div className="DonateSectionHeader">
                     <p>Help Raise Money for Santas Flight</p>
                 </div>
