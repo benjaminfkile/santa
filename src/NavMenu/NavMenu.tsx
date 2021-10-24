@@ -94,7 +94,7 @@ class NavMenu extends Component<{}, NavTypes> {
                                             message="406"
                                         />
                                     </div>
-                                    <p id="tracker-route-text">Santa</p>
+                                    <p id="tracker-route-text">Track Santa</p>
                                 </div>
                             </Link>
                         </div>
@@ -104,7 +104,7 @@ class NavMenu extends Component<{}, NavTypes> {
                                     <div className="NavMenuRouteSVG">
                                         <FeedbackSVG />
                                     </div>
-                                    <p id="tracker-route-text">Contact</p>
+                                    <p id="contact-route-text">Contact</p>
                                 </div>
                             </Link>
                         </div>

@@ -75,6 +75,17 @@
     max-width: 600px;
 }
 
+.AboutContentLowerItem p {
+    text-decoration: underline;
+}
+
+.AboutContentLowerItem img {
+    width: 100%;
+    max-width: 600px;
+    max-height: 500px;
+    object-fit: cover;
+}
+
 #img-credit-about-i-1 {
     font-size: 10px;
     color: gray;
