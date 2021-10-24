@@ -11,7 +11,7 @@ class Logo extends Component<LogoProps, {}> {
         return (
             <div className="Logo" id={this.props.id || "wmsfo-unaltered-logo"}>
                 <Link to='/about'>
-                    <img src="/res/wmsfo-logo.png" />
+                    <img src="/res/wmsfo-logo.png" alt="wmsfo-logo" />
                 </Link>
             </div>
         )
