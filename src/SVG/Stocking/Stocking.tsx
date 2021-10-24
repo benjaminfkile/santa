@@ -1,10 +1,14 @@
 import { Component } from "react"
 
-class Stocking extends Component {
+interface StockingProps {
+    id: string
+}
+
+class Stocking extends Component<StockingProps, {}> {
 
     render() {
         return (
-            <div className="Stocking">
+            <div className="Stocking" id={this.props.id}>
                 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 100 100" enableBackground="new 0 0 100 100" xmlSpace="preserve">
                     <rect display="none" fill="#468967" width="100" height="100"></rect>
                     <path fill="#E9656B" d="M41.1,16.1h44v58.6c0,0,3,22.9-22.9,22.9s-24.7,0-24.7,0s-23.1,1.1-23.1-16.2s17.9-16.7,21.8-16.7
