@@ -14,9 +14,9 @@ class DonateSection extends Component {
                 <NavMenu />
                 <JumpingElf />
                 <Ornaments />
-                <div className="PageMarkerSVG">
+                {/* <div className="PageMarkerSVG">
                     <MoneyTransferSVG />
-                </div>
+                </div> */}
                 <div className="DonateSectionHeader">
                     <p>Help Raise Money for Santas Flight</p>
                 </div>

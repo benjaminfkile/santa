@@ -75,8 +75,18 @@
     max-width: 600px;
 }
 
+.AboutContentLowerItemHeader{
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+#about-lower-content-mistltoe{
+    width: 50px;
+}
+
 .AboutContentLowerItem p {
-    text-decoration: underline;
+    color: gray;
 }
 
 .AboutContentLowerItem img {

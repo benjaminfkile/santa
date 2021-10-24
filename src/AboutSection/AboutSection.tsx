@@ -4,6 +4,7 @@ import NavMenu from "../NavMenu/NavMenu"
 import Ornaments from "../Utils/Ornaments/Ornaments"
 import InfoSVG from "../SVG/Info/InfoSVG"
 import "./AboutSection.css"
+import Mistletoe from "../SVG/Mistletoe/Mistletoe"
 
 class AboutSection extends Component {
 
@@ -11,9 +12,9 @@ class AboutSection extends Component {
         return (
             <div className="AboutSection">
                 <NavMenu />
-                <div className="PageMarkerSVG">
+                {/* <div className="PageMarkerSVG">
                     <InfoSVG />
-                </div>
+                </div> */}
                 <JumpingElf />
                 <Ornaments />
                 <div className="AboutHeader">
@@ -31,15 +32,27 @@ class AboutSection extends Component {
                         In 2020, after a rough year of lockdowns and school closures, a group of Missoula residents started a Facebook group to get more people interested in seeing Santa fly again. The group grew rapidly and received a tremendous amount of support throughout the community. With the help of volunteers and donations, Santa flew over Missoula for the first time in over a decade. This group has now gone on to create a non-profit for the purpose of bringing Joy and Christmas Spirit to Missoula and as many surrounding Cities as possible.
                     </p>
                     <div className="AboutContentLowerItem">
-                        <p>Santa getting ready to take off</p>
-                        <img src="https://i.ibb.co/h73Bk7D/pre-flight.jpg" alt="pre-flight" />
-                    </div>
-                    <div className="AboutContentLowerItem">
-                        <p>Some Elves working on getting Santa ready to fly</p>
+                        <div className="AboutContentLowerItemHeader">
+                            <Mistletoe id="about-lower-content-mistltoe" />
+                            <p>Some Elves working on getting Santa ready to fly</p>
+                            <Mistletoe id="about-lower-content-mistltoe" />
+                        </div>
                         <img src="https://i.ibb.co/g4NDrCL/working-on-santa.jpg" alt="elves-working" />
                     </div>
                     <div className="AboutContentLowerItem">
-                        <p>Santas light controler</p>
+                        <div className="AboutContentLowerItemHeader">
+                            <Mistletoe id="about-lower-content-mistltoe" />
+                            <p>Santa getting ready to take off</p>
+                            <Mistletoe id="about-lower-content-mistltoe" />
+                        </div>
+                        <img src="https://i.ibb.co/h73Bk7D/pre-flight.jpg" alt="pre-flight" />
+                    </div>
+                    <div className="AboutContentLowerItem">
+                        <div className="AboutContentLowerItemHeader">
+                            <Mistletoe id="about-lower-content-mistltoe" />
+                            <p>Santas light controler</p>
+                            <Mistletoe id="about-lower-content-mistltoe" />
+                        </div>
                         <img src="https://i.ibb.co/TMNDYyL/santa-light-controler.jpg" alt="light-controler" />
                     </div>
                 </div>

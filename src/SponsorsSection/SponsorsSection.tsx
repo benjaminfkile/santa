@@ -41,9 +41,9 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionTyp
                 <NavMenu />
                 <JumpingElf />
                 <Ornaments />
-                <div className="SponsorSectionMarker">
+                {/* <div className="SponsorSectionMarker">
                     <img src="/res/sponsors-icon.png" alt="" />
-                </div>
+                </div> */}
                 <div className="SponsorsHeader">
                     <p>Our Sponsors</p>
                 </div>
