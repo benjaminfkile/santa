@@ -1,6 +1,7 @@
 .Logo {
     position: fixed;
     height: 50px;
+    max-width: 110px;/*Samsung Internet WTF?*/
     top: 5px;
     left: 5px;
 }
