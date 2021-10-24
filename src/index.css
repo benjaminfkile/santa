@@ -1,8 +1,9 @@
 html, body{
   margin: 0px;
   padding: 0px;
-  background-color: #1b2c2e;
-  font-family: 'Montserrat', sans-serif;
+  background-color: #242526;
+  color: rgb(255, 255, 255);
+  font-family:"lucida grande",tahoma,verdana,arial,sans-serif;
 }
 
 ::-webkit-scrollbar {
@@ -26,6 +27,12 @@ html, body{
   border-radius: 5px;
 }
 
+.PageMarkerSVG {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 40px;
+}
 
 @-webkit-keyframes slide-in-right {
   0% {

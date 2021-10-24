@@ -22,14 +22,14 @@
 
 .SponsorsHeader {
     text-align: center;
+    height: 50px;
 }
 
 .SponsorsHeader p {
     margin: 0px;
-    margin-bottom: 15px;
-    font-size: 35px;
+    margin-top: 15px;
+    font-size: 20px;
     color: #FFFFFF;
-    font-family: 'Mountains of Christmas', cursive;
 }
 
 .SponsorList {
@@ -49,7 +49,7 @@
     margin-bottom: 5px;
     border-radius: 5px;
     box-shadow: 2px 2px 2px rgb(0 0 0 / 30%);
-    background-color: #4d56625b;
+    background-color: #3a3b3c78;
     color: #FFFFFF;
 }
 
@@ -111,6 +111,16 @@
         margin-left: auto;
         margin-right: auto;
     }
+
+    .SponsorsHeader{
+        height: 65px;
+    }
+
+    .SponsorsHeader p{
+        margin-top: 0px;
+        font-size: 30px;
+    }
+
     .SponsorItem {
         width: 100%;
         height: 200px;

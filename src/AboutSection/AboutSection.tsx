@@ -2,7 +2,7 @@ import { Component } from "react"
 import JumpingElf from "../Utils/JumpingElf/JumpingElf"
 import NavMenu from "../NavMenu/NavMenu"
 import Ornaments from "../Utils/Ornaments/Ornaments"
-import Mistletoe from "../SVG/Mistletoe/Mistletoe"
+import InfoSVG from "../SVG/Info/InfoSVG"
 import "./AboutSection.css"
 
 class AboutSection extends Component {
@@ -11,8 +11,8 @@ class AboutSection extends Component {
         return (
             <div className="AboutSection">
                 <NavMenu />
-                <div className="AboutSectionMistletoe">
-                    <Mistletoe />
+                <div className="PageMarkerSVG">
+                    <InfoSVG />
                 </div>
                 <JumpingElf />
                 <Ornaments />
@@ -28,7 +28,7 @@ class AboutSection extends Component {
                         <p id="img-credit-about-i-1">Credit: Getty Images/iStockphoto</p>
                     </div>
                     <p>
-                    In 2020, after a rough year of lockdowns and school closures, a group of Missoula residents started a Facebook group to get more people interested in seeing Santa fly again. The group grew rapidly and received a tremendous amount of support throughout the community. With the help of volunteers and donations, Santa flew over Missoula for the first time in over a decade. This group has now gone on to create a non-profit for the purpose of bringing Joy and Christmas Spirit to Missoula and as many surrounding Cities as possible.
+                        In 2020, after a rough year of lockdowns and school closures, a group of Missoula residents started a Facebook group to get more people interested in seeing Santa fly again. The group grew rapidly and received a tremendous amount of support throughout the community. With the help of volunteers and donations, Santa flew over Missoula for the first time in over a decade. This group has now gone on to create a non-profit for the purpose of bringing Joy and Christmas Spirit to Missoula and as many surrounding Cities as possible.
                     </p>
                 </div>
             </div>

@@ -23,32 +23,31 @@
     padding-left: 15px;
     padding-right: 15px;
     text-align: center;
-    color: white;
 }
 
 .DonateSectionHeader p {
-    font-size: 28px;
+    font-size: 20px;
     margin-bottom: 0px;
     /* text-decoration: underline; */
-    font-family: 'Mountains of Christmas', cursive;
 }
 
 .DonateSectionContent {
     width: 90%;
     /* max-width: 414px; */
-    margin: auto;
-    padding-top: 15px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 15px;
     overflow-y: auto;
     overflow-x: hidden;
+    padding-top: 15px;
     padding-right: 15px;
     padding-left: 15px;
-    max-height: calc(100% - 210px);
+    max-height: calc(100% - 95px);
     border-top: 1px solid gray;
     border-bottom: 1px solid gray;
 }
 
 .DonateSectionContent p {
-    color: white;
     text-align: center;
     margin-top: 10px;
     /* -webkit-animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
@@ -116,7 +115,7 @@
         width: 450px;
     }
     .DonateSectionHeader p {
-        font-size: 50px;
+        font-size: 30px;
     }
     .DonateSectionContent {
         width: 80%;
