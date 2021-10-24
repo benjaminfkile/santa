@@ -54,7 +54,7 @@ class NavMenu extends Component<{}, NavTypes> {
         return (
             <div className="NavMenu" ref={this.wrapperRef}>
                 {!this.state.menuOpen && <div className="NavMenuBtn" onClick={this.toggleMenu}>
-                    <span className="material-icons">tune</span>
+                    <span className="material-icons">menu</span>
                 </div>}
                 {this.state.menuOpen && <div className="NavMenuContent">
                     <div className="NavMenuRoutes">
