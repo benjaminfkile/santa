@@ -4,6 +4,7 @@ import NavMenu from "../NavMenu/NavMenu"
 import Ornaments from "../Utils/Ornaments/Ornaments"
 import Mistletoe from "../SVG/Mistletoe/Mistletoe"
 import "./AboutSection.css"
+import Logo from "../Utils/Logo/Logo"
 
 class AboutSection extends Component {
 
@@ -18,8 +19,9 @@ class AboutSection extends Component {
                 </div>
                 <div className="AboutContent">
                     <p>
-                        Western Montana Santa Flyover is a non-profit organization devout to bringing back and keeping the tradition of the Santa Flyover in Missoula Mt. Hearing the kids, and adults, screaming “Santa” with cheer is what makes this event a true Christmas Miracle.
+                        We are a non-profit organization devout to bringing back and keeping the tradition of the Santa Flyover in Missoula Mt. Hearing the kids, and adults, screaming “Santa” with cheer is what makes this event a true Christmas Miracle.
                     </p>
+                    <Logo/>
                     <div className="AboutSectionContentImg1">
                         <img src="https://i.ibb.co/QrCcpqC/e353718c-01b2-46dc-b52a-7853c976bf66-750x422.jpg" alt="Santa" />
                         <p id="img-credit-about-i-1">Credit: Getty Images/iStockphoto</p>

@@ -3,6 +3,7 @@ import { Button } from "react-bootstrap"
 import NavMenu from "../NavMenu/NavMenu"
 import DonateToolkit from "../Utils/Donate/DonateToolkit"
 import JumpingElf from "../Utils/JumpingElf/JumpingElf"
+import Logo from "../Utils/Logo/Logo"
 import Ornaments from "../Utils/Ornaments/Ornaments"
 import "./DonateSection.css"
 
@@ -11,6 +12,7 @@ class DonateSection extends Component {
         return (
             <div className="DonateSection">
                 <NavMenu />
+                <Logo/>
                 <JumpingElf />
                 <Ornaments />
                 <div className="DonateSectionHeader">

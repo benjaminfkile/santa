@@ -35,7 +35,7 @@
     overflow-x: hidden;
     padding-right: 15px;
     padding-left: 15px;
-    max-height: calc(100% - 95px);
+    max-height: calc(100% - 105px);
     border-top: 1px solid gray;
     border-bottom: 1px solid gray;
 }
@@ -130,7 +130,7 @@
     }
     .AboutContent {
         width: 80%;
-        max-height: calc(100% - 210px);
+        max-height: calc(100% - 135px);
     }
     .AboutContent p {
         font-size: 21px;
@@ -143,7 +143,7 @@
     }
     .AboutContent {
         width: 50%;
-        max-height: calc(100% - 150px);
+        max-height: calc(100% - 90px);
         /* display: flex; */
     }
     .AboutContent p {

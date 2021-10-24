@@ -7,17 +7,12 @@
     overflow-y: none;
 }
 
-.SponsorSectionMarker{
+.SponsorSectionMarker {
     position: absolute;
     width: 60px;
     height: 60px;
     top: -5px;
     left: 0px;
-}
-
-.SponsorSectionMarker img{
-    height: 100%;
-    transform: scale(.8);
 }
 
 .SponsorsHeader {
@@ -38,7 +33,7 @@
     padding: 15px;
     border-top: 1px solid gray;
     border-bottom: 1px solid gray;
-
+    overflow-x: hidden;
 }
 
 .SponsorItem {
@@ -67,7 +62,7 @@
     margin: 0px;
 }
 
-.SponsorLogoWrapper{
+.SponsorLogoWrapper {
     margin-top: 5px;
 }
 
@@ -84,7 +79,7 @@
     height: 50px;
 }
 
-.SponsorFooter a{
+.SponsorFooter a {
     color: gray;
     margin-left: 10px;
     margin-top: 23px;
@@ -108,7 +103,6 @@
 }
 
 @media screen and (min-width: 800px) {
-
     .SponsorList {
         display: grid;
         grid-template-columns: 50% 50%;
@@ -117,16 +111,13 @@
         margin-left: auto;
         margin-right: auto;
     }
-
-    .SponsorsHeader{
+    .SponsorsHeader {
         height: 65px;
     }
-
-    .SponsorsHeader p{
+    .SponsorsHeader p {
         margin-top: 0px;
         font-size: 30px;
     }
-
     .SponsorItem {
         width: 100%;
         height: 200px;
