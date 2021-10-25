@@ -1,15 +1,16 @@
 import { Component } from "react"
 import { Route, Switch } from "react-router-dom"
-import DonateToolkit from "./Utils/Donate/DonateToolkit";
 import axios from "axios"
+import DonateToolkit from "./Utils/Donate/DonateToolkit"
 import SantaTracker from "./SantaTracker/SantaTracker"
-import Donate from "./Utils/Donate/Checkout/Donate";
-import AboutSection from "./AboutSection/AboutSection";
-import DonateSection from "./DonateSection/DonateSection";
-import NoSleep from 'nosleep.js';
+import Donate from "./Utils/Donate/Checkout/Donate"
+import AboutSection from "./AboutSection/AboutSection"
+import DonateSection from "./DonateSection/DonateSection"
+import NoSleep from 'nosleep.js'
+import SponsorsSection from "./SponsorsSection/SponsorsSection"
+import ContactSection from "./ContactSection/ContactSection"
 import 'bootstrap/dist/css/bootstrap.min.css'
-import SponsorsSection from "./SponsorsSection/SponsorsSection";
-import ContactSection from "./ContactSection/ContactSection";
+
 
 type AppTypes = {
   santaDat: any
@@ -43,7 +44,6 @@ class App extends Component<{}, AppTypes>{
     }
     //eslint-disable-next-line
     console.log("\n  .-\"\"-.\r\n \/,..___\\\r\n() {_____}\r\n  (\/-@-@-\\)\r\n  {`-=^=-\'}\r\n  {  `-\'  }\r\n   {     }\r\n    `---\'\n\nDeveloped by Ben Kile\n\n")
-
   }
 
   componentWillUnmount() {

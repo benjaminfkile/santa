@@ -16,7 +16,7 @@ class DonateSection extends Component {
                 <JumpingElf />
                 <Ornaments />
                 <div className="DonateSectionHeader">
-                    <p>Help Raise Money for Santas flight</p>
+                    <p>Help Raise Money for Santas Flight</p>
                 </div>
                 <div className="DonateSectionContent">
                     <div className="DonateSectionContentImg1">
