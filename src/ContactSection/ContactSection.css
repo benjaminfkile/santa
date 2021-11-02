@@ -1,0 +1,53 @@
+.ContactSection {
+    height: 100vh;
+    width: 100vw;
+    padding-top: 50px;
+}
+
+.ContactSectionHeader {
+    width: 200px;
+    margin-right: auto;
+    margin-left: auto;
+    text-align: center;
+}
+
+.ContactSectionHeader p {
+    font-size: 20px;
+}
+
+.ContactSectionInputWrapper {
+    margin-left: auto;
+    margin-right: auto;
+    width: 80%;
+    max-width: 600px;
+}
+
+.ContactSectionInputWrapperUpperInput {
+    margin-bottom: 5px;
+}
+
+.ContactSectionMessageWrapper .form-control {
+    height: auto !important;
+}
+
+.ContactSectionInputWrapperUpperInput {
+    display: flex;
+}
+
+.ContactSectionValidField span, .ContactSectionInvalidField span {
+    margin-top: 10px;
+    margin-left: -30px;
+    margin-right: 5px;
+}
+
+.ContactSectionValidField span{
+    color: #28a745;
+}
+
+.ContactSectionInvalidField span{
+    color: #dc3545;
+}
+
+.ContactSectionMessageWrapper{
+    display: flex;
+}
