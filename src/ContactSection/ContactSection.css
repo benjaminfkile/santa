@@ -51,3 +51,42 @@
 .ContactSectionMessageWrapper{
     display: flex;
 }
+
+.ContactSectionSaveBtnWrapper, .ContactSectionSavingBtnWrapper{
+    display: flex;
+    width: 100%;
+    margin-top: 15px;
+    justify-content: center;
+}
+
+.ContactSectionSavingBtnWrapper{
+    color: #898989;
+}
+
+.OtherContactMethods{
+    position: absolute;
+    width: 100%;
+    bottom: 50px;
+    display: flex;
+    justify-content: center;
+}
+
+.OtherContactMethodsSocial{
+    display: flex;
+    justify-content: center;
+}
+
+.OtherContactMethodsSocial img{
+    height: 65px;
+    margin-left: -15px;
+}
+
+.OtherContactMethodsEmail{
+    display: flex;
+    justify-content: center;
+}
+
+.OtherContactMethodsEmail span{
+    font-size: 45px;
+    margin-top: 10px;
+}

@@ -121,8 +121,8 @@ class CheckoutForm extends Component {
                 this.setState({ fail: true, success: false })
             } else {
                 rb.token = result.token
-                axios.post(`${process.env.REACT_APP_MRS_CLAUS_API_URL}/api/donate/createCharge`, rb).then(res => {
-                    // axios.post(`http://localhost:8000/api/donate/createCharge`, rb).then(res => {
+                // axios.post(`${process.env.REACT_APP_MRS_CLAUS_API_URL}/api/donate/createCharge`, rb).then(res => {
+                    axios.post(`http://localhost:8000/api/donate/createCharge`, rb).then(res => {
                         console.log(res.data)
                     if (res.data.status === "succeeded") {
                         this.setState({ success: true, confirm: false, fail: false })

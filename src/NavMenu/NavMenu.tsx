@@ -40,8 +40,6 @@ class NavMenu extends Component<{}, NavTypes> {
         }
     }
 
-
-
     toggleMenu = () => {
         if (this.state.menuOpen) {
             this.setState({ menuOpen: false })
@@ -98,7 +96,7 @@ class NavMenu extends Component<{}, NavTypes> {
                                 </div>
                             </Link>
                         </div>
-                        <div className="NavMenuRoute" tabIndex={1} onClick={this.toggleMenu}>
+                        {/* <div className="NavMenuRoute" tabIndex={1} onClick={this.toggleMenu}>
                             <Link to='/contact'>
                                 <div className="NavMenuRouteBtn">
                                     <div className="NavMenuRouteSVG">
@@ -107,7 +105,7 @@ class NavMenu extends Component<{}, NavTypes> {
                                     <p id="contact-route-text">Contact</p>
                                 </div>
                             </Link>
-                        </div>
+                        </div> */}
                     </div>
                     {/* <div className="NavMenuFooter">
                         <span id="nav-menu-close-btn" className="material-icons" onClick={this.toggleMenu}>clear</span>

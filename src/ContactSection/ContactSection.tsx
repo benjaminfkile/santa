@@ -4,14 +4,18 @@ import JumpingElf from "../Utils/JumpingElf/JumpingElf"
 import Ornaments from "../Utils/Ornaments/Ornaments"
 import ContactParamTypes from "./ContactParamTypes"
 import ContactParams from "./ContactParams"
-import { Button, FormControl } from "react-bootstrap"
+import { Button, FormControl, Spinner } from "react-bootstrap"
 import reggie from "../Utils/Reggie"
+import axios from "axios"
 import "./ContactSection.css"
 
 type ContactSectionTypes = {
     params: ContactParamTypes
     eventType: string
     complete: boolean
+    messageSuccess: boolean
+    messageFailure: boolean
+    saving: boolean
 }
 
 class ContactSection extends Component<{}, ContactSectionTypes> {
@@ -19,14 +23,24 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
     state = {
         params: ContactParams,
         eventType: "",
-        complete: false
+        complete: false,
+        messageSuccess: false,
+        messageFailure: false,
+        saving: false
     }
 
     componentDidMount() {
         for (const [key] of Object.entries(ContactParams)) {
             ContactParams[key] = null
         }
-        this.setState({ params: ContactParams })
+        this.setState({
+            params: ContactParams,
+            eventType: "",
+            complete: false,
+            messageSuccess: false,
+            messageFailure: false,
+            saving: false
+        })
     }
 
     setEventType = (eventType: string) => {
@@ -62,11 +76,30 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
     validMessageLength = (message: string) => {
         if (message) {
             let str = message.split(" ").join("") || ""
-            if (str && (str.length > 99 && str.length <= 500)) {
+            if (str && (str.length > 1 && str.length <= 500)) {
                 return true
             }
         }
         return false
+    }
+
+    sendMessage = () => {
+        this.setState({ saving: true })
+        let rb = this.state.params
+        axios.post(`http://localhost:8000/api/contact`, rb)
+            .then(res => {
+                for (const [key] of Object.entries(ContactParams)) {
+                    ContactParams[key] = null
+                }
+                this.setState({ messageSuccess: true, messageFailure: false, params: ContactParams, saving: false })
+            }).catch(err => {
+                console.log(err)
+                this.setState({ messageSuccess: true, messageFailure: false, params: ContactParams, saving: false })
+            })
+    }
+
+    openLink = (url: string) => {
+        window.open(url, '_blank')
     }
 
     render() {
@@ -134,9 +167,21 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
                         />
                     </div>
                 </div>
-                {this.state.complete && <div className="ContactSectionSaveBtnWrapper">
-                    <Button>Save</Button>
+                {this.state.complete && !this.state.saving && <div className="ContactSectionSaveBtnWrapper">
+                    <Button onClick={() => this.sendMessage()}>Send</Button>
                 </div>}
+                {this.state.saving && <div className="ContactSectionSavingBtnWrapper">
+                    <Spinner animation="border" />
+                </div>}
+
+                <div className="OtherContactMethods">
+                    <div className="OtherContactMethodsSocial">
+                        <img src="/res/fb-icon.png" alt="" onClick={() => this.openLink("https://www.facebook.com/groups/374773957140495")} />
+                    </div>
+                    <div className="OtherContactMethodsEmail">
+                        <span className="material-icons" onClick={() => this.openLink("mailto:wmsfo@gmail.com")}>email</span>
+                    </div>
+                </div>
             </div>
         )
     }
