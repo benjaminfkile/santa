@@ -1,6 +1,6 @@
 import React, { Component } from "react"
 import { Link } from "react-router-dom"
-import FeedbackSVG from "../SVG/Feedback/FeedbackSVG"
+// import FeedbackSVG from "../SVG/Feedback/FeedbackSVG"
 import InfoSVG from "../SVG/Info/InfoSVG"
 import MoneyTransferSVG from "../SVG/MoneyTransfer/MoneyTransferSVG"
 import LaughingSanta from "../Utils/LaughingSanta/LaughingSanta"
