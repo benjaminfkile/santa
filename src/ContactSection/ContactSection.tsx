@@ -92,10 +92,10 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
                 for (const [key] of Object.entries(ContactParams)) {
                     ContactParams[key] = null
                 }
-                this.setState({ messageSuccess: true, messageFailure: false, params: ContactParams, saving: false })
+                this.setState({ messageSuccess: true, messageFailure: false, params: ContactParams, saving: false, complete: false })
             }).catch(err => {
                 console.log(err)
-                this.setState({ messageSuccess: true, messageFailure: false, params: ContactParams, saving: false })
+                this.setState({ messageSuccess: true, messageFailure: false, params: ContactParams, saving: false, complete: false })
             })
     }
 
