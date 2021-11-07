@@ -137,9 +137,9 @@
 }
 
 @media screen and (max-height: 565px) {
-    .Logo{
+    /* .Logo{
         display: none;
-    }
+    } */
     .DonateSectionHeader{
         display: none;
     }
