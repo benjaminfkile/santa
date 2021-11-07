@@ -3,7 +3,7 @@ import { Button } from "react-bootstrap"
 import NavMenu from "../NavMenu/NavMenu"
 import DonateToolkit from "../Utils/Donate/DonateToolkit"
 import JumpingElf from "../Utils/JumpingElf/JumpingElf"
-import Logo from "../Utils/Logo/Logo"
+import Logo from "../Utils/Logo/LogoSmall"
 import Ornaments from "../Utils/Ornaments/Ornaments"
 import "./DonateSection.css"
 
@@ -16,7 +16,7 @@ class DonateSection extends Component {
                 <JumpingElf />
                 <Ornaments />
                 <div className="DonateSectionHeader">
-                    <p>Help Raise Money for Santas Flight</p>
+                    <p>Donate</p>
                 </div>
                 <div className="DonateSectionContent">
                     <div className="DonateSectionContentImg1">

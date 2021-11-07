@@ -9,20 +9,16 @@
 }
 
 .AboutHeader {
-    width: 200px;
-    margin-right: auto;
-    margin-left: auto;
-    margin-top: 15px;
-    padding-left: 15px;
-    padding-right: 15px;
-    text-align: center;
+    width: 100%;
 }
 
-.AboutHeader p {
-    font-size: 20px;
-    /* text-decoration: underline; */
-    margin-bottom: 0px;
-    /* font-family: 'Mountains of Christmas', cursive; */
+.AboutHeader img{
+    margin-top: -40px;
+    margin-bottom: -50px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    height: 190px;
 }
 
 .AboutContent {
@@ -104,27 +100,18 @@
 }
 
 @media screen and (min-width: 360px) {
-    .AboutHeader {
-        width: 210px;
-    }
     .AboutContent {
         max-height: calc(100% - 110px);
     }
 }
 
 @media screen and (min-width: 470px) {
-    .AboutHeader {
-        width: 210px;
-    }
     .AboutContent {
         width: 80%;
     }
 }
 
 @media screen and (min-width: 600px) {
-    .AboutHeader {
-        width: 450px;
-    }
     .AboutHeader p {
         font-size: 30px;
     }
@@ -138,9 +125,6 @@
 }
 
 @media screen and (min-width: 900px) {
-    .AboutHeader {
-        width: 700px;
-    }
     .AboutContent {
         width: 50%;
         max-height: calc(100% - 90px);
@@ -151,5 +135,22 @@
     }
     .JumpingElf {
         display: block;
+    }
+}
+
+@media screen and (max-height: 565px) {
+    .AboutSection{
+        max-width: calc(100% - 100px);
+        margin-left: 50px;
+    }
+    .AboutContent{
+        max-height: calc(100% - 10px);
+    }
+    .AboutHeader{
+        display: none;
+    }
+
+    .AboutHeader img{
+        display: none;
     }
 }

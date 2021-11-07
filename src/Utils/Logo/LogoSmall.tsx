@@ -1,6 +1,6 @@
 import { Component } from "react"
 import { Link } from "react-router-dom"
-import "./Logo.css"
+import "./LogoSmall.css"
 
 interface LogoProps {
     id?: string
