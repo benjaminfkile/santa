@@ -123,9 +123,9 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
                             {this.state.params.name && <div className="ContactSectionValidField">
                                 <span className="material-icons">done</span>
                             </div>}
-                            {!this.state.params.name && <div className="ContactSectionInvalidField">
+                            {/* {!this.state.params.name && <div className="ContactSectionInvalidField">
                                 <span className="material-icons">close</span>
-                            </div>}
+                            </div>} */}
                             <FormControl onFocus={() => this.setEventType("name")}
                                 type="text"
                                 autoComplete="off"
@@ -139,9 +139,9 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
                             {reggie.validateMail(this.state.params.email) && <div className="ContactSectionValidField">
                                 <span className="material-icons">done</span>
                             </div>}
-                            {!reggie.validateMail(this.state.params.email) && <div className="ContactSectionInvalidField">
+                            {/* {!reggie.validateMail(this.state.params.email) && <div className="ContactSectionInvalidField">
                                 <span className="material-icons">close</span>
-                            </div>}
+                            </div>} */}
                             <FormControl onFocus={() => this.setEventType("email")}
                                 type="text"
                                 autoComplete="off"
@@ -156,12 +156,12 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
                         {this.validMessageLength(this.state.params.message) && <div className="ContactSectionValidField">
                             <span className="material-icons">done</span>
                         </div>}
-                        {!this.validMessageLength(this.state.params.message) && <div className="ContactSectionInvalidField">
+                        {/* {!this.validMessageLength(this.state.params.message) && <div className="ContactSectionInvalidField">
                             <span className="material-icons">close</span>
-                        </div>}
+                        </div>} */}
                         <FormControl onFocus={() => this.setEventType("message")}
                             as="textarea"
-                            rows={10}
+                            rows={15}
                             placeholder={"Message (100-1000 characters)"}
                             onChange={this.handleChange}
                             value={this.state.params.message || ""}
