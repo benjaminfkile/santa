@@ -136,8 +136,16 @@
     }
 }
 
-@media screen and (min-height: 565px) {
-    /* .DonateSection{
-        overflow-y: auto;
-    } */
+@media screen and (max-height: 565px) {
+    .Logo{
+        display: none;
+    }
+    .DonateSectionHeader{
+        display: none;
+    }
+    .DonateSectionContent{
+        margin-top: -10px;
+        max-width: calc(100% - 150px);
+        max-height: calc(100% - 55px);
+    }
 }
