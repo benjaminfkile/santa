@@ -80,6 +80,8 @@
 .OtherContactMethodsSocial img{
     height: 65px;
     margin-left: -15px;
+    cursor: pointer;
+    user-select: none;
 }
 
 .OtherContactMethodsEmail{
@@ -90,4 +92,6 @@
 .OtherContactMethodsEmail span{
     font-size: 45px;
     margin-top: 10px;
+    cursor: pointer;
+    user-select: none;
 }
