@@ -22,6 +22,7 @@
     width: 80%;
     height: calc(100% - 280px);
     min-height: 200px;
+    max-height: 500px;
     max-width: 600px;
 }
 
@@ -36,7 +37,8 @@
 
 .ContactSectionMessageWrapper .form-control {
     height: calc(100vh - 430px) !important;
-    min-height: 200px;
+    min-height: 100px;
+    max-height: 400px;
 }
 
 .ContactSectionInputWrapperUpperInput {
@@ -65,6 +67,7 @@
 }
 
 .ContactSectionSaveBtnWrapper, .ContactSectionSavingBtnWrapper {
+    position: absolute;
     display: flex;
     width: 100%;
     margin-top: 15px;
@@ -77,7 +80,7 @@
 
 .OtherContactMethods {
     width: 100%;
-    bottom: 50px;
+    margin-top: 50px;
     display: flex;
     justify-content: center;
 }
