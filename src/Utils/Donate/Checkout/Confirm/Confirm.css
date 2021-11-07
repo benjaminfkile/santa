@@ -40,8 +40,15 @@
 
 .confirm-dialog-footer{
     width: 100%;
+    height: 35px;
     display: flex; 
 }
 #confirm-dialog-footer-back{
     margin-right: auto;
+}
+#donate-loading-spinner{
+    position: absolute;
+    right: 15px;
+    color: #8d8d8d;
+    margin-left: auto;
 }

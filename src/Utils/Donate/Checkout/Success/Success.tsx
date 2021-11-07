@@ -12,7 +12,19 @@ type SuccessTypes = {
 class Success extends Component<{}, SuccessTypes> {
 
     state = {
-        confetti: true
+        confetti: false
+    }
+
+    componentDidMount() {
+        this.setState({ confetti: true })
+        const self = this
+        setTimeout(() => {
+            self.setState({ confetti: false })
+        }, 5000)
+    }
+
+    componentWillUnmount() {
+        this.setState({ confetti: false })
     }
 
     render() {
@@ -40,7 +52,7 @@ class Success extends Component<{}, SuccessTypes> {
                         />
                         <div className="donate-success-content">
                             <p id="donate-success-content-p1">Thank you for your donation!</p>
-                            <p id="donate-success-content-p2">Mrs. Claus emailed you a receipt.</p>
+                            <p id="donate-success-content-p2">We emailed you a receipt.</p>
                         </div>
                     </Modal.Body>
                     <Modal.Footer>

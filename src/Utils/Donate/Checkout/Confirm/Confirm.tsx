@@ -1,5 +1,5 @@
 import { Component } from "react"
-import { Modal, Button } from "react-bootstrap"
+import { Modal, Button, Spinner } from "react-bootstrap"
 import LaughingSanta from "../../../LaughingSanta/LaughingSanta"
 import "./Confirm.css"
 
@@ -9,11 +9,15 @@ interface ConfirmProps {
     name: string
     email: string
     amount: string
+    loading: boolean
 }
 
 class Confirm extends Component<ConfirmProps, {}> {
 
     render() {
+
+        console.log(this.props.loading)
+
         return (
             <div className="Confirm">
                 <Modal
@@ -40,8 +44,9 @@ class Confirm extends Component<ConfirmProps, {}> {
                     </Modal.Body>
                     <Modal.Footer>
                         <div className="confirm-dialog-footer">
-                            <Button id="confirm-dialog-footer-back" variant="secondary" onClick={(event) => this.props.cancelConfirm(event)}>Back</Button>
-                            <Button onClick={(event) => this.props.confirm(event)} variant="primary">Donate ${this.props.amount}</Button>
+                            {!this.props.loading && <Button id="confirm-dialog-footer-back" variant="secondary" onClick={(event) => this.props.cancelConfirm(event)}>Back</Button>}
+                            {!this.props.loading && <Button onClick={(event) => this.props.confirm(event)} variant="primary">Donate ${this.props.amount}</Button>}
+                            {this.props.loading && <Spinner id="donate-loading-spinner" animation="border" />}
                         </div>
                     </Modal.Footer>
                 </Modal>

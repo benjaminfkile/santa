@@ -20,17 +20,18 @@ class CheckoutForm extends Component {
         name: "",
         amount: "",
         formattedAmount: "",
-        cvc: '',
-        expiry: '',
-        focus: '',
-        number: '',
+        cvc: "",
+        expiry: "",
+        focus: "",
+        number: "",
         validCard: false,
         validEmail: false,
         validName: false,
         validAmount: false,
         confirm: false,
         success: false,
-        fail: false
+        fail: false,
+        loading: false
     }
 
     componentDidMount() {
@@ -82,7 +83,7 @@ class CheckoutForm extends Component {
 
         if (name === "amount") {
             if (!isNaN(value)) {
-                this.setState({ formattedAmount: this.formatCurrency(value), [name]: value, validAmount: true })
+                this.setState({ formattedAmount: value, [name]: value, validAmount: true })
             } else {
                 this.setState({ formattedAmount: "", [name]: "", validAmount: false })
             }
@@ -94,15 +95,16 @@ class CheckoutForm extends Component {
         this.setState({ validEmail: re.test(email.toLowerCase()) })
     }
 
-    formatCurrency = (input) => {
+    // formatCurrency = (input) => {
 
-        return input.toLocaleString('en-US', {
-            style: 'currency',
-            currency: 'USD',
-        });
-    }
+    //     return input.toLocaleString('en-US', {
+    //         style: 'currency',
+    //         currency: 'USD',
+    //     });
+    // }
 
     handleSubmit = async event => {
+        this.setState({loading: true})
         // event.preventDefault()
         if (this.state.name.length !== "" && this.state.email !== "" && this.state.amount !== "") {
             let rb = {}
@@ -118,7 +120,7 @@ class CheckoutForm extends Component {
             const result = await stripe.createToken(card)
             if (result.error) {
                 console.log(result.error.message)
-                this.setState({ fail: true, success: false })
+                this.setState({ fail: true, success: false, loading: false })
             } else {
                 rb.token = result.token
                 axios.post(`${process.env.REACT_APP_MRS_CLAUS_API_URL}/api/donate/createCharge`, rb).then(res => {
@@ -142,10 +144,11 @@ class CheckoutForm extends Component {
                         validEmail: false,
                         validName: false,
                         validAmount: false,
+                        loading: false
                     })
                 }).catch(err => {
                     console.log(err)
-                    this.setState({ fail: true, success: false })
+                    this.setState({ fail: true, success: false, loading: false })
                 })
             }
         }
@@ -238,9 +241,10 @@ class CheckoutForm extends Component {
                                     {!this.state.validAmount && <span className="material-icons field-invalid">close</span>}
                                     <div className="form-group">
                                         <input
-                                            type="text"
+                                            type="number"
                                             name="amount"
-                                            value={this.state.formattedAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                                            // value={this.state.formattedAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                                            value={this.state.formattedAmount}
                                             onPaste={(e) => e.preventDefault()}
                                             onChange={this.handleInputChange}
                                             onFocus={this.handleInputFocus}
@@ -276,6 +280,7 @@ class CheckoutForm extends Component {
                         name={this.state.name}
                         email={this.state.email}
                         amount={this.state.formattedAmount}
+                        loading={this.state.loading}
                     />}
                 {this.state.success && <Success />}
                 {this.state.fail && <Fail />}
