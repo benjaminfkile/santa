@@ -114,3 +114,10 @@
         font-size: 30px;
     }
 }
+
+@media screen and (max-height: 565px) {
+
+    .ContactSectionHeader{
+        margin-top: -25px;
+    }
+}
