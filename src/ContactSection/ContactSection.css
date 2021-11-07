@@ -28,6 +28,11 @@
     margin-bottom: 5px;
 }
 
+.ContactSectionInputWrapper .form-control, .ContactSectionInputWrapper .form-control:focus {
+    background-color: #393a3b;
+    color: azure;
+}
+
 .ContactSectionMessageWrapper .form-control {
     height: calc(100vh - 365px) !important;
 }
@@ -36,62 +41,71 @@
     display: flex;
 }
 
-.ContactSectionValidField span, .ContactSectionInvalidField span {
+.ContactSectionValidField span {
     margin-top: 10px;
     margin-left: -30px;
     margin-right: 5px;
-}
-
-.ContactSectionValidField span{
     color: #28a745;
 }
 
-.ContactSectionInvalidField span{
+.ContactSectionInvalidField{
+    margin-top: 10px;
+}
+
+.ContactSectionInvalidField span {
+    margin-left: -15px;
+    margin-right: 5px;
     color: #dc3545;
 }
 
-.ContactSectionMessageWrapper{
+.ContactSectionMessageWrapper {
     display: flex;
 }
 
-.ContactSectionSaveBtnWrapper, .ContactSectionSavingBtnWrapper{
+.ContactSectionSaveBtnWrapper, .ContactSectionSavingBtnWrapper {
     display: flex;
     width: 100%;
     margin-top: 15px;
     justify-content: center;
 }
 
-.ContactSectionSavingBtnWrapper{
+.ContactSectionSavingBtnWrapper {
     color: #898989;
 }
 
-.OtherContactMethods{
+.OtherContactMethods {
     width: 100%;
     bottom: 50px;
     display: flex;
     justify-content: center;
 }
 
-.OtherContactMethodsSocial{
+.OtherContactMethodsSocial {
     display: flex;
     justify-content: center;
 }
 
-.OtherContactMethodsSocial img{
+.OtherContactMethodsSocial img {
     height: 65px;
     margin-left: -15px;
     cursor: pointer;
     user-select: none;
 }
 
-.OtherContactMethodsEmail{
+.OtherContactMethodsEmail {
     display: flex;
     justify-content: center;
 }
 
-.OtherContactMethodsEmail span{
+.OtherContactMethodsEmail span {
     font-size: 45px;
     margin-top: 10px;
     cursor: pointer;
     user-select: none;
+}
+
+@media screen and (min-width: 600px) {
+    .ContactSectionHeader p {
+        font-size: 30px;
+    }
 }
