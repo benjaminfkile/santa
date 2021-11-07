@@ -20,7 +20,7 @@
     margin-left: auto;
     margin-right: auto;
     width: 80%;
-    height: calc(100% - 215px);
+    height: calc(100% - 280px);
     max-width: 600px;
 }
 
@@ -34,7 +34,7 @@
 }
 
 .ContactSectionMessageWrapper .form-control {
-    height: calc(100vh - 365px) !important;
+    height: calc(100vh - 430px) !important;
 }
 
 .ContactSectionInputWrapperUpperInput {
