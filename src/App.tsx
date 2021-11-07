@@ -125,6 +125,7 @@ class App extends Component<{}, AppTypes>{
           />
         </Switch>
         {this.state.donate && <Donate />}
+        <div id="snackbar">snacks</div>
       </div>
     )
   }

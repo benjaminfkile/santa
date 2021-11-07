@@ -9,6 +9,7 @@ import reggie from "../Utils/Reggie"
 import axios from "axios"
 import "./ContactSection.css"
 import Logo from "../Utils/Logo/LogoSmall"
+import snackBar from "../Utils/snackBar/SnackBar"
 
 type ContactSectionTypes = {
     params: ContactParamTypes
@@ -27,7 +28,7 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
         complete: false,
         messageSuccess: false,
         messageFailure: false,
-        saving: false
+        saving: false,
     }
 
     componentDidMount() {
@@ -94,9 +95,12 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
                     ContactParams[key] = null
                 }
                 this.setState({ messageSuccess: true, messageFailure: false, params: ContactParams, saving: false, complete: false })
+                snackBar({ text: "Message Sent", type: "primary", timeout: 3000 })
+
             }).catch(err => {
                 console.log(err)
                 this.setState({ messageSuccess: true, messageFailure: false, params: ContactParams, saving: false, complete: false })
+                snackBar({ text: "Failed to send message", type: "error", timeout: 3000 })
             })
     }
 
