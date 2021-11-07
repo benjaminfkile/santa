@@ -87,7 +87,7 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
         this.setState({ saving: true })
         let rb = this.state.params
         axios.post(`${process.env.REACT_APP_MRS_CLAUS_API_URL}/api/contact`, rb)
-        // axios.post(`http://localhost:8000/api/contact`, rb)
+            // axios.post(`http://localhost:8000/api/contact`, rb)
             .then(res => {
                 for (const [key] of Object.entries(ContactParams)) {
                     ContactParams[key] = null
@@ -161,20 +161,21 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
                         </div>} */}
                         <FormControl onFocus={() => this.setEventType("message")}
                             as="textarea"
-                            rows={15}
                             placeholder={"Message (100-1000 characters)"}
                             onChange={this.handleChange}
                             value={this.state.params.message || ""}
                         />
                     </div>
                 </div>
+                {!this.state.complete && !this.state.saving && <div className="ContactSectionSaveBtnWrapper">
+                    <Button variant="secondary" disabled={true} onClick={() => this.sendMessage()}>Send</Button>
+                </div>}
                 {this.state.complete && !this.state.saving && <div className="ContactSectionSaveBtnWrapper">
                     <Button onClick={() => this.sendMessage()}>Send</Button>
                 </div>}
                 {this.state.saving && <div className="ContactSectionSavingBtnWrapper">
                     <Spinner animation="border" />
                 </div>}
-
                 <div className="OtherContactMethods">
                     <div className="OtherContactMethodsSocial">
                         <img src="/res/fb-icon.png" alt="" onClick={() => this.openLink("https://www.facebook.com/groups/374773957140495")} />
