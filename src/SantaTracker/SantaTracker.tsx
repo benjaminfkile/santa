@@ -13,7 +13,7 @@ type SantaTrackerTypes = {
     returnUser: boolean
 }
 
-class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
+class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {//bump
 
     state = {
         preShow: true,
