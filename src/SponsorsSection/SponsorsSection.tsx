@@ -23,7 +23,7 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionTyp
     }
 
     componentDidMount() {
-        axios.get("https://wmsfo-ms-claus.herokuapp.com/api/sponsors/get-sponsors")
+        axios.get(`${process.env.REACT_APP_MRS_CLAUS_API_URL}/api/sponsors/get-sponsors`)
             .then(res => {
                 this.setState({ sponsors: res.data })
             }).catch(err => {
