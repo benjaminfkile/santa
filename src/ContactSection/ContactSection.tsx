@@ -77,7 +77,7 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
     validMessageLength = (message: string) => {
         if (message) {
             let str = message.split(" ").join("") || ""
-            if (str && (str.length > 100 && str.length <= 1000)) {
+            if (str && (str.length > 0 && str.length <= 1000)) {
                 return true
             }
         }
@@ -166,7 +166,7 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
                         </div>}
                         <FormControl onFocus={() => this.setEventType("message")}
                             as="textarea"
-                            placeholder={"Message (100-1000 characters)"}
+                            placeholder={"Message (1000 character max)"}
                             onChange={this.handleChange}
                             value={this.state.params.message || ""}
                         />
