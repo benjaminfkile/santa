@@ -5,7 +5,7 @@ import NavMenu from "../NavMenu/NavMenu"
 import JumpingElf from "../Utils/JumpingElf/JumpingElf"
 import Ornaments from "../Utils/Ornaments/Ornaments"
 import "./SponsorsSection.css"
-import LogoSmall from "../Utils/Logo/LogoSmall"
+// import LogoSmall from "../Utils/Logo/LogoSmall"
 
 
 interface SponsorsSectionProps {
@@ -40,7 +40,6 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionTyp
         return (
             <div className="SponsorsSection">
                 <NavMenu />
-                <LogoSmall />
                 <JumpingElf />
                 <Ornaments />
                 <div className="SponsorsHeader">

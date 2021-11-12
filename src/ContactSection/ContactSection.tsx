@@ -8,7 +8,6 @@ import { Button, FormControl, Spinner } from "react-bootstrap"
 import reggie from "../Utils/Reggie"
 import axios from "axios"
 import "./ContactSection.css"
-import Logo from "../Utils/Logo/LogoSmall"
 import snackBar from "../Utils/snackBar/SnackBar"
 
 type ContactSectionTypes = {
@@ -117,11 +116,11 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
         return (
             <div className="ContactSection">
                 <NavMenu />
-                <Logo />
                 <JumpingElf />
                 <Ornaments />
                 <div className="ContactSectionHeader">
-                    <p>Contact Us</p>
+                    <img src="/res/wmsfo-logo.png" alt="" />
+                    {/* <p>Contact us</p> */}
                 </div>
                 <div className="ContactSectionInputWrapper">
                     <div className="ContactSectionInputWrapperUpper">

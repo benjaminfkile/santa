@@ -1,6 +1,6 @@
 .DonateSection {
     position: absolute;
-    top: 30px;
+    top: 00px;
     left: 0px;
     width: 100%;
     height: calc(100% - 30px);
@@ -9,13 +9,17 @@
 }
 
 .DonateSectionHeader {
-    width: 200px;
-    margin-right: auto;
-    margin-left: auto;
-    margin-top: 15px;
-    padding-left: 15px;
-    padding-right: 15px;
+    width: 100%;
     text-align: center;
+}
+
+.DonateSectionHeader img {
+    margin-top: -40px;
+    margin-bottom: -50px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    height: 190px;
 }
 
 .DonateSectionHeader p {
@@ -35,7 +39,7 @@
     padding-top: 15px;
     padding-right: 15px;
     padding-left: 15px;
-    max-height: calc(100% - 95px);
+    max-height: calc(100% - 200px);
     border-top: 1px solid gray;
     border-bottom: 1px solid gray;
 }
@@ -85,34 +89,19 @@
     margin: 0px;
 }
 
-@media screen and (min-width: 360px) {
-    .DonateSectionHeader {
-        width: 210px;
-    }
-    .DonateSectionContent {
-        max-height: calc(100% - 170px);
-    }
-}
-
 @media screen and (min-width: 470px) {
-    .DonateSectionHeader {
-        width: 210px;
-    }
     .DonateSectionContent {
         width: 80%;
     }
 }
 
 @media screen and (min-width: 600px) {
-    .DonateSectionHeader {
-        width: 450px;
-    }
     .DonateSectionHeader p {
         font-size: 30px;
     }
     .DonateSectionContent {
         width: 80%;
-        max-height: calc(100% - 375px);
+        max-height: calc(100% - 250px);
     }
     .DonateSectionContent p {
         font-size: 21px;
@@ -120,32 +109,11 @@
 }
 
 @media screen and (min-width: 900px) {
-    .DonateSectionHeader {
-        width: 700px;
-    }
     .DonateSectionContent {
         width: 50%;
-        max-height: calc(100% - 200px);
-        /* display: flex; */
-    }
-    .DonateSectionContent p {
-        font-size: 20px;
+        max-height: calc(100% - 300px);
     }
     .JumpingElf {
         display: block;
-    }
-}
-
-@media screen and (max-height: 565px) {
-    /* .Logo{
-        display: none;
-    } */
-    /* .DonateSectionHeader{
-        display: none;
-    } */
-    .DonateSectionContent{
-        margin-top: 0px;
-        max-width: calc(100% - 150px);
-        max-height: calc(100% - 110px);
     }
 }

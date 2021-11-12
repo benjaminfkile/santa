@@ -143,20 +143,3 @@
         display: block;
     }
 }
-
-@media screen and (max-height: 565px) {
-    .AboutSection{
-        max-width: calc(100% - 100px);
-        margin-left: 50px;
-    }
-    .AboutContent{
-        max-height: calc(100% - 10px);
-    }
-    .AboutHeader{
-        display: none;
-    }
-
-    .AboutHeader img{
-        display: none;
-    }
-}

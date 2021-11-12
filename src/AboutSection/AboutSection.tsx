@@ -14,7 +14,6 @@ class AboutSection extends Component {
                 <JumpingElf />
                 <Ornaments />
                 <div className="AboutHeader">
-                    {/* <p>Western Montana Santa Flyover</p> */}
                     <img src="/res/wmsfo-logo.png" alt="" />
                 </div>
                 <div className="AboutContent">

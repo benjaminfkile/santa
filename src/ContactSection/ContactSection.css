@@ -12,6 +12,19 @@
     text-align: center;
 }
 
+.ContactSectionHeader {
+    width: 100%;
+}
+
+.ContactSectionHeader img{
+    margin-top: -90px;
+    margin-bottom: 0px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    height: 190px;
+}
+
 .ContactSectionHeader p {
     font-size: 20px;
 }
@@ -112,16 +125,4 @@
     margin-top: 10px;
     cursor: pointer;
     user-select: none;
-}
-
-@media screen and (min-width: 600px) {
-    .ContactSectionHeader p {
-        font-size: 30px;
-    }
-}
-
-@media screen and (max-height: 565px) {
-    .ContactSectionHeader {
-        margin-top: -25px;
-    }
 }
