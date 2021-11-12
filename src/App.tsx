@@ -1,5 +1,5 @@
 import { Component } from "react"
-import ReactGA from 'react-ga';
+// import ReactGA from 'react-ga';
 import { Route, Switch } from "react-router-dom"
 // import axios from "axios"
 // import DonateToolkit from "./Utils/Donate/DonateToolkit"
@@ -36,10 +36,10 @@ class App extends Component<{}, AppTypes>{
     // DonateToolkit.getStripe()
     // this.checkActiveInterval = setInterval(this.checkActive, this.updateInterval)
     // this.donateInterval = setInterval(this.donateListener, 100)
-    if (process.env.REACT_APP_GOOGLE_ANALYTICS === "true") {
-      ReactGA.initialize("G-1E2JEK81CG");
-      ReactGA.pageview(window.location.pathname + window.location.search);
-    }
+    // if (process.env.REACT_APP_GOOGLE_ANALYTICS === "true") {
+    //   ReactGA.initialize("G-1E2JEK81CG");
+    //   ReactGA.pageview(window.location.pathname + window.location.search);
+    // }
 
     // try {
     //   setTimeout(() => {
