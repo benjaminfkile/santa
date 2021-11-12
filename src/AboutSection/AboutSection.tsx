@@ -48,7 +48,7 @@ class AboutSection extends Component {
                     <div className="AboutContentLowerItem">
                         <div className="AboutContentLowerItemHeader">
                             <Mistletoe id="about-lower-content-mistltoe" />
-                            <p>Santas light controler</p>
+                            <p>Santa's light controler</p>
                             <Mistletoe id="about-lower-content-mistltoe" />
                         </div>
                         <img src="https://i.ibb.co/TMNDYyL/santa-light-controler.jpg" alt="light-controler" />
