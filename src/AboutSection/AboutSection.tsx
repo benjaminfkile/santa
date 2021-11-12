@@ -27,7 +27,7 @@ class AboutSection extends Component {
                     <p>
                         In 2020, after a rough year of lockdowns and school closures, a group of Missoula residents started a
                         Facebook group to get more people interested in seeing Santa fly again. The group grew rapidly and
-                        received a tremendous amount of support throughout the community. With the help of the <a href="https://www.missouladowntown.com/" target="_blank" rel="noreferrer">Missoula Downtown Foundation</a>, volunteers and from your donations, Santa flew over Missoula for the first time in over a decade. This groups plan is to continue this tradition and bring Joy and Christmas Spirit to
+                        received a tremendous amount of support throughout the community. With the help of the <a href="https://www.missouladowntown.com/" target="_blank" rel="noreferrer">Missoula Downtown Foundation</a>, volunteers and from your donations, Santa flew over Missoula for the first time in over a decade. This group's plan is to continue this tradition and bring Joy and Christmas Spirit to
                         Missoula and as many surrounding Cities as possible.</p>
                     <div className="AboutContentLowerItem">
                         <div className="AboutContentLowerItemHeader">
@@ -48,7 +48,7 @@ class AboutSection extends Component {
                     <div className="AboutContentLowerItem">
                         <div className="AboutContentLowerItemHeader">
                             <Mistletoe id="about-lower-content-mistltoe" />
-                            <p>Santa's light controler</p>
+                            <p>Santa's light controller</p>
                             <Mistletoe id="about-lower-content-mistltoe" />
                         </div>
                         <img src="https://i.ibb.co/TMNDYyL/santa-light-controler.jpg" alt="light-controler" />
