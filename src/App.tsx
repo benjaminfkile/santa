@@ -1,7 +1,7 @@
 import { Component } from "react"
 import ReactGA from 'react-ga';
 import { Route, Switch } from "react-router-dom"
-import axios from "axios"
+// import axios from "axios"
 // import DonateToolkit from "./Utils/Donate/DonateToolkit"
 import SantaTracker from "./SantaTracker/SantaTracker"
 // import Donate from "./Utils/Donate/Checkout/Donate"
@@ -27,14 +27,14 @@ class App extends Component<{}, AppTypes>{
     // donate: false
   }
 
-  updateInterval = 5000
-  donateInterval: any
-  checkActiveInterval: any
+  // updateInterval = 5000
+  // donateInterval: any
+  // checkActiveInterval: any
 
   componentDidMount() {
-    this.getSanta()
+    // this.getSanta()
     // DonateToolkit.getStripe()
-    this.checkActiveInterval = setInterval(this.checkActive, this.updateInterval)
+    // this.checkActiveInterval = setInterval(this.checkActive, this.updateInterval)
     // this.donateInterval = setInterval(this.donateListener, 100)
     if (process.env.REACT_APP_GOOGLE_ANALYTICS === "true") {
       ReactGA.initialize("G-1E2JEK81CG");
@@ -53,7 +53,7 @@ class App extends Component<{}, AppTypes>{
   }
 
   componentWillUnmount() {
-    clearInterval(this.updateInterval)
+    // clearInterval(this.updateInterval)
     // clearInterval(this.donateInterval)
     // this.noSleep.disable()
   }
@@ -81,23 +81,23 @@ class App extends Component<{}, AppTypes>{
     // } else {
     //   this.getSanta()
     // }
-    this.getSanta()
+    // this.getSanta()
   }
 
-  getSanta = () => {
-    // console.log("updating every " + this.updateInterval)
-    axios.get(`${process.env.REACT_APP_WMSFO_LOCATION_DATA_API_URL}/api/location-data`)
-      .then(res => {
-        if (res.data) {
-          this.setState({ santaDat: res.data })
-        }
-        if (res.data.throttle !== this.updateInterval) {
-          clearInterval(this.checkActiveInterval)
-          this.updateInterval = res.data.throttle * 1000
-          this.checkActiveInterval = setInterval(this.checkActive, this.updateInterval)
-        }
-      })
-  }
+  // getSanta = () => {
+  //   // console.log("updating every " + this.updateInterval)
+  //   axios.get(`${process.env.REACT_APP_WMSFO_LOCATION_DATA_API_URL}/api/location-data`)
+  //     .then(res => {
+  //       if (res.data) {
+  //         this.setState({ santaDat: res.data })
+  //       }
+  //       if (res.data.throttle !== this.updateInterval) {
+  //         clearInterval(this.checkActiveInterval)
+  //         this.updateInterval = res.data.throttle * 1000
+  //         this.checkActiveInterval = setInterval(this.checkActive, this.updateInterval)
+  //       }
+  //     })
+  // }
 
 
   render() {
