@@ -43,6 +43,12 @@
     animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; */
 }
 
+.AboutContent a{
+    text-decoration: none;
+    color: #FFFFFF;
+    text-decoration: underline;
+}
+
 .AboutContent img {
     display: block;
     margin-left: auto;
