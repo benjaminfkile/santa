@@ -78,7 +78,7 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
     validMessageLength = (message: string) => {
         if (message) {
             let str = message.split(" ").join("") || ""
-            if (str && (str.length > 1 && str.length <= 500)) {
+            if (str && (str.length > 100 && str.length <= 1000)) {
                 return true
             }
         }

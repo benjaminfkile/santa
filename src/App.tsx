@@ -2,9 +2,9 @@ import { Component } from "react"
 import ReactGA from 'react-ga';
 import { Route, Switch } from "react-router-dom"
 import axios from "axios"
-import DonateToolkit from "./Utils/Donate/DonateToolkit"
+// import DonateToolkit from "./Utils/Donate/DonateToolkit"
 import SantaTracker from "./SantaTracker/SantaTracker"
-import Donate from "./Utils/Donate/Checkout/Donate"
+// import Donate from "./Utils/Donate/Checkout/Donate"
 import AboutSection from "./AboutSection/AboutSection"
 import DonateSection from "./DonateSection/DonateSection"
 // import NoSleep from 'nosleep.js'
@@ -15,7 +15,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 
 type AppTypes = {
   santaDat: any
-  donate: boolean
+  // donate: boolean
 }
 
 class App extends Component<{}, AppTypes>{
@@ -24,7 +24,7 @@ class App extends Component<{}, AppTypes>{
 
   state = {
     santaDat: null,
-    donate: false
+    // donate: false
   }
 
   updateInterval = 5000
@@ -33,9 +33,9 @@ class App extends Component<{}, AppTypes>{
 
   componentDidMount() {
     this.getSanta()
-    DonateToolkit.getStripe()
+    // DonateToolkit.getStripe()
     this.checkActiveInterval = setInterval(this.checkActive, this.updateInterval)
-    this.donateInterval = setInterval(this.donateListener, 100)
+    // this.donateInterval = setInterval(this.donateListener, 100)
     if (process.env.REACT_APP_GOOGLE_ANALYTICS === "true") {
       ReactGA.initialize("G-1E2JEK81CG");
       ReactGA.pageview(window.location.pathname + window.location.search);
@@ -54,21 +54,21 @@ class App extends Component<{}, AppTypes>{
 
   componentWillUnmount() {
     clearInterval(this.updateInterval)
-    clearInterval(this.donateInterval)
+    // clearInterval(this.donateInterval)
     // this.noSleep.disable()
   }
 
-  donateListener = () => {
-    if (DonateToolkit.donating) {
-      if (!this.state.donate) {
-        this.setState({ donate: true })
-      }
-    } else {
-      if (this.state.donate) {
-        this.setState({ donate: false })
-      }
-    }
-  }
+  // donateListener = () => {
+  //   if (DonateToolkit.donating) {
+  //     if (!this.state.donate) {
+  //       this.setState({ donate: true })
+  //     }
+  //   } else {
+  //     if (this.state.donate) {
+  //       this.setState({ donate: false })
+  //     }
+  //   }
+  // }
 
   checkActive = () => {
     // if (this.noSleep._wakeLock) {
@@ -131,7 +131,7 @@ class App extends Component<{}, AppTypes>{
             render={() => <ContactSection />}
           />
         </Switch>
-        {this.state.donate && <Donate />}
+        {/* {this.state.donate && <Donate />} */}
         <div id="snackbar">snacks</div>
       </div>
     )

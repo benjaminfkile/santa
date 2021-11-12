@@ -19,15 +19,17 @@ class AboutSection extends Component {
                 </div>
                 <div className="AboutContent">
                     <p>
-                        We are a non-profit organization devout to bringing back and keeping the tradition of the Santa Flyover in Missoula Mt. Hearing the kids, and adults, screaming “Santa” with cheer is what makes this event a true Christmas Miracle.
+                        Western Montana Sant Fly Over, with the help of the <a href="https://www.missouladowntown.com/" target="_blank" rel="noreferrer">Missoula Downtown Foundation</a>, is keeping the tradition of having Santa do a test flight over Missoula Mt. Hearing the kids, and adults, screaming “Santa” with cheer is what makes this flight a true Christmas Miracle.
                     </p>
                     <div className="AboutSectionContentImg1">
                         <img src="https://i.ibb.co/QrCcpqC/e353718c-01b2-46dc-b52a-7853c976bf66-750x422.jpg" alt="Santa" />
                         <p id="img-credit-about-i-1">Credit: Getty Images/iStockphoto</p>
                     </div>
                     <p>
-                        In 2020, after a rough year of lockdowns and school closures, a group of Missoula residents started a Facebook group to get more people interested in seeing Santa fly again. The group grew rapidly and received a tremendous amount of support throughout the community. With the help of volunteers and donations, Santa flew over Missoula for the first time in over a decade. This group has now gone on to create a non-profit for the purpose of bringing Joy and Christmas Spirit to Missoula and as many surrounding Cities as possible.
-                    </p>
+                        In 2020, after a rough year of lockdowns and school closures, a group of Missoula residents started a
+                        Facebook group to get more people interested in seeing Santa fly again. The group grew rapidly and
+                        received a tremendous amount of support throughout the community. With the help of the <a href="https://www.missouladowntown.com/" target="_blank" rel="noreferrer">Missoula Downtown Foundation</a>, volunteers and from your donations, Santa flew over Missoula for the first time in over a decade. This groups plan is to continue this tradition and bring Joy and Christmas Spirit to
+                        Missoula and as many surrounding Cities as possible</p>
                     <div className="AboutContentLowerItem">
                         <div className="AboutContentLowerItemHeader">
                             <Mistletoe id="about-lower-content-mistltoe" />
