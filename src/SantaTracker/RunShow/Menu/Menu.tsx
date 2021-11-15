@@ -148,18 +148,18 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                             </div>}
                     </div>}
                     <div className="TrackerMenuFooter">
-                        {!userLocation.disable && <div className="TrackerMenuLocationAllowed" id={"tracker-menu-location-btn-allowed-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">my_location</span></div>}
-                        {userLocation.disable && <div className="TrackerMenuLocationDenied" id={"tracker-menu-location-btn-denied-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">location_disabled</span></div>}
-                        <div className="TrackerMenuRoutesBtnWrapper">
-                            <div className="TrackerMenuDonateBtn" id={"tracker-menu-donate-btn-" + this.props.currentTheme.toLowerCase()} onClick={() => DonateToolKit.toggleDonate()}><p><span className="material-icons">attach_money</span></p></div>
+                        {!userLocation.disable && <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-location-btn-allowed-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">my_location</span></div>}
+                        {userLocation.disable && <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-location-btn-denied-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">location_disabled</span></div>}
+                        <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`}>
+                            {/* <div className="TrackerMenuDonateBtn" id={"tracker-menu-donate-btn-" + this.props.currentTheme.toLowerCase()} onClick={() => DonateToolKit.toggleDonate()}><p><span className="material-icons">attach_money</span></p></div> */}
                             <div className="TrackerMenuHomeBtn">
                                 <Link to='/about'>
                                     <span id={"tracker-menu-home-btn-" + this.props.currentTheme.toLowerCase()} className="material-icons">home</span>
                                 </Link>
                             </div>
                         </div>
-                        {!userLocation.disable && <div  id={"tracker-menu-compass-btn-" + this.props.currentTheme.toLowerCase()} className="TrackerMenuCompassBtn" onClick={() => this.toggleCompass()}><span className="material-icons">explore</span></div>}
-                        <div className="TrackerMenuCloseBtn" id={"tracker-menu-close-btn-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleMenu}><p><span className="material-icons">clear</span></p></div>
+                        {!userLocation.disable && <div id={"tracker-menu-compass-btn-" + this.props.currentTheme.toLowerCase()} className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} onClick={() => this.toggleCompass()}><span className="material-icons">explore</span></div>}
+                        <div className={`TrackerMenuCloseBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-close-btn-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleMenu}><p><span className="material-icons">clear</span></p></div>
                     </div>
                 </div>}
                 {this.state.locationPrompt &&

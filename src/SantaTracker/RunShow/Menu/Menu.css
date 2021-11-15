@@ -87,11 +87,11 @@
     display: flex;
     margin-left: 3px;
     margin-right: 3px;
-    height: 45px;
 }
 
 .TrackerMenuFooter span {
     font-size: 40px !important;
+    margin-top: 5px;
 }
 
 .TrackerMenuRoutes {
@@ -100,75 +100,102 @@
     bottom: -18px;
 }
 
-.TrackerMenuRoutesBtnWrapper {
-    display: flex;
-    width: 60px;
+.TrackerMenuFooterBtn, .TrackerMenuCloseBtn {
+    cursor: pointer;
+    user-select: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    text-align: center;
+    margin-right: 3px;
+    margin-bottom: 3px;
 }
 
-.TrackerMenuRoutesBtnWrapper span {
-    text-decoration: none;
-    color: white;
+.TrackerMenuFooterBtn-standard{
+    background-color: #bdd8bb;
+}
+
+.TrackerMenuFooterBtn-retro{
+    background-color: #dfd2ae;
+}
+
+.TrackerMenuFooterBtn-silver{
+    background-color: #737372b8;
+}
+
+.TrackerMenuFooterBtn-dark{
+    background-color: #434343;
+}
+
+.TrackerMenuFooterBtn-night{
+    background-color: #4c5561;
+}
+
+.TrackerMenuFooterBtn-aubergine{
+    background-color: #2c5e74;
+}
+
+#tracker-menu-compass-btn-aubergine span, #tracker-menu-compass-btn-night span{
+    color: #FFFFFF;
+}
+
+#tracker-menu-compass-btn-dark span{
+    color: #b4b4b4;
 }
 
 .TrackerMenuCloseBtn {
     margin-left: auto;
-}
-
-.TrackerMenuCloseBtn span, .TrackerMenuDonateBtn span {
-    padding: 0px;
-    margin: 0px;
-    font-size: 30px;
-    cursor: pointer;
-    user-select: none;
-}
-
-.TrackerMenuLocationAllowed, .TrackerMenuLocationDenied {
-    cursor: pointer;
-    user-select: none;
-}
-
-.TrackerMenuLocationAllowed span, .TrackerMenuLocationDenied span {
-    font-size: 30px;
+    margin-right: 0px;
 }
 
 #tracker-menu-location-btn-allowed-night {
     color: #28a745;
+    background-color: #4c5561
 }
 
 #tracker-menu-location-btn-denied-night {
-    color: #dc3545
+    color: #dc3545;
+    background-color: #4c5561
 }
 
 #tracker-menu-location-btn-allowed-aubergine {
     color: #28a745;
+    background-color: #2c5e74;
 }
 
 #tracker-menu-location-btn-denied-aubergine {
-    color: #dc3545
+    color: #dc3545;
+    background-color: #2c5e74;
 }
 
 #tracker-menu-location-btn-allowed-retro {
     color: #28a745;
+    background-color: #ded1ad;
 }
 
 #tracker-menu-location-btn-denied-retro {
-    color: #dc3545
+    color: #dc3545;
+    background-color: #ded1ad;
 }
 
 #tracker-menu-location-btn-allowed-silver {
     color: #28a745;
+    background-color: #737372b8;
 }
 
 #tracker-menu-location-btn-denied-silver {
-    color: #dc3545
+    color: #dc3545;
+    background-color: #737372b8;
 }
 
 #tracker-menu-location-btn-allowed-dark {
     color: #b5b5b5;
+    background-color: #434343;
 }
 
 #tracker-menu-location-btn-denied-dark {
-    color: #dc3545
+    color: #dc3545;
+    background-color: #434343;
 }
 
 #tracker-menu-location-btn-allowed-standard {
@@ -553,17 +580,4 @@
     color: #FFFFFF;
 }
 
-.TrackerMenuCompassBtn{
-    margin-left: 25px;
-}
-
-.TrackerMenuCompassBtn span{
-    color: #FFFFFF;
-    cursor: pointer;
-    user-select: none;
-}
-
-#tracker-menu-compass-btn-standard span, #tracker-menu-compass-btn-silver span, #tracker-menu-compass-btn-retro span{
-    color: black;
-}
 
