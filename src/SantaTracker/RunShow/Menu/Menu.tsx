@@ -2,7 +2,7 @@ import { Component } from "react"
 import LocationPrompt from "../../../Utils/UserLocation/LocationPrompt"
 import { Button } from "react-bootstrap"
 import userLocation from "../../../Utils/UserLocation/UserLocation"
-import DonateToolKit from "../../../Utils/Donate/DonateToolkit"
+// import DonateToolKit from "../../../Utils/Donate/DonateToolkit"
 import "./Menu.css"
 import { Link } from "react-router-dom"
 
