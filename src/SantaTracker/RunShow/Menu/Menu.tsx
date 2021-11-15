@@ -95,8 +95,6 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
 
     render() {
 
-        // console.log(this.props.santaDat)
-
         return (
             <div className="TrackerMenu">
                 {!this.state.menuOpen && <div className="TrackerMenuBtn" id={this.props.currentTheme.toLowerCase() + "-theme-menu-btn"} onClick={this.toggleMenu}>
