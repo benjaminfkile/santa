@@ -563,3 +563,7 @@
     user-select: none;
 }
 
+#tracker-menu-compass-btn-standard span, #tracker-menu-compass-btn-silver span, #tracker-menu-compass-btn-retro span{
+    color: black;
+}
+

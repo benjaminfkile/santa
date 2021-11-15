@@ -51,7 +51,7 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
                     </Modal.Body>
                     <Modal.Footer>
                         <Button onClick={() => this.handleUserAllowLocation()}>Allow</Button>
-                        <Button onClick={() => this.props.toggleLocationPrompt()}>Back</Button>
+                        <Button variant="secondary" onClick={() => this.props.toggleLocationPrompt()}>Back</Button>
                     </Modal.Footer>
                 </Modal>}
                 {!userLocation.disable && <Modal id={`location-prompt-modal-${this.props.theme.toLowerCase()}`}
@@ -69,8 +69,8 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
                         </div>
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button onClick={() => this.handleUserRevokeLocation()}>Disable</Button>
-                        <Button onClick={() => this.props.toggleLocationPrompt()}>Back</Button>
+                        <Button variant="danger" onClick={() => this.handleUserRevokeLocation()}>Disable</Button>
+                        <Button variant="secondary" onClick={() => this.props.toggleLocationPrompt()}>Back</Button>
                     </Modal.Footer>
                 </Modal>}
             </div>
