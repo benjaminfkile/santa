@@ -76,14 +76,14 @@ class NavMenu extends Component<{}, NavTypes> {
                                 </div>
                             </Link>
                         </div>
-                        {/* <div className="NavMenuRoute" tabIndex={1} onClick={this.toggleMenu}>
+                        <div className="NavMenuRoute" tabIndex={1} onClick={this.toggleMenu}>
                             <Link to='/sponsors'>
                                 <div className="NavMenuRouteBtn">
                                     <img src="/res/sponsors-icon.png" alt="" />
                                     <p id="sponsors-route-text">Sponsors</p>
                                 </div>
                             </Link>
-                        </div> */}
+                        </div>
                         <div className="NavMenuRoute" tabIndex={1} onClick={this.toggleMenu}>
                             <Link to='/santa'>
                                 <div className="NavMenuRouteBtn">
