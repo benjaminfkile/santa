@@ -23,16 +23,16 @@
         height: 100%;
     }
 
-    #logo-img-1{
+    /* #logo-img-1{
         margin-right: 100px;
         margin-left: 60px;
-    }
+    } */
 
-    #logo-img-2{
+    /* #logo-img-2{
         display: block;
         transform: scale(.5);
         margin-left: -220px;
         filter: brightness(0) invert(1);
 
-    }
+    } */
 }
