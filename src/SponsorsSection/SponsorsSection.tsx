@@ -38,8 +38,6 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionTyp
 
     render() {
 
-        console.log(this.state.sponsors)
-
         return (
             <div className="SponsorsSection">
                 <NavMenu />
