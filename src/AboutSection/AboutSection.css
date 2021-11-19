@@ -35,7 +35,7 @@
     animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; */
 }
 
-.AboutContent a{
+.AboutContent a {
     text-decoration: none;
     color: #FFFFFF;
     text-decoration: underline;
@@ -69,13 +69,13 @@
     max-width: 600px;
 }
 
-.AboutContentLowerItemHeader{
+.AboutContentLowerItemHeader {
     display: flex;
     justify-content: center;
     width: 100%;
 }
 
-#about-lower-content-mistltoe{
+#about-lower-content-mistltoe {
     width: 50px;
 }
 
@@ -113,10 +113,12 @@
     .AboutHeader p {
         font-size: 30px;
     }
+
     .AboutContent {
         width: 80%;
         max-height: calc(100% - 135px);
     }
+
     .AboutContent p {
         font-size: 21px;
     }
@@ -131,7 +133,14 @@
     .AboutContent p {
         font-size: 20px;
     }
+
     .JumpingElf {
         display: block;
     }
+}
+
+#idfk {
+    filter: brightness(0) invert(1);
+    max-width: 300px;
+
 }

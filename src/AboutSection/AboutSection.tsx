@@ -15,16 +15,16 @@ class AboutSection extends Component {
                 <JumpingElf />
                 <Ornaments />
                 <div className="AboutHeader">
-                    <Logo/>
+                    <Logo />
                 </div>
                 <div className="AboutContent">
                     <p>
                         Western Montana Santa Fly Over, with the help of the <a href="https://www.missouladowntown.com/" target="_blank" rel="noreferrer">Missoula Downtown Foundation</a>, is keeping the tradition of having Santa do a test flight over Missoula Mt. Hearing the kids, and adults, screaming “Santa” with cheer is what makes this flight a true Christmas Miracle.
                     </p>
                     <div className="AboutSectionContentImg1">
-                        {/* <img src="https://i.ibb.co/QrCcpqC/e353718c-01b2-46dc-b52a-7853c976bf66-750x422.jpg" alt="Santa" /> */}
-                        {/* <p id="img-credit-about-i-1">Credit: Getty Images/iStockphoto</p> */}
-                        <img src="/res/mdf-logo.png" alt="" />
+                        <img id="idfk" src="/res/mdf-logo.png" alt="" />
+                        <img src="https://i.ibb.co/QrCcpqC/e353718c-01b2-46dc-b52a-7853c976bf66-750x422.jpg" alt="Santa" />
+                        <p id="img-credit-about-i-1">Credit: Getty Images/iStockphoto</p>
                     </div>
                     <p>
                         In 2020, after a rough year of lockdowns and school closures, a group of Missoula residents started a
