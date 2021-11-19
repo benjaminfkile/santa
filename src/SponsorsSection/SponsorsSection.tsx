@@ -55,8 +55,7 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionTyp
                                 <p>{sponsor.name}</p>
                             </div>
                             <div className="SponsorLogoWrapper">
-                                {sponsor.sponsor_id === "dee8cf8925f9cf111b91aab4ab2a4325" && <img id={"foo-fml"} src={sponsor.logo} alt="" />}
-                                {sponsor.sponsor_id !== "dee8cf8925f9cf111b91aab4ab2a4325" && <img src={sponsor.logo} alt="" />}
+                                <img src={sponsor.logo} alt=""/>
                             </div>
                             {(sponsor.website_url || sponsor.fb_url) && <div className="SponsorFooter">
                                 {/* {sponsor.website_url && <span className="material-icons" onClick={() => this.openLink(sponsor.website_url)}>link</span>} */}
