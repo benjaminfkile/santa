@@ -1,6 +1,6 @@
 .DonateSection {
     position: absolute;
-    top: 00px;
+    top: 0px;
     left: 0px;
     width: 100%;
     height: calc(100% - 30px);
@@ -8,19 +8,7 @@
     overflow-x: hidden;
 }
 
-.DonateSectionHeader {
-    width: 100%;
-    text-align: center;
-}
 
-.DonateSectionHeader img {
-    margin-top: -40px;
-    margin-bottom: -50px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    height: 190px;
-}
 
 .DonateSectionHeader p {
     font-size: 20px;

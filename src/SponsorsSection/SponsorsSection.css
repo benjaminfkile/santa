@@ -1,22 +1,14 @@
 .SponsorsSection {
-    position: fixed;
-    top: 30px;
+    position: absolute;
+    top: 0px;
     left: 10px;
     height: 100%;
     width: calc(100% - 20px);
     overflow-y: none;
 }
 
-.SponsorsHeader {
-    text-align: center;
-    height: 50px;
-}
-
-.SponsorsHeader p {
-    margin: 0px;
-    margin-top: 15px;
-    font-size: 20px;
-    color: #FFFFFF;
+.SposorSectionHeader{
+    margin-bottom: 10px;
 }
 
 .SponsorList {

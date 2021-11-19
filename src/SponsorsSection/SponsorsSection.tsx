@@ -5,6 +5,7 @@ import NavMenu from "../NavMenu/NavMenu"
 import JumpingElf from "../Utils/JumpingElf/JumpingElf"
 import Ornaments from "../Utils/Ornaments/Ornaments"
 import "./SponsorsSection.css"
+import Logo from "../Utils/Logo/Logo"
 // import LogoSmall from "../Utils/Logo/LogoSmall"
 
 
@@ -42,8 +43,8 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionTyp
                 <NavMenu />
                 <JumpingElf />
                 <Ornaments />
-                <div className="SponsorsHeader">
-                    <p>Our Sponsors</p>
+                <div className="SposorSectionHeader">
+                    <Logo />
                 </div>
                 {this.state.sponsors.length > 0 && <div className="SponsorList">
                     {this.state.sponsors.map((sponsor: SponsorTypes, i: number) =>

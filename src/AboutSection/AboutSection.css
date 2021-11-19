@@ -12,14 +12,6 @@
     width: 100%;
 }
 
-.AboutHeader img{
-    margin-top: -40px;
-    margin-bottom: -50px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    height: 190px;
-}
 
 .AboutContent {
     width: 90%;
@@ -132,10 +124,10 @@
 
 @media screen and (min-width: 900px) {
     .AboutContent {
-        width: 50%;
-        max-height: calc(100% - 90px);
+        width: 65%;
         /* display: flex; */
     }
+
     .AboutContent p {
         font-size: 20px;
     }

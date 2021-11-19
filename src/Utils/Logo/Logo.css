@@ -1,0 +1,38 @@
+.Logo{
+    width: 100%;
+}
+.LogoWrapper{
+    margin-top: -40px;
+    margin-bottom: -50px;
+    display: flex;
+    justify-content: center;
+    height: 190px;
+}
+
+.LogoWrapper img{
+    height: 100%;
+}
+
+#logo-img-2{
+    display: none;
+}
+
+@media screen and (min-width: 600px) {
+
+    .LogoWrapper img{
+        height: 100%;
+    }
+
+    #logo-img-1{
+        margin-right: 100px;
+        margin-left: 60px;
+    }
+
+    #logo-img-2{
+        display: block;
+        transform: scale(.5);
+        margin-left: -220px;
+        filter: brightness(0) invert(1);
+
+    }
+}

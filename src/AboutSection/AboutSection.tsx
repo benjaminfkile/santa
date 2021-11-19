@@ -4,6 +4,7 @@ import NavMenu from "../NavMenu/NavMenu"
 import Ornaments from "../Utils/Ornaments/Ornaments"
 import Mistletoe from "../SVG/Mistletoe/Mistletoe"
 import "./AboutSection.css"
+import Logo from "../Utils/Logo/Logo"
 
 class AboutSection extends Component {
 
@@ -14,7 +15,7 @@ class AboutSection extends Component {
                 <JumpingElf />
                 <Ornaments />
                 <div className="AboutHeader">
-                    <img src="/res/wmsfo-logo.png" alt="" />
+                    <Logo/>
                 </div>
                 <div className="AboutContent">
                     <p>
