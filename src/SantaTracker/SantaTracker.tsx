@@ -22,7 +22,7 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
         returnUser: false,
     }
 
-    render() {//.env bump
+    render() {
         return (
             <div className="SantaTracker">
                 {this.state.preShow && <div className="PreShow">
