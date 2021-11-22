@@ -49,6 +49,9 @@ class NavMenu extends Component<{}, NavTypes> {
     }
 
     render() {
+
+        let routes = JSON.parse(process.env.REACT_APP_ROUTES || "")
+
         return (
             <div className="NavMenu" ref={this.wrapperRef}>
                 {!this.state.menuOpen && <div className="NavMenuBtn" onClick={this.toggleMenu}>
@@ -56,7 +59,7 @@ class NavMenu extends Component<{}, NavTypes> {
                 </div>}
                 {this.state.menuOpen && <div className="NavMenuContent">
                     <div className="NavMenuRoutes">
-                        <div className="NavMenuRoute" tabIndex={1} onClick={this.toggleMenu}>
+                        {routes.about && <div className="NavMenuRoute" tabIndex={1} onClick={this.toggleMenu}>
                             <Link to='/about'>
                                 <div className="NavMenuRouteBtn">
                                     <div className="NavMenuRouteSVG">
@@ -65,8 +68,8 @@ class NavMenu extends Component<{}, NavTypes> {
                                     <p id="about-route-text">About</p>
                                 </div>
                             </Link>
-                        </div>
-                        <div className="NavMenuRoute" tabIndex={1} onClick={this.toggleMenu}>
+                        </div>}
+                        {routes.donate && <div className="NavMenuRoute" tabIndex={2} onClick={this.toggleMenu}>
                             <Link to='/donate'>
                                 <div className="NavMenuRouteBtn">
                                     <div className="NavMenuRouteSVG">
@@ -75,16 +78,16 @@ class NavMenu extends Component<{}, NavTypes> {
                                     <p id="donate-route-text">Donate</p>
                                 </div>
                             </Link>
-                        </div>
-                        <div className="NavMenuRoute" tabIndex={1} onClick={this.toggleMenu}>
+                        </div>}
+                        {routes.sponsors && <div className="NavMenuRoute" tabIndex={3} onClick={this.toggleMenu}>
                             <Link to='/sponsors'>
                                 <div className="NavMenuRouteBtn">
                                     <img src="/res/sponsors-icon.png" alt="" />
                                     <p id="sponsors-route-text">Sponsors</p>
                                 </div>
                             </Link>
-                        </div>
-                        <div className="NavMenuRoute" tabIndex={1} onClick={this.toggleMenu}>
+                        </div>}
+                        {routes.tracker && <div className="NavMenuRoute" tabIndex={4} onClick={this.toggleMenu}>
                             <Link to='/santa'>
                                 <div className="NavMenuRouteBtn">
                                     <div className="NavMenuLaughingSantaWrapper">
@@ -95,8 +98,8 @@ class NavMenu extends Component<{}, NavTypes> {
                                     <p id="tracker-route-text">Track Santa</p>
                                 </div>
                             </Link>
-                        </div>
-                        <div className="NavMenuRoute" tabIndex={1} onClick={this.toggleMenu}>
+                        </div>}
+                        {routes.contact && <div className="NavMenuRoute" tabIndex={5} onClick={this.toggleMenu}>
                             <Link to='/contact'>
                                 <div className="NavMenuRouteBtn">
                                     <div className="NavMenuRouteSVG">
@@ -105,11 +108,8 @@ class NavMenu extends Component<{}, NavTypes> {
                                     <p id="contact-route-text">Contact</p>
                                 </div>
                             </Link>
-                        </div>
+                        </div>}
                     </div>
-                    {/* <div className="NavMenuFooter">
-                        <span id="nav-menu-close-btn" className="material-icons" onClick={this.toggleMenu}>clear</span>
-                    </div> */}
                 </div>}
             </div>
         )
