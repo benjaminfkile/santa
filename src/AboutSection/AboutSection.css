@@ -140,7 +140,7 @@
 }
 
 #idfk {
-    filter: brightness(1) invert(0);
+    filter: grayscale(100%);
     max-width: 300px;
 
 }

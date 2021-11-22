@@ -23,8 +23,8 @@ class AboutSection extends Component {
                     </p>
                     <div className="AboutSectionContentImg1">
                         <img id="idfk" src="/res/mdf-logo.png" alt="" />
-                        <img src="https://i.ibb.co/QrCcpqC/e353718c-01b2-46dc-b52a-7853c976bf66-750x422.jpg" alt="Santa" />
-                        <p id="img-credit-about-i-1">Credit: Getty Images/iStockphoto</p>
+                        {/* <img src="https://i.ibb.co/QrCcpqC/e353718c-01b2-46dc-b52a-7853c976bf66-750x422.jpg" alt="Santa" />
+                        <p id="img-credit-about-i-1">Credit: Getty Images/iStockphoto</p> */}
                     </div>
                     <p>
                         In 2020, after a rough year of lockdowns and school closures, a group of Missoula residents started a
