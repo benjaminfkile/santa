@@ -186,7 +186,7 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
                         <img src="/res/fb-icon.png" alt="" onClick={() => this.openLink("https://www.facebook.com/groups/374773957140495")} />
                     </div>
                     <div className="OtherContactMethodsEmail">
-                        <span className="material-icons" onClick={() => this.openLink("mailto:contactus@406santaflyover.org")}>email</span>
+                        <span className="material-icons" onClick={() => this.openLink("mailto:contactus@406santaFlyover.org")}>email</span>
                     </div>
                 </div>
             </div>
