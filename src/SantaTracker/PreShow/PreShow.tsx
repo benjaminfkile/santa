@@ -17,7 +17,7 @@ class PreShow extends Component {
                         <p id="preshow-info-card-header-p2">When he starts to move you can interact with the map.</p>
                     </div>
                     <div className="preshow-info-card-message">
-                        <p>Important updates about Santas flight such as weather and flight status will show up here.</p>
+                        <p>Important updates about Santa's flight such as weather and flight status will show up here.</p>
                     </div>
                     <div className="preshow-info-card-laughing-santa-wrapper">
                         <LaughingSanta
