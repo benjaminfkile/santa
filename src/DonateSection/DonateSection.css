@@ -77,6 +77,10 @@
     margin: 0px;
 }
 
+.DonateSectionDonateLetter{
+    margin-bottom: 10px;
+}
+
 @media screen and (min-width: 470px) {
     .DonateSectionContent {
         width: 80%;
