@@ -14,7 +14,7 @@ class DonateSection extends Component {
     }
 
 
-    render() {
+    render() {//bump
         return (
             <div className="DonateSection">
                 <NavMenu />
