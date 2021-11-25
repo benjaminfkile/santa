@@ -16,8 +16,8 @@ type SantaTrackerTypes = {
 class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
 
     state = {
-        preShow: true,
-        runShow: false,
+        preShow: false,
+        runShow: true,
         endShow: false,
         returnUser: false,
     }
