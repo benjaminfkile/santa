@@ -8,7 +8,7 @@ import Logo from "../Utils/Logo/Logo"
 
 class AboutSection extends Component {
 
-    render() {
+    render() {//bump 
         return (
             <div className="AboutSection">
                 <NavMenu />
