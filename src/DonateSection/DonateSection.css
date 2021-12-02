@@ -16,6 +16,26 @@
     /* text-decoration: underline; */
 }
 
+.FundsRaised {
+    position: fixed;
+    right: 5px;
+    bottom: 5px;
+    background-color: #242526;
+    /* box-shadow: 2px 2px 2px #0000006b; */
+}
+
+.FundsRaised p {
+    position: fixed;
+    bottom: -15px;
+    right: 80px;
+    color: gray;
+}
+
+.FundsRaisedRingWrapper {
+    height: 80px;
+    width: 80px;
+}
+
 .DonateSectionContent {
     width: 90%;
     /* max-width: 414px; */
@@ -77,7 +97,7 @@
     margin: 0px;
 }
 
-.DonateSectionDonateForm{
+.DonateSectionDonateForm {
     margin-bottom: 10px;
 }
 
@@ -91,10 +111,12 @@
     .DonateSectionHeader p {
         font-size: 30px;
     }
+
     .DonateSectionContent {
         width: 80%;
         max-height: calc(100% - 250px);
     }
+
     .DonateSectionContent p {
         font-size: 21px;
     }
@@ -105,7 +127,19 @@
         width: 50%;
         max-height: calc(100% - 300px);
     }
+
     .JumpingElf {
         display: block;
+    }
+
+    .FundsRaisedRingWrapper {
+        height: 100px;
+        width: 100px;
+    }
+    .FundsRaised p {
+        position: fixed;
+        bottom: -15px;
+        right: 100px;
+        color: gray;
     }
 }
