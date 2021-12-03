@@ -34,7 +34,7 @@
     margin-right: auto;
     width: 80%;
     height: calc(100% - 295px);
-    min-height: 200px;
+    min-height: 115px;
     max-height: 500px;
     max-width: 600px;
 }
@@ -55,7 +55,7 @@
 
 .ContactSectionMessageWrapper .form-control {
     height: calc(100vh - 430px) !important;
-    min-height: 100px;
+    min-height: 38px;
     max-height: 400px;
 }
 

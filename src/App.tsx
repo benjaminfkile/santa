@@ -8,6 +8,7 @@ import FundStatus from "./FundStatus/FundStatus"
 import SponsorsSection from "./SponsorsSection/SponsorsSection"
 import ContactSection from "./ContactSection/ContactSection"
 import 'bootstrap/dist/css/bootstrap.min.css'
+import fundData from "./Utils/FundsRing/FundData"
 
 
 type AppTypes = {
@@ -25,6 +26,7 @@ class App extends Component<{}, AppTypes>{
 
   componentDidMount() {
     this.getSanta()
+    fundData.getFundData()
     //eslint-disable-next-line
     console.log("\n  .-\"\"-.\r\n \/,..___\\\r\n() {_____}\r\n  (\/-@-@-\\)\r\n  {`-=^=-\'}\r\n  {  `-\'  }\r\n   {     }\r\n    `---\'\n\nDeveloped by Ben Kile\n\n")
   }
@@ -66,7 +68,7 @@ class App extends Component<{}, AppTypes>{
             render={() => <DonateSection />}
           />
           <Route
-            path='/status'
+            path='/funding'
             render={() => <FundStatus />}
           />
           <Route

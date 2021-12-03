@@ -81,12 +81,14 @@ class NavMenu extends Component<{}, NavTypes> {
                             </Link>
                         </div>}
                         {routes.fundProgress && <div className="NavMenuRoute" tabIndex={2} onClick={this.toggleMenu}>
-                            <Link to='/status'>
+                            <Link to='/funding'>
                                 <div className="NavMenuRouteBtn">
                                     <div className="NavMenuRouteSVG">
-                                        <FundsRing />
+                                        <FundsRing 
+                                        ringStrokeWidth={12}
+                                        />
                                     </div>
-                                    <p id="donate-route-text">Status</p>
+                                    <p id="funding-route-text">Cheer Meter</p>
                                 </div>
                             </Link>
                         </div>}

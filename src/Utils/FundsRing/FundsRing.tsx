@@ -6,6 +6,7 @@ import 'react-circular-progressbar/dist/styles.css'
 
 interface FundsRingProps {
     message?: string
+    ringStrokeWidth? : number
 }
 
 type FundsRingTypes = {
@@ -53,7 +54,7 @@ class FundsRing extends Component<FundsRingProps, FundsRingTypes> {
                     <CircularProgressbar
                         value={this.state.progress + 1}
                         text={`${this.state.progress + 1}%`}
-                        strokeWidth={5}
+                        strokeWidth={this.props.ringStrokeWidth || 5}
                         styles={buildStyles({
                             rotation: 0.25,
                             strokeLinecap: 'butt',
