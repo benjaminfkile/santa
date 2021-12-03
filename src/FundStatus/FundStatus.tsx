@@ -7,7 +7,7 @@ import Ornaments from "../Utils/Ornaments/Ornaments"
 import "./FundStatus.css"
 
 class FundStatus extends Component {
-    render() {
+    render() {//bump
         return (
             <div className="FundStatus">
                 <NavMenu />
