@@ -16,15 +16,7 @@
     /* text-decoration: underline; */
 }
 
-.FundsRaised {
-    position: fixed;
-    right: 5px;
-    bottom: 5px;
-    background-color: #242526;
-    /* box-shadow: 2px 2px 2px #0000006b; */
-}
-
-.FundsRaised p {
+.FundsRaisedRingWrapper p {
     position: fixed;
     bottom: -15px;
     right: 80px;
@@ -34,6 +26,10 @@
 .FundsRaisedRingWrapper {
     height: 80px;
     width: 80px;
+    position: fixed;
+    right: 5px;
+    bottom: 5px;
+
 }
 
 .DonateSectionContent {
@@ -136,10 +132,10 @@
         height: 100px;
         width: 100px;
     }
-    .FundsRaised p {
+
+    .FundsRaisedRingWrapper p {
         position: fixed;
         bottom: -15px;
         right: 100px;
-        color: gray;
     }
 }

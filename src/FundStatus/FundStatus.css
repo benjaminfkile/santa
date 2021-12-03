@@ -1,0 +1,41 @@
+.FundStatusBody {
+    position: absolute;
+    top: 130px;
+    left: 10%;
+    width: 80%;
+    padding-bottom: 35px;
+    background-color: #222222;
+    border-radius: 5px;
+    box-shadow: 3px 3px 3px #000000;
+}
+
+.FundStatusBodyHeader {
+    text-align: center;
+    padding: 10px;
+    padding-bottom: 0px;
+}
+
+.FundStatusRingWrapper {
+    margin: auto;
+    width: 80%;
+}
+
+#amount-needed {
+    position: absolute;
+    bottom: -10px;
+    right: 5px;
+    
+}
+
+@media screen and (min-width: 500px) {
+    .FundStatusBody {
+        position: absolute;
+        top: 130px;
+        left: calc(50% - 225px);
+        width: 450px;
+        padding-bottom: 15px;
+        background-color: #222222;
+        border-radius: 5px;
+        box-shadow: 3px 3px 3px #000000;
+    }
+}

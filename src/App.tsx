@@ -4,6 +4,7 @@ import axios from "axios"
 import SantaTracker from "./SantaTracker/SantaTracker"
 import AboutSection from "./AboutSection/AboutSection"
 import DonateSection from "./DonateSection/DonateSection"
+import FundStatus from "./FundStatus/FundStatus"
 import SponsorsSection from "./SponsorsSection/SponsorsSection"
 import ContactSection from "./ContactSection/ContactSection"
 import 'bootstrap/dist/css/bootstrap.min.css'
@@ -63,6 +64,10 @@ class App extends Component<{}, AppTypes>{
           <Route
             path='/donate'
             render={() => <DonateSection />}
+          />
+          <Route
+            path='/status'
+            render={() => <FundStatus />}
           />
           <Route
             path='/santa'

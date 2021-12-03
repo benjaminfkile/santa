@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 import FeedbackSVG from "../SVG/Feedback/FeedbackSVG"
 import InfoSVG from "../SVG/Info/InfoSVG"
 import MoneyTransferSVG from "../SVG/MoneyTransfer/MoneyTransferSVG"
+import FundsRing from "../Utils/FundsRing/FundsRing"
 import LaughingSanta from "../Utils/LaughingSanta/LaughingSanta"
 import "./NavMenu.css"
 
@@ -76,6 +77,16 @@ class NavMenu extends Component<{}, NavTypes> {
                                         <MoneyTransferSVG />
                                     </div>
                                     <p id="donate-route-text">Donate</p>
+                                </div>
+                            </Link>
+                        </div>}
+                        {routes.fundProgress && <div className="NavMenuRoute" tabIndex={2} onClick={this.toggleMenu}>
+                            <Link to='/status'>
+                                <div className="NavMenuRouteBtn">
+                                    <div className="NavMenuRouteSVG">
+                                        <FundsRing />
+                                    </div>
+                                    <p id="donate-route-text">Status</p>
                                 </div>
                             </Link>
                         </div>}
