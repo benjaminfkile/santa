@@ -118,6 +118,11 @@
     .SponsorLogoWrapper img {
         height: 100%;
     }
+    
+    #adccddadeafd .SponsorLogoWrapper{
+        height: 100px;
+        margin-bottom: -20px;
+    }
 }
 
 @media screen and (min-width: 1200px) {

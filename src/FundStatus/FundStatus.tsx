@@ -16,7 +16,7 @@ class FundStatus extends Component {
                 <JumpingElf />
                 <div className="FundStatusBody">
                     <div className="FundStatusBodyHeader">
-                        <p>Cheer Tracker</p>
+                        <p>Cheer Meter</p>
                     </div>
                     <div className="FundStatusBodyText">
                         <p>Updates are made on Monday and Friday evenings. Donations made throughout the week and on these days may not be reflected until the following update.</p>

@@ -48,12 +48,12 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionTyp
                 </div>
                 {this.state.sponsors.length > 0 && <div className="SponsorList">
                     {this.state.sponsors.map((sponsor: SponsorTypes, i: number) =>
-                        <div className="SponsorItem" key={i}>
+                        <div className="SponsorItem" key={i} id={sponsor.sponsor_id.replace(/[0-9]/g, '')}>
                             <div className="SponsorItemHeader">
                                 <p>{sponsor.name}</p>
                             </div>
                             <div className="SponsorLogoWrapper">
-                                <img src={sponsor.logo} alt=""/>
+                                <img src={sponsor.logo} alt="" />
                             </div>
                             {(sponsor.website_url || sponsor.fb_url) && <div className="SponsorFooter">
                                 {/* {sponsor.website_url && <span className="material-icons" onClick={() => this.openLink(sponsor.website_url)}>link</span>} */}
