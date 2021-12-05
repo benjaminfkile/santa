@@ -19,7 +19,7 @@ class FundStatus extends Component {
                         <p>Cheer Meter</p>
                     </div>
                     <div className="FundStatusBodyText">
-                        <p>Updates are made on Monday and Friday evenings. Donations made throughout the week and on these days may not be reflected until the following update.</p>
+                        <p>Updates are made on Monday and Friday evenings. Donations made throughout the week or on these days may not be reflected until the following update.</p>
                     </div>
                     <div className="FundStatusRingWrapper">
                         <FundsRing />
