@@ -3,8 +3,8 @@ import LocationPrompt from "../../../Utils/UserLocation/LocationPrompt"
 import { Button } from "react-bootstrap"
 import userLocation from "../../../Utils/UserLocation/UserLocation"
 // import DonateToolKit from "../../../Utils/Donate/DonateToolkit"
-import "./Menu.css"
 import { Link } from "react-router-dom"
+import "./Menu.css"
 
 interface TrackerMenuProps {
     changeTheme: Function
@@ -158,7 +158,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                                 </Link>
                             </div>
                         </div>
-                        {!userLocation.disable && <div id={"tracker-menu-compass-btn-" + this.props.currentTheme.toLowerCase()} className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} onClick={() => this.toggleCompass()}><span className="material-icons">explore</span></div>}
+                        {/* {!userLocation.disable && <div id={"tracker-menu-compass-btn-" + this.props.currentTheme.toLowerCase()} className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} onClick={() => this.toggleCompass()}><span className="material-icons">explore</span></div>} */}
                         <div className={`TrackerMenuCloseBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-close-btn-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleMenu}><p><span className="material-icons">clear</span></p></div>
                     </div>
                 </div>}
