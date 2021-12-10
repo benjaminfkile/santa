@@ -128,11 +128,11 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                         </div>}
                         {this.props.santaDat.alt && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
                             <span className="material-icons">flight_takeoff</span>
-                            <p>{this.props.santaDat.alt.split("+")[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
+                            <p>{this.props.santaDat.alt.split("+")[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</p>
                         </div>}
                         {this.props.santaDat.speed && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
                             <span className="material-icons">speed</span>
-                            <p>{this.props.santaDat.speed.split("+")[0]} mph</p>
+                            <p>{this.props.santaDat.speed.split("+")[0]}</p>
                         </div>}
                     </div>
                     {!userLocation.disable && this.props.distanceFromUserToSanta && <div className="DistanceFromUserToSantaTrackerMenu" id={"distance-from-user-to-santa-tracker-menu-" + this.props.currentTheme.toLowerCase()}>

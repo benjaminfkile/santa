@@ -73,8 +73,9 @@ class Tracker extends Component {
     getUserLocation = () => {
         if (userLocation.coordinates.lat
             && this.props.santaDat.lat
-            && userLocation.coordinates.lat !== this.userToSantaCoords[1].lat
-            && userLocation.coordinates.lng !== this.userToSantaCoords[1].lng) {
+            // && userLocation.coordinates.lat !== this.userToSantaCoords[1].lat
+            // && userLocation.coordinates.lng !== this.userToSantaCoords[1].lng
+        ) {
             this.userToSantaCoords[0] = { lat: Number(this.props.santaDat.lat), lng: Number(this.props.santaDat.lng) }
             this.userToSantaCoords[1] = { lat: Number(userLocation.coordinates.lat), lng: Number(userLocation.coordinates.lng) }
         }
