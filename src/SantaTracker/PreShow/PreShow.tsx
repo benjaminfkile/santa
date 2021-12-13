@@ -15,7 +15,7 @@ class PreShow extends Component<PreShowProps, {}> {
         let message = this.props.santaDat.message || null
 
         return (
-            <div className="PreShowContainer">
+            <div className="PreShow">
                 <NavMenu />
                 <Snow />
                 <div className="preshow-info-card">

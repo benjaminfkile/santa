@@ -43,7 +43,7 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
         let santaDat = this.props.santaDat
 
         if (santaDat) {
-            santaDat.mode = 0
+            santaDat.mode = 2
         }
 
         return (

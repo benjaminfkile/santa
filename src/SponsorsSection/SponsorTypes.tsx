@@ -4,6 +4,8 @@ type SponsorTypes = {
     fb_url: string
     logo: string
     sponsor_id: string
+    logo_small: string
+    hangTime: number
 }
 
 export default SponsorTypes
