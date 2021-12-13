@@ -1,13 +1,10 @@
 import { Component } from "react"
-import axios from "axios"
 import SponsorTypes from "./SponsorTypes"
 import NavMenu from "../NavMenu/NavMenu"
 import JumpingElf from "../Utils/JumpingElf/JumpingElf"
 import Ornaments from "../Utils/Ornaments/Ornaments"
-import "./SponsorsSection.css"
 import Logo from "../Utils/Logo/Logo"
-// import LogoSmall from "../Utils/Logo/LogoSmall"
-
+import "./SponsorsSection.css"
 
 interface SponsorsSectionProps {
     sponsors: Array<SponsorTypes> | []
