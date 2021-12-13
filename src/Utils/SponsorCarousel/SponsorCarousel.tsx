@@ -65,7 +65,9 @@ class SponsorCarousel extends Component<SponsorCarouselProps, SponsorCarouselTyp
     }
 
     openLink = (url: string) => {
-        window.open(url, '_blank')
+        if (url) {
+            window.open(url, '_blank')
+        }
     }
 
     render() {

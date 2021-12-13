@@ -67,7 +67,9 @@ class Endshow extends Component<EndShowProps, EndShowTypes> {
     }
 
     openLink = (url: string) => {
-        window.open(url, '_blank')
+        if (url) {
+            window.open(url, '_blank')
+        }
     }
 
     render() {
