@@ -3,7 +3,6 @@ import LocationPrompt from "../../../Utils/UserLocation/LocationPrompt"
 import { Button } from "react-bootstrap"
 import userLocation from "../../../Utils/UserLocation/UserLocation"
 // import DonateToolKit from "../../../Utils/Donate/DonateToolkit"
-import { Link } from "react-router-dom"
 import "./Menu.css"
 
 interface TrackerMenuProps {
