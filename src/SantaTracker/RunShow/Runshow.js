@@ -11,6 +11,7 @@ import TrackerMenu from "./Menu/Menu"
 import Snow from "../../Utils/Snow/Snow"
 import projectedRoute from "../../Utils/ProjectedRoute"
 import Compass from "../../Utils/Compass/Compass"
+import SponsorCarousel from "../../Utils/SponsorCarousel/SponsorCarousel";
 import "./Runshow.css"
 // import fullScreen from "../../Utils/FullScreen/FullScreen";
 
@@ -324,6 +325,10 @@ class Tracker extends Component {
                         santaBearing={parseInt(this.props.santaDat.bearraw)}
                     />}
                 {this.state.snow && <Snow />}
+                <SponsorCarousel
+                    sponsors={this.props.sponsors}
+                    theme={this.state.currentTheme}
+                />
             </div>
         )
     }

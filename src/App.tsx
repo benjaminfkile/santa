@@ -9,16 +9,19 @@ import SponsorsSection from "./SponsorsSection/SponsorsSection"
 import ContactSection from "./ContactSection/ContactSection"
 import 'bootstrap/dist/css/bootstrap.min.css'
 import fundData from "./Utils/FundsRing/FundData"
+import SponsorTypes from "./SponsorsSection/SponsorTypes"
 
 
 type AppTypes = {
   santaDat: any
+  sponsors: Array<SponsorTypes> | []
 }
 
 class App extends Component<{}, AppTypes>{
 
   state = {
     santaDat: null,
+    sponsors: []
   }
 
   updateFrequency = 5000
@@ -26,6 +29,7 @@ class App extends Component<{}, AppTypes>{
 
   componentDidMount() {
     this.getSanta()
+    this.getSponosrs()
     fundData.getFundData()
     //eslint-disable-next-line
     console.log("\n  .-\"\"-.\r\n \/,..___\\\r\n() {_____}\r\n  (\/-@-@-\\)\r\n  {`-=^=-\'}\r\n  {  `-\'  }\r\n   {     }\r\n    `---\'\n\nDeveloped by Ben Kile\n\n")
@@ -50,6 +54,14 @@ class App extends Component<{}, AppTypes>{
       })
   }
 
+  getSponosrs = () => {
+    axios.get(`${process.env.REACT_APP_MRS_CLAUS_API_URL}/api/sponsors/get-sponsors`)
+      .then(res => {
+        this.setState({ sponsors: res.data })
+      }).catch(err => {
+        console.log(err)
+      })
+  }
 
   render() {
 
@@ -76,11 +88,14 @@ class App extends Component<{}, AppTypes>{
             path='/santa'
             render={() => <SantaTracker
               santaDat={this.state.santaDat}
+              sponsors={this.state.sponsors}
             />}
           />
           <Route
             path='/sponsors'
-            render={() => <SponsorsSection />}
+            render={() => <SponsorsSection
+              sponsors={this.state.sponsors}
+            />}
           />
           <Route
             path='/contact'

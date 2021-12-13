@@ -1,0 +1,58 @@
+.SponsorCarousel{
+    position: fixed;
+    bottom: 0px;
+    margin-bottom: 25px;
+    width: 120px;
+    height: 50px;
+    right: calc(50% - 60px)
+}
+
+.SponsorCarouselItem{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.SponsorCarouselItem img{
+    height: 50px;
+    max-width: calc(120px - 10px);
+
+}
+
+#sponsor-carousel-item-standard{
+    background-color: #ffffff;
+}
+
+#sponsor-carousel-item-retro{
+    background-color: #ded1ad;
+}
+
+#sponsor-carousel-item-silver{
+    background-color: #737372;
+}
+
+#sponsor-carousel-item-dark{
+    background-color: #ffffff1c;
+}
+
+#sponsor-carousel-item-night{
+    background-color: #00000080;
+}
+
+#sponsor-carousel-item-aubergine{
+    background-color: #21556cad;
+}
+
+@media screen and (min-width: 500px) {
+    .SponsorCarousel{
+        width: 200px;
+        right: calc(50% - 100px)
+    }
+
+    .SponsorCarouselItem img{
+        height: 65px;
+        max-width: 200px;
+    }
+}

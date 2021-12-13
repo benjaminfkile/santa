@@ -5,6 +5,7 @@ import Runshow from "./RunShow/Runshow"
 
 interface SantaTrackerProps {
     santaDat: any
+    sponsors: any
 }
 
 type SantaTrackerTypes = {
@@ -37,10 +38,12 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
 
     render() {
 
-        console.log(this.props.santaDat)
-
         let loading = this.state.loading
         let santaDat = this.props.santaDat
+
+        if (santaDat) {
+            santaDat.mode = 1
+        }
 
         return (
             <div className="SantaTracker">
@@ -50,6 +53,7 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
                 {!loading && santaDat && santaDat.mode === 1 && this.props.santaDat && this.props.santaDat.lat && <div className="RunShow">
                     <Runshow
                         santaDat={this.props.santaDat}
+                        sponsors={this.props.sponsors}
                     />
                 </div>}
                 {!loading && santaDat && santaDat.mode === 2 && this.props.santaDat && this.props.santaDat.lat && <div className="RunShow">
