@@ -138,24 +138,8 @@ class Tracker extends Component {
 
     drawRoutePoly = () => {
         // console.log("drawing route poly")
-        let color = ""
-        let colorDex = -1
-        let c1 = "#cc2626"
-        let c2 = "#9acd32"
-        let c3 = "#ffffff"
-
+        let color = "#dc35457d"
         for (let i = 0; i < projectedRoute.length; i++) {
-            colorDex++
-            if (colorDex === 0) {
-                color = c1
-            }
-            if (colorDex === 1) {
-                color = c2
-            }
-            if (colorDex === 2) {
-                color = c3
-                colorDex = -1
-            }
             if (i < projectedRoute.length - 1) {
                 let coords = []
                 coords.push({ lat: Number(projectedRoute[i].Lat), lng: Number(projectedRoute[i].Lon) })
@@ -164,7 +148,7 @@ class Tracker extends Component {
                     path: coords,
                     color: color,
                     strokeColor: color,
-                    strokeOpacity: .7,
+                    strokeOpacity: 1,
                     strokeWeight: 1,
                 })
                 coords.setMap(this.map)
@@ -215,7 +199,6 @@ class Tracker extends Component {
     setTheme = (index) => {
         this.map.setOptions({ styles: this.mapThemes[index].mapTheme })
         this.setState({ currentTheme: this.mapThemes[index].title })
-        // this.drawRoutePoly()
     }
 
     toggleTerrain = () => {
@@ -244,7 +227,7 @@ class Tracker extends Component {
             },
             styles: this.mapThemes[4].mapTheme
         })
-        // this.drawRoutePoly()
+        this.drawRoutePoly()
         const self = this
         window.google.maps.event.addListener(map, 'dragstart', function () { self.handleMapDrag() });
     }
