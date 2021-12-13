@@ -9,7 +9,6 @@ import Night from './MapThemes/Night'
 import Aubergine from './MapThemes/Aubergine'
 import TrackerMenu from "./Menu/Menu"
 import Snow from "../../Utils/Snow/Snow"
-import TreeLoader from "../../Utils/TreeLoader/TreeLoader"
 import projectedRoute from "../../Utils/ProjectedRoute"
 import Compass from "../../Utils/Compass/Compass"
 import "./Runshow.css"
@@ -32,9 +31,6 @@ class Tracker extends Component {
     userToSantaCoords = [{}, {}]
     userToSantaFlightPath = null
     updateinterval = 100
-    loadHandlerInterval
-    loadHandlerSpeed = 1000
-    loadHandlerStep = 0;
     state = {
         lat: 46.833,
         lng: -114.030,
@@ -47,7 +43,6 @@ class Tracker extends Component {
         menuOpen: false,
         test: true,
         online: null,
-        loading: true,
         donate: false,
         compass: false,
     }
@@ -55,7 +50,6 @@ class Tracker extends Component {
 
     componentDidMount() {
         setInterval(this.update, this.updateinterval)
-        this.loadHandlerInterval = setInterval(this.loadHandler, this.loadHandlerSpeed)
     }
 
     componentWillUnmount() {
@@ -244,14 +238,6 @@ class Tracker extends Component {
         this.setState({ menuOpen: isOpen })
     }
 
-    loadHandler = () => {
-        this.loadHandlerStep++
-        if (this.props.santaDat && this.loadHandlerStep > 2) {
-            this.setState({ loading: false })
-            clearInterval(this.loadHandlerInterval)
-        }
-    }
-
     toggleCompass = () => {
         if (this.state.compass) {
             this.setState({ compass: false })
@@ -337,10 +323,6 @@ class Tracker extends Component {
                         theme={this.state.currentTheme}
                         santaBearing={parseInt(this.props.santaDat.bearraw)}
                     />}
-                {this.state.loading &&
-                    <div className="TrackerLoading">
-                        <TreeLoader />
-                    </div>}
                 {this.state.snow && <Snow />}
             </div>
         )
