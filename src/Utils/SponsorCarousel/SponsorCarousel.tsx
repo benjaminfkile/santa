@@ -15,6 +15,7 @@ type SponsorCarouselTypes = {
 class SponsorCarousel extends Component<SponsorCarouselProps, SponsorCarouselTypes> {
 
     sponsorDex = 0
+    delay = 0;
 
     state = {
         sponsors: [],
@@ -56,21 +57,27 @@ class SponsorCarousel extends Component<SponsorCarouselProps, SponsorCarouselTyp
             } else {
                 self.sponsorDex = 0
             }
-            self.setState({ sponsor: self.state.sponsors[self.sponsorDex] })
+            let sponsor: SponsorTypes = self.state.sponsors[self.sponsorDex]
+            this.delay = sponsor.hangTime * 20
+            self.setState({ sponsor: sponsor })
             self.handleCarousel()
-        }, 500)
+        }, this.delay)
+    }
+
+    openLink = (url: string) => {
+        window.open(url, '_blank')
     }
 
     render() {
 
-        console.log(this.state.sponsors)
+        // console.log(this.state.sponsors)
 
         let sponsor: SponsorTypes | any = this.state.sponsor || null
 
         return (
             <div className="SponsorCarousel">
                 {sponsor && <div id={`sponsor-carousel-item-${this.props.theme.toLowerCase()}`} className="SponsorCarouselItem">
-                    <img src={sponsor.logo} alt="" />
+                    <img src={sponsor.logo_small} onClick={() => this.openLink(sponsor.website_url)} alt="" />
                 </div>}
             </div>
         )
