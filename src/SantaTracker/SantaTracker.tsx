@@ -52,6 +52,9 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
                         santaDat={this.props.santaDat}
                     />
                 </div>}
+                {!loading && santaDat && santaDat.mode === 2 && this.props.santaDat && this.props.santaDat.lat && <div className="RunShow">
+                    end show
+                </div>}
                 {loading &&
                     <div className="TrackerLoading">
                         <TreeLoader />
