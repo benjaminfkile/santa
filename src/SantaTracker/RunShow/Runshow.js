@@ -221,7 +221,7 @@ class Tracker extends Component {
             },
             styles: this.mapThemes[4].mapTheme
         })
-        this.drawRoutePoly()
+        // this.drawRoutePoly()
         const self = this
         window.google.maps.event.addListener(map, 'dragstart', function () { self.handleMapDrag() });
     }

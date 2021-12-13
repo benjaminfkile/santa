@@ -122,14 +122,14 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                             <span className="material-icons">360</span>
                             <p>{this.props.santaDat.accuracy.split("+")[0]} ft</p>
                         </div>} */}
-                        {this.props.santaDat.bear && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
+                        {/* {this.props.santaDat.bear && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
                             <span className="material-icons">explore</span>
                             <p>{this.props.santaDat.bear.split("+")[0]}</p>
                         </div>}
                         {this.props.santaDat.alt && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
                             <span className="material-icons">flight_takeoff</span>
                             <p>{this.props.santaDat.alt.split("+")[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</p>
-                        </div>}
+                        </div>} */}
                         {this.props.santaDat.speed && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
                             <span className="material-icons">speed</span>
                             <p>{this.props.santaDat.speed.split("+")[0]}</p>
@@ -148,16 +148,15 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                             </div>}
                     </div>}
                     <div className="TrackerMenuFooter">
-                        {!userLocation.disable && <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-location-btn-allowed-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">my_location</span></div>}
+                        {/* {!userLocation.disable && <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-location-btn-allowed-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">my_location</span></div>}
                         {userLocation.disable && <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-location-btn-denied-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">location_disabled</span></div>}
                         <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`}>
-                            {/* <div className="TrackerMenuDonateBtn" id={"tracker-menu-donate-btn-" + this.props.currentTheme.toLowerCase()} onClick={() => DonateToolKit.toggleDonate()}><p><span className="material-icons">attach_money</span></p></div> */}
                             <div className="TrackerMenuHomeBtn">
                                 <Link to='/about'>
                                     <span id={"tracker-menu-home-btn-" + this.props.currentTheme.toLowerCase()} className="material-icons">home</span>
                                 </Link>
                             </div>
-                        </div>
+                        </div> */}
                         {/* {!userLocation.disable && <div id={"tracker-menu-compass-btn-" + this.props.currentTheme.toLowerCase()} className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} onClick={() => this.toggleCompass()}><span className="material-icons">explore</span></div>} */}
                         <div className={`TrackerMenuCloseBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-close-btn-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleMenu}><p><span className="material-icons">clear</span></p></div>
                     </div>
