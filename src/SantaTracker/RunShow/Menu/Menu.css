@@ -266,27 +266,27 @@
     color: #ffffff;
 }
 
-.TerrainToggle, .RoadMapToggle, .SnowToggle {
-    width: calc(33.333333% - 5px);
+.TerrainToggle{
+    width: 93px;
+    margin-left: 5px;
 }
+
+.RoadMapToggle{
+    width: 93px;
+    margin-left: 4px;
+}
+
+.SnowToggle{
+    width: 96px;
+    margin-left: 4px;
+}
+
 
 .TerrainToggle p, .RoadMapToggle p, .SnowToggle p {
     font-size: 14px;
 }
 
-.TerrainToggle {
-    margin-left: 5px;
-    margin-right: 4px;
-}
 
-.RoadMapToggle {
-    margin-right: 4px;
-}
-
-.SnowToggle {
-    margin-right: 5px;
-    padding-left: 10px;
-}
 
 #terrain-toggled-off, #terrain-toggled-on, #snow-toggled-on, #snow-toggled-off, #roadmap-toggled-on, #roadmap-toggled-off {
     display: flex;

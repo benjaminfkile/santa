@@ -1,8 +1,8 @@
 const Standard =
     [
         {
-            "featureType": "administrative.land_parcel",
-            "elementType": "labels",
+            "featureType": "administrative",
+            "elementType": "geometry",
             "stylers": [
                 {
                     "visibility": "off"
@@ -11,7 +11,6 @@ const Standard =
         },
         {
             "featureType": "poi",
-            "elementType": "labels.text",
             "stylers": [
                 {
                     "visibility": "off"
@@ -19,8 +18,16 @@ const Standard =
             ]
         },
         {
-            "featureType": "road.local",
-            "elementType": "labels",
+            "featureType": "road",
+            "elementType": "labels.icon",
+            "stylers": [
+                {
+                    "visibility": "off"
+                }
+            ]
+        },
+        {
+            "featureType": "transit",
             "stylers": [
                 {
                     "visibility": "off"

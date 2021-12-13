@@ -31,7 +31,7 @@ class Tracker extends Component {
     marker = null
     userToSantaCoords = [{}, {}]
     userToSantaFlightPath = null
-    updateinterval = 1000
+    updateinterval = 100
     loadHandlerInterval
     loadHandlerSpeed = 1000
     loadHandlerStep = 0;
