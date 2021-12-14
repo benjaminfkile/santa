@@ -38,7 +38,7 @@ class Tracker extends Component {
         currentTheme: this.mapThemes[4].title,
         snow: false,
         santaDat: {},
-        distanceFromUserToSanta: null,
+        DistanceFromUserToSanta: null,
         mapCentered: true,
         zoom: 10,
         menuOpen: false,
@@ -79,7 +79,7 @@ class Tracker extends Component {
         }
         if (userLocation.disable) {
             this.removePoly()
-            this.setState({ distanceFromUserToSanta: false })
+            this.setState({ DistanceFromUserToSanta: false })
         }
     }
 
@@ -125,10 +125,14 @@ class Tracker extends Component {
         let throttle = this.props.santaDat.throttle
         total = (rps * dynos) * throttle
         if (!isNaN(total) && total > 0) {
-            this.setState({ online: (total + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",") })
+            this.setState({ online: this.kFormatter(total) })
         } else {
             this.setState({ online: 1 })
         }
+    }
+
+    kFormatter = (num) => {
+        return Math.abs(num) > 999 ? Math.sign(num) * ((Math.abs(num) / 1000).toFixed(1)) + 'k' : Math.sign(num) * Math.abs(num)
     }
 
     drawRoutePoly = () => {
@@ -180,7 +184,7 @@ class Tracker extends Component {
         })
 
         let lengthInMeters = window.google.maps.geometry.spherical.computeLength(this.userToSantaFlightPath.getPath());
-        this.setState({ distanceFromUserToSanta: Math.floor(lengthInMeters * 3.28084) })
+        this.setState({ DistanceFromUserToSanta: Math.floor(lengthInMeters * 3.28084) })
 
         this.userToSantaFlightPath.setMap(this.map);
     }
@@ -290,21 +294,28 @@ class Tracker extends Component {
                         menuOpen={this.menuOpen}
                         santaDat={this.props.santaDat}
                         getUserLocation={this.getUserLocation}
-                        distanceFromUserToSanta={this.state.distanceFromUserToSanta}
+                        DistanceFromUserToSanta={this.state.DistanceFromUserToSanta}
                         toggleCompass={this.toggleCompass}
                     />}
-                    {!userLocation.disable && this.state.distanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
-                        {this.state.distanceFromUserToSanta < 5281 &&
+                    <div className="TopLeftInfoWrapper">
+                    {!userLocation.disable && this.state.DistanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
+                        {this.state.DistanceFromUserToSanta < 5281 &&
                             <div id="distance-from-user-to-santa-content-wrapper">
                                 <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
-                                <p>{this.state.distanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
+                                <p>{this.state.DistanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
                             </div>}
-                        {this.state.distanceFromUserToSanta > 5280 &&
+                        {this.state.DistanceFromUserToSanta > 5280 &&
                             <div id="distance-from-user-to-santa-content-wrapper">
                                 <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
-                                <p> {((this.state.distanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
+                                <p> {((this.state.DistanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
                             </div>}
                     </div>}
+                    {!this.state.menuOpen && this.state.online && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
+                        <span className="material-icons">people</span>
+                        <p>{this.state.online}</p>
+                    </div>}
+                    </div>
+
                     {!this.state.menuOpen && <div className="FooterControls">
                         {!this.state.mapCentered && <div className="CenterMapBtnWrapper" id={"center-map-btn-wrapper-" + this.state.currentTheme.toLowerCase()}>
                             <div id="center-map-btn"><span className="material-icons" onClick={() => this.userRecenter()}>center_focus_weak</span></div>
@@ -313,10 +324,6 @@ class Tracker extends Component {
                             <div id="zoom-in-btn" onClick={() => this.handleZoomClick("+")}><span className="material-icons">add</span></div>
                             <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">remove</span></div>
                         </div>}
-                    </div>}
-                    {!this.state.menuOpen && this.state.online && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
-                        <span className="material-icons">people</span>
-                        <p>{this.state.online}</p>
                     </div>}
                 </div>}
                 {!this.state.menuOpen && this.state.compass && !isNaN(parseInt(this.props.santaDat.bearraw)) &&

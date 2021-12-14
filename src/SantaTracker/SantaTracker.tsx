@@ -42,9 +42,9 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
         let loading = this.state.loading
         let santaDat = this.props.santaDat
 
-        // if (santaDat) {
-        //     santaDat.mode = 2
-        // }
+        if (santaDat) {
+            santaDat.mode = 1
+        }
 
         return (
             <div className="SantaTracker">

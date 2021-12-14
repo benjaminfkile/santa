@@ -79,7 +79,7 @@ class SponsorCarousel extends Component<SponsorCarouselProps, SponsorCarouselTyp
         return (
             <div className="SponsorCarousel">
                 {sponsor && <div id={`sponsor-carousel-item-${this.props.theme.toLowerCase()}`} className="SponsorCarouselItem">
-                    <img src={sponsor.logo_small} onClick={() => this.openLink(sponsor.website_url)} alt="" />
+                    <img src={sponsor.logo} onClick={() => this.openLink(sponsor.website_url)} alt="" />
                 </div>}
             </div>
         )

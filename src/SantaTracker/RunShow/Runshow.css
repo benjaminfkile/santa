@@ -9,11 +9,15 @@
   height: 20px;
 }
 
-.DistanceFromUserToSanta {
+.TopLeftInfoWrapper {
   position: fixed;
   top: 5px;
   left: 5px;
+}
+
+.DistanceFromUserToSanta {
   border-radius: 10px;
+  margin-bottom: 5px;
 }
 
 #stats-item-wrapper {
@@ -327,7 +331,7 @@ body {
   color: #929292;
 }
 
-#online-users-night{
+#online-users-night {
   background-color: rgba(0, 0, 0, .5);
   border-radius: 8px;
   box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
@@ -359,11 +363,9 @@ body {
   color: #929292;
 }
 
-.OnlineUsers{
-  position: fixed;
+.OnlineUsers {
   display: flex;
-  bottom: 0px;
-  left: 5px;
+  position: absolute;
   height: 40px;
   margin-bottom: 25px;
   box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
@@ -373,13 +375,13 @@ body {
   animation: slide-in-left 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
 
-.OnlineUsers span{
+.OnlineUsers span {
   font-size: 30px;
   margin-right: 8px;
   margin-left: 10px;
 }
 
-.OnlineUsers p{
+.OnlineUsers p {
   margin: 0px;
   margin-right: 10px;
   margin-top: 3px;
@@ -387,7 +389,7 @@ body {
   font-weight: 600;
 }
 
-.RunShowFullScreenBtn{
+.RunShowFullScreenBtn {
   position: fixed;
   top: 60px;
   right: 10px;
@@ -402,6 +404,7 @@ body {
     transform: translateX(1000px);
     opacity: 0;
   }
+
   100% {
     -webkit-transform: translateX(0);
     transform: translateX(0);
@@ -415,6 +418,7 @@ body {
     transform: translateX(1000px);
     opacity: 0;
   }
+
   100% {
     -webkit-transform: translateX(0);
     transform: translateX(0);
@@ -428,6 +432,7 @@ body {
     transform: translateX(-1000px);
     opacity: 0;
   }
+
   100% {
     -webkit-transform: translateX(0);
     transform: translateX(0);
@@ -441,6 +446,7 @@ body {
     transform: translateX(-1000px);
     opacity: 0;
   }
+
   100% {
     -webkit-transform: translateX(0);
     transform: translateX(0);

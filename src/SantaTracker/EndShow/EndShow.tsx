@@ -1,6 +1,7 @@
 import { Component } from "react"
 import { Modal, Spinner } from "react-bootstrap"
 import { Link } from "react-router-dom"
+// import NavMenu from "../../NavMenu/NavMenu"
 import SponsorTypes from "../../SponsorsSection/SponsorTypes"
 import LaughingSanta from "../../Utils/LaughingSanta/LaughingSanta"
 import Snow from "../../Utils/Snow/Snow"
@@ -78,6 +79,7 @@ class Endshow extends Component<EndShowProps, EndShowTypes> {
 
         return (
             <div className="EndShow">
+                {/* <NavMenu /> */}
                 <div className="EndShowModalBodyLaughingSantaWrapper">
                     <LaughingSanta
                         message={"406"}
