@@ -49,9 +49,6 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
         // if (santaDat) {
         //     santaDat.mode = 1
         // }
-        //bump
-
-        console.log(mode)
 
         return (
             <div className="SantaTracker">
