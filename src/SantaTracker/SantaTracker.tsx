@@ -41,26 +41,32 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
 
         let loading = this.state.loading
         let santaDat = this.props.santaDat
+        let mode = "0"
+        if (santaDat) {
+            mode = santaDat.mode + ""
+        }
 
         // if (santaDat) {
         //     santaDat.mode = 1
         // }
         //bump
 
+        console.log(mode)
+
         return (
             <div className="SantaTracker">
-                {!loading && santaDat && santaDat.mode === 0 && <div className="PreShow">
+                {!loading && santaDat && mode === "0" && <div className="PreShow">
                     <PreShow
                         santaDat={this.props.santaDat}
                     />
                 </div>}
-                {!loading && santaDat && santaDat.mode === 1 && this.props.santaDat && this.props.santaDat.lat && <div className="RunShow">
+                {!loading && santaDat && mode === "1" && this.props.santaDat && this.props.santaDat.lat && <div className="RunShow">
                     <Runshow
                         santaDat={this.props.santaDat}
                         sponsors={this.props.sponsors}
                     />
                 </div>}
-                {!loading && santaDat && santaDat.mode === 2 && this.props.santaDat && this.props.santaDat.lat && <div className="RunShow">
+                {!loading && santaDat && mode === "2" && this.props.santaDat && this.props.santaDat.lat && <div className="RunShow">
                     <Endshow
                         sponsors={this.props.sponsors}
                     />
