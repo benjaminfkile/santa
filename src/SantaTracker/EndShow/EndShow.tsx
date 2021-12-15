@@ -1,7 +1,5 @@
 import { Component } from "react"
-import { Modal, Spinner } from "react-bootstrap"
-import { Link } from "react-router-dom"
-import LaughingSanta from "../../Utils/LaughingSanta/LaughingSanta"
+import { Modal } from "react-bootstrap"
 import Snow from "../../Utils/Snow/Snow"
 import "./EndShow.css"
 
