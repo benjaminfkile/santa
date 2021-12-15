@@ -269,7 +269,7 @@ class Tracker extends Component {
                             this.setMapOptions(map)
                             let mapIcon = {
                                 url: './res/santa-icon.png',
-                                scaledSize: new window.google.maps.Size(60, 60),
+                                scaledSize: new window.google.maps.Size(70, 45),
                                 origin: new window.google.maps.Point(0, 0),
                                 anchor: new window.google.maps.Point(22, 28)
                             }
