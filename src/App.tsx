@@ -33,11 +33,9 @@ class App extends Component<{}, AppTypes>{
       .then(res => {
         if (res.data) {
           this.setState({ santaDat: res.data })
-          console.log(res.data)
           if(parseInt(res.data.redirect) === 1){
             this.redirect()
           }
-
         }
         if (res.data.throttle !== this.updateFrequency) {
           clearInterval(this.getSantaInterval)
