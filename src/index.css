@@ -56,12 +56,29 @@ html, body {
   animation: slide-in-bottom 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
 
+.SemiSantaHeader {
+  position: fixed;
+  top: 5px;
+  left: 5px;
+  font-family: 'Mountains of Christmas', cursive;
+  font-weight: 500;
+  z-index: 1;
+  -webkit-animation: slide-in-left 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+  animation: slide-in-left 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+}
+
+.SemiSantaHeader p {
+  margin-top: -10px;
+  font-size: 2rem;
+}
+
 @-webkit-keyframes slide-in-right {
   0% {
     -webkit-transform: translateX(1000px);
     transform: translateX(1000px);
     opacity: 0;
   }
+
   100% {
     -webkit-transform: translateX(0);
     transform: translateX(0);
@@ -75,6 +92,7 @@ html, body {
     transform: translateX(1000px);
     opacity: 0;
   }
+
   100% {
     -webkit-transform: translateX(0);
     transform: translateX(0);
@@ -101,6 +119,7 @@ html, body {
     transform: translateY(1000px);
     opacity: 0;
   }
+
   100% {
     -webkit-transform: translateY(0);
     transform: translateY(0);
@@ -114,6 +133,7 @@ html, body {
     transform: translateY(1000px);
     opacity: 0;
   }
+
   100% {
     -webkit-transform: translateY(0);
     transform: translateY(0);
@@ -127,6 +147,7 @@ html, body {
     transform: translateZ(-200px) rotate(45deg);
     opacity: 0;
   }
+
   100% {
     -webkit-transform: translateZ(0) rotate(0);
     transform: translateZ(0) rotate(0);
@@ -140,6 +161,7 @@ html, body {
     transform: translateZ(-200px) rotate(45deg);
     opacity: 0;
   }
+
   100% {
     -webkit-transform: translateZ(0) rotate(0);
     transform: translateZ(0) rotate(0);
@@ -153,6 +175,7 @@ html, body {
     transform: rotate(45deg);
     opacity: 0;
   }
+
   100% {
     -webkit-transform: rotate(0);
     transform: rotate(0);
@@ -166,6 +189,7 @@ html, body {
     transform: rotate(45deg);
     opacity: 0;
   }
+
   100% {
     -webkit-transform: rotate(0);
     transform: rotate(0);
@@ -179,6 +203,7 @@ html, body {
     transform: rotate(-360deg);
     opacity: 0;
   }
+
   100% {
     -webkit-transform: rotate(0);
     transform: rotate(0);
@@ -192,6 +217,7 @@ html, body {
     transform: rotate(-360deg);
     opacity: 0;
   }
+
   100% {
     -webkit-transform: rotate(0);
     transform: rotate(0);

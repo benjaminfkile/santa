@@ -1,0 +1,13 @@
+.TrackerLoading{
+    position: fixed;
+    left: calc(50% - 160px);
+    top: calc(50% - 20px);
+    height: 250px;
+    width: 250px;
+}
+
+.TrackerLoading p{
+    margin-top: -30px;
+    margin-left: 70px;
+    z-index: 50;
+}

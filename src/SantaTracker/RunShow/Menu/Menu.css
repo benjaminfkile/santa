@@ -86,7 +86,8 @@
 .TrackerMenuFooter {
     display: flex;
     margin-left: 3px;
-    margin-right: 3px;
+    margin-right: 5px;
+    margin-top: -10px;
 }
 
 .TrackerMenuFooter span {
@@ -111,35 +112,35 @@
     margin-bottom: 3px;
 }
 
-.TrackerMenuFooterBtn-standard{
+.TrackerMenuFooterBtn-standard {
     background-color: #bdd8bb;
 }
 
-.TrackerMenuFooterBtn-retro{
+.TrackerMenuFooterBtn-retro {
     background-color: #dfd2ae;
 }
 
-.TrackerMenuFooterBtn-silver{
+.TrackerMenuFooterBtn-silver {
     background-color: #737372b8;
 }
 
-.TrackerMenuFooterBtn-dark{
+.TrackerMenuFooterBtn-dark {
     background-color: #434343;
 }
 
-.TrackerMenuFooterBtn-night{
+.TrackerMenuFooterBtn-night {
     background-color: #4c5561;
 }
 
-.TrackerMenuFooterBtn-aubergine{
+.TrackerMenuFooterBtn-aubergine {
     background-color: #2c5e74;
 }
 
-#tracker-menu-compass-btn-aubergine span, #tracker-menu-compass-btn-night span{
+#tracker-menu-compass-btn-aubergine span, #tracker-menu-compass-btn-night span {
     color: #FFFFFF;
 }
 
-#tracker-menu-compass-btn-dark span{
+#tracker-menu-compass-btn-dark span {
     color: #b4b4b4;
 }
 
@@ -266,17 +267,17 @@
     color: #ffffff;
 }
 
-.TerrainToggle{
+.TerrainToggle {
     width: 93px;
     margin-left: 5px;
 }
 
-.RoadMapToggle{
+.RoadMapToggle {
     width: 93px;
     margin-left: 4px;
 }
 
-.SnowToggle{
+.SnowToggle {
     width: 96px;
     margin-left: 4px;
 }
@@ -467,12 +468,14 @@
 
 .TrackerMenuSantaDatItem {
     display: flex;
+    position: absolute;
+    margin-top: 5px;
     /* align-items: center;
     justify-content: center; */
 }
 
 .TrackerMenuSantaDatItem p {
-    font-size: 14px;
+    font-size: 20px;
 }
 
 .TrackerMenuSantaDatItem span, .TrackerMenuSantaDatItem p {
@@ -481,8 +484,9 @@
 }
 
 .TrackerMenuSantaDatItem span {
-    margin-right: 10px;
-    margin-left: 10px;
+    margin-right: 0px;
+    margin-left: px;
+    font-size: 30px;
 }
 
 #tracker-menu-santa-dat-wrapper-standard {
@@ -579,5 +583,3 @@
 #distance-from-user-to-santa-tracker-menu-aubergine p {
     color: #FFFFFF;
 }
-
-

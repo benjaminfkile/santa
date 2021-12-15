@@ -256,6 +256,9 @@ class Tracker extends Component {
         return (
 
             <div className="TrackerContainer">
+                {!this.state.menuOpen && <div className="SemiSantaHeader">
+                    <p>Semi Santa</p>
+                </div>}
                 {!this.state.loading && <div>
                     <Map
                         id="Map"
@@ -313,10 +316,10 @@ class Tracker extends Component {
                             <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">remove</span></div>
                         </div>}
                     </div>}
-                    {!this.state.menuOpen && this.state.online && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
+                    {/* {!this.state.menuOpen && this.state.online && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
                         <span className="material-icons">people</span>
                         <p>{this.state.online}</p>
-                    </div>}
+                    </div>} */}
                 </div>}
                 {!this.state.menuOpen && this.state.compass && !isNaN(parseInt(this.props.santaDat.bearraw)) &&
                     <Compass
