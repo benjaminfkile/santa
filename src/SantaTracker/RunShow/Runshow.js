@@ -47,10 +47,13 @@ class Tracker extends Component {
         compass: false,
     }
 
-    // markerCoords = [
-    //     { name: "Walmart", lat: 46.884130, lng: -114.041760 },
-    //     { name: "Walmart", lat: 46.884130, lng: -114.041760 }
-    // ]
+    markerCoords = [
+        { name: "Walmart", lat: 46.884130, lng: -114.041760, icon: "./res/present-icons/p1.png" },
+        { name: "Ashley Furniture", lat: 46.890110, lng: -114.036710, icon: "./res/present-icons/p2.png" },
+        { name: "Albertsons-1", lat: 46.885910, lng: -114.036420, icon: "./res/present-icons/p3.png" },
+        { name: "Albertsons-2", lat: 46.867690, lng: -113.981300, icon: "./res/present-icons/p4.png" },
+        { name: "Albertsons-3", lat: 46.9139456, lng: -114.0523008, icon: "./res/present-icons/p5.png" }
+    ]
 
 
     componentDidMount() {
@@ -251,10 +254,16 @@ class Tracker extends Component {
         }
     }
 
+
+    navigate = (lat, lng) => {
+        let str = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+        window.open(str, '_blank')
+    }
+
     render() {
 
-        if (this.marker) {
-            this.marker.setPosition({ lat: Number(this.props.santaDat.lat), lng: Number(this.props.santaDat.lng) })
+        if (this.santaMarker) {
+            this.santaMarker.setPosition({ lat: Number(this.props.santaDat.lat), lng: Number(this.props.santaDat.lng) })
             this.autoRecenter()
         }
 
@@ -276,14 +285,35 @@ class Tracker extends Component {
                                 anchor: new window.google.maps.Point(22, 28)
                             }
 
-                            let marker = new window.google.maps.Marker(
+                            let santaMarker = new window.google.maps.Marker(
                                 {
                                     position: { lat: parseFloat(this.props.santaDat.lat), lng: parseFloat(this.props.santaDat.lng) },
                                     map: map,
                                     label: '',
                                     icon: mapIcon
-                                });
-                            this.marker = marker
+                                })
+                            this.santaMarker = santaMarker
+
+                            for (let i = 0; i < this.markerCoords.length; i++) {
+                                let mapIcon = new window.google.maps.MarkerImage(
+                                    this.markerCoords[i].icon,
+                                    null,
+                                    null,
+                                    null,
+                                    //@ts-ignore
+                                    new window.google.maps.Size(40, 40)
+                                )
+                                const marker = new window.google.maps.Marker(
+                                    {
+                                        position: { lat: parseFloat(this.markerCoords[i].lat), lng: parseFloat(this.markerCoords[i].lng) },
+                                        map: map,
+                                        // label: this.markerCoords[i].name,
+                                        icon: mapIcon
+                                    });
+                                marker.addListener('click', () => {
+                                    this.navigate(parseFloat(this.markerCoords[i].lat), parseFloat(this.markerCoords[i].lng))
+                                })
+                            }
                         }
                         }
                     />
