@@ -20,7 +20,6 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
     loadHandlerStep = 0
     loadHandlerSpeed = 1000
 
-
     state = {
         loading: true,
     }
@@ -46,7 +45,7 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
             mode = santaDat.mode + ""
         }
 
-        // mode = "2"
+        mode = "0"
 
         return (
             <div className="SantaTracker">

@@ -12,6 +12,7 @@ import Snow from "../../Utils/Snow/Snow"
 import projectedRoute from "../../Utils/ProjectedRoute"
 import Compass from "../../Utils/Compass/Compass"
 import "./Runshow.css"
+import { walkUpBindingElementsAndPatterns } from "typescript";
 // import fullScreen from "../../Utils/FullScreen/FullScreen";
 
 class Tracker extends Component {
@@ -46,6 +47,11 @@ class Tracker extends Component {
         donate: false,
         compass: false,
     }
+
+    markerCoords = [
+        { name: "Walmart", lat: 46.884130, lng: -114.041760 },
+        { name: "Walmart", lat: 46.884130, lng: -114.041760 }
+    ]
 
 
     componentDidMount() {
