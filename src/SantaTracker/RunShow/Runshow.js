@@ -52,7 +52,7 @@ class Tracker extends Component {
         { name: "Ashley Furniture", lat: 46.890110, lng: -114.036710, icon: "./res/present-icons/p2.png" },
         { name: "Albertsons-1", lat: 46.885910, lng: -114.036420, icon: "./res/present-icons/p3.png" },
         { name: "Albertsons-2", lat: 46.867690, lng: -113.981300, icon: "./res/present-icons/p4.png" },
-        { name: "Albertsons-3", lat: 46.9139456, lng: -114.0523008, icon: "./res/present-icons/p5.png" }
+        { name: "Albertsons-3", lat: 46.851056, lng: -114.017942, icon: "./res/present-icons/p5.png" }
     ]
 
 
