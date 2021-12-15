@@ -44,7 +44,7 @@
 }
 
 #preshow-info-card-header-p1 {
-    font-size: 22px;
+    font-size: 18px;
     color: #FFFFFF;
 }
 
@@ -97,12 +97,6 @@
     .preshow-info-card-header{
         margin-top: 20px;
         border: none;
-    }
-    #preshow-info-card-header-p1{
-        font-size: 35px;
-    }
-    #preshow-info-card-header-p2{
-        font-size: 25px;
     }
     .preshow-info-card-message{
         display: none;
