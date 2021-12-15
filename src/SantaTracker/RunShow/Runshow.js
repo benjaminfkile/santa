@@ -301,7 +301,7 @@ class Tracker extends Component {
                                     null,
                                     null,
                                     //@ts-ignore
-                                    new window.google.maps.Size(40, 40)
+                                    new window.google.maps.Size(30, 30)
                                 )
                                 const marker = new window.google.maps.Marker(
                                     {
