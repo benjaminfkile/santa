@@ -1,38 +1,77 @@
 import { Component } from "react"
+import TreeLoader from "../Utils/TreeLoader/TreeLoader"
+import Endshow from "./EndShow/EndShow"
 import PreShow from "./PreShow/PreShow"
 import Runshow from "./RunShow/Runshow"
 
 interface SantaTrackerProps {
     santaDat: any
+    sponsors: any
 }
 
 type SantaTrackerTypes = {
-    preShow: boolean
-    runShow: boolean
-    endShow: boolean
-    returnUser: boolean
+
+    loading: boolean
 }
 
 class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
 
+    loadHandlerInterval: any
+    loadHandlerStep = 0
+    loadHandlerSpeed = 1000
+
+
     state = {
-        preShow: true,
-        runShow: false,
-        endShow: false,
-        returnUser: false,
+        loading: true,
+    }
+
+    componentDidMount() {
+        this.loadHandlerInterval = setInterval(this.loadHandler, this.loadHandlerSpeed)
+    }
+
+    loadHandler = () => {
+        this.loadHandlerStep++
+        if (this.props.santaDat && this.loadHandlerStep > 2) {
+            this.setState({ loading: false })
+            clearInterval(this.loadHandlerInterval)
+        }
     }
 
     render() {
+
+        let loading = this.state.loading
+        let santaDat = this.props.santaDat
+        let mode = null
+        if (santaDat) {
+            mode = santaDat.mode + ""
+        }
+
+        // if (santaDat) {
+        //     santaDat.mode = "0"
+        // }
+
         return (
             <div className="SantaTracker">
-                {this.state.preShow && <div className="PreShow">
-                    <PreShow />
-                </div>}
-                {this.state.runShow && this.props.santaDat && this.props.santaDat.lat && <div className="RunShow">
-                    <Runshow
+                {!loading && santaDat && mode === "0" && <div className="PreShow">
+                    <PreShow
                         santaDat={this.props.santaDat}
                     />
                 </div>}
+                {!loading && santaDat && mode === "1" && this.props.santaDat && this.props.santaDat.lat && <div className="RunShow">
+                    <Runshow
+                        santaDat={this.props.santaDat}
+                        sponsors={this.props.sponsors}
+                    />
+                </div>}
+                {!loading && santaDat && mode === "2" && this.props.santaDat && this.props.santaDat.lat && <div className="RunShow">
+                    <Endshow
+                        sponsors={this.props.sponsors}
+                    />
+                </div>}
+                {loading &&
+                    <div className="TrackerLoading">
+                        <TreeLoader />
+                    </div>}
             </div>
         )
     }

@@ -4,11 +4,18 @@ import LaughingSanta from "../../Utils/LaughingSanta/LaughingSanta"
 import Snow from "../../Utils/Snow/Snow"
 import "./PreShow.css"
 
-class PreShow extends Component {
+interface PreShowProps {
+    santaDat: any
+}
+
+class PreShow extends Component<PreShowProps, {}> {
 
     render() {
+
+        let message = this.props.santaDat.message || null
+
         return (
-            <div className="PreShowContainer">
+            <div className="PreShow">
                 <NavMenu />
                 <Snow />
                 <div className="preshow-info-card">
@@ -17,7 +24,8 @@ class PreShow extends Component {
                         <p id="preshow-info-card-header-p2">When he starts to move you can interact with the map.</p>
                     </div>
                     <div className="preshow-info-card-message">
-                        <p>Important updates about Santa's flight such as weather and flight status will show up here.</p>
+                        {!message && <p>Important updates about Santa's flight such as weather and flight status will show up here.</p>}
+                        {message && <p>{message}</p>}
                     </div>
                     <div className="preshow-info-card-laughing-santa-wrapper">
                         <LaughingSanta

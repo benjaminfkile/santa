@@ -3,8 +3,8 @@ import LocationPrompt from "../../../Utils/UserLocation/LocationPrompt"
 import { Button } from "react-bootstrap"
 import userLocation from "../../../Utils/UserLocation/UserLocation"
 // import DonateToolKit from "../../../Utils/Donate/DonateToolkit"
-import "./Menu.css"
 import { Link } from "react-router-dom"
+import "./Menu.css"
 
 interface TrackerMenuProps {
     changeTheme: Function
@@ -24,7 +24,7 @@ interface TrackerMenuProps {
     }
     getUserLocation: Function
     toggleDonate: Function
-    distanceFromUserToSanta: any
+    DistanceFromUserToSanta: any
 }
 
 type TrackerMenuTypes = {
@@ -116,23 +116,23 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                         </div>}
                         {this.props.santaDat.alt && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
                             <span className="material-icons">flight_takeoff</span>
-                            <p>{this.props.santaDat.alt.split("+")[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
+                            <p>{this.props.santaDat.alt.split("+")[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</p>
                         </div>}
                         {this.props.santaDat.speed && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
                             <span className="material-icons">speed</span>
-                            <p>{this.props.santaDat.speed.split("+")[0]} mph</p>
+                            <p>{this.props.santaDat.speed.split("+")[0]}</p>
                         </div>}
                     </div>
-                    {!userLocation.disable && this.props.distanceFromUserToSanta && <div className="DistanceFromUserToSantaTrackerMenu" id={"distance-from-user-to-santa-tracker-menu-" + this.props.currentTheme.toLowerCase()}>
-                        {this.props.distanceFromUserToSanta < 5281 &&
+                    {!userLocation.disable && this.props.DistanceFromUserToSanta && <div className="DistanceFromUserToSantaTrackerMenu" id={"distance-from-user-to-santa-tracker-menu-" + this.props.currentTheme.toLowerCase()}>
+                        {this.props.DistanceFromUserToSanta < 5281 &&
                             <div id="distance-from-user-to-santa-menu-pill-wrapper">
                                 <img id="santa-hat-menu-user-loc" src="./res/santa-hat.png" alt=""></img>
-                                <p>{this.props.distanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
+                                <p>{this.props.DistanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
                             </div>}
-                        {this.props.distanceFromUserToSanta > 5280 &&
+                        {this.props.DistanceFromUserToSanta > 5280 &&
                             <div id="distance-from-user-to-santa-menu-pill-wrapper">
                                 <img id="santa-hat-menu-user-loc" src="./res/santa-hat.png" alt=""></img>
-                                <p> {((this.props.distanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
+                                <p> {((this.props.DistanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
                             </div>}
                     </div>}
                     <div className="TrackerMenuFooter">

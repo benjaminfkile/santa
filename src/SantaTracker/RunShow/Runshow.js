@@ -9,8 +9,8 @@ import Night from './MapThemes/Night'
 import Aubergine from './MapThemes/Aubergine'
 import TrackerMenu from "./Menu/Menu"
 import Snow from "../../Utils/Snow/Snow"
-import TreeLoader from "../../Utils/TreeLoader/TreeLoader"
 import projectedRoute from "../../Utils/ProjectedRoute"
+import SponsorCarousel from "../../Utils/SponsorCarousel/SponsorCarousel";
 import "./Runshow.css"
 // import fullScreen from "../../Utils/FullScreen/FullScreen";
 
@@ -30,30 +30,25 @@ class Tracker extends Component {
     marker = null
     userToSantaCoords = [{}, {}]
     userToSantaFlightPath = null
-    updateinterval = 1000
-    loadHandlerInterval
-    loadHandlerSpeed = 1000
-    loadHandlerStep = 0;
+    updateinterval = 100
     state = {
         lat: 46.833,
         lng: -114.030,
         currentTheme: this.mapThemes[4].title,
         snow: false,
         santaDat: {},
-        distanceFromUserToSanta: null,
+        DistanceFromUserToSanta: null,
         mapCentered: true,
         zoom: 10,
         menuOpen: false,
         test: true,
         online: null,
-        loading: true,
         donate: false,
     }
 
 
     componentDidMount() {
         setInterval(this.update, this.updateinterval)
-        this.loadHandlerInterval = setInterval(this.loadHandler, this.loadHandlerSpeed)
     }
 
     componentWillUnmount() {
@@ -71,8 +66,9 @@ class Tracker extends Component {
     getUserLocation = () => {
         if (userLocation.coordinates.lat
             && this.props.santaDat.lat
-            && userLocation.coordinates.lat !== this.userToSantaCoords[1].lat
-            && userLocation.coordinates.lng !== this.userToSantaCoords[1].lng) {
+            // && userLocation.coordinates.lat !== this.userToSantaCoords[1].lat
+            // && userLocation.coordinates.lng !== this.userToSantaCoords[1].lng
+        ) {
             this.userToSantaCoords[0] = { lat: Number(this.props.santaDat.lat), lng: Number(this.props.santaDat.lng) }
             this.userToSantaCoords[1] = { lat: Number(userLocation.coordinates.lat), lng: Number(userLocation.coordinates.lng) }
         }
@@ -81,7 +77,7 @@ class Tracker extends Component {
         }
         if (userLocation.disable) {
             this.removePoly()
-            this.setState({ distanceFromUserToSanta: false })
+            this.setState({ DistanceFromUserToSanta: false })
         }
     }
 
@@ -127,32 +123,20 @@ class Tracker extends Component {
         let throttle = this.props.santaDat.throttle
         total = (rps * dynos) * throttle
         if (!isNaN(total) && total > 0) {
-            this.setState({ online: (total + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",") })
+            this.setState({ online: this.kFormatter(total) })
         } else {
             this.setState({ online: 1 })
         }
     }
 
+    kFormatter = (num) => {
+        return Math.abs(num) > 999 ? Math.sign(num) * ((Math.abs(num) / 1000).toFixed(1)) + 'k' : Math.sign(num) * Math.abs(num)
+    }
+
     drawRoutePoly = () => {
         // console.log("drawing route poly")
-        let color = ""
-        let colorDex = -1
-        let c1 = "#cc2626"
-        let c2 = "#9acd32"
-        let c3 = "#ffffff"
-
+        let color = "#dc35457d"
         for (let i = 0; i < projectedRoute.length; i++) {
-            colorDex++
-            if (colorDex === 0) {
-                color = c1
-            }
-            if (colorDex === 1) {
-                color = c2
-            }
-            if (colorDex === 2) {
-                color = c3
-                colorDex = -1
-            }
             if (i < projectedRoute.length - 1) {
                 let coords = []
                 coords.push({ lat: Number(projectedRoute[i].Lat), lng: Number(projectedRoute[i].Lon) })
@@ -161,7 +145,7 @@ class Tracker extends Component {
                     path: coords,
                     color: color,
                     strokeColor: color,
-                    strokeOpacity: .7,
+                    strokeOpacity: 1,
                     strokeWeight: 1,
                 })
                 coords.setMap(this.map)
@@ -171,12 +155,13 @@ class Tracker extends Component {
 
     drawUserToSantaPoly = () => {
         this.removePoly()
+        let color = "#28a745"
         let iconSequence = [];
         let circle = {
             "path": "M -2,0 C -1.947018,-2.2209709 1.9520943,-2.1262691 2,0.00422057 2.0378955,1.3546185 1.5682108,2.0631345 1.4372396e-8,2.0560929 -1.7155482,2.0446854 -1.9145886,1.0142836 -2,0.06735507 Z",
-            "fillColor": "#cc2626",
+            "fillColor": color,
             "fillOpacity": 0.7,
-            "strokeColor": "#cc2626",
+            "strokeColor": color,
             "strokeWeight": 13,
             "scale": 1
         }
@@ -190,15 +175,15 @@ class Tracker extends Component {
 
         this.userToSantaFlightPath = new window.google.maps.Polyline({
             path: this.userToSantaCoords,
-            color: "#cc2626",
-            strokeColor: "#cc2626",
+            color: color,
+            strokeColor: color,
             strokeOpacity: 0.7,
             strokeWeight: 1,
             icons: iconSequence
         })
 
         let lengthInMeters = window.google.maps.geometry.spherical.computeLength(this.userToSantaFlightPath.getPath());
-        this.setState({ distanceFromUserToSanta: Math.floor(lengthInMeters * 3.28084) })
+        this.setState({ DistanceFromUserToSanta: Math.floor(lengthInMeters * 3.28084) })
 
         this.userToSantaFlightPath.setMap(this.map);
     }
@@ -212,7 +197,6 @@ class Tracker extends Component {
     setTheme = (index) => {
         this.map.setOptions({ styles: this.mapThemes[index].mapTheme })
         this.setState({ currentTheme: this.mapThemes[index].title })
-        // this.drawRoutePoly()
     }
 
     toggleTerrain = () => {
@@ -241,7 +225,7 @@ class Tracker extends Component {
             },
             styles: this.mapThemes[4].mapTheme
         })
-        // this.drawRoutePoly()
+        this.drawRoutePoly()
         const self = this
         window.google.maps.event.addListener(map, 'dragstart', function () { self.handleMapDrag() });
     }
@@ -258,11 +242,11 @@ class Tracker extends Component {
         this.setState({ menuOpen: isOpen })
     }
 
-    loadHandler = () => {
-        this.loadHandlerStep++
-        if (this.props.santaDat && this.loadHandlerStep > 2) {
-            this.setState({ loading: false })
-            clearInterval(this.loadHandlerInterval)
+    toggleCompass = () => {
+        if (this.state.compass) {
+            this.setState({ compass: false })
+        } else {
+            this.setState({ compass: true })
         }
     }
 
@@ -283,7 +267,7 @@ class Tracker extends Component {
                             this.setMapOptions(map)
                             let mapIcon = {
                                 url: './res/santa-icon.png',
-                                scaledSize: new window.google.maps.Size(60, 60),
+                                scaledSize: new window.google.maps.Size(70, 45),
                                 origin: new window.google.maps.Point(0, 0),
                                 anchor: new window.google.maps.Point(22, 28)
                             }
@@ -309,20 +293,28 @@ class Tracker extends Component {
                         menuOpen={this.menuOpen}
                         santaDat={this.props.santaDat}
                         getUserLocation={this.getUserLocation}
-                        distanceFromUserToSanta={this.state.distanceFromUserToSanta}
+                        DistanceFromUserToSanta={this.state.DistanceFromUserToSanta}
+                        toggleCompass={this.toggleCompass}
                     />}
-                    {!userLocation.disable && this.state.distanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
-                        {this.state.distanceFromUserToSanta < 5281 &&
+                    <div className="TopLeftInfoWrapper">
+                    {!userLocation.disable && this.state.DistanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
+                        {this.state.DistanceFromUserToSanta < 5281 &&
                             <div id="distance-from-user-to-santa-content-wrapper">
                                 <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
-                                <p>{this.state.distanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
+                                <p>{this.state.DistanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
                             </div>}
-                        {this.state.distanceFromUserToSanta > 5280 &&
+                        {this.state.DistanceFromUserToSanta > 5280 &&
                             <div id="distance-from-user-to-santa-content-wrapper">
                                 <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
-                                <p> {((this.state.distanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
+                                <p> {((this.state.DistanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
                             </div>}
                     </div>}
+                    {!this.state.menuOpen && this.state.online && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
+                        <span className="material-icons">people</span>
+                        <p>{this.state.online}</p>
+                    </div>}
+                    </div>
+
                     {!this.state.menuOpen && <div className="FooterControls">
                         {!this.state.mapCentered && <div className="CenterMapBtnWrapper" id={"center-map-btn-wrapper-" + this.state.currentTheme.toLowerCase()}>
                             <div id="center-map-btn"><span className="material-icons" onClick={() => this.userRecenter()}>center_focus_weak</span></div>
@@ -332,16 +324,12 @@ class Tracker extends Component {
                             <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">remove</span></div>
                         </div>}
                     </div>}
-                    {!this.state.menuOpen && this.state.online && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
-                        <span className="material-icons">people</span>
-                        <p>{this.state.online}</p>
-                    </div>}
                 </div>}
-                {this.state.loading &&
-                    <div className="TrackerLoading">
-                        <TreeLoader />
-                    </div>}
                 {this.state.snow && <Snow />}
+                <SponsorCarousel
+                    sponsors={this.props.sponsors}
+                    theme={this.state.currentTheme}
+                />
             </div>
         )
     }

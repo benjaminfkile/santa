@@ -1,36 +1,18 @@
 import { Component } from "react"
-import axios from "axios"
 import SponsorTypes from "./SponsorTypes"
 import NavMenu from "../NavMenu/NavMenu"
 import JumpingElf from "../Utils/JumpingElf/JumpingElf"
 import Ornaments from "../Utils/Ornaments/Ornaments"
-import "./SponsorsSection.css"
 import Logo from "../Utils/Logo/Logo"
-// import LogoSmall from "../Utils/Logo/LogoSmall"
-
+import "./SponsorsSection.css"
 
 interface SponsorsSectionProps {
-
+    sponsors: Array<SponsorTypes> | []
 }
 
-type SponsorsSectionTypes = {
-    sponsors: Array<SponsorTypes> | null
-}
 
-class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionTypes>{
 
-    state = {
-        sponsors: []
-    }
-
-    componentDidMount() {
-        axios.get(`${process.env.REACT_APP_MRS_CLAUS_API_URL}/api/sponsors/get-sponsors`)
-            .then(res => {
-                this.setState({ sponsors: res.data })
-            }).catch(err => {
-                console.log(err)
-            })
-    }
+class SponsorsSection extends Component<SponsorsSectionProps, {}>{
 
     openLink = (url: string) => {
         window.open(url, '_blank')
@@ -46,8 +28,8 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionTyp
                 <div className="SposorSectionHeader">
                     <Logo />
                 </div>
-                {this.state.sponsors.length > 0 && <div className="SponsorList">
-                    {this.state.sponsors.map((sponsor: SponsorTypes, i: number) =>
+                {this.props.sponsors.length > 0 && <div className="SponsorList">
+                    {this.props.sponsors.map((sponsor: SponsorTypes, i: number) =>
                         <div className="SponsorItem" key={i} id={sponsor.sponsor_id.replace(/[0-9]/g, '')}>
                             <div className="SponsorItemHeader">
                                 <p>{sponsor.name}</p>
