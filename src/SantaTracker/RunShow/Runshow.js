@@ -10,7 +10,6 @@ import Aubergine from './MapThemes/Aubergine'
 import TrackerMenu from "./Menu/Menu"
 import Snow from "../../Utils/Snow/Snow"
 import projectedRoute from "../../Utils/ProjectedRoute"
-import Compass from "../../Utils/Compass/Compass"
 import "./Runshow.css"
 // import fullScreen from "../../Utils/FullScreen/FullScreen";
 
@@ -44,7 +43,6 @@ class Tracker extends Component {
         test: true,
         online: null,
         donate: false,
-        compass: false,
     }
 
     markerCoords = [
@@ -246,15 +244,6 @@ class Tracker extends Component {
         this.setState({ menuOpen: isOpen })
     }
 
-    toggleCompass = () => {
-        if (this.state.compass) {
-            this.setState({ compass: false })
-        } else {
-            this.setState({ compass: true })
-        }
-    }
-
-
     navigate = (lat, lng) => {
         let str = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
         window.open(str, '_blank')
@@ -328,7 +317,6 @@ class Tracker extends Component {
                         santaDat={this.props.santaDat}
                         getUserLocation={this.getUserLocation}
                         distanceFromUserToSanta={this.state.distanceFromUserToSanta}
-                        toggleCompass={this.toggleCompass}
                     />}
                     {!userLocation.disable && this.state.distanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
                         {this.state.distanceFromUserToSanta < 5281 &&
@@ -356,11 +344,6 @@ class Tracker extends Component {
                         <p>{this.state.online}</p>
                     </div>} */}
                 </div>}
-                {!this.state.menuOpen && this.state.compass && !isNaN(parseInt(this.props.santaDat.bearraw)) &&
-                    <Compass
-                        theme={this.state.currentTheme}
-                        santaBearing={parseInt(this.props.santaDat.bearraw)}
-                    />}
                 {this.state.snow && <Snow />}
             </div>
         )
