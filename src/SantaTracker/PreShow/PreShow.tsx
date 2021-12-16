@@ -11,6 +11,8 @@ class PreShow extends Component<PreShowProps, {}> {
 
     render() {
 
+        let message = this.props.santaDat.message || null
+
         return (
             <div className="PreShow">
                 <Snow />
@@ -23,7 +25,9 @@ class PreShow extends Component<PreShowProps, {}> {
                         {/* <p id="preshow-info-card-header-p2">When he starts to move you can interact with the map.</p> */}
                     </div>
                     <div className="preshow-info-card-message">
-                        <p>When he is on the move you can come back here, and it will turn into a tracker to help you locate him.</p>
+                        {!message && <p>When he is on the move you can come back here, and it will turn into a tracker to help you locate him.</p>}
+                        {message && <p>{message}</p>}
+
                     </div>
                     <div className="preshow-info-card-laughing-santa-wrapper">
                         <LaughingSanta
