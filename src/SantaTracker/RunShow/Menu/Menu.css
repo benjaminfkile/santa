@@ -311,9 +311,9 @@
     border-bottom: solid 2px #ffffff;
 }
 
-#terrain-toggled-off p, #terrain-toggled-on p, #snow-toggled-off p, #snow-toggled-on p, #roadmap-toggled-on p, #roadmap-toggled-off p {
+/* #terrain-toggled-off p, #terrain-toggled-on p, #snow-toggled-off p, #snow-toggled-on p, #roadmap-toggled-on p, #roadmap-toggled-off p {
     margin-left: 5px;
-}
+} */
 
 #terrain-toggled-on span, #terrain-toggled-off span {
     margin-left: -2px;
