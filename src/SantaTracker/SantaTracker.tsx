@@ -46,7 +46,7 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
             mode = santaDat.mode + ""
         }
 
-        mode = "0"
+        // mode = "0"
 
         return (
             <div className="SantaTracker">
