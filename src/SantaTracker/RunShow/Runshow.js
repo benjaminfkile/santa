@@ -11,7 +11,6 @@ import TrackerMenu from "./Menu/Menu"
 import Snow from "../../Utils/Snow/Snow"
 import TreeLoader from "../../Utils/TreeLoader/TreeLoader"
 import projectedRoute from "../../Utils/ProjectedRoute"
-import Compass from "../../Utils/Compass/Compass"
 import "./Runshow.css"
 // import fullScreen from "../../Utils/FullScreen/FullScreen";
 
@@ -49,7 +48,6 @@ class Tracker extends Component {
         online: null,
         loading: true,
         donate: false,
-        compass: false,
     }
 
 
@@ -268,14 +266,6 @@ class Tracker extends Component {
         }
     }
 
-    toggleCompass = () => {
-        if (this.state.compass) {
-            this.setState({ compass: false })
-        } else {
-            this.setState({ compass: true })
-        }
-    }
-
     render() {
 
         if (this.marker) {
@@ -320,7 +310,6 @@ class Tracker extends Component {
                         santaDat={this.props.santaDat}
                         getUserLocation={this.getUserLocation}
                         distanceFromUserToSanta={this.state.distanceFromUserToSanta}
-                        toggleCompass={this.toggleCompass}
                     />}
                     {!userLocation.disable && this.state.distanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
                         {this.state.distanceFromUserToSanta < 5281 &&
@@ -348,11 +337,6 @@ class Tracker extends Component {
                         <p>{this.state.online}</p>
                     </div>}
                 </div>}
-                {!this.state.menuOpen && this.state.compass && !isNaN(parseInt(this.props.santaDat.bearraw)) &&
-                    <Compass
-                        theme={this.state.currentTheme}
-                        santaBearing={parseInt(this.props.santaDat.bearraw)}
-                    />}
                 {this.state.loading &&
                     <div className="TrackerLoading">
                         <TreeLoader />

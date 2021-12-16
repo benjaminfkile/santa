@@ -13,7 +13,6 @@ interface TrackerMenuProps {
     availableThemes: Array<{ title: string, nickName: string }>
     currentTheme: string
     toggleSnow: Function
-    toggleCompass: Function
     menuOpen: Function
     santaDat: {
         accuracy: string,
@@ -32,7 +31,6 @@ type TrackerMenuTypes = {
     menuOpen: boolean
     mapTypeId: string
     snow: boolean
-    compass: boolean
     locationPrompt: boolean
     donate: boolean
 }
@@ -43,7 +41,6 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
         menuOpen: false,
         mapTypeId: this.props.mapType,
         snow: false,
-        compass: false,
         locationPrompt: false,
         donate: false
     }
@@ -82,15 +79,6 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
         } else {
             this.setState({ locationPrompt: true })
         }
-    }
-
-    toggleCompass = () => {
-        if (this.state.compass) {
-            this.setState({ compass: false })
-        } else {
-            this.setState({ compass: true })
-        }
-        this.props.toggleCompass()
     }
 
     render() {
@@ -158,7 +146,6 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                                 </Link>
                             </div>
                         </div>
-                        {!userLocation.disable && <div id={"tracker-menu-compass-btn-" + this.props.currentTheme.toLowerCase()} className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} onClick={() => this.toggleCompass()}><span className="material-icons">explore</span></div>}
                         <div className={`TrackerMenuCloseBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-close-btn-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleMenu}><p><span className="material-icons">clear</span></p></div>
                     </div>
                 </div>}
