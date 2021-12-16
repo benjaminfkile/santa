@@ -297,22 +297,22 @@ class Tracker extends Component {
                         toggleCompass={this.toggleCompass}
                     />}
                     <div className="TopLeftInfoWrapper">
-                    {!userLocation.disable && this.state.DistanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
-                        {this.state.DistanceFromUserToSanta < 5281 &&
-                            <div id="distance-from-user-to-santa-content-wrapper">
-                                <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
-                                <p>{this.state.DistanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
-                            </div>}
-                        {this.state.DistanceFromUserToSanta > 5280 &&
-                            <div id="distance-from-user-to-santa-content-wrapper">
-                                <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
-                                <p> {((this.state.DistanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
-                            </div>}
-                    </div>}
-                    {!this.state.menuOpen && this.state.online && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
-                        <span className="material-icons">people</span>
-                        <p>{this.state.online}</p>
-                    </div>}
+                        {!userLocation.disable && this.state.DistanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
+                            {this.state.DistanceFromUserToSanta < 5281 &&
+                                <div id="distance-from-user-to-santa-content-wrapper">
+                                    <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
+                                    <p>{this.state.DistanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
+                                </div>}
+                            {this.state.DistanceFromUserToSanta > 5280 &&
+                                <div id="distance-from-user-to-santa-content-wrapper">
+                                    <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
+                                    <p> {((this.state.DistanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
+                                </div>}
+                        </div>}
+                        {!this.state.menuOpen && this.state.online && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
+                            <span className="material-icons">people</span>
+                            <p>{this.state.online}</p>
+                        </div>}
                     </div>
 
                     {!this.state.menuOpen && <div className="FooterControls">
