@@ -46,6 +46,8 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
             mode = santaDat.mode + ""
         }
 
+        mode = "0"
+
         return (
             <div className="SantaTracker">
                 {!loading && santaDat && mode === "0" && <div className="PreShow">
