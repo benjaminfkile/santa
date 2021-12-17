@@ -13,7 +13,7 @@ let userLocation = {
         }
     },
     errorCallback: (err: any) => {
-        if (err.code == err.PERMISSION_DENIED) {
+        if (err.code === err.PERMISSION_DENIED) {
             userLocation.disable = true
             userLocation.userDenied = true
         }
