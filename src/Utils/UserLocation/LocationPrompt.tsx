@@ -22,12 +22,12 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
     handleUserAllowLocation = () => {
         userLocation.disable = false
         this.props.toggleLocationPrompt()
-        if(!userLocation.inApp()){
+        if (!userLocation.inApp()) {
             userLocation.getUserLocation()
-            setInterval(() =>{
+            setInterval(() => {
                 userLocation.getUserLocation()
             }, 5000)
-        }else{
+        } else {
             userLocation.getUserLocation()
         }
     }
@@ -46,12 +46,14 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
                     </Modal.Header>
                     <Modal.Body>
                         <div className="LocationPromptCustomModalBody" id={`location-prompt-custom-modal-body-${this.props.theme.toLowerCase()}`}>
-                            <p>If you choose to allow your location you can get real time updates about your distance from Santa.</p>
-                            <p>Your location will not be shared or saved anywhere.</p>
+                            <p>(<span className="LocationPromtRedSpan">Experimental</span>) If you choose to allow your location you can get real time updates about your distance from Santa.</p>
+                            <p>Clicking "Ok" will launch a location prompt in your browser window and you will be asked if you want to allow 406santaflyover.org to access your devices location.</p>
+                            <p className="LocationPromtYellowParagraph">If you are visiting this website from Facebook, Instagram or Firefox there might be issues keeping your location updated and relative to Santa.</p>
+                            <p className="LocationPromtGreenParagraph">Location services work best in Chrome, Edge and Safari browsers.</p>
                         </div>
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button onClick={() => this.handleUserAllowLocation()}>Allow</Button>
+                        <Button onClick={() => this.handleUserAllowLocation()}>Ok</Button>
                         <Button variant="secondary" onClick={() => this.props.toggleLocationPrompt()}>Back</Button>
                     </Modal.Footer>
                 </Modal>}
