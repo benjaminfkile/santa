@@ -21,7 +21,7 @@ class PreShow extends Component<PreShowProps, {}> {
                 </div>
                 <div className="preshow-info-card">
                     <div className="preshow-info-card-header">
-                        <p id="preshow-info-card-header-p1">Semi Santa will be visiting the Walmart on Mullen, Ashley Furniture, and all the Missoula Albertsons stores on: Dec 22nd – 10:30am – 5:00pm Dec 23rd – 9:00am – 5:00pm</p>
+                        <p id="preshow-info-card-header-p1">Looks like Santa is still at the North Pole.</p>
                         {/* <p id="preshow-info-card-header-p2">When he starts to move you can interact with the map.</p> */}
                     </div>
                     <div className="preshow-info-card-message">
