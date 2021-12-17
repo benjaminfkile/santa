@@ -309,7 +309,7 @@ class Tracker extends Component {
                                     <p> {((this.state.DistanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
                                 </div>}
                         </div>}
-                        {this.props.santaDat.showOnline && !this.state.menuOpen && this.state.online && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
+                        {!this.state.menuOpen && this.state.online && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
                             <span className="material-icons">people</span>
                             <p>{this.state.online}</p>
                         </div>}
