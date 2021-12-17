@@ -1,21 +1,10 @@
 let userLocation = {
     coordinates: { lat: null, lng: null },
     disable: true,
-    userDenied: false,
     getUserLocation: () => {
 
         if (!userLocation.disable) {
-            navigator.geolocation.getCurrentPosition(userLocation.showPosition, userLocation.errorCallback,
-                {
-                    maximumAge: Infinity,
-                    timeout: 0
-                })
-        }
-    },
-    errorCallback: (err: any) => {
-        if (err.code === err.PERMISSION_DENIED) {
-            userLocation.disable = true
-            userLocation.userDenied = true
+            navigator.geolocation.getCurrentPosition(userLocation.showPosition)
         }
     },
     showPosition: (position: any) => {
