@@ -33,3 +33,16 @@
 #location-prompt-custom-modal-header-retro, #location-prompt-custom-modal-body-retro {
     color: #53583b;
 }
+
+.LocationPromtYellowParagraph{
+    color: #ffc107;
+}
+
+.LocationPromtRedSpan{
+    color: #dc3545;
+}
+
+.LocationPromtGreenParagraph{
+    color: #28a745;
+    font-weight: 600;
+}

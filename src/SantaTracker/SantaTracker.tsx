@@ -3,6 +3,7 @@ import TreeLoader from "../Utils/TreeLoader/TreeLoader"
 import Endshow from "./EndShow/EndShow"
 import PreShow from "./PreShow/PreShow"
 import Runshow from "./RunShow/Runshow"
+import NoSleep from 'nosleep.js'
 
 interface SantaTrackerProps {
     santaDat: any
@@ -19,7 +20,7 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
     loadHandlerInterval: any
     loadHandlerStep = 0
     loadHandlerSpeed = 1000
-
+    noSleep = new NoSleep()
 
     state = {
         loading: true,
@@ -27,6 +28,11 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
 
     componentDidMount() {
         this.loadHandlerInterval = setInterval(this.loadHandler, this.loadHandlerSpeed)
+        this.noSleep.enable()
+    }
+
+    componentWillUnmount(){
+        this.noSleep.disable()
     }
 
     loadHandler = () => {
@@ -46,7 +52,7 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
             mode = santaDat.mode + ""
         }
 
-        mode = "0"
+        // mode = "1"
 
         return (
             <div className="SantaTracker">
