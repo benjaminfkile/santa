@@ -1,4 +1,5 @@
 import { Component } from "react"
+import NavMenu from "../../NavMenu/NavMenu"
 import LaughingSanta from "../../Utils/LaughingSanta/LaughingSanta"
 import Snow from "../../Utils/Snow/Snow"
 import "./PreShow.css"
@@ -16,9 +17,7 @@ class PreShow extends Component<PreShowProps, {}> {
         return (
             <div className="PreShow">
                 <Snow />
-                <div className="SemiSantaHeader">
-                    <p>Semi Santa</p>
-                </div>
+                <NavMenu/>
                 <div className="preshow-info-card">
                     <div className="preshow-info-card-header">
                         <p id="preshow-info-card-header-p1">Looks like Santa is still at the North Pole.</p>
