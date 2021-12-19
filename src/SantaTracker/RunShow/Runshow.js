@@ -29,7 +29,6 @@ class Tracker extends Component {
     marker = null
     userToSantaCoords = [{}, {}]
     userToSantaFlightPath = null
-    updateinterval = 100
     state = {
         lat: 46.833,
         lng: -114.030,
@@ -54,13 +53,7 @@ class Tracker extends Component {
     ]
 
 
-    componentDidMount() {
-        setInterval(this.update, this.updateinterval)
-    }
-
     componentWillUnmount() {
-        clearInterval(this.updateinterval)
-        this.updateinterval = null
         this.wakeLock = false
         this.setState({})
     }
@@ -255,6 +248,8 @@ class Tracker extends Component {
             this.santaMarker.setPosition({ lat: Number(this.props.santaDat.lat), lng: Number(this.props.santaDat.lng) })
             this.autoRecenter()
         }
+
+        console.log("render")
 
         return (
 
