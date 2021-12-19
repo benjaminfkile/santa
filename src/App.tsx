@@ -29,12 +29,12 @@ class App extends Component<{}, AppTypes>{
 
   getSanta = () => {
     // console.log("getting santa every " + this.updateFrequency + " ms")
-    axios.get(`${process.env.REACT_APP_WMSFO_LOCATION_DATA_API_URL}/api/location-data`)
+    axios.get(`${process.env.REACT_APP_SEMI_SANTA_LOCATION_DATA_API_URL}/api/location-data`)
       .then(res => {
         if (res.data) {
           this.setState({ santaDat: res.data })
           if(parseInt(res.data.redirect) === 1){
-            this.redirect()
+            // this.redirect()
           }
         }
         if (res.data.throttle !== this.updateFrequency) {
