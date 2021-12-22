@@ -45,10 +45,10 @@ class App extends Component<{}, AppTypes>{
       })
   }
 
-  redirect = () => {
-    //@ts-ignore
-    window.location.replace(process.env.REACT_APP_REDIRECT_URL)
-  }
+  // redirect = () => {
+  //   //@ts-ignore
+  //   window.location.replace(process.env.REACT_APP_REDIRECT_URL)
+  // }
 
   render() {
 

@@ -278,26 +278,26 @@ class Tracker extends Component {
                                 })
                             this.santaMarker = santaMarker
 
-                            for (let i = 0; i < this.markerCoords.length; i++) {
-                                let mapIcon = new window.google.maps.MarkerImage(
-                                    this.markerCoords[i].icon,
-                                    null,
-                                    null,
-                                    null,
-                                    //@ts-ignore
-                                    new window.google.maps.Size(30, 30)
-                                )
-                                const marker = new window.google.maps.Marker(
-                                    {
-                                        position: { lat: parseFloat(this.markerCoords[i].lat), lng: parseFloat(this.markerCoords[i].lng) },
-                                        map: map,
-                                        // label: this.markerCoords[i].name,
-                                        icon: mapIcon
-                                    });
-                                marker.addListener('click', () => {
-                                    this.navigate(parseFloat(this.markerCoords[i].lat), parseFloat(this.markerCoords[i].lng))
-                                })
-                            }
+                            // for (let i = 0; i < this.markerCoords.length; i++) {
+                            //     let mapIcon = new window.google.maps.MarkerImage(
+                            //         this.markerCoords[i].icon,
+                            //         null,
+                            //         null,
+                            //         null,
+                            //         //@ts-ignore
+                            //         new window.google.maps.Size(30, 30)
+                            //     )
+                            //     const marker = new window.google.maps.Marker(
+                            //         {
+                            //             position: { lat: parseFloat(this.markerCoords[i].lat), lng: parseFloat(this.markerCoords[i].lng) },
+                            //             map: map,
+                            //             // label: this.markerCoords[i].name,
+                            //             icon: mapIcon
+                            //         });
+                            //     marker.addListener('click', () => {
+                            //         this.navigate(parseFloat(this.markerCoords[i].lat), parseFloat(this.markerCoords[i].lng))
+                            //     })
+                            // }
                         }
                         }
                     />
