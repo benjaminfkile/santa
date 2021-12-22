@@ -249,7 +249,7 @@ class Tracker extends Component {
             this.autoRecenter()
         }
 
-        console.log("render")
+        // console.log("render")
 
         return (
 
