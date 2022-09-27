@@ -7,6 +7,32 @@
     overflow-y: none;
 }
 
+.SponsorListYearWrapper{
+    position: absolute;
+    margin-top: -50px;
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.SponsorListYearItem{
+    margin-right: 8px;
+    height: 28px;
+    width: 50px;
+    line-height: 18px;
+    padding: 5px;
+    border-radius: 5px;
+    box-shadow: 2px 2px 2px rgb(0 0 0 / 30%);
+    background-color: #3a3b3c;
+    color: #FFFFFF;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.SponsorListYearItemChecked{
+    border-bottom: 3px solid #007bff;
+}
+
 .SposorSectionHeader{
     margin-bottom: 10px;
 }

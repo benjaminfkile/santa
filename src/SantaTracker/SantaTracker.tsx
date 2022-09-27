@@ -69,7 +69,7 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
                 </div>}
                 {!loading && santaDat && mode === "2" && this.props.santaDat && this.props.santaDat.lat && <div className="RunShow">
                     <Endshow
-                        sponsors={this.props.sponsors}
+                        sponsors={this.props.sponsors[0].sponsors}
                     />
                 </div>}
                 {loading &&

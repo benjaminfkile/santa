@@ -14,7 +14,7 @@ import SponsorTypes from "./SponsorsSection/SponsorTypes"
 
 type AppTypes = {
   santaDat: any
-  sponsors: Array<SponsorTypes> | []
+  sponsors: Array<SponsorTypes> | any
 }
 
 class App extends Component<{}, AppTypes>{
