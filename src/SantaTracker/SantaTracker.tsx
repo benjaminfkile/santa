@@ -52,7 +52,7 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
             mode = santaDat.mode + ""
         }
 
-        mode = "1"//bump
+        // mode = "1"//bump
 
         return (
             <div className="SantaTracker">
