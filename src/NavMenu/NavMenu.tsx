@@ -80,7 +80,7 @@ class NavMenu extends Component<{}, NavTypes> {
                                 </div>
                             </Link>
                         </div>}
-                        {routes.fundProgress && <div className="NavMenuRoute" tabIndex={2} onClick={this.toggleMenu}>
+                        {/* {routes.fundProgress && <div className="NavMenuRoute" tabIndex={2} onClick={this.toggleMenu}>
                             <Link to='/funding'>
                                 <div className="NavMenuRouteBtn">
                                     <div className="NavMenuRouteSVG">
@@ -91,7 +91,7 @@ class NavMenu extends Component<{}, NavTypes> {
                                     <p id="funding-route-text">Cheer Meter</p>
                                 </div>
                             </Link>
-                        </div>}
+                        </div>} */}
                         {routes.sponsors && <div className="NavMenuRoute" tabIndex={3} onClick={this.toggleMenu}>
                             <Link to='/sponsors'>
                                 <div className="NavMenuRouteBtn">
