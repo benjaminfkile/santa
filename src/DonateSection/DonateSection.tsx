@@ -15,16 +15,19 @@ class DonateSection extends Component {
     }
 
     render() {
+
+        const routes = JSON.parse(process.env.REACT_APP_ROUTES || "")
+
         return (
             <div className="DonateSection">
                 <NavMenu />
                 <JumpingElf />
                 <Ornaments />
-                <div className="FundsRaisedRingWrapper">
+                {routes.fundProgress && <div className="FundsRaisedRingWrapper">
                     <FundsRing
                         message={"Funds Raised"}
                     />
-                </div>
+                </div>}
                 <div className="DonateSectionHeader">
                     <Logo />
                 </div>
