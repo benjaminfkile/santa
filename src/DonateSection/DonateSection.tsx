@@ -37,7 +37,7 @@ class DonateSection extends Component {
                         <p id="img-credit-donate-i-1">Credit: The Motley Fool</p>
                     </div>
                     <p>
-                        We depend on donations to pay for the cost of the flight, the cost of storing Santa, and the cost of materials such as lights and generators. 100% of all donations go toward funding Santa’s flight. We have partnered with the Missoula Downtown Foundation so that any donation made is tax-deductible. To donate, please click the Donate button below to be redirected to the Missoula Downtown Foundation donation page and select “Santa Flyover” in the “Project” drop-down menu.
+                        We depend on donations to cover the cost of the flight, storage, maintenance, and improvements. 100% of all donations go toward making the Santa flyover happen. We have partnered with the Missoula Downtown Foundation so that any donation made is tax-deductible. To donate, please click the Donate button below to be redirected to the Missoula Downtown Foundation donation page and select “Santa Flyover” in the “Project” drop-down menu.                    
                     </p>
                     <div className="DonateSectionDonateForm">
                         <Button variant="secondary" id="donate-section-donate-btn" onClick={() => this.openLink("https://www.406santa.com/docs/WMSFO%20Donation%20Form.pdf?fbclid=IwAR2ewnMp31T43IrJ_flL_pDqk6-wjnMOiVQUBwOGdqQz6p3uG-mbYqRkJTo")}>Donation Form</Button>
