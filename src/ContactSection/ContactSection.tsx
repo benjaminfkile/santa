@@ -7,8 +7,8 @@ import ContactParams from "./ContactParams"
 import { Button, FormControl, Spinner } from "react-bootstrap"
 import reggie from "../Utils/Reggie"
 import axios from "axios"
-import "./ContactSection.css"
 import snackBar from "../Utils/snackBar/SnackBar"
+import "./ContactSection.css"
 
 type ContactSectionTypes = {
     params: ContactParamTypes
@@ -120,7 +120,7 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
                 <Ornaments />
                 <div className="ContactSectionHeader">
                     <img src="/res/wmsfo-logo.png" alt="" />
-                    {/* <p>Contact us</p> */}
+                    <p>To contact us, please fill out the form below and one of our Elves will get back to you as soon as they get a break from making presents.</p>
                 </div>
                 <div className="ContactSectionInputWrapper">
                     <div className="ContactSectionInputWrapperUpper">

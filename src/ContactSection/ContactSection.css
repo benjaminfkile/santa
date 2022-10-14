@@ -3,6 +3,7 @@
     height: 100vh;
     width: 100vw;
     padding-top: 50px;
+    overflow-y: auto;
 }
 
 .ContactSectionHeader {
@@ -25,9 +26,6 @@
     height: 190px;
 }
 
-.ContactSectionHeader p {
-    font-size: 20px;
-}
 
 .ContactSectionInputWrapper {
     margin-left: auto;
