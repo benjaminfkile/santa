@@ -21,7 +21,7 @@ class PreShow extends Component<PreShowProps, {}> {
                 </div>
                 <div className="preshow-info-card">
                     <div className="preshow-info-card-header">
-                        <p id="preshow-info-card-header-p1">Semi-truck Santa’s schedule to come!</p>
+                        <p id="preshow-info-card-header-p1">Semi-truck Santa’s scheduled to come!</p>
                         {/* <p id="preshow-info-card-header-p2">When he starts to move you can interact with the map.</p> */}
                     </div>
                     <div className="preshow-info-card-message">
