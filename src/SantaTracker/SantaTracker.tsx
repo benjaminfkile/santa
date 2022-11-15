@@ -43,7 +43,7 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
         }
     }
 
-    render() {
+    render() {//bump
 
         let loading = this.state.loading
         let santaDat = this.props.santaDat
