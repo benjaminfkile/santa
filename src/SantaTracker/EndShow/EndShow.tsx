@@ -7,7 +7,6 @@ class Endshow extends Component {
 
     render() {
 
-
         return (
             <div className="EndShow">
                 <Snow />
