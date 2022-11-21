@@ -291,66 +291,6 @@ body {
   transition: background-color 0.16s
 }
 
-#online-users-standard {
-  background-color: rgba(255, 255, 255, 1);
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
-  overflow: hidden;
-  cursor: pointer;
-  transition: background-color 0.16s;
-  color: #666666;
-}
-
-#online-users-retro {
-  background-color: #dfd2ae;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
-  overflow: hidden;
-  cursor: pointer;
-  transition: background-color 0.16s;
-  color: #666666;
-}
-
-#online-users-silver {
-  background-color: #737372;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
-  overflow: hidden;
-  cursor: pointer;
-  transition: background-color 0.16s;
-  color: #f7f7f7;
-}
-
-#online-users-dark {
-  background-color: #ffffff1c;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
-  overflow: hidden;
-  cursor: pointer;
-  transition: background-color 0.16s;
-  color: #929292;
-}
-
-#online-users-night {
-  background-color: rgba(0, 0, 0, .5);
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
-  overflow: hidden;
-  cursor: pointer;
-  transition: background-color 0.16s;
-  color: #5d5d5d;
-}
-
-#online-users-aubergine {
-  background-color: #21556cad;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
-  overflow: hidden;
-  cursor: pointer;
-  transition: background-color 0.16s;
-  color: #929292;
-}
-
 #center-map-btn-wrapper-standard span, #center-map-btn-wrapper-retro span {
   color: #666666;
 }
@@ -361,32 +301,6 @@ body {
 
 #center-map-btn-wrapper-dark span, #center-map-btn-wrapper-aubergine span {
   color: #929292;
-}
-
-.OnlineUsers {
-  display: flex;
-  position: absolute;
-  height: 40px;
-  margin-bottom: 25px;
-  box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
-  border-radius: 8px;
-  padding-top: 5px;
-  -webkit-animation: slide-in-left 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
-  animation: slide-in-left 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
-}
-
-.OnlineUsers span {
-  font-size: 30px;
-  margin-right: 8px;
-  margin-left: 10px;
-}
-
-.OnlineUsers p {
-  margin: 0px;
-  margin-right: 10px;
-  margin-top: 3px;
-  user-select: none;
-  font-weight: 600;
 }
 
 .RunShowFullScreenBtn {

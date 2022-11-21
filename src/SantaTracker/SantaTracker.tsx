@@ -45,8 +45,11 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
 
     render() {//bump
 
-        let loading = this.state.loading
-        let santaDat = this.props.santaDat
+        const props = this.props
+        const state = this.state
+
+        const loading = state.loading
+        const santaDat = props.santaDat
         let mode = null
         if (santaDat) {
             mode = santaDat.mode + ""
