@@ -9,10 +9,8 @@ import Night from './MapThemes/Night'
 import Aubergine from './MapThemes/Aubergine'
 import TrackerMenu from "./Menu/Menu"
 import Snow from "../../Utils/Snow/Snow"
-import projectedRoute from "../../Utils/ProjectedRoute"
 import SponsorCarousel from "../../Utils/SponsorCarousel/SponsorCarousel";
 import "./Runshow.css"
-// import fullScreen from "../../Utils/FullScreen/FullScreen";
 
 class Tracker extends Component {
 
@@ -42,13 +40,12 @@ class Tracker extends Component {
         zoom: 10,
         menuOpen: false,
         test: true,
-        online: null,
         donate: false,
     }
 
 
     componentDidMount() {
-        setInterval(this.update, this.updateinterval)
+        setInterval(this.getUserLocation, this.updateinterval)
     }
 
     componentWillUnmount() {
@@ -56,11 +53,6 @@ class Tracker extends Component {
         this.updateinterval = null
         this.wakeLock = false
         this.setState({})
-    }
-
-    update = () => {
-        this.averageUsers()
-        this.getUserLocation()
     }
 
     getUserLocation = () => {
@@ -114,43 +106,6 @@ class Tracker extends Component {
             this.setState({ mapCentered: false })
         }
         this.handleZoomPinch()
-    }
-
-    averageUsers = () => {
-        let total = 0;
-        let rps = this.props.santaDat.rps
-        let dynos = this.props.santaDat.dynos
-        let throttle = this.props.santaDat.throttle
-        total = (rps * dynos) * throttle
-        if (!isNaN(total) && total > 0) {
-            this.setState({ online: this.kFormatter(total) })
-        } else {
-            this.setState({ online: 1 })
-        }
-    }
-
-    kFormatter = (num) => {
-        return Math.abs(num) > 999 ? Math.sign(num) * ((Math.abs(num) / 1000).toFixed(1)) + 'k' : Math.sign(num) * Math.abs(num)
-    }
-
-    drawRoutePoly = () => {
-        // console.log("drawing route poly")
-        let color = "#dc35457d"
-        for (let i = 0; i < projectedRoute.length; i++) {
-            if (i < projectedRoute.length - 1) {
-                let coords = []
-                coords.push({ lat: Number(projectedRoute[i].Lat), lng: Number(projectedRoute[i].Lon) })
-                coords.push({ lat: Number(projectedRoute[i + 1].Lat), lng: Number(projectedRoute[i + 1].Lon) })
-                coords = new window.google.maps.Polyline({
-                    path: coords,
-                    color: color,
-                    strokeColor: color,
-                    strokeOpacity: 1,
-                    strokeWeight: 1,
-                })
-                coords.setMap(this.map)
-            }
-        }
     }
 
     drawUserToSantaPoly = () => {
@@ -225,7 +180,6 @@ class Tracker extends Component {
             },
             styles: this.mapThemes[4].mapTheme
         })
-        this.drawRoutePoly()
         const self = this
         window.google.maps.event.addListener(map, 'dragstart', function () { self.handleMapDrag() });
     }
@@ -308,10 +262,6 @@ class Tracker extends Component {
                                     <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
                                     <p> {((this.state.DistanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
                                 </div>}
-                        </div>}
-                        {this.props.santaDat.showOnline && !this.state.menuOpen && this.state.online && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
-                            <span className="material-icons">people</span>
-                            <p>{this.state.online}</p>
                         </div>}
                     </div>
 
