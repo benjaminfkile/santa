@@ -3,6 +3,7 @@ import TreeLoader from "../Utils/TreeLoader/TreeLoader"
 import Endshow from "./EndShow/EndShow"
 import PreShow from "./PreShow/PreShow"
 import Runshow from "./RunShow/Runshow"
+//@ts-ignore
 import NoSleep from 'nosleep.js'
 
 interface SantaTrackerProps {
