@@ -7,7 +7,7 @@ interface PreShowProps {
     santaDat: any
 }
 
-class PreShow extends Component<PreShowProps, {}> {//bump
+class PreShow extends Component<PreShowProps, {}> {
 
     render() {
 
