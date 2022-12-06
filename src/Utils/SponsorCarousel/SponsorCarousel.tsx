@@ -27,40 +27,40 @@ class SponsorCarousel extends Component<SponsorCarouselProps, SponsorCarouselTyp
     }
 
     awaitSposnors = () => {
-        const self = this
+        //@ts-ignore
+        const sponsors = this.props.sponsors ? this.props.sponsors[this.props.sponsors.length - 1].sponsors : []
         setTimeout(() => {
-            if (self.props.sponsors.length > 0) {
-                self.setState({ sponsors: self.shuffleSponosors(self.props.sponsors) })
-                self.handleCarousel()
+            if (sponsors.length > 0) {
+                this.setState({ sponsors: this.shuffleSponosors(sponsors) })
+                this.handleCarousel()
             } else {
-                self.awaitSposnors()
+                this.awaitSposnors()
             }
         }, 500)
     }
 
-    shuffleSponosors = (array: Array<SponsorTypes>) => {
-        let currentIndex = array.length, randomIndex;
+    shuffleSponosors = (sponsors: Array<SponsorTypes>) => {
+        let currentIndex = sponsors.length, randomIndex;
         while (currentIndex !== 0) {
             randomIndex = Math.floor(Math.random() * currentIndex)
             currentIndex--
-            [array[currentIndex], array[randomIndex]] = [
-                array[randomIndex], array[currentIndex]]
+            [sponsors[currentIndex], sponsors[randomIndex]] = [
+                sponsors[randomIndex], sponsors[currentIndex]]
         }
-        return array
+        return sponsors
     }
 
     handleCarousel = () => {
-        const self = this
+        if (this.sponsorDex < this.state.sponsors.length - 1) {
+            this.sponsorDex++
+        } else {
+            this.sponsorDex = 0
+        }
+        let sponsor: SponsorTypes = this.state.sponsors[this.sponsorDex]
+        this.delay = sponsor.hangTime * 20
+        this.setState({ sponsor: sponsor })
         setTimeout(() => {
-            if (self.sponsorDex < self.state.sponsors.length - 1) {
-                self.sponsorDex++
-            } else {
-                self.sponsorDex = 0
-            }
-            let sponsor: SponsorTypes = self.state.sponsors[self.sponsorDex]
-            this.delay = sponsor.hangTime * 20
-            self.setState({ sponsor: sponsor })
-            self.handleCarousel()
+            this.handleCarousel()
         }, this.delay)
     }
 
@@ -71,8 +71,6 @@ class SponsorCarousel extends Component<SponsorCarouselProps, SponsorCarouselTyp
     }
 
     render() {
-
-        // console.log(this.state.sponsors)
 
         let sponsor: SponsorTypes | any = this.state.sponsor || null
 

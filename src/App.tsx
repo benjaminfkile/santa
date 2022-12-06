@@ -63,8 +63,7 @@ class App extends Component<{}, AppTypes>{
       })
   }
 
-  //buld you fucking dooshbag
-
+  
   render() {
 
     return (
