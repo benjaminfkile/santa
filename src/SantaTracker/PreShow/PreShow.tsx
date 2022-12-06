@@ -9,7 +9,7 @@ interface PreShowProps {
 
 class PreShow extends Component<PreShowProps, {}> {
 
-    render() {
+    render() {//bump
 
         let message = this.props.santaDat.message || null
 
