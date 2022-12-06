@@ -3,27 +3,56 @@ import NavMenu from "../NavMenu/NavMenu"
 import JumpingElf from "../Utils/JumpingElf/JumpingElf"
 import Ornaments from "../Utils/Ornaments/Ornaments"
 import Logo from "../Utils/Logo/Logo"
-import "./SponsorsSection.css"
 import mutator from "../Utils/mutator"
+import SponsorTypes from "./SponsorTypes"
+import "./SponsorsSection.css"
+
 
 interface SponsorsSectionProps {
     sponsors: any
 }
 
 interface SponsorsSectionState {
-    yearDex: number
+    sponsors: Array<SponsorTypes> | []
 }
 
 class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionState>{
 
 
     state = {
-        yearDex: 0
+        sponsors: [],
+    }
+
+    componentDidMount(): void {
+        this.awaitSposnors()
     }
 
     manageState = (keys: Array<{ key: string, value?: any }>) => {
         this.setState(mutator.mutate(this.state, keys))
     }
+
+    awaitSposnors = () => {
+        //@ts-ignore
+        const sponsors = this.props.sponsors.length > 0 ? this.props.sponsors[this.props.sponsors.length - 1].sponsors : []
+        setTimeout(() => {
+            if (sponsors.length > 0) {
+                this.manageState([{key: "sponsors", value: sponsors}])
+            } else {
+                this.awaitSposnors()
+            }
+        }, 50)
+    }
+
+    // shuffleSponosors = (sponsors: Array<SponsorTypes>) => {
+    //     let currentIndex = sponsors.length, randomIndex;
+    //     while (currentIndex !== 0) {
+    //         randomIndex = Math.floor(Math.random() * currentIndex)
+    //         currentIndex--
+    //         [sponsors[currentIndex], sponsors[randomIndex]] = [
+    //             sponsors[randomIndex], sponsors[currentIndex]]
+    //     }
+    //     return sponsors
+    // }
 
     openLink = (url: string) => {
         window.open(url, '_blank')
@@ -32,9 +61,7 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionSta
     render() {
 
         const state = this.state
-        const props = this.props
-
-        const sponsorList = props.sponsors
+        const sponsors = state.sponsors
 
         return (
             <div className="SponsorsSection">
@@ -44,14 +71,8 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionSta
                 <div className="SposorSectionHeader">
                     <Logo />
                 </div>
-                {sponsorList.length > 0 && <div className="SponsorList">
-                    <div className="SponsorListYearWrapper">
-                        {sponsorList.map((item: { year: string, sponsors: Array<any> }, i: number) =>
-                            <div key={`SponsorListYearItem-${i}`} className={`SponsorListYearItem SponsorListYearItem${state.yearDex === i ? "Checked" : "Unchecked"}`} onClick={() => this.manageState([{ key: "yearDex", value: i }])}>
-                                <p>{item.year}</p>
-                            </div>)}
-                    </div>
-                    {sponsorList[this.state.yearDex].sponsors.map((item: any, i: number) =>
+                {sponsors.length > 0 && <div className="SponsorList">
+                    {sponsors.map((item: any, i: number) =>
                         <div className="SponsorItem" key={i} id={item.sponsor_id.replace(/[0-9]/g, '')}>
                             <div className="SponsorItemHeader">
                                 <p>{item.name}</p>
