@@ -1,9 +1,10 @@
 import { Component } from "react"
+//@ts-ignore
 import { Modal, Spinner } from "react-bootstrap"
 import { Link } from "react-router-dom"
-// import NavMenu from "../../NavMenu/NavMenu"
 import SponsorTypes from "../../SponsorsSection/SponsorTypes"
 import LaughingSanta from "../../Utils/LaughingSanta/LaughingSanta"
+import mutator from "../../Utils/mutator"
 import Snow from "../../Utils/Snow/Snow"
 import "./EndShow.css"
 
@@ -25,20 +26,25 @@ class Endshow extends Component<EndShowProps, EndShowTypes> {
         sponsor: null
     }
 
-    componentDidMount() {
+    componentDidMount(): void {
         this.awaitSposnors()
     }
 
+    manageState = (keys: Array<{ key: string, value?: any }>) => {
+        this.setState(mutator.mutate(this.state, keys))
+    }
+
     awaitSposnors = () => {
-        const self = this
+        //@ts-ignore
+        const sponsors = this.props.sponsors.length > 0 ? this.props.sponsors[this.props.sponsors.length - 1].sponsors : []
         setTimeout(() => {
-            if (self.props.sponsors.length > 0) {
-                self.setState({ sponsors: self.shuffleSponosors(self.props.sponsors) })
-                self.handleCarousel()
+            if (sponsors.length > 0) {
+                this.manageState([{key: "sponsors", value: this.shuffleSponosors(sponsors)}])
+                this.handleCarousel()
             } else {
-                self.awaitSposnors()
+                this.awaitSposnors()
             }
-        }, 100)
+        }, 50)
     }
 
     shuffleSponosors = (array: Array<SponsorTypes>) => {
