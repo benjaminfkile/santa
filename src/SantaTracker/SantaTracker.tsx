@@ -44,7 +44,7 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
         }
     }
 
-    render() {//bump
+    render() {
 
         const props = this.props
         const state = this.state
