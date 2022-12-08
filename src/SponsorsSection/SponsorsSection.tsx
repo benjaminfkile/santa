@@ -36,7 +36,8 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionSta
         const sponsors = this.props.sponsors.length > 0 ? this.props.sponsors[this.props.sponsors.length - 1].sponsors : []
         setTimeout(() => {
             if (sponsors.length > 0) {
-                this.manageState([{key: "sponsors", value: sponsors}])
+                //@ts-ignore
+                this.manageState([{key: "sponsors", value: sponsors.sort(({ hangTime: a }, { hangTime: b }) => b - a)}])
             } else {
                 this.awaitSposnors()
             }
