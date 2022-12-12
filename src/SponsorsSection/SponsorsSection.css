@@ -89,6 +89,11 @@
     height: 50px;
 }
 
+.SponsorFooterItem{
+    height: 50px;
+    line-height: 50px;
+}
+
 .SponsorFooter a {
     color: gray;
     margin-left: 10px;

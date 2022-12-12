@@ -37,7 +37,7 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionSta
         setTimeout(() => {
             if (sponsors.length > 0) {
                 //@ts-ignore
-                this.manageState([{key: "sponsors", value: sponsors.sort(({ hangTime: a }, { hangTime: b }) => b - a)}])
+                this.manageState([{ key: "sponsors", value: sponsors.sort(({ hangTime: a }, { hangTime: b }) => b - a) }])
             } else {
                 this.awaitSposnors()
             }
@@ -82,10 +82,13 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionSta
                                 <img src={item.logo} alt="" />
                             </div>
                             {(item.website_url || item.fb_url) && <div className="SponsorFooter">
-                                {/* {sponsor.website_url && <span className="material-icons" onClick={() => this.openLink(sponsor.website_url)}>link</span>} */}
-                                {item.website_url && <a href={item.website_url} target="_blank" rel="noreferrer">{item.name}</a>}
-                                {/*@ts-ignore*/}
-                                {item.fb_url && <img src="/res/fb-icon.png" alt="" onClick={() => this.openLink(item.fb_url)} />}
+                                <div className="SponsorFooterItem">
+                                    {item.website_url && <a href={item.website_url} target="_blank" rel="noreferrer">{item.name}</a>}
+                                </div>
+                                <div className="SponsorFooterItem">
+                                    {/*@ts-ignore*/}
+                                    {item.fb_url && <img src="/res/fb-icon.png" alt="" onClick={() => this.openLink(item.fb_url)} />}
+                                </div>
                             </div>}
                         </div>
                     )}
