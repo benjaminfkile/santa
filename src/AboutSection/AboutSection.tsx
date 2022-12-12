@@ -23,7 +23,7 @@ class AboutSection extends Component {
                         is keeping the tradition of having Santa do a flight over Missoula Mt.
                         Throughout the years this flight has evolved and is now known as Santa’s Dash
                         Through the Big Sky Flyover. This flyover will take place several days before
-                        Christmas Eve and will only happen ONCE. Updates about this flyover can be found on our official <a href="https://www.facebook.com/groups/374773957140495/user/100073599618363" target="_blank" rel="noreferrer">Facebook page</a>.
+                        Christmas Eve and will only happen ONCE. Updates about this flyover can be found on our official <a href="https://www.facebook.com/WesternMontanaSantaFlyover" target="_blank" rel="noreferrer">Facebook page</a>.
                     </p>
                     <p>
                         Santa’s Dash Through the Big Sky Flyover is only possible with the help of our sponsors and community.
