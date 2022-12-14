@@ -29,7 +29,7 @@ const Aubergine =
     "elementType": "geometry",
     "stylers": [
       {
-        "visibility": "off"
+        "visibility": "on"
       }
     ]
   },
@@ -82,7 +82,7 @@ const Aubergine =
     "featureType": "poi",
     "stylers": [
       {
-        "visibility": "off"
+        "visibility": "on"
       }
     ]
   },
@@ -145,7 +145,7 @@ const Aubergine =
     "elementType": "labels.icon",
     "stylers": [
       {
-        "visibility": "off"
+        "visibility": "on"
       }
     ]
   },
@@ -207,7 +207,7 @@ const Aubergine =
     "featureType": "transit",
     "stylers": [
       {
-        "visibility": "off"
+        "visibility": "on"
       }
     ]
   },

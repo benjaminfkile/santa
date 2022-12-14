@@ -53,6 +53,7 @@
 #distance-from-user-to-santa-content-wrapper span {
   font-size: 30px;
   margin-top: 3px;
+  margin-left: 3px;
 }
 
 #tracker-menu-stats-wrapper-night {
