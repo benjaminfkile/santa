@@ -3,6 +3,7 @@
   top: 0px;
   right: 0px;
   color: black;
+  z-index: 10;
 }
 
 .TrackerCustomLabel img {
@@ -47,6 +48,11 @@
   margin-left: 3px;
   user-select: none;
   font-weight: 600;
+}
+
+#distance-from-user-to-santa-content-wrapper span {
+  font-size: 30px;
+  margin-top: 3px;
 }
 
 #tracker-menu-stats-wrapper-night {
