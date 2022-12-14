@@ -127,13 +127,13 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                         {this.props.DistanceFromUserToSanta < 5281 &&
                             <div id="distance-from-user-to-santa-menu-pill-wrapper">
                                 {/* <img id="santa-hat-menu-user-loc" src="./res/santa-hat.png" alt=""></img> */}
-                                <span className="material-icons">social_distance</span>
+                                <span className="material-icons">person_pin_circle</span>
                                 <p>{this.props.DistanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
                             </div>}
                         {this.props.DistanceFromUserToSanta > 5280 &&
                             <div id="distance-from-user-to-santa-menu-pill-wrapper">
                                 {/* <img id="santa-hat-menu-user-loc" src="./res/santa-hat.png" alt=""></img> */}
-                                <span className="material-icons">social_distance</span>
+                                <span className="material-icons">person_pin_circle</span>
                                 <p> {((this.props.DistanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
                             </div>}
                     </div>}
