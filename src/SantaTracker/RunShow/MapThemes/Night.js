@@ -29,7 +29,7 @@ const Night =
       "elementType": "geometry",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
@@ -46,7 +46,7 @@ const Night =
       "featureType": "poi",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
@@ -100,7 +100,7 @@ const Night =
       "elementType": "labels.icon",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
@@ -144,7 +144,7 @@ const Night =
       "featureType": "transit",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },

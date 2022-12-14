@@ -29,7 +29,7 @@ const Retro =
       "elementType": "geometry",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
@@ -73,7 +73,7 @@ const Retro =
       "featureType": "poi",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
@@ -127,7 +127,7 @@ const Retro =
       "elementType": "labels.icon",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
@@ -189,7 +189,7 @@ const Retro =
       "featureType": "transit",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
