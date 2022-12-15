@@ -28,7 +28,7 @@
 
 .TrackerMenuContent {
     display: block;
-    border-bottom-left-radius: 10px;
+    border-bottom-left-radius: 5px;
     -webkit-animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
     animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
@@ -39,8 +39,8 @@
 } */
 
 .TrackerMenuThemes {
-    display: grid;
-    grid-template-columns: auto auto auto;
+    display: flex;
+    flex-wrap: wrap;
     padding: 3px;
 }
 
@@ -60,6 +60,7 @@
     margin: 2px;
     cursor: pointer;
     user-select: none;
+    width: calc(33.33% - 4px);
 }
 
 .TrackerMenuTheme img {
@@ -79,19 +80,143 @@
 
 .TrackerMenuMapTypeWrapper {
     display: flex;
+    justify-content: space-evenly;
+    margin-top: -4px;
+    margin-bottom: 2px;
+    padding: 3px;
+}
+
+.TerrainToggle, .RoadMapToggle, .SnowToggle {
+    width: calc(33.33% - 4px);
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.TerrainToggle p, .RoadMapToggle p, .SnowToggle p {
+    font-size: 14px;
+}
+
+#terrain-toggled-off, #terrain-toggled-on, #snow-toggled-on, #snow-toggled-off, #roadmap-toggled-on, #roadmap-toggled-off {
+    display: flex;
+    height: 35px;
+    padding: 0px;
+    padding-top: 5px;
+    padding-left: 12px;
+    border: none;
+}
+
+#terrain-toggled-off:focus, #terrain-toggled-on:focus, #snow-toggled-on:focus, #snow-toggled-off:focus, #roadmap-toggled-on:focus, #roadmap-toggled-off:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+#terrain-toggled-on, #snow-toggled-on {
+    border-bottom: solid 2px #ffffff;
+}
+
+#roadmap-toggled-on, #roadmap-toggled-on {
+    border-bottom: solid 2px #ffffff;
+}
+
+#terrain-toggled-off p, #terrain-toggled-on p, #snow-toggled-off p, #snow-toggled-on p, #roadmap-toggled-on p, #roadmap-toggled-off p {
+    margin-left: 5px;
+}
+
+#terrain-toggled-on span, #terrain-toggled-off span {
+    margin-left: -2px;
+}
+
+#snow-toggled-on span, #snow-toggled-off span {
+    margin-left: 2px;
+}
+
+#roadmap-toggled-on span, #roadmap-toggled-off span {
+    margin-left: -10px;
+}
+
+
+
+.TrackerMenuSantaData {
+    width: calc(100% - 8px);
+    justify-content: left;
     margin-top: -1px;
     margin-bottom: 4px;
+    margin-left: 4px;
+    border-radius: 3px;
+}
+
+.TrackerMenuSantaDataItem {
+    display: flex;
+    height: 35px;
+    line-height: 35px;
+    margin-right: 2px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.TrackerMenuSantaDataItem span {
+    font-size: 27px;
+    margin-top: 5px;
+    margin-right: 5px;
+}
+
+.TrackerMenuSantaDataStandard{
+    background-color: #bdd8bb;
+}
+
+.TrackerMenuSantaDataRetro{
+    background-color: #dfd2ae;
+}
+
+.TrackerMenuSantaDataSilver{
+    background-color: #999998;
+}
+
+.TrackerMenuSantaDataDark{
+    background-color: #434343;
+}
+
+.TrackerMenuSantaDataNight{
+    background-color: #4d5662;
+}
+
+.TrackerMenuSantaDataAubergine{
+    background-color: #2d5f75;
+}
+
+.TrackerMenuSantaDataStandard span, .TrackerMenuSantaDataStandard p{
+    color: #000000;
+}
+
+.TrackerMenuSantaDataRetro span, .TrackerMenuSantaDataRetro p{
+    color: #000000;
+}
+
+.TrackerMenuSantaDataSilver span, .TrackerMenuSantaDataSilver p{
+    color: #000000;
+}
+
+.TrackerMenuSantaDataDark span, .TrackerMenuSantaDataDark p{
+    color: #b5b5b5;
+}
+
+.TrackerMenuSantaDataNight span, .TrackerMenuSantaDataNight p{
+    color: #ffffff;
+}
+
+.TrackerMenuSantaDataAubergine span, .TrackerMenuSantaDataAubergine p{
+    color: #ffffff;
+}
+
+#tracker-menu-location-btn-allowed-silver span{
+    color: #000000;
 }
 
 .TrackerMenuFooter {
     display: flex;
-    margin-left: 3px;
-    margin-right: 3px;
-}
-
-.TrackerMenuFooter .LDSRipple{
-    margin-left: -2px;
-    margin-top: -2px;
+    margin-left: 4px;
+    margin-right: 4px;
+    padding-bottom: 2px;
 }
 
 .TrackerMenuFooter span {
@@ -110,41 +235,41 @@
     user-select: none;
     width: 50px;
     height: 50px;
-    border-radius: 8px;
+    border-radius: 3px;
     text-align: center;
     margin-right: 3px;
     margin-bottom: 3px;
 }
 
-.TrackerMenuFooterBtn-standard{
+.TrackerMenuFooterBtn-standard {
     background-color: #bdd8bb;
 }
 
-.TrackerMenuFooterBtn-retro{
+.TrackerMenuFooterBtn-retro {
     background-color: #dfd2ae;
 }
 
-.TrackerMenuFooterBtn-silver{
+.TrackerMenuFooterBtn-silver {
     background-color: #737372b8;
 }
 
-.TrackerMenuFooterBtn-dark{
+.TrackerMenuFooterBtn-dark {
     background-color: #434343;
 }
 
-.TrackerMenuFooterBtn-night{
+.TrackerMenuFooterBtn-night {
     background-color: #4c5561;
 }
 
-.TrackerMenuFooterBtn-aubergine{
+.TrackerMenuFooterBtn-aubergine {
     background-color: #2c5e74;
 }
 
-#tracker-menu-compass-btn-aubergine span, #tracker-menu-compass-btn-night span{
+#tracker-menu-compass-btn-aubergine span, #tracker-menu-compass-btn-night span {
     color: #FFFFFF;
 }
 
-#tracker-menu-compass-btn-dark span{
+#tracker-menu-compass-btn-dark span {
     color: #b4b4b4;
 }
 
@@ -271,66 +396,6 @@
     color: #ffffff;
 }
 
-.TerrainToggle{
-    width: 93px;
-    margin-left: 5px;
-}
-
-.RoadMapToggle{
-    width: 93px;
-    margin-left: 4px;
-}
-
-.SnowToggle{
-    width: 96px;
-    margin-left: 4px;
-}
-
-
-.TerrainToggle p, .RoadMapToggle p, .SnowToggle p {
-    font-size: 14px;
-}
-
-
-
-#terrain-toggled-off, #terrain-toggled-on, #snow-toggled-on, #snow-toggled-off, #roadmap-toggled-on, #roadmap-toggled-off {
-    display: flex;
-    height: 35px;
-    padding: 0px;
-    padding-top: 5px;
-    padding-left: 12px;
-    border: none;
-}
-
-#terrain-toggled-off:focus, #terrain-toggled-on:focus, #snow-toggled-on:focus, #snow-toggled-off:focus, #roadmap-toggled-on:focus, #roadmap-toggled-off:focus {
-    outline: none;
-    box-shadow: none;
-}
-
-#terrain-toggled-on, #snow-toggled-on {
-    border-bottom: solid 2px #ffffff;
-}
-
-#roadmap-toggled-on, #roadmap-toggled-on {
-    border-bottom: solid 2px #ffffff;
-}
-
-/* #terrain-toggled-off p, #terrain-toggled-on p, #snow-toggled-off p, #snow-toggled-on p, #roadmap-toggled-on p, #roadmap-toggled-off p {
-    margin-left: 5px;
-} */
-
-#terrain-toggled-on span, #terrain-toggled-off span {
-    margin-left: -2px;
-}
-
-#snow-toggled-on span, #snow-toggled-off span {
-    margin-left: 2px;
-}
-
-#roadmap-toggled-on span, #roadmap-toggled-off span {
-    margin-left: -10px;
-}
-
 #standard-theme-menu-btn {
     background-color: rgba(255, 255, 255, 1);
     color: #666666;
@@ -385,7 +450,7 @@
 }
 
 #silver-theme-menu-content .TrackerMenuTheme {
-    background-color: #737372;
+    background-color: #999998;
     border: none;
 }
 
@@ -457,17 +522,6 @@
 
 #aubergine-theme-menu-content button {
     background-color: #2d5f75;
-}
-
-.TrackerMenuSantaDatWrapper {
-    display: grid;
-    grid-template-columns: auto auto auto;
-    margin-bottom: 4px;
-    padding: 3px;
-}
-
-.TrackerMenuSantaDatWrapperLeft, .TrackerMenuSantaDatWrapperRight {
-    width: 50%;
 }
 
 .TrackerMenuSantaDatItem {
@@ -557,7 +611,7 @@
     font-weight: 600;
 }
 
-.DistanceFromUserToSantaTrackerMenu span{
+.DistanceFromUserToSantaTrackerMenu span {
     margin-left: 13px;
     margin-right: 8px;
 }
@@ -583,7 +637,7 @@
     color: #b5b5b5;
 }
 
-#distance-from-user-to-santa-tracker-menu-dark span{
+#distance-from-user-to-santa-tracker-menu-dark span {
     color: #b5b5b5;
 }
 
@@ -602,5 +656,3 @@
 #distance-from-user-to-santa-tracker-menu-aubergine span {
     color: #FFFFFF;
 }
-
-

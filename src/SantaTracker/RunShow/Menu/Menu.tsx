@@ -83,6 +83,8 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
 
     render() {
 
+        const props = this.props
+
         return (
             <div className="TrackerMenu">
                 {!this.state.menuOpen && <div className="TrackerMenuBtn" id={this.props.currentTheme.toLowerCase() + "-theme-menu-btn"} onClick={this.toggleMenu}>
@@ -105,38 +107,21 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                         {!this.state.snow && <Button id="snow-toggled-off" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons">ac_unit</span><p>Snow</p></Button>}
                         {this.state.snow && <Button id="snow-toggled-on" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons">ac_unit</span><p>Snow</p></Button>}
                     </div>
-                    <div className="TrackerMenuSantaDatWrapper" id={"tracker-menu-santa-dat-wrapper-" + this.props.currentTheme.toLowerCase()}>
-                        {/* {this.props.santaDat.accuracy && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
-                            <span className="material-icons">360</span>
-                            <p>{this.props.santaDat.accuracy.split("+")[0]} ft</p>
-                        </div>} */}
-                        {this.props.santaDat.bear && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
-                            <span className="material-icons">explore</span>
-                            <p>{this.props.santaDat.bear.split("+")[0]}</p>
-                        </div>}
-                        {this.props.santaDat.alt && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
-                            <span className="material-icons">flight_takeoff</span>
-                            <p>{this.props.santaDat.alt.split("+")[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</p>
-                        </div>}
-                        {this.props.santaDat.speed && <div className="TrackerMenuSantaDatItem" id={"tracker-menu-santa-dat-item-" + this.props.currentTheme.toLowerCase()}>
+                    <div className={`TrackerMenuSantaData TrackerMenuSantaData${props.currentTheme}`}>
+                        <div className={`TrackerMenuSantaDataItem`}>
                             <span className="material-icons">speed</span>
-                            <p>{this.props.santaDat.speed.split("+")[0]}</p>
+                            <p>{props.santaDat.speed}</p>
+                        </div>
+                        <div className={`TrackerMenuSantaDataItem`}>
+                            <span className="material-icons">explore</span>
+                            <p>{props.santaDat.bear}</p>
+                        </div>
+                        {!userLocation.disable && this.props.DistanceFromUserToSanta && <div className={`TrackerMenuSantaDataItem`}>
+                            <span className="material-icons">person_pin_circle</span>
+                            {props.DistanceFromUserToSanta < 5280 && <p>{this.props.DistanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>}
+                            {props.DistanceFromUserToSanta >= 5280 && <p> {((this.props.DistanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>}
                         </div>}
                     </div>
-                    {!userLocation.disable && this.props.DistanceFromUserToSanta && <div className="DistanceFromUserToSantaTrackerMenu" id={"distance-from-user-to-santa-tracker-menu-" + this.props.currentTheme.toLowerCase()}>
-                        {this.props.DistanceFromUserToSanta < 5281 &&
-                            <div id="distance-from-user-to-santa-menu-pill-wrapper">
-                                {/* <img id="santa-hat-menu-user-loc" src="./res/santa-hat.png" alt=""></img> */}
-                                <span className="material-icons">person_pin_circle</span>
-                                <p>{this.props.DistanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
-                            </div>}
-                        {this.props.DistanceFromUserToSanta > 5280 &&
-                            <div id="distance-from-user-to-santa-menu-pill-wrapper">
-                                {/* <img id="santa-hat-menu-user-loc" src="./res/santa-hat.png" alt=""></img> */}
-                                <span className="material-icons">person_pin_circle</span>
-                                <p> {((this.props.DistanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
-                            </div>}
-                    </div>}
                     <div className="TrackerMenuFooter">
                         {!userLocation.disable && <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-location-btn-allowed-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}>
                             <span className="material-icons">my_location</span>
