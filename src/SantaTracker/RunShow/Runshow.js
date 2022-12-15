@@ -110,15 +110,15 @@ class Tracker extends Component {
 
     drawUserToSantaPoly = () => {
         this.removePoly()
-        let color = "#00ff3a"
+        let color = "#28a745"
         let iconSequence = [];
         let circle = {
             "path": "M -2,0 C -1.947018,-2.2209709 1.9520943,-2.1262691 2,0.00422057 2.0378955,1.3546185 1.5682108,2.0631345 1.4372396e-8,2.0560929 -1.7155482,2.0446854 -1.9145886,1.0142836 -2,0.06735507 Z",
             "fillColor": color,
-            "fillOpacity": 0.7,
+            "fillOpacity": 1,
             "strokeColor": color,
-            "strokeWeight": 13,
-            "scale": 1
+            "strokeWeight": 25,
+            "scale": 1.5
         }
 
         iconSequence.push(
@@ -220,10 +220,10 @@ class Tracker extends Component {
                         onMapLoad={map => {
                             this.setMapOptions(map)
                             let mapIcon = {
-                                url: './res/santa-hat.png',
-                                scaledSize: new window.google.maps.Size(45, 45),
+                                url: './res/santa-icon.png',
+                                scaledSize: new window.google.maps.Size(65, 65),
                                 origin: new window.google.maps.Point(0, 0),
-                                anchor: new window.google.maps.Point(22, 28)
+                                anchor: new window.google.maps.Point(35, 58)
                             }
 
                             let marker = new window.google.maps.Marker(
