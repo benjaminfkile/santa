@@ -125,9 +125,7 @@
     margin-top: -10px;
 } */
 
-#ccf-b--bac-cceb .SponsorFooter{
-    margin-top: -30px;
-}
+
 
 @media screen and (min-width: 800px) {
     .SponsorList {
@@ -162,7 +160,7 @@
         height: 100%;
     }
 
-    #adccddadeafd .SponsorLogoWrapper {
+    #ccf-b--bac-cceb .SponsorLogoWrapper {
         height: 100px;
         margin-bottom: -20px;
     }

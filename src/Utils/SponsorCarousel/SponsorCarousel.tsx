@@ -1,5 +1,6 @@
 import { Component } from "react"
 import SponsorTypes from "../../SponsorsSection/SponsorTypes"
+import Cat from "../Cat/Cat"
 import "./SponsorCarousel.css"
 
 interface SponsorCarouselProps {
@@ -77,6 +78,7 @@ class SponsorCarousel extends Component<SponsorCarouselProps, SponsorCarouselTyp
         return (
             <div className="SponsorCarousel">
                 {sponsor && <div id={`sponsor-carousel-item-${this.props.theme.toLowerCase()}`} className="SponsorCarouselItem">
+                    {sponsor.sponsor_id === "2a56681e-b68f-4e88-afc5-44c4a18475bf" && <Cat/>}
                     <img src={sponsor.logo} onClick={() => this.openLink(sponsor.website_url)} alt="" />
                 </div>}
             </div>
