@@ -5,7 +5,7 @@ const Standard =
             "elementType": "geometry",
             "stylers": [
                 {
-                    "visibility": "off"
+                    "visibility": "on"
                 }
             ]
         },
@@ -13,7 +13,7 @@ const Standard =
             "featureType": "poi",
             "stylers": [
                 {
-                    "visibility": "off"
+                    "visibility": "on"
                 }
             ]
         },
@@ -22,7 +22,7 @@ const Standard =
             "elementType": "labels.icon",
             "stylers": [
                 {
-                    "visibility": "off"
+                    "visibility": "on"
                 }
             ]
         },
@@ -30,7 +30,7 @@ const Standard =
             "featureType": "transit",
             "stylers": [
                 {
-                    "visibility": "off"
+                    "visibility": "on"
                 }
             ]
         }

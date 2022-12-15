@@ -28,7 +28,7 @@ class Tracker extends Component {
     marker = null
     userToSantaCoords = [{}, {}]
     userToSantaFlightPath = null
-    updateinterval = 100
+    updateinterval = 250
     state = {
         lat: 46.833,
         lng: -114.030,
@@ -110,7 +110,7 @@ class Tracker extends Component {
 
     drawUserToSantaPoly = () => {
         this.removePoly()
-        let color = "#28a745"
+        let color = "#00ff3a"
         let iconSequence = [];
         let circle = {
             "path": "M -2,0 C -1.947018,-2.2209709 1.9520943,-2.1262691 2,0.00422057 2.0378955,1.3546185 1.5682108,2.0631345 1.4372396e-8,2.0560929 -1.7155482,2.0446854 -1.9145886,1.0142836 -2,0.06735507 Z",
@@ -220,8 +220,8 @@ class Tracker extends Component {
                         onMapLoad={map => {
                             this.setMapOptions(map)
                             let mapIcon = {
-                                url: './res/santa-icon.png',
-                                scaledSize: new window.google.maps.Size(70, 45),
+                                url: './res/santa-hat.png',
+                                scaledSize: new window.google.maps.Size(45, 45),
                                 origin: new window.google.maps.Point(0, 0),
                                 anchor: new window.google.maps.Point(22, 28)
                             }
@@ -254,12 +254,14 @@ class Tracker extends Component {
                         {!userLocation.disable && this.state.DistanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
                             {this.state.DistanceFromUserToSanta < 5281 &&
                                 <div id="distance-from-user-to-santa-content-wrapper">
-                                    <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
+                                    <span className="material-icons">person_pin_circle</span>
+                                    {/* <img id="santa-hat" src="./res/santa-hat.png" alt=""></img> */}
                                     <p>{this.state.DistanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
                                 </div>}
                             {this.state.DistanceFromUserToSanta > 5280 &&
                                 <div id="distance-from-user-to-santa-content-wrapper">
-                                    <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
+                                    {/* <img id="santa-hat" src="./res/santa-hat.png" alt=""></img> */}
+                                    <span className="material-icons">person_pin_circle</span>
                                     <p> {((this.state.DistanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
                                 </div>}
                         </div>}

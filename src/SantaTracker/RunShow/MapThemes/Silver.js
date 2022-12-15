@@ -12,7 +12,7 @@ const Silver =
       "elementType": "labels.icon",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
@@ -37,7 +37,7 @@ const Silver =
       "elementType": "geometry",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
@@ -54,7 +54,7 @@ const Silver =
       "featureType": "poi",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
@@ -108,7 +108,7 @@ const Silver =
       "elementType": "labels.icon",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
@@ -152,7 +152,7 @@ const Silver =
       "featureType": "transit",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },

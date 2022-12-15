@@ -126,18 +126,24 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                     {!userLocation.disable && this.props.DistanceFromUserToSanta && <div className="DistanceFromUserToSantaTrackerMenu" id={"distance-from-user-to-santa-tracker-menu-" + this.props.currentTheme.toLowerCase()}>
                         {this.props.DistanceFromUserToSanta < 5281 &&
                             <div id="distance-from-user-to-santa-menu-pill-wrapper">
-                                <img id="santa-hat-menu-user-loc" src="./res/santa-hat.png" alt=""></img>
+                                {/* <img id="santa-hat-menu-user-loc" src="./res/santa-hat.png" alt=""></img> */}
+                                <span className="material-icons">person_pin_circle</span>
                                 <p>{this.props.DistanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
                             </div>}
                         {this.props.DistanceFromUserToSanta > 5280 &&
                             <div id="distance-from-user-to-santa-menu-pill-wrapper">
-                                <img id="santa-hat-menu-user-loc" src="./res/santa-hat.png" alt=""></img>
+                                {/* <img id="santa-hat-menu-user-loc" src="./res/santa-hat.png" alt=""></img> */}
+                                <span className="material-icons">person_pin_circle</span>
                                 <p> {((this.props.DistanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
                             </div>}
                     </div>}
                     <div className="TrackerMenuFooter">
-                        {!userLocation.disable && <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-location-btn-allowed-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">my_location</span></div>}
-                        {userLocation.disable && <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-location-btn-denied-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}><span className="material-icons">location_disabled</span></div>}
+                        {!userLocation.disable && <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-location-btn-allowed-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}>
+                            <span className="material-icons">my_location</span>
+                        </div>}
+                        {userLocation.disable && <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-location-btn-denied-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}>
+                            <span className="material-icons">location_disabled</span>
+                        </div>}
                         <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`}>
                             {/* <div className="TrackerMenuDonateBtn" id={"tracker-menu-donate-btn-" + this.props.currentTheme.toLowerCase()} onClick={() => DonateToolKit.toggleDonate()}><p><span className="material-icons">attach_money</span></p></div> */}
                             <div className="TrackerMenuHomeBtn">

@@ -12,7 +12,7 @@ const Dark =
       "elementType": "labels.icon",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
@@ -40,7 +40,7 @@ const Dark =
           "color": "#757575"
         },
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
@@ -57,7 +57,7 @@ const Dark =
       "featureType": "administrative.land_parcel",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
@@ -74,7 +74,7 @@ const Dark =
       "featureType": "poi",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
@@ -128,7 +128,7 @@ const Dark =
       "elementType": "labels.icon",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
@@ -181,7 +181,7 @@ const Dark =
       "featureType": "transit",
       "stylers": [
         {
-          "visibility": "off"
+          "visibility": "on"
         }
       ]
     },
