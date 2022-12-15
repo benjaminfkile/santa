@@ -130,7 +130,6 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                             <span className="material-icons">location_disabled</span>
                         </div>}
                         <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`}>
-                            {/* <div className="TrackerMenuDonateBtn" id={"tracker-menu-donate-btn-" + this.props.currentTheme.toLowerCase()} onClick={() => DonateToolKit.toggleDonate()}><p><span className="material-icons">attach_money</span></p></div> */}
                             <div className="TrackerMenuHomeBtn">
                                 <Link to='/about'>
                                     <span id={"tracker-menu-home-btn-" + this.props.currentTheme.toLowerCase()} className="material-icons">home</span>
