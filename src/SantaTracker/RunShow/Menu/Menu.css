@@ -209,7 +209,7 @@
 }
 
 #tracker-menu-location-btn-allowed-silver span{
-    color: #000000;
+    color: #28a745;
 }
 
 .TrackerMenuFooter {
@@ -250,7 +250,7 @@
 }
 
 .TrackerMenuFooterBtn-silver {
-    background-color: #737372b8;
+    background-color: #737372ba;
 }
 
 .TrackerMenuFooterBtn-dark {
@@ -310,12 +310,12 @@
 
 #tracker-menu-location-btn-allowed-silver {
     color: #28a745;
-    background-color: #737372b8;
+    background-color: #737372ba;
 }
 
 #tracker-menu-location-btn-denied-silver {
     color: #dc3545;
-    background-color: #737372b8;
+    background-color: #737372ba;
 }
 
 #tracker-menu-location-btn-allowed-dark {
@@ -348,6 +348,10 @@
     color: #FFFFFF;
 }
 
+#tracker-menu-close-btn-silver {
+    color: #000000;
+}
+
 #tracker-menu-donate-btn-standard span {
     color: #000000;
 }
@@ -357,7 +361,7 @@
 }
 
 #tracker-menu-donate-btn-silver span {
-    color: #000000;
+    color: #ffffff;
 }
 
 #tracker-menu-donate-btn-dark span {
@@ -439,23 +443,24 @@
 }
 
 #silver-theme-menu-btn {
-    background-color: #737372;
+    background-color: #747473;
     color: #f7f7f7;
     box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
     border-radius: 8px;
 }
 
 #silver-theme-menu-content {
-    background-color: #ffffffab;
+    background-color: #ffffff;
+    border: 1px solid #737372ba;
 }
 
 #silver-theme-menu-content .TrackerMenuTheme {
-    background-color: #999998;
+    background-color: #737372ba;
     border: none;
 }
 
 #silver-theme-menu-content button {
-    background-color: #737372b8;
+    background-color: #737372ba;
     color: black;
 }
 
@@ -467,7 +472,7 @@
 }
 
 #dark-theme-menu-content {
-    background-color: #212121d4;
+    background-color: #2f2d2de6;
 }
 
 #dark-theme-menu-content .TrackerMenuTheme {
@@ -564,11 +569,11 @@
 
 #tracker-menu-santa-dat-wrapper-silver {
     /* background-color: #737373; */
-    color: #000000;
+    color: #ffffff;
 }
 
 #tracker-menu-santa-dat-wrapper-silver span {
-    color: #000000;
+    color: #ffffff;
 }
 
 #tracker-menu-santa-dat-wrapper-dark {
@@ -630,7 +635,7 @@
 }
 
 #distance-from-user-to-santa-tracker-menu-silver p {
-    color: #000000;
+    color: #ffffff;
 }
 
 #distance-from-user-to-santa-tracker-menu-dark p {
