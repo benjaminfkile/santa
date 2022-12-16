@@ -30,7 +30,9 @@
     -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-1E2JEK81CG"></script>
   <script>
-    if (window.location.origin === ("https://www.406santa.org" || "https://www.406santaflyover.org" )) {
+    const analyticsOrigins = ["https://www.406santa.org", "https://www.406santaflyover.org"]
+    const useAnalytics = analyticsOrigins.indexOf(window.location.origin) > -1 
+    if (useAnalytics) {
       window.dataLayer = window.dataLayer || [];
       function gtag() { dataLayer.push(arguments); }
       gtag("js", new Date());
