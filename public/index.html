@@ -30,11 +30,12 @@
     -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-1E2JEK81CG"></script>
   <script>
-    if (window.location.origin === "https://www.406santa.org") {
+    if (window.location.origin === ("https://www.406santa.org" || "https://www.406santaflyover.org" )) {
       window.dataLayer = window.dataLayer || [];
       function gtag() { dataLayer.push(arguments); }
       gtag("js", new Date());
       gtag("config", "G-1E2JEK81CG");
+      console.log(`Analytics Enabled for ${window.location.origin}`)
     } else {
       console.log(`Analytics Disabled for ${window.location.origin}`)
     }
