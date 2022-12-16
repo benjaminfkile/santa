@@ -55,12 +55,16 @@
 
 .TrackerMenuTheme {
     height: 90px;
-    border: 1px solid;
     border-radius: 3px;
     margin: 2px;
     cursor: pointer;
     user-select: none;
     width: calc(33.33% - 4px);
+}
+
+.TrackerMenuThemeChecked{
+    opacity: .65;
+    border-bottom: 2px solid #00ff3c;
 }
 
 .TrackerMenuTheme img {
@@ -96,12 +100,13 @@
     font-size: 14px;
 }
 
+#snow-toggled-on{
+    opacity: .65;
+}
+
 #terrain-toggled-off, #terrain-toggled-on, #snow-toggled-on, #snow-toggled-off, #roadmap-toggled-on, #roadmap-toggled-off {
     display: flex;
     height: 35px;
-    padding: 0px;
-    padding-top: 5px;
-    padding-left: 12px;
     border: none;
 }
 
@@ -111,11 +116,11 @@
 }
 
 #terrain-toggled-on, #snow-toggled-on {
-    border-bottom: solid 2px #ffffff;
+    border-bottom: solid 2px #00ff3c;
 }
 
 #roadmap-toggled-on, #roadmap-toggled-on {
-    border-bottom: solid 2px #ffffff;
+    border-bottom: solid 2px #00ff3c;
 }
 
 #terrain-toggled-off p, #terrain-toggled-on p, #snow-toggled-off p, #snow-toggled-on p, #roadmap-toggled-on p, #roadmap-toggled-off p {
@@ -129,12 +134,6 @@
 #snow-toggled-on span, #snow-toggled-off span {
     margin-left: 2px;
 }
-
-#roadmap-toggled-on span, #roadmap-toggled-off span {
-    margin-left: -10px;
-}
-
-
 
 .TrackerMenuSantaData {
     width: calc(100% - 8px);
@@ -413,7 +412,6 @@
 
 #standard-theme-menu-content .TrackerMenuTheme {
     background-color: #bdd8bb;
-    border: none;
 }
 
 #standard-theme-menu-content button {
@@ -434,7 +432,6 @@
 
 #retro-theme-menu-content .TrackerMenuTheme {
     background-color: #dfd2ae;
-    border: none;
 }
 
 #retro-theme-menu-content button {
@@ -456,7 +453,6 @@
 
 #silver-theme-menu-content .TrackerMenuTheme {
     background-color: #737372ba;
-    border: none;
 }
 
 #silver-theme-menu-content button {
@@ -477,7 +473,6 @@
 
 #dark-theme-menu-content .TrackerMenuTheme {
     background-color: #434343;
-    border: none;
     color: #b5b5b5;
 }
 
@@ -500,7 +495,6 @@
 #night-theme-menu-content .TrackerMenuTheme {
     background-color: #4d5662;
     color: #FFFFFF;
-    border: none;
 }
 
 #night-theme-menu-content button {
@@ -522,7 +516,6 @@
 #aubergine-theme-menu-content .TrackerMenuTheme {
     background-color: #2d5f75;
     color: #FFFFFF;
-    border: none;
 }
 
 #aubergine-theme-menu-content button {
