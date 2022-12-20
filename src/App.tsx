@@ -12,6 +12,7 @@ class App extends Component<{}, AppTypes>{
 
   state = {
     santaDat: null,
+    sponsors: []
   }
 
   updateFrequency = 5000
@@ -20,7 +21,7 @@ class App extends Component<{}, AppTypes>{
   componentDidMount() {
     this.getSanta()
     //eslint-disable-next-line
-    console.log("\n  .-\"\"-.\r\n \/,..___\\\r\n() {_____}\r\n  (\/-@-@-\\)\r\n  {`-=^=-\'}\r\n  {  `-\'  }\r\n   {     }\r\n    `---\'\n\nDeveloped by Ben Kile\n\n")
+    // console.log("\n  .-\"\"-.\r\n \/,..___\\\r\n() {_____}\r\n  (\/-@-@-\\)\r\n  {`-=^=-\'}\r\n  {  `-\'  }\r\n   {     }\r\n    `---\'\n\nDeveloped by Ben Kile\n\n")
   }
 
   componentWillUnmount() {
@@ -50,6 +51,7 @@ class App extends Component<{}, AppTypes>{
   //   window.location.replace(process.env.REACT_APP_REDIRECT_URL)
   // }
 
+  
   render() {
 
     return (

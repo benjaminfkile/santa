@@ -1,0 +1,224 @@
+  .cat {
+      --cat-skin: #fff;
+      --cat-pink: #fd79b0;
+      position: absolute;
+      transform: scale(.3);
+      bottom: -40px;
+      left: -45px;
+  }
+
+  .head {
+      background-color: #fff;
+      height: 130px;
+      width: 144px;
+      border-radius: 100px 100px 40px 40px;
+  }
+
+  .left-ear {
+      z-index: -2;
+      position: relative;
+      top: -15px;
+      right: 10px;
+      background-color: var(--cat-skin);
+      height: 40px;
+      width: 40px;
+      border-radius: 60px 4px;
+      transform: rotate(-100deg);
+      border-bottom: 16px solid var(--cat-pink);
+      animation-name: wag-left;
+      animation-duration: 2.5s;
+      animation-iteration-count: infinite;
+      animation-timing-function: ease-in-out;
+      animation-play-state: running;
+  }
+
+  .right-ear {
+      z-index: -2;
+      position: relative;
+      top: -70px;
+      right: -80px;
+      background-color: var(--cat-skin);
+      height: 40px;
+      width: 40px;
+      border-radius: 60px 4px;
+      transform: rotate(-25deg);
+      border-bottom: 16px solid var(--cat-pink);
+      animation-name: wag-right;
+      animation-duration: 3s;
+      animation-iteration-count: infinite;
+      animation-timing-function: ease-in-out;
+      animation-play-state: running;
+  }
+
+  @keyframes wag-right {
+      0% {
+          -webkit-transform: rotate(-20deg);
+      }
+
+      50% {
+          -webkit-transform: rotate(-60deg);
+      }
+
+      100% {
+          -webkit-transform: rotate(-20deg);
+      }
+  }
+
+  @keyframes wag-left {
+      0% {
+          -webkit-transform: rotate(-70deg);
+      }
+
+      50% {
+          -webkit-transform: rotate(-90deg);
+      }
+
+      100% {
+          -webkit-transform: rotate(-70deg);
+      }
+  }
+
+  .left-eye,
+  .right-eye {
+      background-color: #000;
+      height: 14px;
+      width: 12px;
+      border-radius: 100px;
+      position: relative;
+      transform: rotate(-12deg);
+      animation-name: blink;
+      animation-duration: 6s;
+      animation-iteration-count: infinite;
+      animation-timing-function: ease-in-out;
+      animation-play-state: running;
+  }
+
+  .left-eye {
+      top: -16px;
+      right: -30px;
+  }
+
+  .right-eye {
+      top: -38px;
+      right: -85px;
+  }
+
+  .nose {
+      position: relative;
+      top: -35px;
+      right: -64px;
+      width: 20px;
+      height: 20px;
+      transform: rotate(-12deg);
+  }
+
+  .nose:before,
+  .nose:after {
+      content: '';
+      position: absolute;
+      background-color: var(--cat-pink);
+      height: 10px;
+      width: 6px;
+      border-radius: 50px 50px 0 0;
+  }
+
+  .nose:before {
+      right: 10px;
+      transform: rotate(45deg);
+  }
+
+  .nose:after {
+      transform: rotate(-45deg);
+  }
+
+  .mouth {
+      position: relative;
+      top: -42px;
+      right: -54px;
+      height: 20px;
+      width: 36px;
+      background-color: transparent;
+      transform: rotate(-12deg);
+  }
+
+  .mouth:before,
+  .mouth:after {
+      position: absolute;
+      content: '';
+      border: 2px solid var(--cat-pink);
+      border-bottom: none;
+      height: 4px;
+      width: 15px;
+      border-radius: 60%/10px 10px 0px 0px;
+  }
+
+  .mouth:before {
+      right: 4px;
+      transform: rotate(-130deg);
+  }
+
+  .mouth:after {
+      transform: rotate(130deg);
+      right: 14px;
+  }
+
+  .right-cheek,
+  .left-cheek {
+      position: relative;
+      width: 14px;
+      height: 20px;
+      background-color: var(--cat-pink);
+      border-radius: 100px;
+      filter: blur(6px);
+  }
+
+  .right-cheek {
+      top: -55px;
+      right: -20px;
+      transform: rotate(-12deg);
+  }
+
+  .left-cheek {
+      top: -85px;
+      right: -100px;
+      transform: rotate(-12deg);
+  }
+
+  .right-paw,
+  .left-paw {
+      position: relative;
+      height: 30px;
+      width: 20px;
+      background-color: var(--cat-skin);
+      border-radius: 0px 0px 20px 20px;
+  }
+
+  .right-paw {
+      top: -32px;
+      right: -20px;
+  }
+
+  .left-paw {
+      top: -60px;
+      right: -50px;
+  }
+
+  .tail {
+      top: -86px;
+      right: -120px;
+      position: relative;
+      background-color: var(--cat-skin);
+      height: 16px;
+      width: 100px;
+      border-radius: 0px 100px 100px 0px;
+  }
+
+  .body {
+      position: relative;
+      right: -20px;
+      top: -10px;
+      background-color: var(--cat-skin);
+      height: 60px;
+      width: 120px;
+      border-radius: 0px 30px 20px 20px;
+  }

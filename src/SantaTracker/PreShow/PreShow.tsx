@@ -27,7 +27,6 @@ class PreShow extends Component<PreShowProps, {}> {
                     <div className="preshow-info-card-message">
                         {!message && <p>When he is on the move you can come back here, and it will turn into a tracker to help you locate him.</p>}
                         {message && <p>{message}</p>}
-
                     </div>
                     <div className="preshow-info-card-laughing-santa-wrapper">
                         <LaughingSanta

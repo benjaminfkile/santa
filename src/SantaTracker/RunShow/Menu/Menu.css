@@ -28,7 +28,7 @@
 
 .TrackerMenuContent {
     display: block;
-    border-bottom-left-radius: 10px;
+    border-bottom-left-radius: 5px;
     -webkit-animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
     animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
@@ -39,8 +39,8 @@
 } */
 
 .TrackerMenuThemes {
-    display: grid;
-    grid-template-columns: auto auto auto;
+    display: flex;
+    flex-wrap: wrap;
     padding: 3px;
 }
 
@@ -55,11 +55,16 @@
 
 .TrackerMenuTheme {
     height: 90px;
-    border: 1px solid;
     border-radius: 3px;
     margin: 2px;
     cursor: pointer;
     user-select: none;
+    width: calc(33.33% - 4px);
+}
+
+.TrackerMenuThemeChecked{
+    opacity: .65;
+    border-bottom: 2px solid #00ff3c;
 }
 
 .TrackerMenuTheme img {
@@ -79,15 +84,144 @@
 
 .TrackerMenuMapTypeWrapper {
     display: flex;
+    justify-content: space-evenly;
+    margin-top: -4px;
+    margin-bottom: 2px;
+    padding: 3px;
+}
+
+.TerrainToggle, .RoadMapToggle, .SnowToggle {
+    width: calc(33.33% - 4px);
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.TerrainToggle p, .RoadMapToggle p, .SnowToggle p {
+    font-size: 14px;
+}
+
+#snow-toggled-on{
+    opacity: .65;
+}
+
+#terrain-toggled-off, #terrain-toggled-on, #snow-toggled-on, #snow-toggled-off, #roadmap-toggled-on, #roadmap-toggled-off {
+    display: flex;
+    height: 35px;
+    border: none;
+}
+
+#terrain-toggled-off:focus, #terrain-toggled-on:focus, #snow-toggled-on:focus, #snow-toggled-off:focus, #roadmap-toggled-on:focus, #roadmap-toggled-off:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+#terrain-toggled-on, #snow-toggled-on {
+    border-bottom: solid 2px #00ff3c;
+}
+
+#roadmap-toggled-on, #roadmap-toggled-on {
+    border-bottom: solid 2px #00ff3c;
+}
+
+#terrain-toggled-off p, #terrain-toggled-on p, #snow-toggled-off p, #snow-toggled-on p, #roadmap-toggled-on p, #roadmap-toggled-off p {
+    margin-left: 5px;
+}
+
+#terrain-toggled-on span, #terrain-toggled-off span {
+    margin-left: -2px;
+}
+
+#snow-toggled-on span, #snow-toggled-off span {
+    margin-left: 2px;
+}
+
+.TrackerMenuSantaData {
+    width: calc(100% - 8px);
+    justify-content: left;
     margin-top: -1px;
     margin-bottom: 4px;
+    margin-left: 4px;
+    border-radius: 3px;
+}
+
+.TrackerMenuSantaDataItem {
+    display: flex;
+    height: 35px;
+    line-height: 35px;
+    margin-right: 2px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.TrackerMenuSantaDataItem span {
+    font-size: 27px;
+    margin-top: 5px;
+    margin-right: 5px;
+}
+
+.TrackerMenuSantaDataStandard{
+    background-color: #bdd8bb;
+}
+
+.TrackerMenuSantaDataRetro{
+    background-color: #dfd2ae;
+}
+
+.TrackerMenuSantaDataSilver{
+    background-color: #999998;
+}
+
+.TrackerMenuSantaDataDark{
+    background-color: #434343;
+}
+
+.TrackerMenuSantaDataNight{
+    background-color: #4d5662;
+}
+
+.TrackerMenuSantaDataAubergine{
+    background-color: #2d5f75;
+}
+
+.TrackerMenuSantaDataStandard span, .TrackerMenuSantaDataStandard p{
+    color: #000000;
+}
+
+.TrackerMenuSantaDataRetro span, .TrackerMenuSantaDataRetro p{
+    color: #000000;
+}
+
+.TrackerMenuSantaDataSilver span, .TrackerMenuSantaDataSilver p{
+    color: #000000;
+}
+
+.TrackerMenuSantaDataDark span, .TrackerMenuSantaDataDark p{
+    color: #b5b5b5;
+}
+
+.TrackerMenuSantaDataNight span, .TrackerMenuSantaDataNight p{
+    color: #ffffff;
+}
+
+.TrackerMenuSantaDataAubergine span, .TrackerMenuSantaDataAubergine p{
+    color: #ffffff;
+}
+
+#tracker-menu-location-btn-allowed-silver span{
+    color: #28a745;
 }
 
 .TrackerMenuFooter {
     display: flex;
+<<<<<<< HEAD
     margin-left: 3px;
     margin-right: 5px;
     margin-top: -10px;
+=======
+    margin-left: 4px;
+    margin-right: 4px;
+    padding-bottom: 2px;
+>>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
 }
 
 .TrackerMenuFooter span {
@@ -106,7 +240,7 @@
     user-select: none;
     width: 50px;
     height: 50px;
-    border-radius: 8px;
+    border-radius: 3px;
     text-align: center;
     margin-right: 3px;
     margin-bottom: 3px;
@@ -121,7 +255,11 @@
 }
 
 .TrackerMenuFooterBtn-silver {
+<<<<<<< HEAD
     background-color: #737372b8;
+=======
+    background-color: #737372ba;
+>>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
 }
 
 .TrackerMenuFooterBtn-dark {
@@ -181,12 +319,12 @@
 
 #tracker-menu-location-btn-allowed-silver {
     color: #28a745;
-    background-color: #737372b8;
+    background-color: #737372ba;
 }
 
 #tracker-menu-location-btn-denied-silver {
     color: #dc3545;
-    background-color: #737372b8;
+    background-color: #737372ba;
 }
 
 #tracker-menu-location-btn-allowed-dark {
@@ -219,6 +357,10 @@
     color: #FFFFFF;
 }
 
+#tracker-menu-close-btn-silver {
+    color: #000000;
+}
+
 #tracker-menu-donate-btn-standard span {
     color: #000000;
 }
@@ -228,7 +370,7 @@
 }
 
 #tracker-menu-donate-btn-silver span {
-    color: #000000;
+    color: #ffffff;
 }
 
 #tracker-menu-donate-btn-dark span {
@@ -267,6 +409,7 @@
     color: #ffffff;
 }
 
+<<<<<<< HEAD
 .TerrainToggle {
     width: 93px;
     margin-left: 5px;
@@ -327,6 +470,8 @@
     margin-left: -10px;
 }
 
+=======
+>>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
 #standard-theme-menu-btn {
     background-color: rgba(255, 255, 255, 1);
     color: #666666;
@@ -340,7 +485,6 @@
 
 #standard-theme-menu-content .TrackerMenuTheme {
     background-color: #bdd8bb;
-    border: none;
 }
 
 #standard-theme-menu-content button {
@@ -361,7 +505,6 @@
 
 #retro-theme-menu-content .TrackerMenuTheme {
     background-color: #dfd2ae;
-    border: none;
 }
 
 #retro-theme-menu-content button {
@@ -370,23 +513,23 @@
 }
 
 #silver-theme-menu-btn {
-    background-color: #737372;
+    background-color: #747473;
     color: #f7f7f7;
     box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
     border-radius: 8px;
 }
 
 #silver-theme-menu-content {
-    background-color: #ffffffab;
+    background-color: #ffffff;
+    border: 1px solid #737372ba;
 }
 
 #silver-theme-menu-content .TrackerMenuTheme {
-    background-color: #737372;
-    border: none;
+    background-color: #737372ba;
 }
 
 #silver-theme-menu-content button {
-    background-color: #737372b8;
+    background-color: #737372ba;
     color: black;
 }
 
@@ -398,12 +541,11 @@
 }
 
 #dark-theme-menu-content {
-    background-color: #212121d4;
+    background-color: #2f2d2de6;
 }
 
 #dark-theme-menu-content .TrackerMenuTheme {
     background-color: #434343;
-    border: none;
     color: #b5b5b5;
 }
 
@@ -426,7 +568,6 @@
 #night-theme-menu-content .TrackerMenuTheme {
     background-color: #4d5662;
     color: #FFFFFF;
-    border: none;
 }
 
 #night-theme-menu-content button {
@@ -448,22 +589,10 @@
 #aubergine-theme-menu-content .TrackerMenuTheme {
     background-color: #2d5f75;
     color: #FFFFFF;
-    border: none;
 }
 
 #aubergine-theme-menu-content button {
     background-color: #2d5f75;
-}
-
-.TrackerMenuSantaDatWrapper {
-    display: grid;
-    grid-template-columns: auto auto auto;
-    margin-bottom: 4px;
-    padding: 3px;
-}
-
-.TrackerMenuSantaDatWrapperLeft, .TrackerMenuSantaDatWrapperRight {
-    width: 50%;
 }
 
 .TrackerMenuSantaDatItem {
@@ -509,11 +638,11 @@
 
 #tracker-menu-santa-dat-wrapper-silver {
     /* background-color: #737373; */
-    color: #000000;
+    color: #ffffff;
 }
 
 #tracker-menu-santa-dat-wrapper-silver span {
-    color: #000000;
+    color: #ffffff;
 }
 
 #tracker-menu-santa-dat-wrapper-dark {
@@ -553,6 +682,12 @@
     color: #FFFFFF;
     float: left;
     white-space: nowrap;
+    font-weight: 600;
+}
+
+.DistanceFromUserToSantaTrackerMenu span {
+    margin-left: 13px;
+    margin-right: 8px;
 }
 
 #santa-hat-menu-user-loc {
@@ -569,10 +704,14 @@
 }
 
 #distance-from-user-to-santa-tracker-menu-silver p {
-    color: #000000;
+    color: #ffffff;
 }
 
 #distance-from-user-to-santa-tracker-menu-dark p {
+    color: #b5b5b5;
+}
+
+#distance-from-user-to-santa-tracker-menu-dark span {
     color: #b5b5b5;
 }
 
@@ -580,6 +719,17 @@
     color: #FFFFFF;
 }
 
+#distance-from-user-to-santa-tracker-menu-night span {
+    color: #FFFFFF;
+<<<<<<< HEAD
+=======
+}
+
 #distance-from-user-to-santa-tracker-menu-aubergine p {
     color: #FFFFFF;
+}
+
+#distance-from-user-to-santa-tracker-menu-aubergine span {
+    color: #FFFFFF;
+>>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
 }

@@ -1,12 +1,17 @@
 import { Component } from "react"
 import PreLoader from "../Utils/PreLoader/PreLoader"
-import Endshow from "./EndShow/EndShow"
 import PreShow from "./PreShow/PreShow"
 import Runshow from "./RunShow/Runshow"
+import Endshow from "./EndShow/EndShow"
+
 import "./SantaTracker.css"
+//@ts-ignore
+import NoSleep from 'nosleep.js'
+
 
 interface SantaTrackerProps {
     santaDat: any
+    sponsors: any
 }
 
 type SantaTrackerTypes = {
@@ -19,6 +24,7 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
     loadHandlerInterval: any
     loadHandlerStep = 0
     loadHandlerSpeed = 1000
+    noSleep = new NoSleep()
 
     state = {
         loading: true,
@@ -26,6 +32,11 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
 
     componentDidMount() {
         this.loadHandlerInterval = setInterval(this.loadHandler, this.loadHandlerSpeed)
+        this.noSleep.enable()
+    }
+
+    componentWillUnmount(){
+        this.noSleep.disable()
     }
 
     loadHandler = () => {
@@ -38,15 +49,17 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
 
     render() {
 
-        let loading = this.state.loading
-        let santaDat = this.props.santaDat
+        const props = this.props
+        const state = this.state
+        const loading = state.loading
+        const santaDat = props.santaDat
         let mode = null
         if (santaDat) {
             mode = santaDat.mode + ""
         }
 
-        // mode = "0"
-
+        mode = "2"
+        
         return (
             <div className="SantaTracker">
                 {!loading && santaDat && mode === "0" && <div className="PreShow">

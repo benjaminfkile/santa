@@ -1,12 +1,11 @@
 import { Component } from "react"
 import fundData from "./FundData"
-import axios from "axios"
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar'
 import 'react-circular-progressbar/dist/styles.css'
 
 interface FundsRingProps {
     message?: string
-    ringStrokeWidth? : number
+    ringStrokeWidth?: number
 }
 
 type FundsRingTypes = {
@@ -16,20 +15,21 @@ type FundsRingTypes = {
 class FundsRing extends Component<FundsRingProps, FundsRingTypes> {
 
     progress = 0
-    animationDex = 0;
+    animationDex = -1;
     state = {
         progress: -1
     }
 
     componentDidMount() {
-        if (fundData.percent === -1) {
-            axios.get(`${process.env.REACT_APP_MRS_CLAUS_API_URL}/api/funds/get-fund-status`)
-                .then(res => {
-                    if (res.data.percent) {
-                        fundData.percent = res.data.percent
-                        this.animateProgress()
-                    }
-                })
+        fundData.getFundData()
+        this.checkForFunds()
+    }
+
+    checkForFunds = () => {
+        if (fundData.percent < 0) {
+            setTimeout(() => {
+                this.checkForFunds()
+            }, 500);
         } else {
             this.animateProgress()
         }
@@ -52,8 +52,8 @@ class FundsRing extends Component<FundsRingProps, FundsRingTypes> {
             <div className="FundsRing">
                 {this.state.progress > -1 && <div className="FundsRingContent">
                     <CircularProgressbar
-                        value={this.state.progress + 1}
-                        text={`${this.state.progress + 1}%`}
+                        value={this.state.progress}
+                        text={`${this.state.progress}%`}
                         strokeWidth={this.props.ringStrokeWidth || 5}
                         styles={buildStyles({
                             rotation: 0.25,

@@ -9,9 +9,12 @@ import Night from './MapThemes/Night'
 import Aubergine from './MapThemes/Aubergine'
 import TrackerMenu from "./Menu/Menu"
 import Snow from "../../Utils/Snow/Snow"
+<<<<<<< HEAD
 import projectedRoute from "../../Utils/ProjectedRoute"
+=======
+import SponsorCarousel from "../../Utils/SponsorCarousel/SponsorCarousel";
+>>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
 import "./Runshow.css"
-// import fullScreen from "../../Utils/FullScreen/FullScreen";
 
 class Tracker extends Component {
 
@@ -29,18 +32,21 @@ class Tracker extends Component {
     marker = null
     userToSantaCoords = [{}, {}]
     userToSantaFlightPath = null
+<<<<<<< HEAD
+=======
+    updateinterval = 250
+>>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
     state = {
         lat: 46.833,
         lng: -114.030,
         currentTheme: this.mapThemes[4].title,
         snow: false,
         santaDat: {},
-        distanceFromUserToSanta: null,
+        DistanceFromUserToSanta: null,
         mapCentered: true,
         zoom: 10,
         menuOpen: false,
         test: true,
-        online: null,
         donate: false,
     }
 
@@ -52,15 +58,16 @@ class Tracker extends Component {
         { name: "Albertsons-3", lat: 46.851056, lng: -114.017942, icon: "./res/present-icons/p5.png" }
     ]
 
+<<<<<<< HEAD
+=======
+    componentDidMount() {
+        setInterval(this.getUserLocation, this.updateinterval)
+    }
+>>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
 
     componentWillUnmount() {
         this.wakeLock = false
         this.setState({})
-    }
-
-    update = () => {
-        this.averageUsers()
-        this.getUserLocation()
     }
 
     getUserLocation = () => {
@@ -77,7 +84,7 @@ class Tracker extends Component {
         }
         if (userLocation.disable) {
             this.removePoly()
-            this.setState({ distanceFromUserToSanta: false })
+            this.setState({ DistanceFromUserToSanta: false })
         }
     }
 
@@ -116,49 +123,17 @@ class Tracker extends Component {
         this.handleZoomPinch()
     }
 
-    averageUsers = () => {
-        let total = 0;
-        let rps = this.props.santaDat.rps
-        let dynos = this.props.santaDat.dynos
-        let throttle = this.props.santaDat.throttle
-        total = (rps * dynos) * throttle
-        if (!isNaN(total) && total > 0) {
-            this.setState({ online: (total + "").replace(/\B(?=(\d{3})+(?!\d))/g, ",") })
-        } else {
-            this.setState({ online: 1 })
-        }
-    }
-
-    drawRoutePoly = () => {
-        // console.log("drawing route poly")
-        let color = "#dc35457d"
-        for (let i = 0; i < projectedRoute.length; i++) {
-            if (i < projectedRoute.length - 1) {
-                let coords = []
-                coords.push({ lat: Number(projectedRoute[i].Lat), lng: Number(projectedRoute[i].Lon) })
-                coords.push({ lat: Number(projectedRoute[i + 1].Lat), lng: Number(projectedRoute[i + 1].Lon) })
-                coords = new window.google.maps.Polyline({
-                    path: coords,
-                    color: color,
-                    strokeColor: color,
-                    strokeOpacity: 1,
-                    strokeWeight: 1,
-                })
-                coords.setMap(this.map)
-            }
-        }
-    }
-
     drawUserToSantaPoly = () => {
         this.removePoly()
+        let color = "#28a745"
         let iconSequence = [];
         let circle = {
             "path": "M -2,0 C -1.947018,-2.2209709 1.9520943,-2.1262691 2,0.00422057 2.0378955,1.3546185 1.5682108,2.0631345 1.4372396e-8,2.0560929 -1.7155482,2.0446854 -1.9145886,1.0142836 -2,0.06735507 Z",
-            "fillColor": "#cc2626",
-            "fillOpacity": 0.7,
-            "strokeColor": "#cc2626",
-            "strokeWeight": 13,
-            "scale": 1
+            "fillColor": color,
+            "fillOpacity": 1,
+            "strokeColor": color,
+            "strokeWeight": 25,
+            "scale": 1.5
         }
 
         iconSequence.push(
@@ -170,15 +145,15 @@ class Tracker extends Component {
 
         this.userToSantaFlightPath = new window.google.maps.Polyline({
             path: this.userToSantaCoords,
-            color: "#cc2626",
-            strokeColor: "#cc2626",
+            color: color,
+            strokeColor: color,
             strokeOpacity: 0.7,
             strokeWeight: 1,
             icons: iconSequence
         })
 
         let lengthInMeters = window.google.maps.geometry.spherical.computeLength(this.userToSantaFlightPath.getPath());
-        this.setState({ distanceFromUserToSanta: Math.floor(lengthInMeters * 3.28084) })
+        this.setState({ DistanceFromUserToSanta: Math.floor(lengthInMeters * 3.28084) })
 
         this.userToSantaFlightPath.setMap(this.map);
     }
@@ -220,7 +195,10 @@ class Tracker extends Component {
             },
             styles: this.mapThemes[4].mapTheme
         })
+<<<<<<< HEAD
         // this.drawRoutePoly()
+=======
+>>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
         const self = this
         window.google.maps.event.addListener(map, 'dragstart', function () { self.handleMapDrag() });
     }
@@ -264,9 +242,9 @@ class Tracker extends Component {
                             this.setMapOptions(map)
                             let mapIcon = {
                                 url: './res/santa-icon.png',
-                                scaledSize: new window.google.maps.Size(60, 60),
+                                scaledSize: new window.google.maps.Size(65, 65),
                                 origin: new window.google.maps.Point(0, 0),
-                                anchor: new window.google.maps.Point(22, 28)
+                                anchor: new window.google.maps.Point(35, 58)
                             }
 
                             let santaMarker = new window.google.maps.Marker(
@@ -311,20 +289,30 @@ class Tracker extends Component {
                         menuOpen={this.menuOpen}
                         santaDat={this.props.santaDat}
                         getUserLocation={this.getUserLocation}
+<<<<<<< HEAD
                         distanceFromUserToSanta={this.state.distanceFromUserToSanta}
+=======
+                        DistanceFromUserToSanta={this.state.DistanceFromUserToSanta}
+                        toggleCompass={this.toggleCompass}
+>>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
                     />}
-                    {!userLocation.disable && this.state.distanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
-                        {this.state.distanceFromUserToSanta < 5281 &&
-                            <div id="distance-from-user-to-santa-content-wrapper">
-                                <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
-                                <p>{this.state.distanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
-                            </div>}
-                        {this.state.distanceFromUserToSanta > 5280 &&
-                            <div id="distance-from-user-to-santa-content-wrapper">
-                                <img id="santa-hat" src="./res/santa-hat.png" alt=""></img>
-                                <p> {((this.state.distanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
-                            </div>}
-                    </div>}
+                    <div className="TopLeftInfoWrapper">
+                        {!userLocation.disable && this.state.DistanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
+                            {this.state.DistanceFromUserToSanta < 5281 &&
+                                <div id="distance-from-user-to-santa-content-wrapper">
+                                    <span className="material-icons">person_pin_circle</span>
+                                    {/* <img id="santa-hat" src="./res/santa-hat.png" alt=""></img> */}
+                                    <p>{this.state.DistanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>
+                                </div>}
+                            {this.state.DistanceFromUserToSanta > 5280 &&
+                                <div id="distance-from-user-to-santa-content-wrapper">
+                                    {/* <img id="santa-hat" src="./res/santa-hat.png" alt=""></img> */}
+                                    <span className="material-icons">person_pin_circle</span>
+                                    <p> {((this.state.DistanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>
+                                </div>}
+                        </div>}
+                    </div>
+
                     {!this.state.menuOpen && <div className="FooterControls">
                         {!this.state.mapCentered && <div className="CenterMapBtnWrapper" id={"center-map-btn-wrapper-" + this.state.currentTheme.toLowerCase()}>
                             <div id="center-map-btn"><span className="material-icons" onClick={() => this.userRecenter()}>center_focus_weak</span></div>
@@ -334,12 +322,19 @@ class Tracker extends Component {
                             <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">remove</span></div>
                         </div>}
                     </div>}
+<<<<<<< HEAD
                     {/* {!this.state.menuOpen && this.state.online && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
                         <span className="material-icons">people</span>
                         <p>{this.state.online}</p>
                     </div>} */}
+=======
+>>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
                 </div>}
                 {this.state.snow && <Snow />}
+                <SponsorCarousel
+                    sponsors={this.props.sponsors}
+                    theme={this.state.currentTheme}
+                />
             </div>
         )
     }
