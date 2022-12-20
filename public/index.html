@@ -30,13 +30,13 @@
     -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-KZ7J9J8XGV"></script>
   <script>
-    const analyticsOrigins = ["https://www.semisanta.com"]
+    const analyticsOrigins = ["https://www.semisanta.com", "https://www.semi-santa.com"]
     const useAnalytics = analyticsOrigins.indexOf(window.location.origin) > -1 
     if (useAnalytics) {
       window.dataLayer = window.dataLayer || [];
       function gtag() { dataLayer.push(arguments); }
       gtag("js", new Date());
-      gtag("config", "G-1E2JEK81CG");
+      gtag("config", "G-KZ7J9J8XGV");
       console.log(`Analytics Enabled for ${window.location.origin}`)
     } else {
       console.log(`Analytics Disabled for ${window.location.origin}`)
