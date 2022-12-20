@@ -30,13 +30,6 @@
     -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-KZ7J9J8XGV"></script>
   <script>
-<<<<<<< HEAD
-    if (window.location.origin === "https://www.semi-santa.com") {
-      window.dataLayer = window.dataLayer || [];
-      function gtag() { dataLayer.push(arguments); }
-      gtag("js", new Date());
-      gtag('config', 'G-KZ7J9J8XGV');
-=======
     const analyticsOrigins = ["https://www.406santa.org", "https://www.406santaflyover.org"]
     const useAnalytics = analyticsOrigins.indexOf(window.location.origin) > -1 
     if (useAnalytics) {
@@ -45,12 +38,11 @@
       gtag("js", new Date());
       gtag("config", "G-1E2JEK81CG");
       console.log(`Analytics Enabled for ${window.location.origin}`)
->>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
     } else {
       console.log(`Analytics Disabled for ${window.location.origin}`)
     }
   </script>
-  <title>Semi Santa</title>
+  <title>Semi-Truck Santa</title>
 </head>
 
 <body>

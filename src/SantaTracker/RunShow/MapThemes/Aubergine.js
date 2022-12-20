@@ -80,8 +80,6 @@ const Aubergine =
   },
   {
     "featureType": "poi",
-<<<<<<< HEAD
-=======
     "stylers": [
       {
         "visibility": "on"
@@ -90,7 +88,6 @@ const Aubergine =
   },
   {
     "featureType": "poi",
->>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
     "elementType": "geometry",
     "stylers": [
       {
@@ -145,8 +142,6 @@ const Aubergine =
   },
   {
     "featureType": "road",
-<<<<<<< HEAD
-=======
     "elementType": "labels.icon",
     "stylers": [
       {
@@ -156,7 +151,6 @@ const Aubergine =
   },
   {
     "featureType": "road",
->>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
     "elementType": "labels.text.fill",
     "stylers": [
       {
@@ -211,8 +205,6 @@ const Aubergine =
   },
   {
     "featureType": "transit",
-<<<<<<< HEAD
-=======
     "stylers": [
       {
         "visibility": "on"
@@ -221,7 +213,6 @@ const Aubergine =
   },
   {
     "featureType": "transit",
->>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
     "elementType": "labels.text.fill",
     "stylers": [
       {

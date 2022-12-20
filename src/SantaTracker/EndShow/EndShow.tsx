@@ -11,11 +11,11 @@ class Endshow extends Component {
             <div className="EndShow">
                 <Snow />
                 <div className="SemiSantaHeader">
-                    <p>Semi Santa</p>
+                    <p>Semi-Truck Santa</p>
                 </div>
                 <div className="preshow-info-card">
                     <div className="preshow-info-card-header">
-                        <p id="preshow-info-card-header-p1">Semi Santa has returned to the North Pole! Please check back with us next year to track Semi Santa.</p>
+                        <p id="preshow-info-card-header-p1">Semi-Truck Santa has returned to the North Pole! Please check back with us next year to track Semi-Truck Santa.</p>
                         {/* <p id="preshow-info-card-header-p2">When he starts to move you can interact with the map.</p> */}
                     </div>
                     <div className="preshow-info-card-message">

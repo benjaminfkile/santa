@@ -1,7 +1,7 @@
 import { Component } from "react"
 import axios from "axios"
-import SantaTracker from "./SantaTracker/SantaTracker"
 import 'bootstrap/dist/css/bootstrap.min.css'
+import SantaTracker from "./SantaTracker/SantaTracker"
 
 
 type AppTypes = {

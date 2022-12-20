@@ -213,15 +213,9 @@
 
 .TrackerMenuFooter {
     display: flex;
-<<<<<<< HEAD
-    margin-left: 3px;
-    margin-right: 5px;
-    margin-top: -10px;
-=======
     margin-left: 4px;
     margin-right: 4px;
     padding-bottom: 2px;
->>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
 }
 
 .TrackerMenuFooter span {
@@ -255,11 +249,7 @@
 }
 
 .TrackerMenuFooterBtn-silver {
-<<<<<<< HEAD
-    background-color: #737372b8;
-=======
     background-color: #737372ba;
->>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
 }
 
 .TrackerMenuFooterBtn-dark {
@@ -409,69 +399,6 @@
     color: #ffffff;
 }
 
-<<<<<<< HEAD
-.TerrainToggle {
-    width: 93px;
-    margin-left: 5px;
-}
-
-.RoadMapToggle {
-    width: 93px;
-    margin-left: 4px;
-}
-
-.SnowToggle {
-    width: 96px;
-    margin-left: 4px;
-}
-
-
-.TerrainToggle p, .RoadMapToggle p, .SnowToggle p {
-    font-size: 14px;
-}
-
-
-
-#terrain-toggled-off, #terrain-toggled-on, #snow-toggled-on, #snow-toggled-off, #roadmap-toggled-on, #roadmap-toggled-off {
-    display: flex;
-    height: 35px;
-    padding: 0px;
-    padding-top: 5px;
-    padding-left: 12px;
-    border: none;
-}
-
-#terrain-toggled-off:focus, #terrain-toggled-on:focus, #snow-toggled-on:focus, #snow-toggled-off:focus, #roadmap-toggled-on:focus, #roadmap-toggled-off:focus {
-    outline: none;
-    box-shadow: none;
-}
-
-#terrain-toggled-on, #snow-toggled-on {
-    border-bottom: solid 2px #ffffff;
-}
-
-#roadmap-toggled-on, #roadmap-toggled-on {
-    border-bottom: solid 2px #ffffff;
-}
-
-/* #terrain-toggled-off p, #terrain-toggled-on p, #snow-toggled-off p, #snow-toggled-on p, #roadmap-toggled-on p, #roadmap-toggled-off p {
-    margin-left: 5px;
-} */
-
-#terrain-toggled-on span, #terrain-toggled-off span {
-    margin-left: -2px;
-}
-
-#snow-toggled-on span, #snow-toggled-off span {
-    margin-left: 2px;
-}
-
-#roadmap-toggled-on span, #roadmap-toggled-off span {
-    margin-left: -10px;
-}
-
-=======
->>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
 #standard-theme-menu-btn {
     background-color: rgba(255, 255, 255, 1);
     color: #666666;
@@ -721,8 +648,6 @@
 
 #distance-from-user-to-santa-tracker-menu-night span {
     color: #FFFFFF;
-<<<<<<< HEAD
-=======
 }
 
 #distance-from-user-to-santa-tracker-menu-aubergine p {
@@ -731,5 +656,4 @@
 
 #distance-from-user-to-santa-tracker-menu-aubergine span {
     color: #FFFFFF;
->>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
 }

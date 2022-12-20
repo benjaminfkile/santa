@@ -9,11 +9,6 @@ import Night from './MapThemes/Night'
 import Aubergine from './MapThemes/Aubergine'
 import TrackerMenu from "./Menu/Menu"
 import Snow from "../../Utils/Snow/Snow"
-<<<<<<< HEAD
-import projectedRoute from "../../Utils/ProjectedRoute"
-=======
-import SponsorCarousel from "../../Utils/SponsorCarousel/SponsorCarousel";
->>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
 import "./Runshow.css"
 
 class Tracker extends Component {
@@ -32,10 +27,7 @@ class Tracker extends Component {
     marker = null
     userToSantaCoords = [{}, {}]
     userToSantaFlightPath = null
-<<<<<<< HEAD
-=======
     updateinterval = 250
->>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
     state = {
         lat: 46.833,
         lng: -114.030,
@@ -58,12 +50,9 @@ class Tracker extends Component {
         { name: "Albertsons-3", lat: 46.851056, lng: -114.017942, icon: "./res/present-icons/p5.png" }
     ]
 
-<<<<<<< HEAD
-=======
     componentDidMount() {
         setInterval(this.getUserLocation, this.updateinterval)
     }
->>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
 
     componentWillUnmount() {
         this.wakeLock = false
@@ -195,10 +184,6 @@ class Tracker extends Component {
             },
             styles: this.mapThemes[4].mapTheme
         })
-<<<<<<< HEAD
-        // this.drawRoutePoly()
-=======
->>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
         const self = this
         window.google.maps.event.addListener(map, 'dragstart', function () { self.handleMapDrag() });
     }
@@ -227,13 +212,11 @@ class Tracker extends Component {
             this.autoRecenter()
         }
 
-        // console.log("render")
-
         return (
 
             <div className="TrackerContainer">
-                {!this.state.menuOpen && <div className="SemiSantaHeader">
-                    <p>Semi Santa</p>
+                {!this.state.menuOpen && <div className="SemiSantaHeader" id={`semi-santa-header-${this.state.currentTheme.toLowerCase()}`}>
+                    <p>Semi-Truck Santa</p>
                 </div>}
                 {!this.state.loading && <div>
                     <Map
@@ -289,12 +272,8 @@ class Tracker extends Component {
                         menuOpen={this.menuOpen}
                         santaDat={this.props.santaDat}
                         getUserLocation={this.getUserLocation}
-<<<<<<< HEAD
-                        distanceFromUserToSanta={this.state.distanceFromUserToSanta}
-=======
                         DistanceFromUserToSanta={this.state.DistanceFromUserToSanta}
                         toggleCompass={this.toggleCompass}
->>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
                     />}
                     <div className="TopLeftInfoWrapper">
                         {!userLocation.disable && this.state.DistanceFromUserToSanta && !this.state.menuOpen && <div className="DistanceFromUserToSanta" id={"distance-from-user-to-santa-" + this.state.currentTheme.toLowerCase()}>
@@ -322,19 +301,8 @@ class Tracker extends Component {
                             <div id="zoom-out-btn" onClick={() => this.handleZoomClick("-")}><span className="material-icons">remove</span></div>
                         </div>}
                     </div>}
-<<<<<<< HEAD
-                    {/* {!this.state.menuOpen && this.state.online && <div className="OnlineUsers" id={"online-users-" + this.state.currentTheme.toLowerCase()}>
-                        <span className="material-icons">people</span>
-                        <p>{this.state.online}</p>
-                    </div>} */}
-=======
->>>>>>> 7503efc2a197fad69f69f5cecd5ed9df8860db8a
                 </div>}
                 {this.state.snow && <Snow />}
-                <SponsorCarousel
-                    sponsors={this.props.sponsors}
-                    theme={this.state.currentTheme}
-                />
             </div>
         )
     }
