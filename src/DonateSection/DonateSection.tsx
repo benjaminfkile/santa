@@ -37,12 +37,12 @@ class DonateSection extends Component {
                         <p id="img-credit-donate-i-1">Credit: The Motley Fool</p>
                     </div>
                     <p>
-                        We depend on donations to cover the costs of flight, storage, maintenance, and improvements. 100% of all donations go toward making the Santa flyover happen. We have partnered with the Missoula Downtown Foundation, ensuring that any donation made is tax-deductible. To donate, please click the <strong>Donate</strong> button below, or download and complete the <strong>Donation Form</strong>.
+                        We depend on donations to cover the costs of flight, storage, maintenance, and improvements. 100% of all donations go toward making the Santa flyover happen. We have partnered with the Missoula Downtown Foundation, ensuring that any donation made is tax-deductible. To donate, please click the <strong>Donate</strong> button below.
                     </p>
 
-                    <div className="DonateSectionDonateForm">
+                    {/* <div className="DonateSectionDonateForm">
                         <Button variant="secondary" id="donate-section-donate-btn" onClick={() => this.openLink("https://www.406santa.com/docs/WMSFO%20Donation%20Form.pdf?fbclid=IwAR2ewnMp31T43IrJ_flL_pDqk6-wjnMOiVQUBwOGdqQz6p3uG-mbYqRkJTo")}>Donation Form</Button>
-                    </div>
+                    </div> */}
                 </div>
                 <div className="DonateSectionDonateBtn">
                     <Button id="donate-section-donate-btn" onClick={() => this.openLink("https://donate.stripe.com/cN2eY1aQF9jqgyA7sv")}>Donate</Button>
