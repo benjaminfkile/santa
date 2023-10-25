@@ -44,7 +44,7 @@ class DonateSection extends Component {
                     </div>
                 </div>
                 <div className="DonateSectionDonateBtn">
-                    <Button id="donate-section-donate-btn" onClick={() => this.openLink("https://donations.missouladowntown.com/")}>Donate</Button>
+                    <Button id="donate-section-donate-btn" onClick={() => this.openLink("https://donate.stripe.com/cN2eY1aQF9jqgyA7sv")}>Donate</Button>
                 </div>
 
             </div>
