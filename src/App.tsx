@@ -33,6 +33,7 @@ class App extends Component<{}, AppTypes>{
     fundData.getFundData()
     //eslint-disable-next-line
     console.log("\n  .-\"\"-.\r\n \/,..___\\\r\n() {_____}\r\n  (\/-@-@-\\)\r\n  {`-=^=-\'}\r\n  {  `-\'  }\r\n   {     }\r\n    `---\'\n\nDeveloped by Ben Kile\n\n")
+    console.log("bump")
   }
 
   componentWillUnmount() {
@@ -63,7 +64,7 @@ class App extends Component<{}, AppTypes>{
       })
   }
 
-  
+
   render() {
 
     return (
