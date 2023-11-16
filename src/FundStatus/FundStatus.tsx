@@ -24,7 +24,7 @@ class FundStatus extends Component {
                     <div className="FundStatusRingWrapper">
                         <FundsRing />
                     </div>
-                    <p id="amount-needed">Santa's Goal: $8,000</p>
+                    <p id="amount-needed">Santa's Goal: $5,000</p>
                 </div>
             </div>
         )
