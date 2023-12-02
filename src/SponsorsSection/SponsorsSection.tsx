@@ -85,7 +85,7 @@ class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionSta
                                 <div className="SponsorFooterItem">
                                     {item.website_url && <a href={item.website_url} target="_blank" rel="noreferrer">{item.name}</a>}
                                 </div>
-                                <div className="SponsorFooterItem">
+                                <div className="SponsorFooterItem SponsorFooterItemFB">
                                     {/*@ts-ignore*/}
                                     {item.fb_url && <img src="/res/fb-icon.png" alt="" onClick={() => this.openLink(item.fb_url)} />}
                                 </div>

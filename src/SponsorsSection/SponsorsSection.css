@@ -95,7 +95,7 @@
 .SponsorFooter a {
     color: gray;
     margin-left: 10px;
-    margin-top: 23px;
+    /* margin-top: 23px; */
 }
 
 .SponsorFooter span {
@@ -115,17 +115,29 @@
     user-select: none;
 }
 
+.SponsorFooterItem a {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    margin-top: 10px;
+}
+
 #foo-fml {
     /*************************wtf!!!********************/
     filter: brightness(0) invert(1);
 }
 
-/* #ccf-b--bac-cceb .SponsorLogoWrapper{
-    transform: scale(.8);
-    margin-top: -10px;
-} */
+#efdc-fc-f-e-cb .SponsorLogoWrapper {
+    margin-top: 20px;
+    margin-bottom: -15px;
+    transform: scale(.85);
+}
 
-
+#efdc-fc-f-e-cb .SponsorItemHeader {
+    height: 35px;
+}
 
 @media screen and (min-width: 800px) {
     .SponsorList {

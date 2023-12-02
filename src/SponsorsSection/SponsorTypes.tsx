@@ -9,4 +9,4 @@ type SponsorTypes = {
     hangTime: number
 }
 
-export default SponsorTypes
+export default SponsorTypes//
