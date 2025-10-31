@@ -1,32 +1,46 @@
 import axios from "axios";
 
-let usingFallbackFund = false;
+let lastPercent = -1;
 
+/**
+ * fundData
+ * --------
+ * Periodically fetches the latest fund status, with a one-time retry
+ * using the fallback URL if the primary call fails.
+ */
 const fundData = {
-    percent: -1,
+  percent: lastPercent,
 
-    async getFundData() {
-        const primary = process.env.REACT_APP_MRS_CLAUS_API_URL!;
-        const fallback = process.env.REACT_APP_MRS_CLAUS_API_URL_FALLBACK;
+  async getFundData() {
+    const primary = process.env.REACT_APP_MRS_CLAUS_API_URL!;
+    const fallback = process.env.REACT_APP_MRS_CLAUS_API_URL_FALLBACK;
 
-        const activeUrl = usingFallbackFund && fallback ? fallback : primary;
+    // Attempt primary first
+    try {
+      const res = await axios.get(`${primary}/api/funds/get-fund-status`);
+      if (res.data?.percent !== undefined) {
+        this.percent = res.data.percent;
+      }
+      return;
+    } catch (primaryErr) {
+      console.warn(`[fundData] Primary fetch failed (${primary}).`, primaryErr);
+    }
 
-        try {
-            const res = await axios.get(`${activeUrl}/api/funds/get-fund-status`);
-            if (res.data?.percent !== undefined) {
-                fundData.percent = res.data.percent;
-            }
-        } catch (err) {
-            if (!usingFallbackFund && fallback) {
-                console.warn(
-                    `Primary funds URL failed (${primary}), switching permanently to fallback: ${fallback}`
-                );
-                usingFallbackFund = true;
-            } else {
-                console.error("Failed to fetch fund data:", err);
-            }
+    // If primary fails, try fallback once
+    if (fallback) {
+      try {
+        console.log(`[fundData] Retrying with fallback: ${fallback}`);
+        const res = await axios.get(`${fallback}/api/funds/get-fund-status`);
+        if (res.data?.percent !== undefined) {
+          this.percent = res.data.percent;
         }
-    },
+      } catch (fallbackErr) {
+        console.error("[fundData] Fallback fetch also failed:", fallbackErr);
+      }
+    } else {
+      console.error("[fundData] No fallback URL configured");
+    }
+  },
 };
 
 export default fundData;
