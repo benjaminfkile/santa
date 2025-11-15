@@ -74,7 +74,7 @@ class App extends Component<{}, AppTypes> {
 
   /** Fetch sponsors once (tries primary, falls back if needed) */
   getSponsors = async () => {
-    const primary = `${process.env.REACT_APP_MRS_CLAUS_API_URL}/api/sponsors/get-sponsors`;
+    const primary = `${process.env.REACT_APP_MRS_CLAUS_API_URL}/api/sponsor-cache-open`;
     const fallback = process.env.REACT_APP_MRS_CLAUS_API_URL_FALLBACK
       ? `${process.env.REACT_APP_MRS_CLAUS_API_URL_FALLBACK}/api/sponsors/get-sponsors`
       : undefined;
