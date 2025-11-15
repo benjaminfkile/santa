@@ -49,8 +49,13 @@ class App extends Component<{}, AppTypes> {
     const activeUrl = this.usingFallbackSanta && fallback ? fallback : primary;
 
     try {
-      const res = await axios.get(`${activeUrl}/api/location-data`);
-      this.setState({ santaDat: res.data });
+      const res = await axios.get(`${activeUrl}`);
+      console.log(res)
+      let fixed = res.data
+      if(fixed.lon){
+        fixed.lng = fixed.lon
+      }
+      this.setState({ santaDat: fixed });
     } catch (err) {
       // Switch to fallback permanently if primary fails
       if (!this.usingFallbackSanta && fallback) {

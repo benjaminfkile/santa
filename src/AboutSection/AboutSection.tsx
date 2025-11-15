@@ -31,9 +31,7 @@ class AboutSection extends Component {
                         screaming “Santa” with cheer is what makes this flight a true Christmas Miracle.
                     </p>
                     <div className="AboutSectionContentImg1">
-                        <img id="idfk" src="/res/mdf-logo.png" alt="" />
-                        {/* <img src="https://i.ibb.co/QrCcpqC/e353718c-01b2-46dc-b52a-7853c976bf66-750x422.jpg" alt="Santa" />
-                        <p id="img-credit-about-i-1">Credit: Getty Images/iStockphoto</p> */}
+                        <img id="idfk" src="https://wmsfo-bucket.s3.us-west-2.amazonaws.com/site-content/sponsor_logos/MDF_Lettermark_Wordmark_2Line_FullColor.png" alt="" />
                     </div>
                     <h3>
                         How the Western Montana Santa Flyover organization started:
