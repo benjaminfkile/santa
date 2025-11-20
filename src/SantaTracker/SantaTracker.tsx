@@ -55,6 +55,8 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
             mode = santaDat.mode + ""
         }
 
+        console.log(mode)
+
         //mode = "2"
         
         return (

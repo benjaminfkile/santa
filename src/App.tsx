@@ -50,7 +50,7 @@ class App extends Component<{}, AppTypes> {
     const activeUrl = this.usingFallbackSanta && fallback ? fallback : primary;
     const path = this.usingFallbackSanta
       ? "api/location-data"
-      : "api/location-cache-open"
+      : "api/location-cache"
 
     try {
       const res = await axios.get(`${activeUrl}/${path}`);
@@ -86,7 +86,7 @@ class App extends Component<{}, AppTypes> {
 
     const path = this.usingFallbackSponsors
       ? "api/sponsors/get-sponsors"
-      : "api/sponsor-cache-open";
+      : "api/sponsor-cache";
 
     const url = `${activeBase}/${path}`;
 

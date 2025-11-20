@@ -17,7 +17,7 @@ const fundData = {
 
     // Attempt primary first
     try {
-      const res = await axios.get(`${primary}/api/funds/get-fund-status`);
+      const res = await axios.get(`${primary}/api/funds-status-cache`);
       if (res.data?.percent !== undefined) {
         this.percent = res.data.percent;
       }
