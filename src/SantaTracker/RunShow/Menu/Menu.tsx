@@ -5,6 +5,7 @@ import userLocation from "../../../Utils/UserLocation/UserLocation"
 // import DonateToolKit from "../../../Utils/Donate/DonateToolkit"
 import { Link } from "react-router-dom"
 import "./Menu.css"
+import ChooseCookies from "../../../Utils/ChooseCookies/ChooseCookies"
 
 interface TrackerMenuProps {
     changeTheme: Function
@@ -33,6 +34,7 @@ type TrackerMenuTypes = {
     snow: boolean
     locationPrompt: boolean
     donate: boolean
+    chooseCookies: boolean
 }
 
 class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
@@ -42,7 +44,8 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
         mapTypeId: this.props.mapType,
         snow: false,
         locationPrompt: false,
-        donate: false
+        donate: false,
+        chooseCookies: false
     }
 
     toggleMenu = () => {
@@ -81,9 +84,45 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
         }
     }
 
+    toggleChooseCookies = () => {
+        this.setState({ chooseCookies: !this.state.chooseCookies })
+    }
+
     render() {
 
+        const cookieColors: Record<string, { iconColor: string; }> = {
+            standard: {
+                iconColor: "#A97458",     
+
+            },
+            retro: {
+                iconColor: "#A97458",
+
+            },
+            silver: {
+                iconColor: "#ffffffff", 
+
+            },
+            dark: {
+                iconColor: "#D2A679",
+
+            },
+            night: {
+                iconColor: "#E1C18A",
+
+            },
+            aubergine: {
+                iconColor: "#E1C18A"
+
+            }
+        };
+
+
         const props = this.props
+
+        const theme = this.props.currentTheme.toLowerCase();
+        const cookieTheme = cookieColors[theme] || cookieColors.standard;
+
 
         return (
             <div className="TrackerMenu">
@@ -129,6 +168,20 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                         {userLocation.disable && <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-location-btn-denied-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}>
                             <span className="material-icons">location_disabled</span>
                         </div>}
+                        <div
+                            className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${theme}`}
+                            onClick={this.toggleChooseCookies}
+                        >
+                            <span
+                                className="material-icons"
+                                style={{
+                                    color: cookieTheme.iconColor,
+                                    fontSize: "34px"
+                                }}
+                            >
+                                cookie
+                            </span>
+                        </div>
                         <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`}>
                             <div className="TrackerMenuHomeBtn">
                                 <Link to='/about'>
@@ -145,6 +198,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
                         theme={this.props.currentTheme}
                         getUserLocation={this.props.getUserLocation}
                     />}
+                {this.state.chooseCookies && <ChooseCookies onClose={this.toggleChooseCookies} currentTheme={this.props.currentTheme} />}
             </div>
         )
     }

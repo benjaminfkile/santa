@@ -482,14 +482,14 @@
 }
 
 #night-theme-menu-btn {
-    background-color: rgba(0, 0, 0, .5);
+    background-color: #000000;
     color: #666666;
     box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
     border-radius: 8px;
 }
 
 #night-theme-menu-content {
-    background-color: rgba(0, 0, 0, .5);
+    background-color: #000000;
 }
 
 #night-theme-menu-content .TrackerMenuTheme {

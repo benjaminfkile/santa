@@ -57,7 +57,8 @@ class SponsorCarousel extends Component<SponsorCarouselProps, SponsorCarouselTyp
             this.sponsorDex = 0
         }
         let sponsor: SponsorTypes = this.state.sponsors[this.sponsorDex]
-        this.delay = sponsor.hangTime * 20
+        // this.delay = sponsor.hangTime * 20
+        this.delay = sponsor.hangTime
         this.setState({ sponsor: sponsor })
         setTimeout(() => {
             this.handleCarousel()

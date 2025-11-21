@@ -1,0 +1,120 @@
+/* Core modal wrapper */
+.CookiesModalWrapper .modal-content {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Inner panel that matches theme */
+.CookiesModal {
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.30);
+}
+
+/* Remove excessive bootstrap padding */
+.CookiesModal .modal-body {
+    padding: 8px 6px !important;
+}
+
+.CookiesModal .modal-header,
+.CookiesModal .modal-footer {
+    padding: 6px 8px !important;
+}
+
+/* List item styling */
+.CookiesModal .list-group-item {
+    border-radius: 6px !important;
+    margin-bottom: 6px;
+    padding: 6px 8px !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Cookie name text */
+.CookiesModal .cookie-name {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* Buttons */
+.CookiesModal button {
+    border-radius: 6px !important;
+    font-weight: bold;
+}
+
+/* Christmas badge */
+.CookiesModal .badge {
+    padding: 4px 6px;
+    border-radius: 4px;
+}
+
+/* THEME ADAPTATION */
+
+#standard-theme-cookies-modal {
+    background-color: #ffffffcf;
+    color: #000;
+}
+
+#retro-theme-cookies-modal {
+    background-color: #646f37d1;
+    color: #000;
+}
+
+#silver-theme-cookies-modal {
+    background-color: #ffffff;
+    border: 1px solid #737372ba;
+    color: #000;
+}
+
+#dark-theme-cookies-modal {
+    background-color: #2f2d2de6;
+    color: #b5b5b5;
+}
+
+#night-theme-cookies-modal {
+    background-color: rgba(0, 0, 0);
+    color: #ffffff;
+}
+
+#aubergine-theme-cookies-modal {
+    background-color: #1d2c4dd4;
+    color: #ffffff;
+}
+
+#cookies-modal-list-group-item-night {
+    background-color: #4d5663;
+}
+
+.cookie-name{
+margin-top: 8px;
+}
+
+.cookies-modal-list-group-item {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Christmas Title */
+.CookiesModal .modal-title {
+    width: 100%;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    text-shadow: 0px 1px 2px rgba(0, 0, 0, .3);
+}
+
+/* Make cookie counter cute */
+.CookiesModal .badge-success {
+    background-color: #28a745 !important;
+    font-size: 16px;
+}
+
+/* Ornament separators */
+.CookiesModal hr {
+    border-top: 1px dashed rgba(255, 255, 255, 0.3);
+    margin-top: 6px;
+    margin-bottom: 6px;
+}

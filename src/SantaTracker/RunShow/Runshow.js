@@ -173,6 +173,7 @@ class Tracker extends Component {
             zoomControl: false,
             fullscreenControl: false,
             streetViewControl: false,
+            disableDefaultUI: true,
             gestureHandling: 'greedy',
             mapTypeId: 'terrain',
             mapTypeControlOptions: {

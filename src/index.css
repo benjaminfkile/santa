@@ -6,6 +6,11 @@ html, body {
   font-family: "lucida grande", tahoma, verdana, arial, sans-serif;
 }
 
+.gm-compass {
+    display: none !important;
+}
+
+
 ::-webkit-scrollbar {
   width: 1px;
   height: 1px;
