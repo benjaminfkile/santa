@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Button, ListGroup, Badge, Spinner } from "react-bootstrap";
+import { Modal, Button, Spinner } from "react-bootstrap";
 import axios from "axios";
 import { IReference } from "../../interfaces";
 import "./ChooseCookies.css";
+
+import ChocolateChip from "../../SVG/Cookies/ChocolateChip";
+import Gingerbread from "../../SVG/Cookies/Gingerbread";
+import Snickerdoodle from "../../SVG/Cookies/Snickerdoodle";
+import Sugar from "../../SVG/Cookies/Sugar";
+import Happy from "../../SVG/Cookies/Happy";
 
 interface CookieType {
   cookie_type_id: number;
@@ -91,7 +97,6 @@ const ChooseCookies: React.FC<Props> = ({ onClose, currentTheme }) => {
       setActualRemaining(newRemaining);
       localStorage.setItem("santaCookiesRemaining", String(newRemaining));
 
-      alert("Thanks! Santa loves cookies 🎅🍪");
       onClose();
     } catch (err: any) {
       const msg = err?.response?.data?.message || "Something went wrong";
@@ -109,92 +114,100 @@ const ChooseCookies: React.FC<Props> = ({ onClose, currentTheme }) => {
   };
 
   return (
-    <Modal show centered dialogClassName="CookiesModalWrapper">
-      {/* WRAPPER MUST WRAP EVERYTHING */}
-      <div
-        className="CookiesModal"
-        id={`${currentTheme.toLowerCase()}-theme-cookies-modal`}
-      >
-        <Modal.Header closeButton onHide={onClose}>
-          <Modal.Title>🎄 Leave Cookies for Santa 🎄</Modal.Title>
-        </Modal.Header>
+    <Modal
+      id="cookies-modal"
+      show
+      centered
+      className={`CookiesModal CookiesModal${currentTheme}`}
+      onHide={onClose}
+    >
+      <Modal.Header>
+        <div className="CookiesModalHeader">
+          <div className="CookiesModalHeaderIcon">
+            <Happy />
+          </div>
+        </div>
+      </Modal.Header>
 
-        <Modal.Body>
-          {loading ? (
-            <div className="text-center">
+      <Modal.Body>
+        <div className="CookiesModalBody">
+          <div className={`ChooseCookiesInfo ChooseCookiesInfo${currentTheme}`}>
+            {loading ? (
               <Spinner animation="border" />
-              <p>Loading cookie types...</p>
-            </div>
-          ) : (
-            <>
-              <p>
-                You may leave <strong>{MAX_COOKIES}</strong> cookies total per
-                device.
-              </p>
+            ) : displayRemaining > 0 ? (
+              <>Leave up to ({displayRemaining})</>
+            ) : (
+              <>You have no cookies left ❌🍪</>
+            )}
+          </div>
+          <div className="ChooseCookiesCookieItemContainer">
+            {!loading &&
+              cookieTypes.map((c) => {
 
-              <p style={{ fontSize: "1.2rem" }}>
-                Remaining:
-                <Badge
-                  variant={displayRemaining > 0 ? "success" : "secondary"}
-                  style={{ marginLeft: 10 }}
-                >
-                  {displayRemaining}
-                </Badge>
-              </p>
+                const count = selected[c.cookie_type_id] || 0;
+                const plusDisabled = displayRemaining <= 0;
+                const minusDisabled = count <= 0;
 
-              {displayRemaining === 0 && (
-                <p style={{ color: "red", marginBottom: "1rem" }}>
-                  You have already used all your cookies 🎅
-                </p>
-              )}
 
-              <ListGroup>
-                {cookieTypes.map((c) => {
-                  const count = selected[c.cookie_type_id] || 0;
+                return (
+                  <div
+                    key={c.cookie_type_id}
+                    className={`ChooseCookiesCookieItem ChooseCookiesCookieItem${currentTheme}`}
+                  >
+                    <div className="ChooseCookiesCookieItemLeft">
+                      <div className="ChooseCookiesCookieItemIcon">
+                        {c.cookie_type_id === 1 && <ChocolateChip />}
+                        {c.cookie_type_id === 2 && <Sugar />}
+                        {c.cookie_type_id === 3 && <Snickerdoodle />}
+                        {c.cookie_type_id === 4 && <Gingerbread />}
+                      </div>
 
-                  return (
-                    <ListGroup.Item key={c.cookie_type_id}
-                      id={`cookies-modal-list-group-item-${currentTheme.toLowerCase()}`}
-                    >
-                      <div className="cookies-modal-list-group-item">
-                        <div className="cookie-name" style={{ flex: 1 }}>
-                          {c.name}
-                          {count > 0 && (
-                            <Badge
-                              variant="primary"
-                              style={{ marginLeft: 10 }}
-                            >
-                              ×{count}
-                            </Badge>
-                          )}
-                        </div>
+                      <div className="ChooseCookiesCookieItemName">
+                        {c.name}
+                      </div>
+                    </div>
 
-                        <Button
-                          variant="light"
-                          disabled={displayRemaining <= 0}
-                          onClick={() => addCookie(c.cookie_type_id)}
-                          style={{ marginRight: 10 }}
+                    <div className="ChooseCookiesCookieItemRight">
+                      <div className="ChooseCookiesCookieItemCount">
+                        ({count})
+                      </div>
+
+                      <div
+                        className={`ChooseCookiesCookieItemButtons ChooseCookiesCookieItemButtons${currentTheme}`}
+                      >
+                        {/* PLUS BUTTON */}
+                        <div
+                          className={`ChooseCookiesCookieItemButton ChooseCookiesCookieItemButton${currentTheme} ChooseCookiesCookieItemButton${plusDisabled ? "Disabled" : "Enabled"
+                            }`}
+                          onClick={() => {
+                            if (!plusDisabled) addCookie(c.cookie_type_id);
+                          }}
                         >
                           +
-                        </Button>
+                        </div>
 
-                        <Button
-                          variant="light"
-                          disabled={count <= 0}
-                          onClick={() => removeCookie(c.cookie_type_id)}
+                        {/* MINUS BUTTON */}
+                        <div
+                          className={`ChooseCookiesCookieItemButton ChooseCookiesCookieItemButton${currentTheme} ChooseCookiesCookieItemButton${minusDisabled ? "Disabled" : "Enabled"
+                            }`}
+                          onClick={() => {
+                            if (!minusDisabled) removeCookie(c.cookie_type_id);
+                          }}
                         >
-                          –
-                        </Button>
+                          -
+                        </div>
                       </div>
-                    </ListGroup.Item>
-                  );
-                })}
-              </ListGroup>
-            </>
-          )}
-        </Modal.Body>
+                    </div>
+                  </div>
+                );
+              }
+              )}
+          </div>
+        </div>
+      </Modal.Body>
 
-        <Modal.Footer>
+      <Modal.Footer>
+        <div className="CookiesModalFooter">
           <Button variant="secondary" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
@@ -206,8 +219,8 @@ const ChooseCookies: React.FC<Props> = ({ onClose, currentTheme }) => {
           >
             {submitting ? "Submitting..." : "Leave Cookies"}
           </Button>
-        </Modal.Footer>
-      </div>
+        </div>
+      </Modal.Footer>
     </Modal>
   );
 };

@@ -11,6 +11,7 @@ import TrackerMenu from "./Menu/Menu"
 import Snow from "../../Utils/Snow/Snow"
 import SponsorCarousel from "../../Utils/SponsorCarousel/SponsorCarousel";
 import "./Runshow.css"
+import Cookies from "../../Cookies/Cookies";
 
 class Tracker extends Component {
 
@@ -28,7 +29,7 @@ class Tracker extends Component {
     marker = null
     userToSantaCoords = [{}, {}]
     userToSantaFlightPath = null
-    updateinterval = 250
+    updateinterval = 1000
     state = {
         lat: 46.833,
         lng: -114.030,
@@ -212,6 +213,8 @@ class Tracker extends Component {
             this.autoRecenter()
         }
 
+        const cookiesShifted = !userLocation.disable && this.state.DistanceFromUserToSanta
+
         return (
 
             <div className="TrackerContainer">
@@ -267,6 +270,12 @@ class Tracker extends Component {
                                 </div>}
                         </div>}
                     </div>
+
+                    {!this.state.menuOpen && this.props.santaDat?.cookies && (
+                        <div className={`CookiesWrapper CookiesWrapper${cookiesShifted ? "B" : "A"}`}>
+                            <Cookies cookies={this.props.santaDat.cookies} theme={this.state.currentTheme} />
+                        </div>
+                     )}
 
                     {!this.state.menuOpen && <div className="FooterControls">
                         {!this.state.mapCentered && <div className="CenterMapBtnWrapper" id={"center-map-btn-wrapper-" + this.state.currentTheme.toLowerCase()}>

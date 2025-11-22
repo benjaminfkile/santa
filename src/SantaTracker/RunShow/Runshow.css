@@ -92,15 +92,15 @@
 }
 
 #distance-from-user-to-santa-silver {
-  background-color: #737372;
+  background-color: #C7D3DD;
   border-radius: 8px;
   box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
-  color: #f7f7f7;
+  color: #000000;
   font-weight: 500;
 }
 
 #distance-from-user-to-santa-dark {
-  background-color: #ffffff1c;
+  background-color: #434343;
   border-radius: 8px;
   box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
   color: #929292;
@@ -108,7 +108,7 @@
 }
 
 #distance-from-user-to-santa-aubergine {
-  background-color: #21556cad;
+  background-color: #2d5f75;
   border-radius: 8px;
   box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
   color: #929292;
@@ -175,15 +175,15 @@ body {
 }
 
 #map-zoom-wrapper-silver {
-  background-color: #737372;
+  background-color: #C7D3DD;
 }
 
 #map-zoom-wrapper-silver span {
-  color: #f7f7f7;
+  color: #000000;
 }
 
 #map-zoom-wrapper-dark {
-  background-color: #ffffff1c;
+  background-color: #434343;
 }
 
 #map-zoom-wrapper-dark span {
@@ -191,7 +191,7 @@ body {
 }
 
 #map-zoom-wrapper-aubergine {
-  background-color: #21556cad;
+  background-color: #2d5f75;
 }
 
 #map-zoom-wrapper-aubergine span {
@@ -269,7 +269,7 @@ body {
 }
 
 #center-map-btn-wrapper-silver {
-  background-color: #737372;
+  background-color: #C7D3DD;
   border-radius: 8px;
   box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
   display: block;
@@ -279,7 +279,7 @@ body {
 }
 
 #center-map-btn-wrapper-dark {
-  background-color: #ffffff1c;
+  background-color: #434343;
   border-radius: 8px;
   box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
   display: block;
@@ -289,7 +289,7 @@ body {
 }
 
 #center-map-btn-wrapper-aubergine {
-  background-color: #21556cad;
+  background-color: #2d5f75;
   border-radius: 8px;
   box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
   display: block;
@@ -303,7 +303,7 @@ body {
 }
 
 #center-map-btn-wrapper-silver {
-  color: #f7f7f7;
+  color: #000000;
 }
 
 #center-map-btn-wrapper-dark span, #center-map-btn-wrapper-aubergine span {
@@ -317,6 +317,20 @@ body {
   width: 40px;
   height: 40px;
   background-color: white;
+}
+
+.CookiesWrapper{
+    position: fixed;
+    left: 5px;  
+}
+
+.CookiesWrapperA{
+    top: 5px;
+
+}
+
+.CookiesWrapperB{
+  top: 45px;
 }
 
 @-webkit-keyframes slide-in-right {

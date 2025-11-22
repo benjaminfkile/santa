@@ -1,120 +1,216 @@
-/* Core modal wrapper */
-.CookiesModalWrapper .modal-content {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
+/* Target Bootstrap modal sections correctly */
+#cookies-modal .modal-header,
+#cookies-modal .modal-body,
+#cookies-modal .modal-footer {
+    margin: 0px;
+    padding: 0px;
 }
 
-/* Inner panel that matches theme */
-.CookiesModal {
-    border-radius: 8px;
-    padding: 10px 12px;
-    box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.30);
+.CookiesModalHeader {
+    width: 100%;
+    height: 200px;
+    text-align: center;
 }
 
-/* Remove excessive bootstrap padding */
-.CookiesModal .modal-body {
-    padding: 8px 6px !important;
+.CookiesModalHeaderIcon svg {
+    height: 180px;
 }
 
-.CookiesModal .modal-header,
-.CookiesModal .modal-footer {
-    padding: 6px 8px !important;
-}
-
-/* List item styling */
-.CookiesModal .list-group-item {
-    border-radius: 6px !important;
-    margin-bottom: 6px;
-    padding: 6px 8px !important;
+.ChooseCookiesInfo {
+    height: 50px;
     display: flex;
+    justify-content: center;
     align-items: center;
+}
+
+.ChooseCookiesCookieItem {
+    height: 48px;
+    line-height: 48px;
+    display: flex;
     justify-content: space-between;
-}
-
-/* Cookie name text */
-.CookiesModal .cookie-name {
-    font-size: 16px;
-    font-weight: 600;
-}
-
-/* Buttons */
-.CookiesModal button {
-    border-radius: 6px !important;
-    font-weight: bold;
-}
-
-/* Christmas badge */
-.CookiesModal .badge {
-    padding: 4px 6px;
+    margin-bottom: 8px;
+    margin-left: 5px;
+    margin-right: 5px;
     border-radius: 4px;
 }
 
-/* THEME ADAPTATION */
-
-#standard-theme-cookies-modal {
-    background-color: #ffffffcf;
-    color: #000;
-}
-
-#retro-theme-cookies-modal {
-    background-color: #646f37d1;
-    color: #000;
-}
-
-#silver-theme-cookies-modal {
-    background-color: #ffffff;
-    border: 1px solid #737372ba;
-    color: #000;
-}
-
-#dark-theme-cookies-modal {
-    background-color: #2f2d2de6;
-    color: #b5b5b5;
-}
-
-#night-theme-cookies-modal {
-    background-color: rgba(0, 0, 0);
-    color: #ffffff;
-}
-
-#aubergine-theme-cookies-modal {
-    background-color: #1d2c4dd4;
-    color: #ffffff;
-}
-
-#cookies-modal-list-group-item-night {
-    background-color: #4d5663;
-}
-
-.cookie-name{
-margin-top: 8px;
-}
-
-.cookies-modal-list-group-item {
-    width: 100%;
+.ChooseCookiesCookieItemLeft {
     display: flex;
+}
+
+.ChooseCookiesCookieItemRight {
+    display: flex;
+}
+
+.CookiesItemCount {
+    margin-right: 6px;
+    font-weight: 600;
+}
+
+.ChooseCookiesCookieItemIcon svg {
+    width: 38px;
+    height: 38px;
+    margin: 6px;
+    margin-top: 0px;
+}
+
+.ChooseCookiesCookieItemButtons {
+    display: flex;
+    width: 100px;
+    padding: 2px;
+}
+
+.ChooseCookiesCookieItemButton {
+    border-radius: 4px;
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+    margin-left: 2px;
+    margin-right: 2px;
+    text-align: center;
+    font-size: 28px;
+    cursor: pointer;
+    user-select: none;
+}
+
+
+.CookiesModalFooter {
+    display: flex;
+    width: 100%;
     justify-content: space-between;
 }
 
-/* Christmas Title */
-.CookiesModal .modal-title {
-    width: 100%;
-    text-align: center;
-    font-size: 20px;
-    font-weight: 700;
-    text-shadow: 0px 1px 2px rgba(0, 0, 0, .3);
+
+/*Night*/
+.CookiesModalNight .modal-content {
+    background-color: #000000 !important;
 }
 
-/* Make cookie counter cute */
-.CookiesModal .badge-success {
-    background-color: #28a745 !important;
-    font-size: 16px;
+.ChooseCookiesCookieItemButtonNight {
+    background-color: #000000;
 }
 
-/* Ornament separators */
-.CookiesModal hr {
-    border-top: 1px dashed rgba(255, 255, 255, 0.3);
-    margin-top: 6px;
-    margin-bottom: 6px;
+.ChooseCookiesCookieItemButtonNight.ChooseCookiesCookieItemButtonDisabled {
+    color: rgb(124, 124, 124) !important;
+}
+
+.ChooseCookiesCookieItemNight {
+    background-color: #4d5663;
+    color: #ffffff;
+}
+
+.ChooseCookiesInfoNight {
+    color: #ffffff;
+}
+
+
+/*Silver*/
+.CookiesModalSilver .modal-content {
+    background-color: #ffffff !important;
+}
+
+.ChooseCookiesCookieItemButtonSilver {
+    background-color: #ffffff;
+}
+
+.ChooseCookiesCookieItemButtonSilver.ChooseCookiesCookieItemButtonDisabled {
+    color: #6c757d !important;
+}
+
+.ChooseCookiesCookieItemSilver {
+    background-color: #d6dfe6;
+    color: #000000;
+}
+
+.ChooseCookiesInfoSilver {
+    color: #000000;
+}
+
+
+/*Standard*/
+.CookiesModalStandard .modal-content {
+    background-color: #ffffff !important;
+}
+
+.ChooseCookiesCookieItemButtonStandard {
+    background-color: #ffffff;
+}
+
+.ChooseCookiesCookieItemButtonStandard.ChooseCookiesCookieItemButtonDisabled {
+    color: #6c757d !important;
+}
+
+.ChooseCookiesCookieItemStandard {
+    background-color: #bdd8bb;
+    color: #000000;
+}
+
+.ChooseCookiesInfoStandard {
+    color: #000000;
+}
+
+/*Retro*/
+.CookiesModalRetro .modal-content {
+    background-color: #dfd2ae !important;
+}
+
+.ChooseCookiesCookieItemButtonRetro {
+    background-color: #dfd2ae;
+}
+
+.ChooseCookiesCookieItemButtonRetro.ChooseCookiesCookieItemButtonDisabled {
+    color: #6c757d !important;
+}
+
+.ChooseCookiesCookieItemRetro {
+    background-color: #7c8250;
+    color: #000000;
+}
+
+.ChooseCookiesInfoRetro {
+    color: #000000;
+}
+
+/*Dark*/
+.CookiesModalDark .modal-content {
+    background-color: #2d2c2c !important;
+}
+
+.ChooseCookiesCookieItemButtonDark {
+    background-color: #000000;
+}
+
+.ChooseCookiesCookieItemButtonDark.ChooseCookiesCookieItemButtonDisabled {
+    color: #6c757d !important;
+}
+
+.ChooseCookiesCookieItemDark {
+    background-color: #434343;
+    color: #ffffff;
+}
+
+.ChooseCookiesInfoDark {
+    color: #ffffff;
+}
+
+/*Aubergine*/
+.CookiesModalAubergine .modal-content {
+    background-color: #1d2c4dd4 !important;
+}
+
+.ChooseCookiesCookieItemButtonAubergine {
+    background-color: #1d2c4dd4;
+}
+
+.ChooseCookiesCookieItemButtonAubergine.ChooseCookiesCookieItemButtonDisabled {
+    color: #6c757d !important;
+}
+
+.ChooseCookiesCookieItemAubergine {
+    background-color: #2d5f75;
+    color: #ffffff;
+}
+
+.ChooseCookiesInfoAubergine {
+    color: #ffffff;
 }

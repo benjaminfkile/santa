@@ -100,7 +100,7 @@ class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
 
             },
             silver: {
-                iconColor: "#ffffffff", 
+                iconColor: "#D2A679", 
 
             },
             dark: {

@@ -54,7 +54,7 @@ class App extends Component<{}, AppTypes> {
 
     try {
       const res = await axios.get(`${activeUrl}/${path}`);
-      console.log(res)
+      //console.log(res)
       let fixed = res.data
       if (fixed.lon) {
         fixed.lng = fixed.lon
