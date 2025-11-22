@@ -38,7 +38,9 @@ const Cookies: FunctionComponent<Props> = ({ cookies, theme }) => {
                     </div>
 
                     <div className="CookiesItemRight">
-                        <div className="CookiesItemCount">{cookie.total}</div>
+                        <div className="CookiesItemCount">
+                            {Number(cookie.total).toLocaleString()}
+                        </div>
                     </div>
                 </div>
             ))}

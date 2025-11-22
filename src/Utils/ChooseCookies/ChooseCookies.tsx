@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button, Spinner } from "react-bootstrap";
 import axios from "axios";
 import { IReference } from "../../interfaces";
-import "./ChooseCookies.css";
 
 import ChocolateChip from "../../SVG/Cookies/ChocolateChip";
 import Gingerbread from "../../SVG/Cookies/Gingerbread";
 import Snickerdoodle from "../../SVG/Cookies/Snickerdoodle";
 import Sugar from "../../SVG/Cookies/Sugar";
 import Happy from "../../SVG/Cookies/Happy";
+
+import authService from "../../Utils/authService";
+import "./ChooseCookies.css";
 
 interface CookieType {
   cookie_type_id: number;
@@ -25,7 +27,6 @@ const MAX_COOKIES = 5;
 const ChooseCookies: React.FC<Props> = ({ onClose, currentTheme }) => {
   const [cookieTypes, setCookieTypes] = useState<CookieType[]>([]);
   const [selected, setSelected] = useState<{ [id: number]: number }>({});
-  const [actualRemaining, setActualRemaining] = useState<number>(MAX_COOKIES);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -39,10 +40,6 @@ const ChooseCookies: React.FC<Props> = ({ onClose, currentTheme }) => {
         );
 
         setCookieTypes(refRes.data.cookieTypes);
-
-        const stored = localStorage.getItem("santaCookiesRemaining");
-        const num = stored ? parseInt(stored, 10) : MAX_COOKIES;
-        setActualRemaining(isNaN(num) ? MAX_COOKIES : num);
       } finally {
         setLoading(false);
       }
@@ -53,10 +50,10 @@ const ChooseCookies: React.FC<Props> = ({ onClose, currentTheme }) => {
   }, []);
 
   const selectedTotal = Object.values(selected).reduce((a, b) => a + b, 0);
-  const displayRemaining = actualRemaining - selectedTotal;
+  const limitReached = selectedTotal >= MAX_COOKIES;
 
   const addCookie = (cookieId: number) => {
-    if (displayRemaining <= 0) return;
+    if (limitReached) return;
 
     setSelected((prev) => ({
       ...prev,
@@ -82,6 +79,7 @@ const ChooseCookies: React.FC<Props> = ({ onClose, currentTheme }) => {
 
     try {
       const payload: { cookie_type_id: number }[] = [];
+
       Object.entries(selected).forEach(([cookieId, count]) => {
         for (let i = 0; i < count; i++) {
           payload.push({ cookie_type_id: Number(cookieId) });
@@ -90,24 +88,19 @@ const ChooseCookies: React.FC<Props> = ({ onClose, currentTheme }) => {
 
       await axios.post(
         `${process.env.REACT_APP_WMSFO_LOCATION_DATA_API_URL}/api/cookies`,
-        payload
+        payload,
+        {
+          headers: {
+            "x-device-id": authService.getDeviceId(),
+            "x-cookie-token": authService.getToken(),
+          },
+        }
       );
-
-      const newRemaining = actualRemaining - selectedTotal;
-      setActualRemaining(newRemaining);
-      localStorage.setItem("santaCookiesRemaining", String(newRemaining));
 
       onClose();
     } catch (err: any) {
       const msg = err?.response?.data?.message || "Something went wrong";
-
-      if (msg.toLowerCase().includes("maximum") || msg.includes("5")) {
-        setActualRemaining(0);
-        localStorage.setItem("santaCookiesRemaining", "0");
-        alert("You've already used all your cookies!");
-      } else {
-        alert(msg);
-      }
+      alert(msg);
     } finally {
       setSubmitting(false);
     }
@@ -134,20 +127,17 @@ const ChooseCookies: React.FC<Props> = ({ onClose, currentTheme }) => {
           <div className={`ChooseCookiesInfo ChooseCookiesInfo${currentTheme}`}>
             {loading ? (
               <Spinner animation="border" />
-            ) : displayRemaining > 0 ? (
-              <>Leave up to ({displayRemaining})</>
             ) : (
-              <>You have no cookies left ❌🍪</>
+              <>Choose up to ({MAX_COOKIES}) cookies</>
             )}
           </div>
+
           <div className="ChooseCookiesCookieItemContainer">
             {!loading &&
               cookieTypes.map((c) => {
-
                 const count = selected[c.cookie_type_id] || 0;
-                const plusDisabled = displayRemaining <= 0;
+                const plusDisabled = limitReached;
                 const minusDisabled = count <= 0;
-
 
                 return (
                   <div
@@ -175,10 +165,10 @@ const ChooseCookies: React.FC<Props> = ({ onClose, currentTheme }) => {
                       <div
                         className={`ChooseCookiesCookieItemButtons ChooseCookiesCookieItemButtons${currentTheme}`}
                       >
-                        {/* PLUS BUTTON */}
                         <div
-                          className={`ChooseCookiesCookieItemButton ChooseCookiesCookieItemButton${currentTheme} ChooseCookiesCookieItemButton${plusDisabled ? "Disabled" : "Enabled"
-                            }`}
+                          className={`ChooseCookiesCookieItemButton ChooseCookiesCookieItemButton${currentTheme} ${
+                            plusDisabled ? "Disabled" : "Enabled"
+                          }`}
                           onClick={() => {
                             if (!plusDisabled) addCookie(c.cookie_type_id);
                           }}
@@ -186,10 +176,10 @@ const ChooseCookies: React.FC<Props> = ({ onClose, currentTheme }) => {
                           +
                         </div>
 
-                        {/* MINUS BUTTON */}
                         <div
-                          className={`ChooseCookiesCookieItemButton ChooseCookiesCookieItemButton${currentTheme} ChooseCookiesCookieItemButton${minusDisabled ? "Disabled" : "Enabled"
-                            }`}
+                          className={`ChooseCookiesCookieItemButton ChooseCookiesCookieItemButton${currentTheme} ${
+                            minusDisabled ? "Disabled" : "Enabled"
+                          }`}
                           onClick={() => {
                             if (!minusDisabled) removeCookie(c.cookie_type_id);
                           }}
@@ -200,8 +190,7 @@ const ChooseCookies: React.FC<Props> = ({ onClose, currentTheme }) => {
                     </div>
                   </div>
                 );
-              }
-              )}
+              })}
           </div>
         </div>
       </Modal.Body>

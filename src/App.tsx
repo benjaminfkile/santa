@@ -9,8 +9,8 @@ import SponsorsSection from "./SponsorsSection/SponsorsSection";
 import ContactSection from "./ContactSection/ContactSection";
 import fundData from "./Utils/FundsRing/FundData";
 import SponsorTypes from "./SponsorsSection/SponsorTypes";
+import authService from "./Utils/authService";
 import "bootstrap/dist/css/bootstrap.min.css";
-
 
 type AppTypes = {
   santaDat: any;
@@ -42,33 +42,50 @@ class App extends Component<{}, AppTypes> {
     clearTimeout(this.getSantaInterval);
   }
 
-  /** Fetches Santa data every 5 seconds. Once the primary fails, permanently switches to fallback. */
+  /** Fetches Santa data every 5 seconds.
+   * If primary fails → try fallback.
+   * If fallback succeeds → next cycle starts at primary again.
+   * If primary fails again → repeat the cycle.
+   */
   getSanta = async (): Promise<void> => {
     const primary = process.env.REACT_APP_WMSFO_LOCATION_DATA_API_URL!;
     const fallback = process.env.REACT_APP_WMSFO_LOCATION_DATA_API_URL_FALLBACK;
 
-    const activeUrl = this.usingFallbackSanta && fallback ? fallback : primary;
-    const path = this.usingFallbackSanta
-      ? "api/location-data"
-      : "api/location-cache"
+    // always start with primary every cycle
+    const primaryPath = "api/location-cache";
+    const fallbackPath = "api/location-data";
 
     try {
-      const res = await axios.get(`${activeUrl}/${path}`);
-      //console.log(res)
-      let fixed = res.data
-      if (fixed.lon) {
-        fixed.lng = fixed.lon
-      }
-      this.setState({ santaDat: fixed });
-    } catch (err) {
-      // Switch to fallback permanently if primary fails
-      if (!this.usingFallbackSanta && fallback) {
-        console.warn(
-          `Primary Santa URL failed (${primary}), switching permanently to fallback: ${fallback}`
-        );
-        this.usingFallbackSanta = true;
+      // 1. Try PRIMARY
+      const res = await axios.get(`${primary}/${primaryPath}`, {
+        headers: {
+          "x-device-id": authService.getDeviceId()
+        }
+      });
+      let data = res.data;
+      if (data.lon) data.lng = data.lon;
+
+      authService.token = res.data.cookieToken
+
+      this.setState({ santaDat: data });
+      this.usingFallbackSanta = false; // reset
+    } catch (primaryErr) {
+      console.warn("Primary Santa failed, trying fallback...", primaryErr);
+
+      if (!fallback) {
+        console.error("No fallback available");
       } else {
-        console.error("Failed to fetch Santa data:", err);
+        try {
+          // 2. Try FALLBACK
+          const res = await axios.get(`${fallback}/${fallbackPath}`);
+          let data = res.data;
+          if (data.lon) data.lng = data.lon;
+
+          this.setState({ santaDat: data });
+          this.usingFallbackSanta = true; // this cycle used fallback
+        } catch (fallbackErr) {
+          console.error("Fallback Santa also failed:", fallbackErr);
+        }
       }
     } finally {
       clearTimeout(this.getSantaInterval);
@@ -76,35 +93,36 @@ class App extends Component<{}, AppTypes> {
     }
   };
 
-  /** Fetch sponsors once (tries primary, falls back if needed) */
+
+  /** Fetches sponsors. Always tries primary first, then fallback. */
   getSponsors = async (): Promise<void> => {
-    const primaryBase = process.env.REACT_APP_MRS_CLAUS_API_URL;
-    const fallbackBase = process.env.REACT_APP_MRS_CLAUS_API_URL_FALLBACK;
+    const primary = process.env.REACT_APP_MRS_CLAUS_API_URL;
+    const fallback = process.env.REACT_APP_MRS_CLAUS_API_URL_FALLBACK;
 
-    const activeBase =
-      this.usingFallbackSponsors && fallbackBase ? fallbackBase : primaryBase;
-
-    const path = this.usingFallbackSponsors
-      ? "api/sponsors/get-sponsors"
-      : "api/sponsor-cache";
-
-    const url = `${activeBase}/${path}`;
+    const primaryPath = "api/sponsor-cache";
+    const fallbackPath = "api/sponsors/get-sponsors";
 
     try {
-      const res = await axios.get(url);
+      // Try PRIMARY
+      const res = await axios.get(`${primary}/${primaryPath}`);
       this.setState({ sponsors: res.data });
-    } catch (err) {
-      if (!this.usingFallbackSponsors && fallbackBase) {
-        console.warn(
-          `Primary sponsors URL failed (${primaryBase}), switching permanently to fallback: ${fallbackBase}`
-        );
+      this.usingFallbackSponsors = false;
+    } catch (primaryErr) {
+      console.warn("Primary sponsors failed, trying fallback...", primaryErr);
+
+      if (!fallback) return console.error("No fallback sponsor API available");
+
+      try {
+        // Try FALLBACK
+        const res = await axios.get(`${fallback}/${fallbackPath}`);
+        this.setState({ sponsors: res.data });
         this.usingFallbackSponsors = true;
-        return this.getSponsors(); // retry once using fallback
-      } else {
-        console.error("Failed to fetch sponsors:", err);
+      } catch (fallbackErr) {
+        console.error("Fallback sponsors also failed:", fallbackErr);
       }
     }
   };
+
 
 
   render() {

@@ -2,12 +2,6 @@ import axios from "axios";
 
 let lastPercent = -1;
 
-/**
- * fundData
- * --------
- * Periodically fetches the latest fund status, with a one-time retry
- * using the fallback URL if the primary call fails.
- */
 const fundData = {
   percent: lastPercent,
 
@@ -15,27 +9,29 @@ const fundData = {
     const primary = process.env.REACT_APP_MRS_CLAUS_API_URL!;
     const fallback = process.env.REACT_APP_MRS_CLAUS_API_URL_FALLBACK;
 
-    // Attempt primary first
+    const primaryPath = "api/funds-status-cache";
+    const fallbackPath = "api/funds/get-fund-status";
+
+    // 1. Try PRIMARY
     try {
-      const res = await axios.get(`${primary}/api/funds-status-cache`);
+      const res = await axios.get(`${primary}/${primaryPath}`);
       if (res.data?.percent !== undefined) {
         this.percent = res.data.percent;
       }
-      return;
-    } catch (primaryErr) {
-      console.warn(`[fundData] Primary fetch failed (${primary}).`, primaryErr);
+      return; // success → done
+    } catch (err) {
+      console.warn("[fundData] Primary failed, trying fallback...");
     }
 
-    // If primary fails, try fallback once
+    // 2. Try FALLBACK
     if (fallback) {
       try {
-        console.log(`[fundData] Retrying with fallback: ${fallback}`);
-        const res = await axios.get(`${fallback}/api/funds/get-fund-status`);
+        const res = await axios.get(`${fallback}/${fallbackPath}`);
         if (res.data?.percent !== undefined) {
           this.percent = res.data.percent;
         }
       } catch (fallbackErr) {
-        console.error("[fundData] Fallback fetch also failed:", fallbackErr);
+        console.error("[fundData] Fallback failed:", fallbackErr);
       }
     } else {
       console.error("[fundData] No fallback URL configured");
