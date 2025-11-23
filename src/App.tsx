@@ -51,38 +51,43 @@ class App extends Component<{}, AppTypes> {
     const primary = process.env.REACT_APP_WMSFO_LOCATION_DATA_API_URL!;
     const fallback = process.env.REACT_APP_WMSFO_LOCATION_DATA_API_URL_FALLBACK;
 
-    // always start with primary every cycle
     const primaryPath = "api/location-cache";
     const fallbackPath = "api/location-data";
 
     try {
       // 1. Try PRIMARY
       const res = await axios.get(`${primary}/${primaryPath}`, {
-        headers: {
-          "x-device-id": authService.getDeviceId()
-        }
+        headers: { "x-device-id": authService.getDeviceId() }
       });
+
       let data = res.data;
       if (data.lon) data.lng = data.lon;
 
-      authService.token = res.data.cookieToken
+      // --- UPDATE OCCURS ONLY WHEN PRIMARY SUCCEEDS ---
+      if (typeof data.interval === "number" && data.interval > 0) {
+        this.updateFrequency = data.interval;
+      }
+
+      authService.token = data.cookieToken;
 
       this.setState({ santaDat: data });
-      this.usingFallbackSanta = false; // reset
+      this.usingFallbackSanta = false;
     } catch (primaryErr) {
       console.warn("Primary Santa failed, trying fallback...", primaryErr);
+
+      // --- FALLBACK MUST RESET TO 5000 ---
+      this.updateFrequency = 5000;
 
       if (!fallback) {
         console.error("No fallback available");
       } else {
         try {
-          // 2. Try FALLBACK
           const res = await axios.get(`${fallback}/${fallbackPath}`);
           let data = res.data;
           if (data.lon) data.lng = data.lon;
 
           this.setState({ santaDat: data });
-          this.usingFallbackSanta = true; // this cycle used fallback
+          this.usingFallbackSanta = true;
         } catch (fallbackErr) {
           console.error("Fallback Santa also failed:", fallbackErr);
         }
@@ -92,7 +97,6 @@ class App extends Component<{}, AppTypes> {
       this.getSantaInterval = setTimeout(this.getSanta, this.updateFrequency);
     }
   };
-
 
   /** Fetches sponsors. Always tries primary first, then fallback. */
   getSponsors = async (): Promise<void> => {
@@ -122,8 +126,6 @@ class App extends Component<{}, AppTypes> {
       }
     }
   };
-
-
 
   render() {
     return (
