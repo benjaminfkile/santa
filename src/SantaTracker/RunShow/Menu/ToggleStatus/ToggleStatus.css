@@ -1,0 +1,44 @@
+.ToggleStatus {
+    position: absolute;
+    height: 3px;
+}
+
+/* Positioning */
+.ToggleStatus-bottom {
+    border-radius: 4px;
+}
+
+/* Hide when unchecked */
+.ToggleStatusUnchecked {
+    display: none;
+}
+
+/* Checked underline uses theme color */
+.ToggleStatusChecked {
+    background-color: currentColor;
+}
+
+/* Theme-specific colors (only overrides color) */
+.ToggleStatus-theme-standard {
+    color: #2962ff;
+}
+
+.ToggleStatus-theme-retro {
+    color: #00ff11;
+}
+
+.ToggleStatus-theme-silver {
+    color: #0099ff;
+}
+
+.ToggleStatus-theme-dark {
+    color: #ffffff7c;
+}
+
+.ToggleStatus-theme-night {
+    color: #00eaff7d;
+}
+
+.ToggleStatus-theme-aubergine {
+    color: #ff66cc;
+}

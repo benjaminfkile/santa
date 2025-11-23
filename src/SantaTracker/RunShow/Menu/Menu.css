@@ -1,300 +1,427 @@
-.TrackerMenu {
-    position: fixed;
-    width: 300px;
-    overflow-y: hidden;
-    overflow-x: hidden;
+:root {
+    --tm-padding: 0px;
+    --tm-padding-lg: 0px;
+
+    --tm-gap: 2px;
+    --tm-gap-sm: 5px;
+
+    --tm-btn-size: 50px;
+    --tm-icon-size: 32px;
+
+    --tm-tile-size: 90px;
+    --tm-theme-img-size: 58px;
 }
 
-.TrackerMenuBtn {
-    width: 50px;
-    height: 50px;
-    text-align: center;
+
+
+.TrackerMenu {
     position: fixed;
     top: 5px;
     right: 5px;
+    width: 300px;
+    max-width: 80vw;
+    overflow: hidden;
+    z-index: 10;
+}
+
+/* Menu toggle button */
+.TrackerMenuBtn {
+    position: fixed;
+    right: 0;
+    margin-top: 8px;
+    margin-right: 8px;
+    width: 50px;
+    height: 50px;
+    text-align: center;
     cursor: pointer;
     user-select: none;
-    /* border: 2px solid; */
-    /* border-radius: 50%; */
-    /* background-color: rgba(0, 0, 0, .5); */
 }
 
 .TrackerMenuBtn span {
     font-size: 40px;
     margin-top: 5px;
-    /* -webkit-animation: rotate-center .5s ease-in-out both;
-    animation: rotate-center .5s ease-in-out both; */
 }
+
+/* Main panel */
+/* .TrackerMenuContent {
+    border-bottom-left-radius: 8px;
+    animation: slide-in-right 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.3);
+} */
 
 .TrackerMenuContent {
-    display: block;
-    border-bottom-left-radius: 5px;
-    -webkit-animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
-    animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+    border-bottom-left-radius: 8px;
+    animation: slide-in-right 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.3);
+    padding: var(--tm-padding) var(--tm-padding-lg);
 }
 
-/* ::-webkit-scrollbar {
-    width: 20;
-    background: transparent;
+
+/* Themes grid */
+/* .TrackerMenuThemes {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 6px;
+}
+
+.TrackerMenuTheme {
+    height: 90px;
+    border-radius: 4px;
+    margin: 3px;
+    cursor: pointer;
+    user-select: none;
+    width: calc(33.33% - 6px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
 } */
 
 .TrackerMenuThemes {
     display: flex;
     flex-wrap: wrap;
-    padding: 3px;
+    padding: 0px;
+    padding-left: 4px;
+    padding-top: 2px;
+    padding-bottom: 4px;
 }
-
-/* .TrackerMenuThemes {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-.TrackerMenuThemes::-webkit-scrollbar {
-    display: none;
-} */
 
 .TrackerMenuTheme {
-    height: 90px;
-    border-radius: 3px;
+    height: 96px;
+    width: 96px;
+    border-radius: 4px;
     margin: 2px;
+    margin-left: 0px;
+    margin-bottom: 0px;
     cursor: pointer;
-    user-select: none;
-    width: calc(33.33% - 4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
 }
 
-.TrackerMenuThemeChecked{
-    opacity: .65;
-    border-bottom: 2px solid #00ff3c;
-}
 
 .TrackerMenuTheme img {
     display: block;
-    width: 60px;
-    height: 60px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 5px;
+    width: var(--tm-theme-img-size);
+    height: var(--tm-theme-img-size);
+    margin-top: 6px;
     border-radius: 50%;
 }
 
 .TrackerMenuTheme p {
     text-align: center;
     font-size: 14px;
+    margin: 2px 0 0;
 }
 
-.TrackerMenuMapTypeWrapper {
+
+/* Map type + Snow row */
+/* .TrackerMenuMapTypeRow {
     display: flex;
     justify-content: space-evenly;
-    margin-top: -4px;
-    margin-bottom: 2px;
-    padding: 3px;
+    padding: 0px 6px 6px;
+} */
+
+.TrackerMenuMapTypeRow {
+    display: flex;
+    justify-content: space-evenly;
+    padding-left: 4px;
+    padding-right: 4px;
+    gap: 2px;
 }
 
-.TerrainToggle, .RoadMapToggle, .SnowToggle {
-    width: calc(33.33% - 4px);
-    margin-left: 2px;
-    margin-right: 2px;
+
+.TRSToggle {
+    display: flex;
+    justify-content: center;
+    padding: 4px;
+    width: 33.33%;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
 }
 
-.TerrainToggle p, .RoadMapToggle p, .SnowToggle p {
+.TRSToggle p {
     font-size: 14px;
+    margin-bottom: 0;
 }
 
-#snow-toggled-on{
-    opacity: .65;
-}
-
-#terrain-toggled-off, #terrain-toggled-on, #snow-toggled-on, #snow-toggled-off, #roadmap-toggled-on, #roadmap-toggled-off {
-    display: flex;
-    height: 35px;
-    border: none;
-}
-
-#terrain-toggled-off:focus, #terrain-toggled-on:focus, #snow-toggled-on:focus, #snow-toggled-off:focus, #roadmap-toggled-on:focus, #roadmap-toggled-off:focus {
-    outline: none;
-    box-shadow: none;
-}
-
-#terrain-toggled-on, #snow-toggled-on {
-    border-bottom: solid 2px #00ff3c;
-}
-
-#roadmap-toggled-on, #roadmap-toggled-on {
-    border-bottom: solid 2px #00ff3c;
-}
-
-#terrain-toggled-off p, #terrain-toggled-on p, #snow-toggled-off p, #snow-toggled-on p, #roadmap-toggled-on p, #roadmap-toggled-off p {
-    margin-left: 5px;
-}
-
-#terrain-toggled-on span, #terrain-toggled-off span {
-    margin-left: -2px;
-}
-
-#snow-toggled-on span, #snow-toggled-off span {
-    margin-left: 2px;
-}
-
-.TrackerMenuSantaData {
-    width: calc(100% - 8px);
-    justify-content: left;
-    margin-top: -1px;
-    margin-bottom: 4px;
-    margin-left: 4px;
-    border-radius: 3px;
-}
-
-.TrackerMenuSantaDataItem {
-    display: flex;
-    height: 35px;
-    line-height: 35px;
-    margin-right: 2px;
-    padding-left: 5px;
-    padding-right: 5px;
-}
-
-.TrackerMenuSantaDataItem span {
-    font-size: 27px;
-    margin-top: 5px;
-    margin-right: 5px;
-}
-
-.TrackerMenuSantaDataStandard{
-    background-color: #bdd8bb;
-}
-
-.TrackerMenuSantaDataRetro{
-    background-color: #dfd2ae;
-}
-
-.TrackerMenuSantaDataSilver{
-    background-color: #C7D3DDba;
-}
-
-.TrackerMenuSantaDataDark{
-    background-color: #434343;
-}
-
-.TrackerMenuSantaDataNight{
+.TRSToggle-night {
     background-color: #4d5662;
+    color: #ffffff;
 }
 
-.TrackerMenuSantaDataAubergine{
-    background-color: #2d5f75;
-}
-
-.TrackerMenuSantaDataStandard span, .TrackerMenuSantaDataStandard p{
+.TRSToggle-standard {
+    background-color: #bdd8bb;
     color: #000000;
 }
 
-.TrackerMenuSantaDataRetro span, .TrackerMenuSantaDataRetro p{
+.TRSToggle-retro {
+    background-color: #dfd2ae;
     color: #000000;
 }
 
-.TrackerMenuSantaDataSilver span, .TrackerMenuSantaDataSilver p{
+.TRSToggle-silver {
+    background-color: #c7d3ddba;
     color: #000000;
 }
 
-.TrackerMenuSantaDataDark span, .TrackerMenuSantaDataDark p{
+.TRSToggle-dark {
+    background-color: #434343;
     color: #b5b5b5;
 }
 
-.TrackerMenuSantaDataNight span, .TrackerMenuSantaDataNight p{
+.TRSToggle-aubergine {
+    background-color: #2d5f75;
     color: #ffffff;
 }
 
-.TrackerMenuSantaDataAubergine span, .TrackerMenuSantaDataAubergine p{
-    color: #ffffff;
+/* Santa data */
+/* .TrackerMenuSantaData {
+    width: calc(100% - 8px);
+    margin: 0 4px 4px;
+    border-radius: 4px;
+    padding: 4px 6px;
+} */
+
+.TrackerMenuSantaData {
+    width: calc(100% - 8px);
+    margin-top: 4px;
+    margin-left: 4px;
+    margin-right: 4px;
+    gap: 2px;
+    border-radius: 4px;
+    padding-top: 4px;
+    padding-bottom: 4px;
 }
 
-#tracker-menu-location-btn-allowed-silver span{
-    color: #28a745;
+
+.TrackerMenuSantaDataItem {
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
 }
+
+.TrackerMenuSantaDataItem span {
+    font-size: 32px;
+    margin-right: 4px;
+    margin-left: 8px;
+}
+
+.TrackerMenuSantaDataItem p {
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Theme-specific Santa data backgrounds */
+.TrackerMenuSantaDataStandard {
+    background-color: #bdd8bb;
+}
+
+.TrackerMenuSantaDataRetro {
+    background-color: #dfd2ae;
+}
+
+.TrackerMenuSantaDataSilver {
+    background-color: #c7d3ddba;
+}
+
+.TrackerMenuSantaDataDark {
+    background-color: #434343;
+}
+
+.TrackerMenuSantaDataNight {
+    background-color: #4d5662;
+}
+
+.TrackerMenuSantaDataAubergine {
+    background-color: #2d5f75;
+}
+
+.TrackerMenuSantaDataStandard span,
+.TrackerMenuSantaDataStandard p {
+    color: #000;
+}
+
+.TrackerMenuSantaDataRetro span,
+.TrackerMenuSantaDataRetro p {
+    color: #000;
+}
+
+.TrackerMenuSantaDataSilver span,
+.TrackerMenuSantaDataSilver p {
+    color: #000;
+}
+
+.TrackerMenuSantaDataDark span,
+.TrackerMenuSantaDataDark p {
+    color: #b5b5b5;
+}
+
+.TrackerMenuSantaDataNight span,
+.TrackerMenuSantaDataNight p {
+    color: #fff;
+}
+
+.TrackerMenuSantaDataAubergine span,
+.TrackerMenuSantaDataAubergine p {
+    color: #fff;
+}
+
+/* Footer section with two rows */
+/* .TrackerMenuFooter {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 4px;
+    padding-bottom: 4px;
+}
+
+.TrackerMenuFooterRow {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+} */
 
 .TrackerMenuFooter {
     display: flex;
-    margin-left: 4px;
-    margin-right: 4px;
-    padding-bottom: 2px;
+    flex-direction: column;
+    margin: 0;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-bottom: 4px;
 }
 
-.TrackerMenuFooter span {
-    font-size: 40px !important;
-    margin-top: 5px;
+.TrackerMenuFooterRow {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--tm-gap);
 }
 
-.TrackerMenuRoutes {
-    position: absolute;
-    width: 100%;
-    bottom: -18px;
+
+/* First row: location, home, close */
+.TrackerMenuFooterRowPrimary {
+    /* justify-content: flex-start; */
 }
 
-.TrackerMenuFooterBtn, .TrackerMenuCloseBtn {
+/* Second row: NEW! + cookie + history */
+.TrackerMenuFooterRowSecondary {
+    justify-content: space-between
+}
+
+.TrackerMenuFooterRowGroup {
+    display: flex;
+    gap: 4px;
+
+}
+
+/* Footer buttons */
+/* .TrackerMenuFooterBtn,
+.TrackerMenuCloseBtn {
     cursor: pointer;
     user-select: none;
     width: 50px;
     height: 50px;
-    border-radius: 3px;
+    border-radius: 4px;
     text-align: center;
-    margin-right: 3px;
-    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+} */
+
+.TrackerMenuFooterBtn,
+.TrackerMenuCloseBtn {
+    cursor: pointer;
+    user-select: none;
+    width: var(--tm-btn-size);
+    height: var(--tm-btn-size);
+    border-radius: 4px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 4px;
 }
 
+
+.TrackerMenuFooter span {
+    font-size: var(--tm-icon-size) !important;
+}
+
+/* NEW label */
+.TrackerMenuNewLabel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    gap: 6px;
+}
+
+.TrackerMenuNewPill {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background-color: #ff4081;
+    color: #ffffff;
+}
+
+/* Theme-colored footer buttons */
 .TrackerMenuFooterBtn-standard {
     background-color: #bdd8bb;
+    color: #000000;
 }
 
 .TrackerMenuFooterBtn-retro {
     background-color: #dfd2ae;
+    color: #000000;
+
 }
 
 .TrackerMenuFooterBtn-silver {
-    background-color: #C7D3DDba;
+    background-color: #c7d3ddba;
+    color: #000000;
+
 }
 
 .TrackerMenuFooterBtn-dark {
     background-color: #434343;
+    color: #b5b5b5;
+
 }
 
 .TrackerMenuFooterBtn-night {
     background-color: #4c5561;
+    color: #FFFFFF;
+
 }
 
 .TrackerMenuFooterBtn-aubergine {
     background-color: #2c5e74;
-}
-
-#tracker-menu-compass-btn-aubergine span, #tracker-menu-compass-btn-night span {
     color: #FFFFFF;
 }
 
-#tracker-menu-compass-btn-dark span {
-    color: #b4b4b4;
+/* Close button theme colors */
+#tracker-menu-close-btn-night {
+    color: #ffffff;
 }
 
-.TrackerMenuCloseBtn {
-    margin-left: auto;
-    margin-right: 0px;
+#tracker-menu-close-btn-dark {
+    color: #b5b5b5;
 }
 
-#tracker-menu-location-btn-allowed-night {
+#tracker-menu-close-btn-aubergine {
+    color: #ffffff;
+}
+
+#tracker-menu-close-btn-silver {
+    color: #000000;
+}
+
+/* Location allowed/denied theme-specific buttons */
+/* #tracker-menu-location-btn-allowed-standard {
     color: #28a745;
-    background-color: #4c5561
-}
-
-#tracker-menu-location-btn-denied-night {
-    color: #dc3545;
-    background-color: #4c5561
-}
-
-#tracker-menu-location-btn-allowed-aubergine {
-    color: #28a745;
-    background-color: #2c5e74;
-}
-
-#tracker-menu-location-btn-denied-aubergine {
-    color: #dc3545;
-    background-color: #2c5e74;
 }
 
 #tracker-menu-location-btn-allowed-retro {
@@ -302,19 +429,14 @@
     background-color: #ded1ad;
 }
 
-#tracker-menu-location-btn-denied-retro {
-    color: #dc3545;
-    background-color: #ded1ad;
-}
-
 #tracker-menu-location-btn-allowed-silver {
     color: #28a745;
-    background-color: #C7D3DDba;
+    background-color: #c7d3ddba;
 }
 
 #tracker-menu-location-btn-denied-silver {
     color: #dc3545;
-    background-color: #C7D3DDba;
+    background-color: #c7d3ddba;
 }
 
 #tracker-menu-location-btn-allowed-dark {
@@ -327,54 +449,27 @@
     background-color: #434343;
 }
 
-#tracker-menu-location-btn-allowed-standard {
+#tracker-menu-location-btn-allowed-night {
     color: #28a745;
+    background-color: #4c5561;
 }
 
-#tracker-menu-location-btn-denied-standard {
-    color: #dc3545
+#tracker-menu-location-btn-denied-night {
+    color: #dc3545;
+    background-color: #4c5561;
 }
 
-#tracker-menu-close-btn-night {
-    color: #ffffff;
+#tracker-menu-location-btn-allowed-aubergine {
+    color: #28a745;
+    background-color: #2c5e74;
 }
 
-#tracker-menu-close-btn-dark {
-    color: #b5b5b5;
-}
+#tracker-menu-location-btn-denied-aubergine {
+    color: #dc3545;
+    background-color: #2c5e74;
+} */
 
-#tracker-menu-close-btn-aubergine {
-    color: #FFFFFF;
-}
-
-#tracker-menu-close-btn-silver {
-    color: #000000;
-}
-
-#tracker-menu-donate-btn-standard span {
-    color: #000000;
-}
-
-#tracker-menu-donate-btn-retro span {
-    color: #000000;
-}
-
-#tracker-menu-donate-btn-silver span {
-    color: #ffffff;
-}
-
-#tracker-menu-donate-btn-dark span {
-    color: #b5b5b5;
-}
-
-#tracker-menu-donate-btn-night span {
-    color: #ffffff;
-}
-
-#tracker-menu-donate-btn-aubergine span {
-    color: #ffffff;
-}
-
+/* Home icon colors by theme */
 #tracker-menu-home-btn-standard {
     color: #000000;
 }
@@ -399,10 +494,12 @@
     color: #ffffff;
 }
 
+
+/* Menu button backgrounds by theme */
 #standard-theme-menu-btn {
-    background-color: rgba(255, 255, 255, 1);
+    background-color: #ffffff;
     color: #666666;
-    box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
+    box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.3);
     border-radius: 8px;
 }
 
@@ -416,13 +513,13 @@
 
 #standard-theme-menu-content button {
     background-color: #bdd8bb;
-    color: black;
+    color: #000;
 }
 
 #retro-theme-menu-btn {
     background-color: #dfd2ae;
     color: #666666;
-    box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
+    box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.3);
     border-radius: 8px;
 }
 
@@ -436,34 +533,34 @@
 
 #retro-theme-menu-content button {
     background-color: #dfd2ae;
-    color: black;
+    color: #000;
 }
 
 #silver-theme-menu-btn {
     background-color: #c7d3dd;
-    color: #000000;
-    box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
+    color: #000;
+    box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.3);
     border-radius: 8px;
 }
 
 #silver-theme-menu-content {
     background-color: #ffffff;
-    border: 1px solid #C7D3DDba;
+    border: 1px solid #c7d3ddba;
 }
 
 #silver-theme-menu-content .TrackerMenuTheme {
-    background-color: #C7D3DDba;
+    background-color: #c7d3ddba;
 }
 
 #silver-theme-menu-content button {
-    background-color: #C7D3DDba;
-    color: black;
+    background-color: #c7d3ddba;
+    color: #000;
 }
 
 #dark-theme-menu-btn {
     background-color: #434343;
     color: #929292;
-    box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
+    box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.3);
     border-radius: 8px;
 }
 
@@ -484,7 +581,7 @@
 #night-theme-menu-btn {
     background-color: #000000;
     color: #666666;
-    box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
+    box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.3);
     border-radius: 8px;
 }
 
@@ -494,18 +591,18 @@
 
 #night-theme-menu-content .TrackerMenuTheme {
     background-color: #4d5662;
-    color: #FFFFFF;
+    color: #ffffff;
 }
 
 #night-theme-menu-content button {
     background-color: #4d5662;
-    color: #FFFFFF;
+    color: #ffffff;
 }
 
 #aubergine-theme-menu-btn {
-    color: #929292;
     background-color: #2d5f75;
-    box-shadow: 0px 1px 4px rgb(0 0 0 / 30%);
+    color: #929292;
+    box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.3);
     border-radius: 8px;
 }
 
@@ -515,142 +612,43 @@
 
 #aubergine-theme-menu-content .TrackerMenuTheme {
     background-color: #2d5f75;
-    color: #FFFFFF;
+    color: #ffffff;
 }
 
 #aubergine-theme-menu-content button {
     background-color: #2d5f75;
-}
-
-.TrackerMenuSantaDatItem {
-    display: flex;
-    /* align-items: center;
-    justify-content: center; */
-}
-
-.TrackerMenuSantaDatItem p {
-    font-size: 14px;
-}
-
-.TrackerMenuSantaDatItem span, .TrackerMenuSantaDatItem p {
-    margin: 0px;
-    padding: 0px
-}
-
-.TrackerMenuSantaDatItem span {
-    margin-right: 10px;
-    margin-left: 10px;
-}
-
-#tracker-menu-santa-dat-wrapper-standard {
-    /* background-color: #bdd8bb; */
-    color: #000000;
-}
-
-#tracker-menu-santa-dat-wrapper-standard span {
-    color: #000000;
-}
-
-#tracker-menu-santa-dat-wrapper-retro {
-    /* background-color: #dfd2ae; */
-    color: #000000;
-}
-
-#tracker-menu-santa-dat-wrapper-retro span {
-    color: #000000;
-}
-
-#tracker-menu-santa-dat-wrapper-silver {
-    /* background-color: #737373; */
     color: #ffffff;
 }
 
-#tracker-menu-santa-dat-wrapper-silver span {
-    color: #ffffff;
+
+/* Animation (kept from original) */
+@keyframes slide-in-right {
+    0% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
-#tracker-menu-santa-dat-wrapper-dark {
-    /* background-color: #434343; */
-    color: #b5b5b5;
-}
+/* Small screens */
+@media (max-width: 480px) {
+    .TrackerMenu {
+        width: 260px;
+        max-width: 90vw;
+    }
 
-#tracker-menu-santa-dat-wrapper-dark span {
-    color: #b5b5b5;
-}
+    .TrackerMenuFooterBtn,
+    .TrackerMenuCloseBtn {
+        width: 44px;
+        height: 44px;
+    }
 
-#tracker-menu-santa-dat-wrapper-night {
-    color: #ffffff;
-}
-
-#tracker-menu-santa-dat-wrapper-night span {
-    color: #ffffff;
-}
-
-#tracker-menu-santa-dat-wrapper-aubergine {
-    /* background-color: #2d5f75; */
-    color: #ffffff;
-}
-
-#tracker-menu-santa-dat-wrapper-aubergine span {
-    color: #ffffff;
-}
-
-#distance-from-user-to-santa-menu-pill-wrapper {
-    height: 28px;
-    display: flex;
-    width: calc(50% - 1px);
-}
-
-#distance-from-user-to-santa-menu-pill-wrapper p {
-    font-size: 17px;
-    color: #FFFFFF;
-    float: left;
-    white-space: nowrap;
-    font-weight: 600;
-}
-
-.DistanceFromUserToSantaTrackerMenu span {
-    margin-left: 13px;
-    margin-right: 8px;
-}
-
-#santa-hat-menu-user-loc {
-    height: 28px;
-    margin-left: 10px;
-}
-
-#distance-from-user-to-santa-tracker-menu-standard p {
-    color: #000000;
-}
-
-#distance-from-user-to-santa-tracker-menu-retro p {
-    color: #000000;
-}
-
-#distance-from-user-to-santa-tracker-menu-silver p {
-    color: #ffffff;
-}
-
-#distance-from-user-to-santa-tracker-menu-dark p {
-    color: #b5b5b5;
-}
-
-#distance-from-user-to-santa-tracker-menu-dark span {
-    color: #b5b5b5;
-}
-
-#distance-from-user-to-santa-tracker-menu-night p {
-    color: #FFFFFF;
-}
-
-#distance-from-user-to-santa-tracker-menu-night span {
-    color: #FFFFFF;
-}
-
-#distance-from-user-to-santa-tracker-menu-aubergine p {
-    color: #FFFFFF;
-}
-
-#distance-from-user-to-santa-tracker-menu-aubergine span {
-    color: #FFFFFF;
+    .TrackerMenuBtn {
+        width: 46px;
+        height: 46px;
+    }
 }

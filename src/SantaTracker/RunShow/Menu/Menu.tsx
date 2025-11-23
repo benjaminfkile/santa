@@ -1,208 +1,365 @@
-import { Component } from "react"
-import LocationPrompt from "../../../Utils/UserLocation/LocationPrompt"
-import { Button } from "react-bootstrap"
-import userLocation from "../../../Utils/UserLocation/UserLocation"
-// import DonateToolKit from "../../../Utils/Donate/DonateToolkit"
-import { Link } from "react-router-dom"
-import "./Menu.css"
-import ChooseCookies from "../../../Utils/ChooseCookies/ChooseCookies"
+import { useState, useEffect } from "react";
+import LocationPrompt from "../../../Utils/UserLocation/LocationPrompt";
+import { Button } from "react-bootstrap";
+import userLocation from "../../../Utils/UserLocation/UserLocation";
+import ChooseCookies from "../../../Utils/ChooseCookies/ChooseCookies";
+import "./Menu.css";
+import ToggleStatus from "./ToggleStatus/ToggleStatus";
 
-interface TrackerMenuProps {
-    changeTheme: Function
-    toggleMapTypes: Function
-    mapType: string
-    availableThemes: Array<{ title: string, nickName: string }>
-    currentTheme: string
-    toggleSnow: Function
-    menuOpen: Function
-    santaDat: {
-        accuracy: string,
-        alt: string,
-        bear: string,
-        lat: string,
-        lng: string,
-        speed: string
-    }
-    getUserLocation: Function
-    toggleDonate: Function
-    DistanceFromUserToSanta: any
-}
+const TrackerMenu = (props: {
+    changeTheme: any;
+    toggleMapTypes: any;
+    toggleHistory: any;
+    mapType: any;
+    availableThemes: any;
+    currentTheme: any;
+    toggleSnow: any;
+    menuOpen: any;
+    santaDat: any;
+    getUserLocation: any;
+    DistanceFromUserToSanta: any;
+}) => {
+    const {
+        changeTheme,
+        toggleMapTypes,
+        toggleHistory,
+        mapType,
+        availableThemes,
+        currentTheme,
+        toggleSnow,
+        menuOpen: parentMenuOpen,
+        santaDat,
+        getUserLocation,
+        DistanceFromUserToSanta,
+    } = props;
 
-type TrackerMenuTypes = {
-    menuOpen: boolean
-    mapTypeId: string
-    snow: boolean
-    locationPrompt: boolean
-    donate: boolean
-    chooseCookies: boolean
-}
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [mapTypeId, setMapTypeId] = useState(mapType);
+    const [snow, setSnow] = useState(false);
+    const [locationPrompt, setLocationPrompt] = useState(false);
+    const [chooseCookies, setChooseCookies] = useState(false);
+    const [historyOn, setHistoryOn] = useState(false);
 
-class TrackerMenu extends Component<TrackerMenuProps, TrackerMenuTypes> {
+    useEffect(() => {
+        setMapTypeId(mapType);
+    }, [mapType]);
 
-    state = {
-        menuOpen: false,
-        mapTypeId: this.props.mapType,
-        snow: false,
-        locationPrompt: false,
-        donate: false,
-        chooseCookies: false
-    }
+    const themeKey = currentTheme.toLowerCase();
 
-    toggleMenu = () => {
-        if (this.state.menuOpen) {
-            this.setState({ menuOpen: false })
-            this.props.menuOpen(false)
-        } else {
-            this.setState({ menuOpen: true })
-            this.props.menuOpen(true)
-        }
-    }
+    const cookieColors = {
+        standard: { iconColor: "#A97458" },
+        retro: { iconColor: "#A97458" },
+        silver: { iconColor: "#000000ff" },
+        dark: { iconColor: "#D2A679" },
+        night: { iconColor: "#E1C18A" },
+        aubergine: { iconColor: "#ffffffff" },
+    };
 
-    toggleMapTypes = () => {
-        if (this.state.mapTypeId === "terrain") {
-            this.setState({ mapTypeId: "roadmap" })
-        } else {
-            this.setState({ mapTypeId: "terrain" })
-        }
-        this.props.toggleMapTypes()
-    }
+    // @ts-ignore
+    const cookieTheme = cookieColors[themeKey] || cookieColors.standard;
 
-    toggleSnow = () => {
-        if (this.state.snow) {
-            this.setState({ snow: false })
-        } else {
-            this.setState({ snow: true })
-        }
-        this.props.toggleSnow()
-    }
+    const handleToggleMenu = () => {
+        const next = !menuOpen;
+        setMenuOpen(next);
+        parentMenuOpen(next);
+    };
 
-    toggleLocationPrompt = () => {
-        if (this.state.locationPrompt) {
-            this.setState({ locationPrompt: false })
-        } else {
-            this.setState({ locationPrompt: true })
-        }
-    }
+    const handleToggleMapTypes = () => {
+        setMapTypeId((prev: string) => (prev === "terrain" ? "roadmap" : "terrain"));
+        toggleMapTypes();
+    };
 
-    toggleChooseCookies = () => {
-        this.setState({ chooseCookies: !this.state.chooseCookies })
-    }
+    const handleToggleSnow = () => {
+        setSnow((prev) => !prev);
+        toggleSnow();
+    };
 
-    render() {
+    const handleToggleLocationPrompt = () => {
+        setLocationPrompt((prev) => !prev);
+    };
 
-        const cookieColors: Record<string, { iconColor: string; }> = {
-            standard: {
-                iconColor: "#A97458",     
+    const handleToggleChooseCookies = () => {
+        setChooseCookies((prev) => !prev);
+    };
 
-            },
-            retro: {
-                iconColor: "#A97458",
+    const handleToggleHistory = () => {
+        setHistoryOn((prev) => !prev);
+        toggleHistory();
+    };
 
-            },
-            silver: {
-                iconColor: "#D2A679", 
-
-            },
-            dark: {
-                iconColor: "#D2A679",
-
-            },
-            night: {
-                iconColor: "#E1C18A",
-
-            },
-            aubergine: {
-                iconColor: "#E1C18A"
-
-            }
-        };
+    const handleHomeClick = () => {
+        window.location.href = "/about";
+    };
 
 
-        const props = this.props
 
-        const theme = this.props.currentTheme.toLowerCase();
-        const cookieTheme = cookieColors[theme] || cookieColors.standard;
+    const isTerrain = mapTypeId === "terrain";
+    const isRoad = mapTypeId === "roadmap";
 
-
-        return (
-            <div className="TrackerMenu">
-                {!this.state.menuOpen && <div className="TrackerMenuBtn" id={this.props.currentTheme.toLowerCase() + "-theme-menu-btn"} onClick={this.toggleMenu}>
+    return (
+        <div className="TrackerMenu">
+            {!menuOpen && (
+                <div
+                    className="TrackerMenuBtn"
+                    id={`${themeKey}-theme-menu-btn`}
+                    onClick={handleToggleMenu}
+                >
                     <span className="material-icons">menu</span>
-                </div>}
-                {this.state.menuOpen && <div className="TrackerMenuContent" id={this.props.currentTheme.toLowerCase() + "-theme-menu-content"}>
-                    <div className="TrackerMenuThemes" id={"tracker-menu-themes-" + this.props.currentTheme.toLowerCase()}>
-                        {this.props.availableThemes.map((theme, index) =>
-                            <div className={`TrackerMenuTheme ${this.props.currentTheme === theme.title ? "TrackerMenuThemeChecked" : "TrackerMenuThemeUnchecked"}`} id={"tracker-menu-theme-" + this.props.currentTheme.toLowerCase()} key={"tracker-menu-theme-" + index} onClick={() => this.props.changeTheme(index)}>
-                                <img src={"./res/map-theme-icons/" + theme.title.toLowerCase() + ".PNG"} alt=""></img>
-                                <p>{theme.nickName}</p>
+                </div>
+            )}
+
+            {menuOpen && (
+                <div
+                    className="TrackerMenuContent"
+                    id={`${themeKey}-theme-menu-content`}
+                >
+                    {/* Map theme thumbnails */}
+                    <div
+                        className="TrackerMenuThemes"
+                        id={`tracker-menu-themes-${themeKey}`}
+                    >
+                        {availableThemes.map(
+                            (
+                                theme: { title: string; nickName: {} | null | undefined },
+                                index: any
+                            ) => (
+                                <div
+                                    key={`tracker-menu-theme-${index}`}
+                                    className={`TrackerMenuTheme ${currentTheme === theme.title
+                                        ? "TrackerMenuThemeChecked"
+                                        : "TrackerMenuThemeUnchecked"
+                                        }`}
+                                    id={`tracker-menu-theme-${theme.title.toLowerCase()}`}
+                                    onClick={() => changeTheme(index)}
+                                >
+                                    <img
+                                        src={`./res/map-theme-icons/${theme.title.toLowerCase()}.PNG`}
+                                        // @ts-ignore
+                                        alt={theme.nickName}
+                                    />
+                                    <p>{theme.nickName}</p>
+                                    <ToggleStatus
+                                        checked={currentTheme === theme.title}
+                                        position="bottom"
+                                        themeKey={themeKey}
+                                        parentHeight={96}
+                                        parentWidth={96}
+                                    />
+                                </div>
+                            )
+                        )}
+                    </div>
+
+                    {/* Map type / Snow row */}
+                    <div className="TrackerMenuMapTypeRow">
+
+                        {isTerrain ? (
+                            <div className={`TRSToggle TRSToggle-${themeKey}`}>
+                                <span className="material-icons">terrain</span>
+                                <p>Terrain</p>
+
+                                <ToggleStatus
+                                    checked={true}
+                                    position="bottom"
+                                    themeKey={themeKey}
+                                    parentHeight={28}
+                                    parentWidth={92}
+                                />
+                            </div>
+                        ) : (
+                            <div
+                                className={`TRSToggle TRSToggle-${themeKey}`}
+                                onClick={handleToggleMapTypes}
+                            >
+                                <span className="material-icons">terrain</span>
+                                <p>Terrain</p>
+                            </div>
+                        )}
+
+                        {isRoad ? (
+                            <div className={`TRSToggle TRSToggle-${themeKey}`}>
+                                <span className="material-icons">map</span>
+                                <p>Road</p>
+
+                                <ToggleStatus
+                                    checked={true}
+                                    position="bottom"
+                                    themeKey={themeKey}
+                                    parentHeight={28}
+                                    parentWidth={92}
+                                />
+                            </div>
+                        ) : (
+                            <div
+                                className={`TRSToggle TRSToggle-${themeKey}`}
+                                onClick={handleToggleMapTypes}
+                            >
+                                <span className="material-icons">map</span>
+                                <p>Road</p>
+                            </div>
+                        )}
+
+                        <div
+                            className={`TRSToggle TRSToggle-${themeKey}`}
+                            onClick={handleToggleSnow}
+                        >
+                            <span className="material-icons">ac_unit</span>
+                            <p>Snow</p>
+
+                            <ToggleStatus
+                                checked={snow}
+                                position="bottom"
+                                themeKey={themeKey}
+                                parentHeight={28}
+                                parentWidth={92}
+                            />
+                        </div>
+
+                    </div>
+
+                    {/* Santa data row */}
+                    <div
+                        className={`TrackerMenuSantaData TrackerMenuSantaData${currentTheme}`}
+                    >
+                        {santaDat.speed && (
+                            <div className="TrackerMenuSantaDataItem">
+                                <span className="material-icons">speed</span>
+                                <p>{santaDat?.speed}</p>
+                            </div>
+                        )}
+                        {santaDat.bearing && (
+                            <div className="TrackerMenuSantaDataItem">
+                                <span className="material-icons">explore</span>
+                                <p>{santaDat?.bearing}</p>
+                            </div>
+                        )}
+
+                        {!userLocation.disable && DistanceFromUserToSanta && (
+                            <div className="TrackerMenuSantaDataItem">
+                                <span className="material-icons">person_pin_circle</span>
+                                {DistanceFromUserToSanta < 5280 && (
+                                    <p>
+                                        {DistanceFromUserToSanta.toString().replace(
+                                            /\B(?=(\d{3})+(?!\d))/g,
+                                            ","
+                                        )}{" "}
+                                        ft
+                                    </p>
+                                )}
+                                {DistanceFromUserToSanta >= 5280 && (
+                                    <p>
+                                        {(DistanceFromUserToSanta / 5280)
+                                            .toFixed(2)
+                                            .toString()
+                                            .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}{" "}
+                                        mi
+                                    </p>
+                                )}
                             </div>
                         )}
                     </div>
-                    <div className="TrackerMenuMapTypeWrapper">
-                        {this.state.mapTypeId !== "terrain" && <Button className="TerrainToggle" id="terrain-toggled-off" onClick={() => this.toggleMapTypes()}><span className="material-icons">terrain</span><p>Terrain</p></Button>}
-                        {this.state.mapTypeId === "terrain" && <Button className="TerrainToggle" id="terrain-toggled-on" disabled={true}><span className="material-icons">terrain</span><p>Terrain</p></Button>}
-                        {this.state.mapTypeId === "roadmap" && <Button className="RoadMapToggle" id="roadmap-toggled-on" disabled={true}><span className="material-icons">map</span><p>Road</p></Button>}
-                        {this.state.mapTypeId !== "roadmap" && <Button className="RoadMapToggle" id="roadmap-toggled-off" onClick={() => this.toggleMapTypes()}><span className="material-icons">map</span><p>Road</p></Button>}
-                        {!this.state.snow && <Button id="snow-toggled-off" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons">ac_unit</span><p>Snow</p></Button>}
-                        {this.state.snow && <Button id="snow-toggled-on" className="SnowToggle" onClick={this.toggleSnow}><span className="material-icons">ac_unit</span><p>Snow</p></Button>}
-                    </div>
-                    <div className={`TrackerMenuSantaData TrackerMenuSantaData${props.currentTheme}`}>
-                        <div className={`TrackerMenuSantaDataItem`}>
-                            <span className="material-icons">speed</span>
-                            <p>{props.santaDat.speed}</p>
-                        </div>
-                        <div className={`TrackerMenuSantaDataItem`}>
-                            <span className="material-icons">explore</span>
-                            <p>{props.santaDat.bear}</p>
-                        </div>
-                        {!userLocation.disable && this.props.DistanceFromUserToSanta && <div className={`TrackerMenuSantaDataItem`}>
-                            <span className="material-icons">person_pin_circle</span>
-                            {props.DistanceFromUserToSanta < 5280 && <p>{this.props.DistanceFromUserToSanta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ft</p>}
-                            {props.DistanceFromUserToSanta >= 5280 && <p> {((this.props.DistanceFromUserToSanta / 5280).toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} mi</p>}
-                        </div>}
-                    </div>
+
+                    {/* Footer area with two rows */}
                     <div className="TrackerMenuFooter">
-                        {!userLocation.disable && <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-location-btn-allowed-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}>
-                            <span className="material-icons">my_location</span>
-                        </div>}
-                        {userLocation.disable && <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-location-btn-denied-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleLocationPrompt}>
-                            <span className="material-icons">location_disabled</span>
-                        </div>}
-                        <div
-                            className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${theme}`}
-                            onClick={this.toggleChooseCookies}
-                        >
-                            <span
-                                className="material-icons"
-                                style={{
-                                    color: cookieTheme.iconColor,
-                                    fontSize: "34px"
-                                }}
-                            >
-                                cookie
-                            </span>
-                        </div>
-                        <div className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`}>
-                            <div className="TrackerMenuHomeBtn">
-                                <Link to='/about'>
-                                    <span id={"tracker-menu-home-btn-" + this.props.currentTheme.toLowerCase()} className="material-icons">home</span>
-                                </Link>
+                        {/* Row 1: location */}
+                        <div className="TrackerMenuFooterRow TrackerMenuFooterRowPrimary">
+                            <div className="TrackerMenuFooterRowGroup">
+                                <div
+                                    className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
+                                    onClick={handleToggleLocationPrompt}
+                                >
+                                    <span className="material-icons">
+                                        {userLocation.disable ? "location_disabled" : "my_location"}
+                                    </span>
+
+                                    <ToggleStatus
+                                        checked={!userLocation.disable}
+                                        position="bottom"
+                                        themeKey={themeKey}
+                                        parentHeight={50}
+                                        parentWidth={50}
+                                    />
+                                </div>
+
+                            </div>
+
+                            <div className="TrackerMenuFooterRowGroup">
+                                <div
+                                    className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
+                                    onClick={handleHomeClick}
+                                >
+                                    <span className="material-icons">home</span>
+
+                                </div>
                             </div>
                         </div>
-                        <div className={`TrackerMenuCloseBtn TrackerMenuFooterBtn-${this.props.currentTheme.toLowerCase()}`} id={"tracker-menu-close-btn-" + this.props.currentTheme.toLowerCase()} onClick={this.toggleMenu}><p><span className="material-icons">clear</span></p></div>
+
+                        {/* Row 2: history + cookies + close */}
+                        <div className="TrackerMenuFooterRow TrackerMenuFooterRowSecondary">
+                            <div className="TrackerMenuFooterRowGroup">
+                                <div
+                                    className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
+                                    onClick={handleToggleHistory}
+                                >
+                                    <span className="material-icons">
+                                        {historyOn ? "history" : "history_toggle_off"}
+                                    </span>
+
+                                    <ToggleStatus
+                                        checked={historyOn}
+                                        position="bottom"
+                                        themeKey={themeKey}
+                                        parentHeight={50}
+                                        parentWidth={50}
+                                    />
+                                </div>
+
+                                <div
+                                    className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
+                                    onClick={handleToggleChooseCookies}
+                                >
+                                    <span
+                                        className="material-icons"
+                                        style={{ color: cookieTheme.iconColor }}
+                                    >
+                                        cookie
+                                    </span>
+                                </div>
+
+
+
+                            </div>
+
+                            {/* Close */}
+                            <div
+                                className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
+                                id={`tracker-menu-close-btn-${themeKey}`}
+                                onClick={handleToggleMenu}
+                            >
+                                <span className="material-icons">close</span>
+                            </div>
+                        </div>
                     </div>
-                </div>}
-                {this.state.locationPrompt &&
-                    <LocationPrompt
-                        toggleLocationPrompt={this.toggleLocationPrompt}
-                        theme={this.props.currentTheme}
-                        getUserLocation={this.props.getUserLocation}
-                    />}
-                {this.state.chooseCookies && <ChooseCookies onClose={this.toggleChooseCookies} currentTheme={this.props.currentTheme} />}
-            </div>
-        )
-    }
-}
+                </div>
+            )}
 
-export default TrackerMenu
+            {/* Modals */}
+            {locationPrompt && (
+                <LocationPrompt
+                    toggleLocationPrompt={handleToggleLocationPrompt}
+                    theme={currentTheme}
+                    getUserLocation={getUserLocation}
+                />
+            )}
 
+            {chooseCookies && (
+                <ChooseCookies
+                    onClose={handleToggleChooseCookies}
+                    currentTheme={currentTheme}
+                />
+            )}
+        </div>
+    );
+};
+
+export default TrackerMenu;
