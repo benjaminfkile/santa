@@ -20,6 +20,7 @@ class Tracker extends Component {
       nickName: "Standard",
       routeColor: "#2962ff",
       arrowColor: "#000000",
+      routeOpacity: 1,
     },
     {
       mapTheme: Retro,
@@ -27,6 +28,7 @@ class Tracker extends Component {
       nickName: "Retro",
       routeColor: "#000000ff",
       arrowColor: "#000000ff",
+      routeOpacity: 1,
     },
     {
       mapTheme: Silver,
@@ -34,13 +36,15 @@ class Tracker extends Component {
       nickName: "Blizzard",
       routeColor: "#0099ff",
       arrowColor: "#0099ff",
+      routeOpacity: 1,
     },
     {
       mapTheme: Dark,
       title: "Dark",
-      nickName: "Blackout",
+      nickName: "Dark",
       routeColor: "#ffffff7c",
       arrowColor: "#ffffff7c",
+      routeOpacity: 1,
     },
     {
       mapTheme: Night,
@@ -48,13 +52,15 @@ class Tracker extends Component {
       nickName: "Night",
       routeColor: "#00eaff7d",
       arrowColor: "#ffffff81",
+      routeOpacity: 1,
     },
     {
       mapTheme: Aubergine,
       title: "Aubergine",
-      nickName: "Aubergine",
-      routeColor: "#ff66cc",
+      nickName: "Nebula",
+      routeColor: "#00C2C7",
       arrowColor: "#ffffff7c",
+      routeOpacity: .5,
     },
   ];
   map;
@@ -424,6 +430,7 @@ class Tracker extends Component {
 
     const routeColor = theme?.routeColor || "#FF0000";
     const arrowColor = theme?.arrowColor || "#FFFFFF";
+    const routeOpacity = theme?.routeOpacity || 1
 
     // ---- BUILD ARROWS ----
     const arrowSymbol = {
@@ -452,7 +459,7 @@ class Tracker extends Component {
     this.routePolyline = new window.google.maps.Polyline({
       path: cleanedPath,
       strokeColor: routeColor,
-      strokeOpacity: 1.0,
+      strokeOpacity: routeOpacity,
       strokeWeight: 2,
       geodesic: true,
     });
