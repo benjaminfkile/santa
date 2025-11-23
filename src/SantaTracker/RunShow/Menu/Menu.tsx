@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import LocationPrompt from "../../../Utils/UserLocation/LocationPrompt";
-import { Button } from "react-bootstrap";
 import userLocation from "../../../Utils/UserLocation/UserLocation";
 import ChooseCookies from "../../../Utils/ChooseCookies/ChooseCookies";
-import "./Menu.css";
 import ToggleStatus from "./ToggleStatus/ToggleStatus";
+import "./Menu.css";
+
 
 const TrackerMenu = (props: {
     changeTheme: any;
