@@ -280,23 +280,6 @@ const TrackerMenu = (props: {
                                         parentWidth={50}
                                     />
                                 </div>
-
-                            </div>
-
-                            <div className="TrackerMenuFooterRowGroup">
-                                <div
-                                    className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
-                                    onClick={handleHomeClick}
-                                >
-                                    <span className="material-icons">home</span>
-
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Row 2: history + cookies + close */}
-                        <div className="TrackerMenuFooterRow TrackerMenuFooterRowSecondary">
-                            <div className="TrackerMenuFooterRowGroup">
                                 <div
                                     className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
                                     onClick={handleToggleHistory}
@@ -313,7 +296,6 @@ const TrackerMenu = (props: {
                                         parentWidth={50}
                                     />
                                 </div>
-
                                 <div
                                     className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
                                     onClick={handleToggleChooseCookies}
@@ -325,20 +307,40 @@ const TrackerMenu = (props: {
                                         cookie
                                     </span>
                                 </div>
+                                <div
+                                    className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
+                                    onClick={handleHomeClick}
+                                >
+                                    <span className="material-icons">home</span>
 
-
+                                </div>
+                                <div
+                                    className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
+                                    id={`tracker-menu-close-btn-${themeKey}`}
+                                    onClick={handleToggleMenu}
+                                >
+                                    <span className="material-icons">close</span>
+                                </div>
 
                             </div>
 
-                            {/* Close */}
-                            <div
-                                className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
-                                id={`tracker-menu-close-btn-${themeKey}`}
-                                onClick={handleToggleMenu}
-                            >
-                                <span className="material-icons">close</span>
+                            <div className="TrackerMenuFooterRowGroup">
+
                             </div>
                         </div>
+
+                        {/* <div className="TrackerMenuFooterRow TrackerMenuFooterRowSecondary">
+                            <div className="TrackerMenuFooterRowGroup">
+
+
+
+
+
+
+                            </div>
+
+
+                        </div> */}
                     </div>
                 </div>
             )}
