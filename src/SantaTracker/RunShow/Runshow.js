@@ -60,6 +60,8 @@ class Tracker extends Component {
   map;
   mapType = "terrain";
   marker = null;
+  userMarker = null;
+  pulseIcon = null;
   userToSantaCoords = [{}, {}];
   userToSantaFlightPath = null;
   updateinterval = 500;
@@ -89,6 +91,12 @@ class Tracker extends Component {
     clearInterval(this.updateinterval);
     this.updateinterval = null;
     this.wakeLock = false;
+    if (this.userMarker) {
+      this.userMarker.setMap(null);
+      this.userMarker = null;
+    }
+    clearInterval(this.userBlinkInterval);
+
     this.setState({});
   }
 
@@ -107,6 +115,63 @@ class Tracker extends Component {
         lat: Number(userLocation.coordinates.lat),
         lng: Number(userLocation.coordinates.lng),
       };
+
+      //--------------------------------------
+      // THEMED USER MARKER (blinking dot)
+      //--------------------------------------
+      if (!userLocation.disable && userLocation.coordinates.lat) {
+        const theme = this.mapThemes.find(
+          (t) => t.title === this.state.currentTheme
+        );
+
+        const userColor = theme?.routeColor || "#4aa3ff";
+
+        // Update icon color based on theme
+        this.pulseIcon = {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: theme?.routeColor || "#4aa3ff",
+          fillOpacity: 1,
+          strokeWeight: 0,
+        };
+
+        if (this.userMarker) {
+          this.userMarker.setIcon(this.pulseIcon);
+        }
+
+        const pos = {
+          lat: Number(userLocation.coordinates.lat),
+          lng: Number(userLocation.coordinates.lng),
+        };
+
+        // Create or update user marker
+        if (!this.userMarker) {
+          this.userMarker = new window.google.maps.Marker({
+            position: pos,
+            map: this.map,
+            icon: this.pulseIcon,
+            optimized: false, // required for blinking animations
+          });
+
+          // Blinking effect
+          let visible = true;
+          this.userBlinkInterval = setInterval(() => {
+            if (this.userMarker) {
+              this.userMarker.setVisible(visible);
+              visible = !visible;
+            }
+          }, 600);
+        } else {
+          this.userMarker.setPosition(pos);
+        }
+      }
+
+      // Remove marker if user disables location
+      if (userLocation.disable && this.userMarker) {
+        this.userMarker.setMap(null);
+        this.userMarker = null;
+        clearInterval(this.userBlinkInterval);
+      }
     }
     if (this.userToSantaCoords[1].lat && !userLocation.disable) {
       this.drawUserToSantaPoly();
@@ -169,7 +234,7 @@ class Tracker extends Component {
     // Create "dot" symbol
     const dotSymbol = {
       path: window.google.maps.SymbolPath.CIRCLE,
-      scale: 2,
+      scale: 1.5,
       strokeColor: color,
       strokeOpacity: 1,
       fillColor: color,
@@ -206,11 +271,32 @@ class Tracker extends Component {
   };
 
   setTheme = (index) => {
+    // 1. Apply the map style immediately
     this.map.setOptions({ styles: this.mapThemes[index].mapTheme });
 
-    this.setState({ currentTheme: this.mapThemes[index].title }, () =>
-      this.drawRoutePolyline()
-    );
+    // 2. Update state, then redraw route + update user marker color
+    this.setState({ currentTheme: this.mapThemes[index].title }, () => {
+      // Redraw flight history arrows with new colors
+      this.drawRoutePolyline();
+
+      // -------------- UPDATE USER MARKER COLOR --------------
+      if (this.userMarker) {
+        const theme = this.mapThemes[index];
+
+        // Rebuild the pulse icon using new theme colors
+        this.pulseIcon = {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: theme.routeColor, // main color for blinking dot
+          fillOpacity: 1,
+          strokeWeight: 0,
+        };
+
+        // Apply new icon to the existing marker
+        this.userMarker.setIcon(this.pulseIcon);
+      }
+      // -------------------------------------------------------
+    });
   };
 
   toggleTerrain = () => {
