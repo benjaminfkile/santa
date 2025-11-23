@@ -634,21 +634,3 @@
     }
 }
 
-/* Small screens */
-@media (max-width: 480px) {
-    .TrackerMenu {
-        width: 260px;
-        max-width: 90vw;
-    }
-
-    .TrackerMenuFooterBtn,
-    .TrackerMenuCloseBtn {
-        width: 44px;
-        height: 44px;
-    }
-
-    .TrackerMenuBtn {
-        width: 46px;
-        height: 46px;
-    }
-}
