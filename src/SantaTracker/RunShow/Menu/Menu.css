@@ -82,15 +82,15 @@
     flex-wrap: wrap;
     padding: 0px;
     padding-left: 4px;
-    padding-top: 2px;
+    padding-top: 0px;
     padding-bottom: 4px;
 }
 
 .TrackerMenuTheme {
-    height: 96px;
-    width: 96px;
+    height: 94px;
+    width: 94px;
     border-radius: 4px;
-    margin: 2px;
+    margin: 4px;
     margin-left: 0px;
     margin-bottom: 0px;
     cursor: pointer;
@@ -125,10 +125,7 @@
 
 .TrackerMenuMapTypeRow {
     display: flex;
-    justify-content: space-evenly;
-    padding-left: 4px;
-    padding-right: 4px;
-    gap: 2px;
+    padding-left: 2px;
 }
 
 
@@ -136,10 +133,12 @@
     display: flex;
     justify-content: center;
     padding: 4px;
-    width: 33.33%;
+    width: 94px;
     border-radius: 4px;
     cursor: pointer;
     user-select: none;
+    margin-left: 2px;
+    margin-right: 2px;
 }
 
 .TRSToggle p {
@@ -291,7 +290,7 @@
     /* padding-left: 4px;
     padding-right: 4px; */
     padding-bottom: 4px;
-    padding-right: 3px;
+    padding-right: 4px;
 }
 
 .TrackerMenuFooterRow {

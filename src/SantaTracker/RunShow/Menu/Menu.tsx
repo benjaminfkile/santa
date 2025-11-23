@@ -142,8 +142,8 @@ const TrackerMenu = (props: {
                                         checked={currentTheme === theme.title}
                                         position="bottom"
                                         themeKey={themeKey}
-                                        parentHeight={96}
-                                        parentWidth={96}
+                                        parentHeight={94}
+                                        parentWidth={94}
                                     />
                                 </div>
                             )
@@ -324,9 +324,6 @@ const TrackerMenu = (props: {
 
                             </div>
 
-                            <div className="TrackerMenuFooterRowGroup">
-
-                            </div>
                         </div>
 
                         {/* <div className="TrackerMenuFooterRow TrackerMenuFooterRowSecondary">
