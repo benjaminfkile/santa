@@ -319,20 +319,6 @@ body {
   background-color: white;
 }
 
-.CookiesWrapper{
-    position: fixed;
-    left: 5px;  
-}
-
-.CookiesWrapperA{
-    top: 5px;
-
-}
-
-.CookiesWrapperB{
-  top: 45px;
-}
-
 @-webkit-keyframes slide-in-right {
   0% {
     -webkit-transform: translateX(1000px);

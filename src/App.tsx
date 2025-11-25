@@ -9,7 +9,6 @@ import SponsorsSection from "./SponsorsSection/SponsorsSection";
 import ContactSection from "./ContactSection/ContactSection";
 import fundData from "./Utils/FundsRing/FundData";
 import SponsorTypes from "./SponsorsSection/SponsorTypes";
-import authService from "./Utils/authService";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 type AppTypes = {
@@ -56,9 +55,7 @@ class App extends Component<{}, AppTypes> {
 
     try {
       // 1. Try PRIMARY
-      const res = await axios.get(`${primary}/${primaryPath}`, {
-        headers: { "x-device-id": authService.getDeviceId() }
-      });
+      const res = await axios.get(`${primary}/${primaryPath}`);
 
       let data = res.data;
       if (data.lon) data.lng = data.lon;
@@ -67,8 +64,6 @@ class App extends Component<{}, AppTypes> {
       if (typeof data.interval === "number" && data.interval > 0) {
         this.updateFrequency = data.interval;
       }
-
-      authService.token = data.cookieToken;
 
       this.setState({ santaDat: data });
       this.usingFallbackSanta = false;

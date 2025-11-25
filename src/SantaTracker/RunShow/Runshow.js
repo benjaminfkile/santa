@@ -10,7 +10,6 @@ import Aubergine from "./MapThemes/Aubergine";
 import TrackerMenu from "./Menu/Menu";
 import Snow from "../../Utils/Snow/Snow";
 import SponsorCarousel from "../../Utils/SponsorCarousel/SponsorCarousel";
-import Cookies from "../../Cookies/Cookies";
 import "./Runshow.css";
 class Tracker extends Component {
   mapThemes = [
@@ -129,8 +128,6 @@ class Tracker extends Component {
         const theme = this.mapThemes.find(
           (t) => t.title === this.state.currentTheme
         );
-
-        const userColor = theme?.routeColor || "#4aa3ff";
 
         // Update icon color based on theme
         this.pulseIcon = {
@@ -492,9 +489,6 @@ class Tracker extends Component {
       this.autoRecenter();
     }
 
-    const cookiesShifted =
-      !userLocation.disable && this.state.DistanceFromUserToSanta;
-
     return (
       <div className="TrackerContainer">
         {!this.state.loading && (
@@ -598,19 +592,6 @@ class Tracker extends Component {
                   </div>
                 )}
             </div>
-
-            {!this.state.menuOpen && this.props.santaDat?.cookies && (
-              <div
-                className={`CookiesWrapper CookiesWrapper${
-                  cookiesShifted ? "B" : "A"
-                }`}
-              >
-                <Cookies
-                  cookies={this.props.santaDat.cookies}
-                  theme={this.state.currentTheme}
-                />
-              </div>
-            )}
 
             {!this.state.menuOpen && (
               <div className="FooterControls">

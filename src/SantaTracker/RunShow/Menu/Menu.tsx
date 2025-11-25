@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import LocationPrompt from "../../../Utils/UserLocation/LocationPrompt";
 import userLocation from "../../../Utils/UserLocation/UserLocation";
-import ChooseCookies from "../../../Utils/ChooseCookies/ChooseCookies";
 import ToggleStatus from "./ToggleStatus/ToggleStatus";
 import "./Menu.css";
 
@@ -37,7 +36,6 @@ const TrackerMenu = (props: {
     const [mapTypeId, setMapTypeId] = useState(mapType);
     const [snow, setSnow] = useState(false);
     const [locationPrompt, setLocationPrompt] = useState(false);
-    const [chooseCookies, setChooseCookies] = useState(false);
     const [historyOn, setHistoryOn] = useState(false);
 
     useEffect(() => {
@@ -45,18 +43,6 @@ const TrackerMenu = (props: {
     }, [mapType]);
 
     const themeKey = currentTheme.toLowerCase();
-
-    const cookieColors = {
-        standard: { iconColor: "#A97458" },
-        retro: { iconColor: "#A97458" },
-        silver: { iconColor: "#000000ff" },
-        dark: { iconColor: "#D2A679" },
-        night: { iconColor: "#E1C18A" },
-        aubergine: { iconColor: "#ffffffff" },
-    };
-
-    // @ts-ignore
-    const cookieTheme = cookieColors[themeKey] || cookieColors.standard;
 
     const handleToggleMenu = () => {
         const next = !menuOpen;
@@ -78,9 +64,6 @@ const TrackerMenu = (props: {
         setLocationPrompt((prev) => !prev);
     };
 
-    const handleToggleChooseCookies = () => {
-        setChooseCookies((prev) => !prev);
-    };
 
     const handleToggleHistory = () => {
         setHistoryOn((prev) => !prev);
@@ -263,81 +246,54 @@ const TrackerMenu = (props: {
                     <div className="TrackerMenuFooter">
                         {/* Row 1: location */}
                         <div className="TrackerMenuFooterRow TrackerMenuFooterRowPrimary">
-                            <div className="TrackerMenuFooterRowGroup">
-                                <div
-                                    className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
-                                    onClick={handleToggleLocationPrompt}
-                                >
-                                    <span className="material-icons">
-                                        {userLocation.disable ? "location_disabled" : "my_location"}
-                                    </span>
+                            <div
+                                className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
+                                onClick={handleToggleLocationPrompt}
+                            >
+                                <span className="material-icons">
+                                    {userLocation.disable ? "location_disabled" : "my_location"}
+                                </span>
 
-                                    <ToggleStatus
-                                        checked={!userLocation.disable}
-                                        position="bottom"
-                                        themeKey={themeKey}
-                                        parentHeight={50}
-                                        parentWidth={50}
-                                    />
-                                </div>
-                                <div
-                                    className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
-                                    onClick={handleToggleHistory}
-                                >
-                                    <span className="material-icons">
-                                        {historyOn ? "history" : "history_toggle_off"}
-                                    </span>
+                                <ToggleStatus
+                                    checked={!userLocation.disable}
+                                    position="bottom"
+                                    themeKey={themeKey}
+                                    parentHeight={50}
+                                    parentWidth={50}
+                                />
+                            </div>
+                            <div
+                                className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
+                                onClick={handleToggleHistory}
+                            >
+                                <span className="material-icons">
+                                    {historyOn ? "history" : "history_toggle_off"}
+                                </span>
 
-                                    <ToggleStatus
-                                        checked={historyOn}
-                                        position="bottom"
-                                        themeKey={themeKey}
-                                        parentHeight={50}
-                                        parentWidth={50}
-                                    />
-                                </div>
-                                <div
-                                    className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
-                                    onClick={handleToggleChooseCookies}
-                                >
-                                    <span
-                                        className="material-icons"
-                                        style={{ color: cookieTheme.iconColor }}
-                                    >
-                                        cookie
-                                    </span>
-                                </div>
-                                <div
-                                    className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
-                                    onClick={handleHomeClick}
-                                >
-                                    <span className="material-icons">home</span>
+                                <ToggleStatus
+                                    checked={historyOn}
+                                    position="bottom"
+                                    themeKey={themeKey}
+                                    parentHeight={50}
+                                    parentWidth={50}
+                                />
+                            </div>
+                            <div
+                                className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
+                                onClick={handleHomeClick}
+                            >
+                                <span className="material-icons">home</span>
 
-                                </div>
-                                <div
-                                    className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
-                                    id={`tracker-menu-close-btn-${themeKey}`}
-                                    onClick={handleToggleMenu}
-                                >
-                                    <span className="material-icons">close</span>
-                                </div>
-
+                            </div>
+                            <div
+                                className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
+                                id={`tracker-menu-close-btn-${themeKey}`}
+                                onClick={handleToggleMenu}
+                            >
+                                <span className="material-icons">close</span>
                             </div>
 
                         </div>
-
-                        {/* <div className="TrackerMenuFooterRow TrackerMenuFooterRowSecondary">
-                            <div className="TrackerMenuFooterRowGroup">
-
-
-
-
-
-
-                            </div>
-
-
-                        </div> */}
                     </div>
                 </div>
             )}
@@ -351,12 +307,6 @@ const TrackerMenu = (props: {
                 />
             )}
 
-            {chooseCookies && (
-                <ChooseCookies
-                    onClose={handleToggleChooseCookies}
-                    currentTheme={currentTheme}
-                />
-            )}
         </div>
     );
 };

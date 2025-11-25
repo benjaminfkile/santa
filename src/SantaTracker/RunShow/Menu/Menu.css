@@ -300,12 +300,6 @@
 }
 
 
-/* First row: location, home, close */
-.TrackerMenuFooterRowPrimary {
-    /* justify-content: flex-start; */
-}
-
-/* Second row: NEW! + cookie + history */
 .TrackerMenuFooterRowSecondary {
     justify-content: space-between
 }
@@ -316,19 +310,6 @@
 
 }
 
-/* Footer buttons */
-/* .TrackerMenuFooterBtn,
-.TrackerMenuCloseBtn {
-    cursor: pointer;
-    user-select: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 4px;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-} */
 
 .TrackerMenuFooterBtn,
 .TrackerMenuCloseBtn {
@@ -342,6 +323,7 @@
     align-items: center;
     justify-content: center;
     margin-top: 4px;
+    margin-left: 2px;
 }
 
 
