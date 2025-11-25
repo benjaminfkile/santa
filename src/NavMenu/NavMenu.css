@@ -84,15 +84,15 @@
     width: 40px;
 }
 
-.NavMenuRouteSVG{
+.NavMenuRouteSVG {
     margin-top: 13px;
 }
 
-.NavMenuRouteBtn img{
+.NavMenuRouteBtn img {
     margin-top: 10px;
 }
 
-.NavMenuLaughingSantaWrapper{
+.NavMenuLaughingSantaWrapper {
     transform: scale(.2);
     position: absolute;
     left: 12px;
@@ -100,10 +100,27 @@
     width: 40px;
 }
 
-#tracker-route-text{
+#tracker-route-text {
     margin-left: 55px;
 }
 
-#funding-route-text{
+#funding-route-text {
     margin-right: -20px;
+}
+
+.NavMenuRouteBtnRoute {
+    width: 55px;
+    height: 55px;
+    margin-left: 35px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.NavMenuRouteBtnRoute span {
+    font-size: 55px;
+    margin-top: 5px;
+}
+
+.NavMenuRouteBtnRoute p {
+    margin-left: 10px;
 }

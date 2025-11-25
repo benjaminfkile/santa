@@ -49,9 +49,12 @@ class NavMenu extends Component<{}, NavTypes> {
         }
     }
 
-    render() {
+    openRoute = () => {
+        window.open(process.env.REACT_APP_ROUTE_IMAGE_URL, "_blank", "noopener,noreferrer");
+    }
 
-        const routes = JSON.parse(process.env.REACT_APP_ROUTES || "")
+
+    render() {
 
         return (
             <div className="NavMenu" ref={this.wrapperRef}>
@@ -60,7 +63,7 @@ class NavMenu extends Component<{}, NavTypes> {
                 </div>}
                 {this.state.menuOpen && <div className="NavMenuContent">
                     <div className="NavMenuRoutes">
-                        {routes.about && <div className="NavMenuRoute" tabIndex={1} onClick={this.toggleMenu}>
+                        <div className="NavMenuRoute" tabIndex={1} onClick={this.toggleMenu}>
                             <Link to='/about'>
                                 <div className="NavMenuRouteBtn">
                                     <div className="NavMenuRouteSVG">
@@ -69,8 +72,8 @@ class NavMenu extends Component<{}, NavTypes> {
                                     <p id="about-route-text">About</p>
                                 </div>
                             </Link>
-                        </div>}
-                        {routes.donate && <div className="NavMenuRoute" tabIndex={2} onClick={this.toggleMenu}>
+                        </div>
+                        <div className="NavMenuRoute" tabIndex={2} onClick={this.toggleMenu}>
                             <Link to='/donate'>
                                 <div className="NavMenuRouteBtn">
                                     <div className="NavMenuRouteSVG">
@@ -79,28 +82,28 @@ class NavMenu extends Component<{}, NavTypes> {
                                     <p id="donate-route-text">Donate</p>
                                 </div>
                             </Link>
-                        </div>}
-                        {routes.fundProgress && <div className="NavMenuRoute" tabIndex={2} onClick={this.toggleMenu}>
+                        </div>
+                        <div className="NavMenuRoute" tabIndex={2} onClick={this.toggleMenu}>
                             <Link to='/funding'>
                                 <div className="NavMenuRouteBtn">
                                     <div className="NavMenuRouteSVG">
-                                        <FundsRing 
-                                        ringStrokeWidth={12}
+                                        <FundsRing
+                                            ringStrokeWidth={12}
                                         />
                                     </div>
                                     <p id="funding-route-text">Cheer Meter</p>
                                 </div>
                             </Link>
-                        </div>}
-                        {routes.sponsors && <div className="NavMenuRoute" tabIndex={3} onClick={this.toggleMenu}>
+                        </div>
+                        <div className="NavMenuRoute" tabIndex={3} onClick={this.toggleMenu}>
                             <Link to='/sponsors'>
                                 <div className="NavMenuRouteBtn">
                                     <img src="/res/sponsors-icon.png" alt="" />
                                     <p id="sponsors-route-text">Sponsors</p>
                                 </div>
                             </Link>
-                        </div>}
-                        {routes.tracker && <div className="NavMenuRoute" tabIndex={4} onClick={this.toggleMenu}>
+                        </div>
+                        <div className="NavMenuRoute" tabIndex={4} onClick={this.toggleMenu}>
                             <Link to='/santa'>
                                 <div className="NavMenuRouteBtn">
                                     <div className="NavMenuLaughingSantaWrapper">
@@ -111,8 +114,17 @@ class NavMenu extends Component<{}, NavTypes> {
                                     <p id="tracker-route-text">Track Santa</p>
                                 </div>
                             </Link>
-                        </div>}
-                        {routes.contact && <div className="NavMenuRoute" tabIndex={5} onClick={this.toggleMenu}>
+                        </div>
+                        <div className="NavMenuRoute" tabIndex={5} onClick={() => {
+                            this.toggleMenu();
+                            this.openRoute();
+                        }}>
+                            <div className="NavMenuRouteBtn NavMenuRouteBtnRoute">
+                                <span className="material-icons">route</span>
+                                <p id="history-route-text">Route</p>
+                            </div>
+                        </div>
+                        <div className="NavMenuRoute" tabIndex={6} onClick={this.toggleMenu}>
                             <Link to='/contact'>
                                 <div className="NavMenuRouteBtn">
                                     <div className="NavMenuRouteSVG">
@@ -121,7 +133,7 @@ class NavMenu extends Component<{}, NavTypes> {
                                     <p id="contact-route-text">Contact</p>
                                 </div>
                             </Link>
-                        </div>}
+                        </div>
                     </div>
                 </div>}
             </div>

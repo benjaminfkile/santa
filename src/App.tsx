@@ -11,13 +11,21 @@ import fundData from "./Utils/FundsRing/FundData";
 import SponsorTypes from "./SponsorsSection/SponsorTypes";
 import "bootstrap/dist/css/bootstrap.min.css";
 
+interface SantaDat {
+  mode?: string | number;
+  lon?: number;
+  lng?: number;
+  interval?: number;
+  [key: string]: any;
+}
+
 type AppTypes = {
-  santaDat: any;
+  santaDat: SantaDat | null;
   sponsors: Array<SponsorTypes> | any;
 };
 
 class App extends Component<{}, AppTypes> {
-  state = {
+  state: AppTypes = {
     santaDat: null,
     sponsors: [],
   };
@@ -123,9 +131,12 @@ class App extends Component<{}, AppTypes> {
   };
 
   render() {
+
+    const mode = parseInt(String(this.state.santaDat?.mode ?? 0));
+
     return (
       <div className="WimsfoSanta">
-        <Switch>
+        {mode !== 1 && <Switch>
           <Route exact path="/" render={() => <AboutSection />} />
           <Route path="/about" render={() => <AboutSection />} />
           <Route path="/donate" render={() => <DonateSection />} />
@@ -146,7 +157,13 @@ class App extends Component<{}, AppTypes> {
             )}
           />
           <Route path="/contact" render={() => <ContactSection />} />
-        </Switch>
+        </Switch>}
+        {mode === 1 &&
+          <SantaTracker
+            santaDat={this.state.santaDat}
+            sponsors={this.state.sponsors}
+          />
+        }
         <div id="snackbar">snacks</div>
       </div>
     );
