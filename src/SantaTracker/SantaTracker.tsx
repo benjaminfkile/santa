@@ -5,10 +5,12 @@ import PreShow from "./PreShow/PreShow"
 import Runshow from "./RunShow/Runshow"
 //@ts-ignore
 import NoSleep from 'nosleep.js'
+import { ISantaRouteCache } from "../App"
 
 interface SantaTrackerProps {
     santaDat: any
     sponsors: any
+    route: ISantaRouteCache[]
 }
 
 type SantaTrackerTypes = {
@@ -68,6 +70,7 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
                     <Runshow
                         santaDat={this.props.santaDat}
                         sponsors={this.props.sponsors}
+                        route={this.props.route}
                     />
                 </div>}
                 {!loading && santaDat && mode === "2" && this.props.santaDat && this.props.santaDat.lat && <div className="RunShow">

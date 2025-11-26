@@ -1,4 +1,4 @@
-import { Component } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Route, Switch } from "react-router-dom";
 import axios from "axios";
 import SantaTracker from "./SantaTracker/SantaTracker";
@@ -8,8 +8,14 @@ import FundStatus from "./FundStatus/FundStatus";
 import SponsorsSection from "./SponsorsSection/SponsorsSection";
 import ContactSection from "./ContactSection/ContactSection";
 import fundData from "./Utils/FundsRing/FundData";
-import SponsorTypes from "./SponsorsSection/SponsorTypes";
 import "bootstrap/dist/css/bootstrap.min.css";
+
+export interface ISantaRouteCache {
+  lat: number;
+  lon: number;
+  seq: number;
+  time?: string;
+}
 
 interface SantaDat {
   mode?: string | number;
@@ -19,124 +25,122 @@ interface SantaDat {
   [key: string]: any;
 }
 
-type AppTypes = {
-  santaDat: SantaDat | null;
-  sponsors: Array<SponsorTypes> | any;
-};
+export default function App() {
+  const [santaDat, setSantaDat] = useState<SantaDat | null>(null);
+  const [sponsors, setSponsors] = useState<any[]>([]);
+  const [route, setRoute] = useState<ISantaRouteCache[]>([]);
 
-class App extends Component<{}, AppTypes> {
-  state: AppTypes = {
-    santaDat: null,
-    sponsors: [],
-  };
+  const updateFrequency = useRef(5000);
+  const santaTimer = useRef<NodeJS.Timeout | null>(null);
 
-  updateFrequency = 5000;
-  getSantaInterval: any;
-  usingFallbackSanta = false;
-  usingFallbackSponsors = false;
+  const primarySanta = process.env.REACT_APP_WMSFO_LOCATION_DATA_API_URL!;
+  const fallbackSanta = process.env.REACT_APP_WMSFO_LOCATION_DATA_API_URL_FALLBACK;
+  const primaryMrsClaus = process.env.REACT_APP_MRS_CLAUS_API_URL;
+  const fallbackMrsClaus = process.env.REACT_APP_MRS_CLAUS_API_URL_FALLBACK;
 
-  componentDidMount() {
-    this.getSanta();
-    this.getSponsors();
-    fundData.getFundData();
-    // eslint-disable-next-line
-    console.log(
-      "\n  .-\"\"-.\r\n \\/,..___\\\r\n() {_____}\r\n  (\\/-@-@-\\)\r\n  {`-=^=-'}\r\n  {  `-'  }\r\n   {     }\r\n    `---'\n\nDeveloped by Ben Kile\n\n"
-    );
-  }
 
-  componentWillUnmount() {
-    clearTimeout(this.getSantaInterval);
-  }
+  const fetchWithFallback = useCallback(
+    async (primary: string, fallback: string | undefined, pathPrimary: string, pathFallback: string) => {
+      try {
+        const res = await axios.get(`${primary}/${pathPrimary}`);
+        return { data: res.data, fallbackUsed: false };
+      } catch (err) {
+        console.warn("Primary failed, trying fallback...");
 
-  /** Fetches Santa data every 5 seconds.
-   * If primary fails → try fallback.
-   * If fallback succeeds → next cycle starts at primary again.
-   * If primary fails again → repeat the cycle.
-   */
-  getSanta = async (): Promise<void> => {
-    const primary = process.env.REACT_APP_WMSFO_LOCATION_DATA_API_URL!;
-    const fallback = process.env.REACT_APP_WMSFO_LOCATION_DATA_API_URL_FALLBACK;
+        if (!fallback) throw err;
 
+        try {
+          const res = await axios.get(`${fallback}/${pathFallback}`);
+          return { data: res.data, fallbackUsed: true };
+        } catch (err2) {
+          console.error("Fallback also failed:", err2);
+          throw err2;
+        }
+      }
+    },
+    []
+  );
+
+  const getSanta = useCallback(async () => {
     const primaryPath = "api/location-cache";
     const fallbackPath = "api/location-data";
 
-    try {
-      // 1. Try PRIMARY
-      const res = await axios.get(`${primary}/${primaryPath}`);
+    clearTimeout(santaTimer.current as any);
 
-      let data = res.data;
+    try {
+      const { data, fallbackUsed } = await fetchWithFallback(
+        primarySanta,
+        fallbackSanta,
+        primaryPath,
+        fallbackPath
+      );
+
       if (data.lon) data.lng = data.lon;
 
-      // --- UPDATE OCCURS ONLY WHEN PRIMARY SUCCEEDS ---
-      if (typeof data.interval === "number" && data.interval > 0) {
-        this.updateFrequency = data.interval;
-      }
-
-      this.setState({ santaDat: data });
-      this.usingFallbackSanta = false;
-    } catch (primaryErr) {
-      console.warn("Primary Santa failed, trying fallback...", primaryErr);
-
-      // --- FALLBACK MUST RESET TO 5000 ---
-      this.updateFrequency = 5000;
-
-      if (!fallback) {
-        console.error("No fallback available");
+      if (!fallbackUsed && typeof data.interval === "number" && data.interval > 0) {
+        updateFrequency.current = data.interval;
       } else {
-        try {
-          const res = await axios.get(`${fallback}/${fallbackPath}`);
-          let data = res.data;
-          if (data.lon) data.lng = data.lon;
-
-          this.setState({ santaDat: data });
-          this.usingFallbackSanta = true;
-        } catch (fallbackErr) {
-          console.error("Fallback Santa also failed:", fallbackErr);
-        }
+        updateFrequency.current = 5000;
       }
+
+      setSantaDat(data);
+    } catch (err) {
+      console.error("Santa fetch failed:", err);
     } finally {
-      clearTimeout(this.getSantaInterval);
-      this.getSantaInterval = setTimeout(this.getSanta, this.updateFrequency);
+      santaTimer.current = setTimeout(getSanta, updateFrequency.current);
     }
-  };
+  }, [fetchWithFallback, primarySanta, fallbackSanta]);
 
-  /** Fetches sponsors. Always tries primary first, then fallback. */
-  getSponsors = async (): Promise<void> => {
-    const primary = process.env.REACT_APP_MRS_CLAUS_API_URL;
-    const fallback = process.env.REACT_APP_MRS_CLAUS_API_URL_FALLBACK;
-
-    const primaryPath = "api/sponsor-cache";
-    const fallbackPath = "api/sponsors/get-sponsors";
-
+  const getSponsors = useCallback(async () => {
     try {
-      // Try PRIMARY
-      const res = await axios.get(`${primary}/${primaryPath}`);
-      this.setState({ sponsors: res.data });
-      this.usingFallbackSponsors = false;
-    } catch (primaryErr) {
-      console.warn("Primary sponsors failed, trying fallback...", primaryErr);
-
-      if (!fallback) return console.error("No fallback sponsor API available");
-
-      try {
-        // Try FALLBACK
-        const res = await axios.get(`${fallback}/${fallbackPath}`);
-        this.setState({ sponsors: res.data });
-        this.usingFallbackSponsors = true;
-      } catch (fallbackErr) {
-        console.error("Fallback sponsors also failed:", fallbackErr);
-      }
+      const { data } = await fetchWithFallback(
+        primaryMrsClaus!,
+        fallbackMrsClaus!,
+        "api/sponsor-cache",
+        "api/sponsors/get-sponsors"
+      );
+      setSponsors(data);
+    } catch (err) {
+      console.error("Sponsors fetch failed:", err);
     }
-  };
+  }, [fetchWithFallback, primaryMrsClaus, fallbackMrsClaus]);
 
-  render() {
+  const getRoute = useCallback(async () => {
+    try {
+      const { data } = await fetchWithFallback(
+        primarySanta,
+        fallbackSanta,
+        "api/flight-history",
+        "api/flight-history"
+      );
+      setRoute(data);
+    } catch (err) {
+      console.error("Route fetch failed:", err);
+    }
+  }, [fetchWithFallback, primarySanta, fallbackSanta]);
 
-    const mode = parseInt(String(this.state.santaDat?.mode ?? 0));
 
-    return (
-      <div className="WimsfoSanta">
-        {mode !== 1 && <Switch>
+  useEffect(() => {
+    (async () => {
+      await Promise.all([getSanta(), getSponsors(), getRoute()]);
+      fundData.getFundData();
+
+      console.log(
+        "\n  .-\"\"-.\r\n \\/,..___\\\r\n() {_____}\r\n  (\\/-@-@-\\)\r\n  {`-=^=-'}\r\n  {  `-'  }\r\n   {     }\r\n    `---'\n\nDeveloped by Ben Kile\n\n"
+      );
+    })();
+
+    return () => {
+      if (santaTimer.current) clearTimeout(santaTimer.current);
+    };
+  }, [getSanta, getSponsors, getRoute]);
+
+  const mode = parseInt(String(santaDat?.mode ?? 0));
+
+  return (
+    <div className="WimsfoSanta">
+      {mode !== 1 && (
+        <Switch>
           <Route exact path="/" render={() => <AboutSection />} />
           <Route path="/about" render={() => <AboutSection />} />
           <Route path="/donate" render={() => <DonateSection />} />
@@ -144,30 +148,17 @@ class App extends Component<{}, AppTypes> {
           <Route
             path="/santa"
             render={() => (
-              <SantaTracker
-                santaDat={this.state.santaDat}
-                sponsors={this.state.sponsors}
-              />
+              <SantaTracker santaDat={santaDat} sponsors={sponsors} route={route} />
             )}
           />
-          <Route
-            path="/sponsors"
-            render={() => (
-              <SponsorsSection sponsors={this.state.sponsors} />
-            )}
-          />
+          <Route path="/sponsors" render={() => <SponsorsSection sponsors={sponsors} />} />
           <Route path="/contact" render={() => <ContactSection />} />
-        </Switch>}
-        {mode === 1 &&
-          <SantaTracker
-            santaDat={this.state.santaDat}
-            sponsors={this.state.sponsors}
-          />
-        }
-        <div id="snackbar">snacks</div>
-      </div>
-    );
-  }
-}
+        </Switch>
+      )}
 
-export default App;
+      {mode === 1 && <SantaTracker santaDat={santaDat} sponsors={sponsors} route={route} />}
+
+      <div id="snackbar">snacks</div>
+    </div>
+  );
+}
