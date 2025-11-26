@@ -434,9 +434,7 @@ class Tracker extends Component {
 
     if (!this.props.route || this.props.route.length === 0) return;
 
-    // --------------------------------------------
     // Build full path (lat/lng + timestamp)
-    // --------------------------------------------
     const path = this.props.route.map((p) => ({
       lat: Number(p.lat),
       lng: Number(p.lng ?? p.lon),
@@ -448,27 +446,21 @@ class Tracker extends Component {
     if (this.arrowPolyline) this.arrowPolyline.setMap(null);
     this.clearTimeMarkers();
 
-    // --------------------------------------------
     // Get FIRST valid timestamp → becomes time = 0
-    // --------------------------------------------
     const firstValid = path.find((p) => p.time && !isNaN(p.time));
     if (!firstValid) return;
 
     const startTime = firstValid.time;
 
-    // ------------------------------------------------
-    // Dynamic interval based on zoom (5 → 45 minutes)
-    // ------------------------------------------------
+    //interval based on zoom (5 → 45 minutes)
     const zoom = this.map.getZoom();
 
-    const intervalMin = this.getTimeIntervalForZoom(zoom); // << dynamic!
+    const intervalMin = this.getTimeIntervalForZoom(zoom);
     const intervalMs = intervalMin * 60 * 1000;
 
     let nextMarkTime = startTime + intervalMs;
 
-    // --------------------------------------------
     // Theme colors
-    // --------------------------------------------
     const theme = this.mapThemes.find(
       (t) => t.title === this.state.currentTheme
     );
@@ -489,9 +481,7 @@ class Tracker extends Component {
       fillOpacity: 1,
     };
 
-    // --------------------------------------------
     // Build arrows + time markers
-    // --------------------------------------------
     let icons = [];
 
     for (let i = 0; i < path.length; i++) {
@@ -500,9 +490,7 @@ class Tracker extends Component {
       if (!point.time) continue;
 
       if (point.time >= nextMarkTime) {
-        // --------------------------------------------
         // Arrow position (percentage along entire route)
-        // --------------------------------------------
         const offsetPercent = (i / path.length) * 100;
 
         icons.push({
@@ -510,9 +498,7 @@ class Tracker extends Component {
           offset: `${offsetPercent}%`,
         });
 
-        // --------------------------------------------
         // Elapsed time label text (0-based)
-        // --------------------------------------------
         const elapsedMin = Math.floor((point.time - startTime) / 60000);
 
         let labelText;
@@ -524,9 +510,7 @@ class Tracker extends Component {
           labelText = `${elapsedMin} min`;
         }
 
-        // --------------------------------------------
         // Add SVG label next to arrow
-        // --------------------------------------------
         const labelMarker = new window.google.maps.Marker({
           position: { lat: point.lat, lng: point.lng },
           map: this.map,
@@ -555,9 +539,7 @@ class Tracker extends Component {
       }
     }
 
-    // --------------------------------------------
     // Draw main route polyline
-    // --------------------------------------------
     this.routePolyline = new window.google.maps.Polyline({
       path,
       strokeColor: routeColor,
@@ -567,9 +549,7 @@ class Tracker extends Component {
     });
     this.routePolyline.setMap(this.map);
 
-    // --------------------------------------------
     // Draw the arrow overlay
-    // --------------------------------------------
     this.arrowPolyline = new window.google.maps.Polyline({
       path,
       strokeOpacity: 0,
