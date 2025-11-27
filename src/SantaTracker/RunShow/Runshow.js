@@ -106,7 +106,10 @@ class Tracker extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (prevProps.route !== this.props.route) {
+    const routeChanged = prevProps.route !== this.props.route;
+    const santaDatChanged = prevProps.santaDat !== this.props.santaDat;
+
+    if (routeChanged || santaDatChanged) {
       this.drawRoutePolyline();
     }
   }
@@ -419,12 +422,149 @@ class Tracker extends Component {
     }
   }
 
+  // drawRoutePolyline = () => {
+  //   if (!this.map) return;
+
+  //   // --------------------------------------------
+  //   // Hide everything if history is disabled
+  //   // --------------------------------------------
+  //   if (!this.state.showHistory) {
+  //     if (this.routePolyline) this.routePolyline.setMap(null);
+  //     if (this.arrowPolyline) this.arrowPolyline.setMap(null);
+  //     this.clearTimeMarkers();
+  //     return;
+  //   }
+
+  //   if (!this.props.route || this.props.route.length === 0) return;
+
+  //   // Build full path (lat/lng + timestamp)
+  //   const path = this.props.route.map((p) => ({
+  //     lat: Number(p.lat),
+  //     lng: Number(p.lng ?? p.lon),
+  //     time: p.time ? new Date(p.time).getTime() : null,
+  //   }));
+
+  //   // Remove old lines + markers
+  //   if (this.routePolyline) this.routePolyline.setMap(null);
+  //   if (this.arrowPolyline) this.arrowPolyline.setMap(null);
+  //   this.clearTimeMarkers();
+
+  //   // Get FIRST valid timestamp → becomes time = 0
+  //   const firstValid = path.find((p) => p.time && !isNaN(p.time));
+  //   if (!firstValid) return;
+
+  //   const startTime = firstValid.time;
+
+  //   //interval based on zoom (5 → 45 minutes)
+  //   const zoom = this.map.getZoom();
+
+  //   const intervalMin = this.getTimeIntervalForZoom(zoom);
+  //   const intervalMs = intervalMin * 60 * 1000;
+
+  //   let nextMarkTime = startTime + intervalMs;
+
+  //   // Theme colors
+  //   const theme = this.mapThemes.find(
+  //     (t) => t.title === this.state.currentTheme
+  //   );
+
+  //   const routeColor = theme?.routeColor || "#FF0000";
+  //   const arrowColor = theme?.arrowColor || "#FFFFFF";
+  //   const routeOpacity = theme?.routeOpacity || 1;
+
+  //   // Arrow icon size based on zoom:
+  //   const arrowScale = this.getArrowScaleForZoom(zoom);
+
+  //   const arrowSymbol = {
+  //     path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+  //     scale: arrowScale,
+  //     strokeColor: arrowColor,
+  //     strokeOpacity: 1,
+  //     fillColor: arrowColor,
+  //     fillOpacity: 1,
+  //   };
+
+  //   // Build arrows + time markers
+  //   let icons = [];
+
+  //   for (let i = 0; i < path.length; i++) {
+  //     const point = path[i];
+
+  //     if (!point.time) continue;
+
+  //     if (point.time >= nextMarkTime) {
+  //       // Arrow position (percentage along entire route)
+  //       const offsetPercent = (i / path.length) * 100;
+
+  //       icons.push({
+  //         icon: arrowSymbol,
+  //         offset: `${offsetPercent}%`,
+  //       });
+
+  //       // Elapsed time label text (0-based)
+  //       const elapsedMin = Math.floor((point.time - startTime) / 60000);
+
+  //       let labelText;
+  //       if (elapsedMin >= 60) {
+  //         const hrs = Math.floor(elapsedMin / 60);
+  //         const mins = elapsedMin % 60;
+  //         labelText = mins === 0 ? `${hrs} hr` : `${hrs} hr ${mins} min`;
+  //       } else {
+  //         labelText = `${elapsedMin} min`;
+  //       }
+
+  //       // Add SVG label next to arrow
+  //       const labelMarker = new window.google.maps.Marker({
+  //         position: { lat: point.lat, lng: point.lng },
+  //         map: this.map,
+  //         icon: {
+  //           url:
+  //             "data:image/svg+xml;charset=UTF-8," +
+  //             encodeURIComponent(`
+  //           <svg xmlns="http://www.w3.org/2000/svg" width="90" height="28">
+  //             <rect width="90" height="28" rx="4" ry="4"
+  //                   fill="black" opacity="0.65"/>
+  //             <text x="45" y="18" text-anchor="middle"
+  //                   fill="white" font-size="14" font-family="Arial">
+  //               ${labelText}
+  //             </text>
+  //           </svg>
+  //         `),
+  //           scaledSize: new window.google.maps.Size(90, 28),
+  //           anchor: new window.google.maps.Point(45, 14),
+  //         },
+  //       });
+
+  //       this.timeMarkers.push(labelMarker);
+
+  //       // schedule next time label
+  //       nextMarkTime += intervalMs;
+  //     }
+  //   }
+
+  //   // Draw main route polyline
+  //   this.routePolyline = new window.google.maps.Polyline({
+  //     path,
+  //     strokeColor: routeColor,
+  //     strokeOpacity: routeOpacity,
+  //     strokeWeight: 2,
+  //     geodesic: true,
+  //   });
+  //   this.routePolyline.setMap(this.map);
+
+  //   // Draw the arrow overlay
+  //   this.arrowPolyline = new window.google.maps.Polyline({
+  //     path,
+  //     strokeOpacity: 0,
+  //     icons,
+  //   });
+  //   this.arrowPolyline.setMap(this.map);
+  // };
+
   drawRoutePolyline = () => {
     if (!this.map) return;
 
-    // --------------------------------------------
-    // Hide everything if history is disabled
-    // --------------------------------------------
+
     if (!this.state.showHistory) {
       if (this.routePolyline) this.routePolyline.setMap(null);
       if (this.arrowPolyline) this.arrowPolyline.setMap(null);
@@ -434,33 +574,28 @@ class Tracker extends Component {
 
     if (!this.props.route || this.props.route.length === 0) return;
 
-    // Build full path (lat/lng + timestamp)
-    const path = this.props.route.map((p) => ({
-      lat: Number(p.lat),
-      lng: Number(p.lng ?? p.lon),
-      time: p.time ? new Date(p.time).getTime() : null,
-    }));
+    // Use predictions (if available)
+    const predictions = this.props.santaDat?.predictions || [];
 
-    // Remove old lines + markers
+    // Convert to drawable path
+    const path = this.props.route.map((p) => {
+      const predicted = predictions.find((x) => x.seq === p.seq);
+
+      return {
+        lat: Number(p.lat),
+        lng: Number(p.lng ?? p.lon),
+        predictedTime: predicted ? Number(predicted.predictedTime) : null,
+        seq: p.seq,
+      };
+    });
+
+    // Clear previous render
     if (this.routePolyline) this.routePolyline.setMap(null);
     if (this.arrowPolyline) this.arrowPolyline.setMap(null);
     this.clearTimeMarkers();
 
-    // Get FIRST valid timestamp → becomes time = 0
-    const firstValid = path.find((p) => p.time && !isNaN(p.time));
-    if (!firstValid) return;
-
-    const startTime = firstValid.time;
-
-    //interval based on zoom (5 → 45 minutes)
+    // Theme + zoom settings
     const zoom = this.map.getZoom();
-
-    const intervalMin = this.getTimeIntervalForZoom(zoom);
-    const intervalMs = intervalMin * 60 * 1000;
-
-    let nextMarkTime = startTime + intervalMs;
-
-    // Theme colors
     const theme = this.mapThemes.find(
       (t) => t.title === this.state.currentTheme
     );
@@ -469,8 +604,8 @@ class Tracker extends Component {
     const arrowColor = theme?.arrowColor || "#FFFFFF";
     const routeOpacity = theme?.routeOpacity || 1;
 
-    // Arrow icon size based on zoom:
     const arrowScale = this.getArrowScaleForZoom(zoom);
+    const step = this.getArrowStepForZoom(zoom); // <<< STABLE SPACING BY INDEX
 
     const arrowSymbol = {
       path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
@@ -481,43 +616,32 @@ class Tracker extends Component {
       fillOpacity: 1,
     };
 
-    // Build arrows + time markers
+    // Build arrows + labels at FIXED PATH POSITIONS
     let icons = [];
 
-    for (let i = 0; i < path.length; i++) {
+    for (let i = 0; i < path.length; i += step) {
       const point = path[i];
+      if (!point.predictedTime) continue;
 
-      if (!point.time) continue;
+      const offsetPercent = (i / path.length) * 100;
 
-      if (point.time >= nextMarkTime) {
-        // Arrow position (percentage along entire route)
-        const offsetPercent = (i / path.length) * 100;
+      icons.push({
+        icon: arrowSymbol,
+        offset: `${offsetPercent}%`,
+      });
 
-        icons.push({
-          icon: arrowSymbol,
-          offset: `${offsetPercent}%`,
-        });
+      const labelText = new Date(point.predictedTime).toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+      });
 
-        // Elapsed time label text (0-based)
-        const elapsedMin = Math.floor((point.time - startTime) / 60000);
-
-        let labelText;
-        if (elapsedMin >= 60) {
-          const hrs = Math.floor(elapsedMin / 60);
-          const mins = elapsedMin % 60;
-          labelText = mins === 0 ? `${hrs} hr` : `${hrs} hr ${mins} min`;
-        } else {
-          labelText = `${elapsedMin} min`;
-        }
-
-        // Add SVG label next to arrow
-        const labelMarker = new window.google.maps.Marker({
-          position: { lat: point.lat, lng: point.lng },
-          map: this.map,
-          icon: {
-            url:
-              "data:image/svg+xml;charset=UTF-8," +
-              encodeURIComponent(`
+      const labelMarker = new window.google.maps.Marker({
+        position: { lat: point.lat, lng: point.lng },
+        map: this.map,
+        icon: {
+          url:
+            "data:image/svg+xml;charset=UTF-8," +
+            encodeURIComponent(`
             <svg xmlns="http://www.w3.org/2000/svg" width="90" height="28">
               <rect width="90" height="28" rx="4" ry="4"
                     fill="black" opacity="0.65"/>
@@ -527,21 +651,17 @@ class Tracker extends Component {
               </text>
             </svg>
           `),
-            scaledSize: new window.google.maps.Size(90, 28),
-            anchor: new window.google.maps.Point(45, 14),
-          },
-        });
+          scaledSize: new window.google.maps.Size(90, 28),
+          anchor: new window.google.maps.Point(45, 14),
+        },
+      });
 
-        this.timeMarkers.push(labelMarker);
-
-        // schedule next time label
-        nextMarkTime += intervalMs;
-      }
+      this.timeMarkers.push(labelMarker);
     }
 
-    // Draw main route polyline
+    // Draw route polyline
     this.routePolyline = new window.google.maps.Polyline({
-      path,
+      path: path.map((p) => ({ lat: p.lat, lng: p.lng })),
       strokeColor: routeColor,
       strokeOpacity: routeOpacity,
       strokeWeight: 2,
@@ -549,9 +669,9 @@ class Tracker extends Component {
     });
     this.routePolyline.setMap(this.map);
 
-    // Draw the arrow overlay
+    // Draw arrow overlay
     this.arrowPolyline = new window.google.maps.Polyline({
-      path,
+      path: path.map((p) => ({ lat: p.lat, lng: p.lng })),
       strokeOpacity: 0,
       icons,
     });
