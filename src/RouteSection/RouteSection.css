@@ -1,23 +1,17 @@
-.RouteSection {
-    position: relative;   
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-}
-
 .RouteSectionControls {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 9999;        
-    pointer-events: auto; 
-}
-
-.RouteSectionZoomer {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
-    z-index: 1;          
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.RouteSectionControls * {
+    pointer-events: auto;
+}
+
+.RouteViewer {
+    position: relative;
+    z-index: 1;
 }

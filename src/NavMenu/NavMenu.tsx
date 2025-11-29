@@ -115,7 +115,7 @@ class NavMenu extends Component<{}, NavTypes> {
                                 </div>
                             </Link>
                         </div>
-                        <div className="NavMenuRoute" tabIndex={5} onClick={this.toggleMenu}>
+                        <div className="NavMenuRoute" id="2f05ecdc-9813-4135-965b-8cf5402c2cd7" tabIndex={5} onClick={this.toggleMenu}>
                             <Link to="/route">
                                 <div className="NavMenuRouteBtn NavMenuRouteBtnRoute">
                                     <span className="material-icons">route</span>
