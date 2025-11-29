@@ -8,6 +8,7 @@ import FundStatus from "./FundStatus/FundStatus";
 import SponsorsSection from "./SponsorsSection/SponsorsSection";
 import ContactSection from "./ContactSection/ContactSection";
 import fundData from "./Utils/FundsRing/FundData";
+import RouteSection from "./RouteSection/RouteSection";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 export interface ISantaRouteCache {
@@ -153,6 +154,7 @@ export default function App() {
           />
           <Route path="/sponsors" render={() => <SponsorsSection sponsors={sponsors} />} />
           <Route path="/contact" render={() => <ContactSection />} />
+          <Route path="/route" render={() => <RouteSection />} />
         </Switch>
       )}
 

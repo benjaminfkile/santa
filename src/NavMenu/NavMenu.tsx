@@ -115,14 +115,13 @@ class NavMenu extends Component<{}, NavTypes> {
                                 </div>
                             </Link>
                         </div>
-                        <div className="NavMenuRoute" tabIndex={5} onClick={() => {
-                            this.toggleMenu();
-                            this.openRoute();
-                        }}>
-                            <div className="NavMenuRouteBtn NavMenuRouteBtnRoute">
-                                <span className="material-icons">route</span>
-                                <p id="history-route-text">Route</p>
-                            </div>
+                        <div className="NavMenuRoute" tabIndex={5} onClick={this.toggleMenu}>
+                            <Link to="/route">
+                                <div className="NavMenuRouteBtn NavMenuRouteBtnRoute">
+                                    <span className="material-icons">route</span>
+                                    <p id="history-route-text">Route</p>
+                                </div>
+                            </Link>
                         </div>
                         <div className="NavMenuRoute" tabIndex={6} onClick={this.toggleMenu}>
                             <Link to='/contact'>
