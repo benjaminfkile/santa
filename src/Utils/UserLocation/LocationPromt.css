@@ -67,3 +67,9 @@
 .LocationPromptCustomModalBody p {
     margin-bottom: 10px;
 }
+
+.LocationPromptCustomModalFooter{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}

@@ -66,7 +66,7 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
             return (
                 <p className="LocationPromtYellowParagraph">
                     You are currently using Facebook or Instagram’s in-app browser.
-                    Location updates may not work properly.  
+                    Location updates may not work properly.
                     <strong>For best results, open this page in Safari, Chrome, or Edge.</strong>
                 </p>
             );
@@ -145,13 +145,15 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
                         </Modal.Body>
 
                         <Modal.Footer>
-                            <Button onClick={this.handleUserAllowLocation}>Ok</Button>
-                            <Button
-                                variant="secondary"
-                                onClick={() => this.props.toggleLocationPrompt()}
-                            >
-                                Back
-                            </Button>
+                            <div className="LocationPromptCustomModalFooter">
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => this.props.toggleLocationPrompt()}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button onClick={this.handleUserAllowLocation}>Enable</Button>
+                            </div>
                         </Modal.Footer>
                     </Modal>
                 )}
@@ -161,6 +163,7 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
                         id={`location-prompt-modal-${theme}`}
                         show={true}
                         keyboard={false}
+                        centered
                     >
                         <Modal.Header>
                             <div
@@ -181,18 +184,21 @@ class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes>
                         </Modal.Body>
 
                         <Modal.Footer>
-                            <Button
-                                variant="danger"
-                                onClick={this.handleUserRevokeLocation}
-                            >
-                                Disable
-                            </Button>
-                            <Button
-                                variant="secondary"
-                                onClick={() => this.props.toggleLocationPrompt()}
-                            >
-                                Back
-                            </Button>
+                            <div className="LocationPromptCustomModalFooter">
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => this.props.toggleLocationPrompt()}
+                                >
+                                    Back
+                                </Button>
+                                <Button
+                                    variant="danger"
+                                    onClick={this.handleUserRevokeLocation}
+                                >
+                                    Disable
+                                </Button>
+                            </div>
+
                         </Modal.Footer>
                     </Modal>
                 )}
