@@ -318,7 +318,7 @@ const TrackerMenu = (props: {
                     />
                 )
             }
-            {showDisclaimer && <RouteDisclaimer onClose={() => setShowDisclaimer(false)} theme={themeKey} />}
+            {showDisclaimer && <RouteDisclaimer onClose={() => setShowDisclaimer(false)} isInTracker />}
         </div >
     );
 };

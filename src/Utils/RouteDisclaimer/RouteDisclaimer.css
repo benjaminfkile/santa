@@ -1,68 +1,74 @@
-#route-disclaimer-modal-standard .modal-content {
-    background-color: #ffffff;
-    color: #000;
+/* The dialog container */
+.rd-dialog {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-#route-disclaimer-modal-standard button {
-    background-color: #bdd8bb;
-    color: #000;
-    border: none;
+/* MAIN MODAL CONTENT */
+.rd-content-night {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border-radius: 14px !important;
+    overflow: hidden;
+    padding: 0; /* let header/body/footer handle spacing */
+    box-shadow:
+       0 0 18px rgba(0, 0, 0, 0.8),
+       0 0 22px rgba(0, 255, 255, 0.25),
+       0 0 40px rgba(0, 255, 255, 0.15);
+    position: relative;
 }
 
-#route-disclaimer-modal-retro .modal-content {
-    background-color: #dfd2ae;
-    color: #000;
+/* TOP ACCENT BAR */
+.rd-content-night::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 8px;
+    background: #00eaff7d; /* night theme cyan */
 }
 
-#route-disclaimer-modal-retro button {
-    background-color: #dfd2ae;
-    color: #000;
-    border: none;
+/* HEADER */
+.rd-content-night .modal-header {
+    border-bottom: none;
+    padding: 1.4rem 1.4rem 1.2rem;
 }
 
-#route-disclaimer-modal-silver .modal-content {
-    background-color: #ffffff;
-    border: 1px solid #c7d3ddba;
-    color: #000;
-}
-
-#route-disclaimer-modal-silver button {
-    background-color: #c7d3ddba;
-    color: #000;
-    border: none;
-}
-
-
-#route-disclaimer-modal-dark .modal-content {
-    background-color: #2f2d2de6;
-    color: #b5b5b5;
-}
-
-#route-disclaimer-modal-dark button {
-    background-color: #434343;
-    color: #b5b5b5;
-    border: none;
-}
-
-#route-disclaimer-modal-night .modal-content {
-    background-color: #000000;
+.rd-content-night .modal-title {
+    font-size: 1.55rem;
+    font-weight: 700;
     color: #ffffff;
 }
 
-#route-disclaimer-modal-night button {
-    background-color: #4d5662;
+/* BODY STYLING */
+.rd-content-night .modal-body {
+    padding: 1.6rem;
+    background: linear-gradient(180deg, #0b0b0b 0%, #161616 100%);
     color: #ffffff;
-    border: none;
+    font-size: 1rem;
+    line-height: 1.45rem;
+    border-bottom-left-radius: 14px;
+    border-bottom-right-radius: 14px;
 }
 
-#route-disclaimer-modal-aubergine .modal-content {
-    background-color: #1d2c4dd4;
-    color: #ffffff;
+/* FOOTER */
+.rd-content-night .modal-footer {
+    border-top: none;
+    padding: 1.2rem 1.4rem 1.6rem;
 }
 
-#route-disclaimer-modal-aubergine button {
-    background-color: #2d5f75;
-    color: #ffffff;
-    border: none;
+/* BUTTON */
+.rd-content-night .btn-primary {
+    background-color: #4d5662 !important;
+    border: none !important;
+    padding: 10px 24px !important;
+    border-radius: 10px !important;
+    font-weight: 600;
+    box-shadow: 0px 3px 8px rgba(0, 180, 255, 0.25);
 }
 
+.rd-content-night .btn-primary:hover {
+    background-color: #63707e !important;
+}

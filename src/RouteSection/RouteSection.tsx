@@ -3,8 +3,8 @@ import NavMenu from "../NavMenu/NavMenu";
 // @ts-ignore
 import OpenSeadragon from "openseadragon";
 import Logo from "../Utils/Logo/Logo";
-import "./RouteSection.css";
 import RouteDisclaimer from "../Utils/RouteDisclaimer/RouteDisclaimer";
+import "./RouteSection.css";
 
 const RouteSection: FunctionComponent<{}> = () => {
     const viewerRef = useRef<HTMLDivElement | null>(null);
@@ -45,21 +45,14 @@ const RouteSection: FunctionComponent<{}> = () => {
 
     return (
         <div className="RouteSection">
-            <div className="RouteSectionLogo">
-                <Logo />
-            </div>
             <div className="RouteSectionControls">
                 <NavMenu />
+                <Logo />
             </div>
 
             <div
                 ref={viewerRef}
                 className="RouteViewer"
-                style={{
-                    width: "100vw",
-                    height: "100vh",
-                    background: "#242526"
-                }}
             />
             {showDisclaimer && <RouteDisclaimer onClose={() => setShowDisclaimer(false)} />}
         </div>
