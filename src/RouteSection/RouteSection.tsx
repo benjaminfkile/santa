@@ -2,6 +2,7 @@ import { FunctionComponent, useRef, useEffect } from "react";
 import NavMenu from "../NavMenu/NavMenu";
 // @ts-ignore
 import OpenSeadragon from "openseadragon";
+import Logo from "../Utils/Logo/Logo";
 import "./RouteSection.css";
 
 const RouteSection: FunctionComponent<{}> = () => {
@@ -27,6 +28,7 @@ const RouteSection: FunctionComponent<{}> = () => {
             drawer: 'canvas',
             maxZoomPixelRatio: 2,
             minZoomImageRatio: 0.8,
+            navigationControlAnchor: OpenSeadragon.ControlAnchor.BOTTOM_RIGHT,
         });
 
         viewer.addHandler("canvas-press", closeMenu);
@@ -41,6 +43,9 @@ const RouteSection: FunctionComponent<{}> = () => {
 
     return (
         <div className="RouteSection">
+            <div className="RouteSectionLogo">
+                <Logo />
+            </div>
             <div className="RouteSectionControls">
                 <NavMenu />
             </div>
