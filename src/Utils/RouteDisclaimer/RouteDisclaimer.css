@@ -1,0 +1,68 @@
+#route-disclaimer-modal-standard .modal-content {
+    background-color: #ffffff;
+    color: #000;
+}
+
+#route-disclaimer-modal-standard button {
+    background-color: #bdd8bb;
+    color: #000;
+    border: none;
+}
+
+#route-disclaimer-modal-retro .modal-content {
+    background-color: #dfd2ae;
+    color: #000;
+}
+
+#route-disclaimer-modal-retro button {
+    background-color: #dfd2ae;
+    color: #000;
+    border: none;
+}
+
+#route-disclaimer-modal-silver .modal-content {
+    background-color: #ffffff;
+    border: 1px solid #c7d3ddba;
+    color: #000;
+}
+
+#route-disclaimer-modal-silver button {
+    background-color: #c7d3ddba;
+    color: #000;
+    border: none;
+}
+
+
+#route-disclaimer-modal-dark .modal-content {
+    background-color: #2f2d2de6;
+    color: #b5b5b5;
+}
+
+#route-disclaimer-modal-dark button {
+    background-color: #434343;
+    color: #b5b5b5;
+    border: none;
+}
+
+#route-disclaimer-modal-night .modal-content {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+#route-disclaimer-modal-night button {
+    background-color: #4d5662;
+    color: #ffffff;
+    border: none;
+}
+
+#route-disclaimer-modal-aubergine .modal-content {
+    background-color: #1d2c4dd4;
+    color: #ffffff;
+}
+
+#route-disclaimer-modal-aubergine button {
+    background-color: #2d5f75;
+    color: #ffffff;
+    border: none;
+}
+

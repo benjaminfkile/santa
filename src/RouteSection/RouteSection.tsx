@@ -1,12 +1,14 @@
-import { FunctionComponent, useRef, useEffect } from "react";
+import { FunctionComponent, useRef, useEffect, useState } from "react";
 import NavMenu from "../NavMenu/NavMenu";
 // @ts-ignore
 import OpenSeadragon from "openseadragon";
 import Logo from "../Utils/Logo/Logo";
 import "./RouteSection.css";
+import RouteDisclaimer from "../Utils/RouteDisclaimer/RouteDisclaimer";
 
 const RouteSection: FunctionComponent<{}> = () => {
     const viewerRef = useRef<HTMLDivElement | null>(null);
+    const [showDisclaimer, setShowDisclaimer] = useState(true)
 
     const closeMenu = () => {
         const elem = document.getElementById("2f05ecdc-9813-4135-965b-8cf5402c2cd7");
@@ -59,6 +61,7 @@ const RouteSection: FunctionComponent<{}> = () => {
                     background: "#242526"
                 }}
             />
+            {showDisclaimer && <RouteDisclaimer onClose={() => setShowDisclaimer(false)} />}
         </div>
     );
 };

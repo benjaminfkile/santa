@@ -3,12 +3,14 @@ import LocationPrompt from "../../../Utils/UserLocation/LocationPrompt";
 import userLocation from "../../../Utils/UserLocation/UserLocation";
 import ToggleStatus from "./ToggleStatus/ToggleStatus";
 import "./Menu.css";
+import RouteDisclaimer from "../../../Utils/RouteDisclaimer/RouteDisclaimer";
 
 
 const TrackerMenu = (props: {
-    changeTheme: any;
-    toggleMapTypes: any;
-    toggleHistory: any;
+    changeTheme: Function;
+    toggleMapTypes: VoidFunction;
+    toggleHistory: VoidFunction;
+    toggleTimes: VoidFunction
     mapType: any;
     availableThemes: any;
     currentTheme: any;
@@ -22,6 +24,7 @@ const TrackerMenu = (props: {
         changeTheme,
         toggleMapTypes,
         toggleHistory,
+        toggleTimes,
         mapType,
         availableThemes,
         currentTheme,
@@ -36,7 +39,9 @@ const TrackerMenu = (props: {
     const [mapTypeId, setMapTypeId] = useState(mapType);
     const [snow, setSnow] = useState(false);
     const [locationPrompt, setLocationPrompt] = useState(false);
-    const [historyOn, setHistoryOn] = useState(false);
+    const [historyOn, setHistoryOn] = useState(true);
+    const [timesOn, setTimesOn] = useState(true)
+    const [showDisclaimer, setShowDisclaimer] = useState(timesOn)
 
     useEffect(() => {
         setMapTypeId(mapType);
@@ -70,10 +75,10 @@ const TrackerMenu = (props: {
         toggleHistory();
     };
 
-    const handleHomeClick = () => {
-        window.location.href = "/about";
+    const handleToggleTimes = () => {
+        setTimesOn((prev) => !prev);
+        toggleTimes();
     };
-
 
 
     const isTerrain = mapTypeId === "terrain";
@@ -277,9 +282,16 @@ const TrackerMenu = (props: {
                             </div>
                             <div
                                 className={`TrackerMenuFooterBtn TrackerMenuFooterBtn-${themeKey}`}
-                                onClick={handleHomeClick}
+                                onClick={handleToggleTimes}
                             >
-                                <span className="material-icons">home</span>
+                                <span className="material-icons">{`${timesOn ? "hourglass_full" : "hourglass_empty"}`}</span>
+                                <ToggleStatus
+                                    checked={timesOn}
+                                    position="bottom"
+                                    themeKey={themeKey}
+                                    parentHeight={50}
+                                    parentWidth={50}
+                                />
 
                             </div>
                             <div
@@ -293,18 +305,21 @@ const TrackerMenu = (props: {
                         </div>
                     </div>
                 </div>
-            )}
+            )
+            }
 
             {/* Modals */}
-            {locationPrompt && (
-                <LocationPrompt
-                    toggleLocationPrompt={handleToggleLocationPrompt}
-                    theme={currentTheme}
-                    getUserLocation={getUserLocation}
-                />
-            )}
-
-        </div>
+            {
+                locationPrompt && (
+                    <LocationPrompt
+                        toggleLocationPrompt={handleToggleLocationPrompt}
+                        theme={currentTheme}
+                        getUserLocation={getUserLocation}
+                    />
+                )
+            }
+            {showDisclaimer && <RouteDisclaimer onClose={() => setShowDisclaimer(false)} theme={themeKey} />}
+        </div >
     );
 };
 

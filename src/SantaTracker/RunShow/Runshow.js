@@ -85,7 +85,8 @@ class Tracker extends Component {
     menuOpen: false,
     test: true,
     donate: false,
-    showHistory: false,
+    showHistory: true,
+    showTimes: true,
   };
 
   componentDidMount() {
@@ -356,9 +357,9 @@ class Tracker extends Component {
   };
 
   getArrowScaleForZoom(zoom) {
-    if (zoom >= 15) return 6;
-    if (zoom >= 13) return 5;
-    if (zoom >= 11) return 4;
+    // if (zoom >= 15) return 6;
+    // if (zoom >= 13) return 5;
+    //if (zoom >= 11) return 4;
     if (zoom >= 9) return 3;
     return 2;
   }
@@ -415,145 +416,154 @@ class Tracker extends Component {
 
   drawRoutePolyline = () => {
     if (!this.map) return;
-
-    // --------------------------------------------
-    // Hide everything if history is disabled
-    // --------------------------------------------
-    if (!this.state.showHistory) {
-      if (this.routePolyline) this.routePolyline.setMap(null);
-      if (this.arrowPolyline) this.arrowPolyline.setMap(null);
-      this.clearTimeMarkers();
-      return;
-    }
-
     if (!this.props.route || this.props.route.length === 0) return;
 
-    // Build full path (lat/lng + timestamp)
     const path = this.props.route.map((p) => ({
       lat: p.lat,
       lng: p.lng,
       time: p.time ? new Date(p.time).getTime() : null,
     }));
 
-    // Remove old lines + markers
+    // -----------------------------
+    // ALWAYS CLEAR OLD LAYERS FIRST
+    // -----------------------------
     if (this.routePolyline) this.routePolyline.setMap(null);
     if (this.arrowPolyline) this.arrowPolyline.setMap(null);
     this.clearTimeMarkers();
 
-    // Get FIRST valid timestamp → becomes time = 0
-    const firstValid = path.find((p) => p.time && !isNaN(p.time));
-    if (!firstValid) return;
+    // stop early if NOTHING is enabled
+    if (!this.state.showHistory && !this.state.showTimes) return;
 
-    const startTime = firstValid.time;
-
-    //interval based on zoom (5 → 45 minutes)
-    const zoom = this.map.getZoom();
-
-    const intervalMin = this.getTimeIntervalForZoom(zoom);
-    const intervalMs = intervalMin * 60 * 1000;
-
-    let nextMarkTime = startTime + intervalMs;
-
-    // Theme colors
+    // theme
     const theme = this.mapThemes.find(
       (t) => t.title === this.state.currentTheme
     );
-
     const routeColor = theme?.routeColor || "#FF0000";
     const arrowColor = theme?.arrowColor || "#FFFFFF";
     const routeOpacity = theme?.routeOpacity || 1;
 
-    // Arrow icon size based on zoom:
+    const zoom = this.map.getZoom();
     const arrowScale = this.getArrowScaleForZoom(zoom);
+    const arrowStep = this.getArrowStepForZoom(zoom);
 
     const arrowSymbol = {
       path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
       scale: arrowScale,
-      strokeColor: arrowColor,
-      strokeOpacity: 1,
       fillColor: arrowColor,
       fillOpacity: 1,
+      strokeColor: arrowColor,
+      strokeOpacity: 1,
     };
 
-    // Build arrows + time markers
-    let icons = [];
+    // ---------------------------------------------------
+    // (1) DRAW ROUTE + ARROWS ***IF showHistory === true***
+    // ---------------------------------------------------
+    if (this.state.showHistory) {
+      // main polyline
+      this.routePolyline = new window.google.maps.Polyline({
+        path,
+        strokeColor: routeColor,
+        strokeOpacity: routeOpacity,
+        strokeWeight: 2,
+        geodesic: true,
+      });
+      this.routePolyline.setMap(this.map);
 
-    for (let i = 0; i < path.length; i++) {
-      const point = path[i];
-
-      if (!point.time) continue;
-
-      if (point.time >= nextMarkTime) {
-        // Arrow position (percentage along entire route)
-        const offsetPercent = (i / path.length) * 100;
-
-        icons.push({
+      // arrow icons placed along path based on zoom step
+      const arrowIcons = [];
+      for (let i = 0; i < path.length; i += arrowStep) {
+        const pct = (i / (path.length - 1)) * 100;
+        arrowIcons.push({
           icon: arrowSymbol,
-          offset: `${offsetPercent}%`,
+          offset: `${pct}%`,
         });
-
-        // Elapsed time label text (0-based)
-        const elapsedMin = Math.floor((point.time - startTime) / 60000);
-
-        let labelText;
-        if (elapsedMin >= 60) {
-          const hrs = Math.floor(elapsedMin / 60);
-          const mins = elapsedMin % 60;
-          labelText = mins === 0 ? `${hrs} hr` : `${hrs} hr ${mins} min`;
-        } else {
-          labelText = `${elapsedMin} min`;
-        }
-
-        // Add SVG label next to arrow
-        const labelMarker = new window.google.maps.Marker({
-          position: { lat: point.lat, lng: point.lng },
-          map: this.map,
-          icon: {
-            url:
-              "data:image/svg+xml;charset=UTF-8," +
-              encodeURIComponent(`
-            <svg xmlns="http://www.w3.org/2000/svg" width="90" height="28">
-              <rect width="90" height="28" rx="4" ry="4"
-                    fill="black" opacity="0.65"/>
-              <text x="45" y="18" text-anchor="middle"
-                    fill="white" font-size="14" font-family="Arial">
-                ${labelText}
-              </text>
-            </svg>
-          `),
-            scaledSize: new window.google.maps.Size(90, 28),
-            anchor: new window.google.maps.Point(45, 14),
-          },
-        });
-
-        this.timeMarkers.push(labelMarker);
-
-        // schedule next time label
-        nextMarkTime += intervalMs;
       }
+
+      // arrow-only transparent polyline
+      this.arrowPolyline = new window.google.maps.Polyline({
+        path,
+        strokeOpacity: 0,
+        icons: arrowIcons,
+      });
+
+      this.arrowPolyline.setMap(this.map);
     }
 
-    // Draw main route polyline
-    this.routePolyline = new window.google.maps.Polyline({
-      path,
-      strokeColor: routeColor,
-      strokeOpacity: routeOpacity,
-      strokeWeight: 2,
-      geodesic: true,
-    });
-    this.routePolyline.setMap(this.map);
+    // ----------------------------------------------------------------
+    // (2) DRAW TIME LABELS ***IF showTimes === true (independent)***
+    // ----------------------------------------------------------------
+    if (this.state.showTimes) {
+      const firstValid = path.find((p) => p.time);
+      if (!firstValid) return;
 
-    // Draw the arrow overlay
-    this.arrowPolyline = new window.google.maps.Polyline({
-      path,
-      strokeOpacity: 0,
-      icons,
-    });
-    this.arrowPolyline.setMap(this.map);
+      const startTime = firstValid.time;
+      const intervalMin = this.getTimeIntervalForZoom(zoom);
+      const intervalMs = intervalMin * 60000;
+      let nextMarkTime = startTime + intervalMs;
+
+      for (let i = 0; i < path.length; i++) {
+        const point = path[i];
+        if (!point.time) continue;
+
+        if (point.time >= nextMarkTime) {
+          const elapsedMin = Math.floor((point.time - startTime) / 60000);
+          let labelText;
+
+          if (elapsedMin >= 60) {
+            const hrs = Math.floor(elapsedMin / 60);
+            const min = elapsedMin % 60;
+            labelText = min === 0 ? `${hrs} hr` : `${hrs} hr ${min} min`;
+          } else {
+            labelText = `${elapsedMin} min`;
+          }
+
+          const padding = 10; // 5px left, 5px right
+          const charWidth = 7; // average monospace-ish width at 14px
+          const textWidth = labelText.length * charWidth;
+          const boxWidth = textWidth + padding * 2;
+
+          const svgWidth = boxWidth;
+          const svgHeight = 38;
+
+          const labelMarker = new window.google.maps.Marker({
+            position: { lat: point.lat, lng: point.lng },
+            map: this.map,
+            icon: {
+              url:
+                "data:image/svg+xml;charset=UTF-8," +
+                encodeURIComponent(`
+                <svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}">
+                  <rect width="${boxWidth}" height="28" rx="4" ry="4"
+                        fill="black" opacity="0.65" />
+                  <text x="${boxWidth / 2}" y="18" text-anchor="middle"
+                        fill="white" font-size="14" font-family="Arial">
+                    ${labelText}
+                  </text>
+                  <circle cx="${boxWidth / 2}" cy="34" r="4"
+                          fill="${routeColor}" />
+                </svg>
+                `),
+              scaledSize: new window.google.maps.Size(svgWidth, svgHeight),
+              anchor: new window.google.maps.Point(svgWidth / 2, 19),
+            },
+          });
+
+          this.timeMarkers.push(labelMarker);
+
+          nextMarkTime += intervalMs;
+        }
+      }
+    }
   };
 
   toggleHistory = () => {
     this.setState({ showHistory: !this.state.showHistory }, () =>
+      this.drawRoutePolyline()
+    );
+  };
+
+  toggleTimes = () => {
+    this.setState({ showTimes: !this.state.showTimes }, () =>
       this.drawRoutePolyline()
     );
   };
@@ -602,6 +612,7 @@ class Tracker extends Component {
                 });
 
                 this.marker = marker;
+                this.drawRoutePolyline();
               }}
             />
             {this.state.currentTheme && (
@@ -613,6 +624,7 @@ class Tracker extends Component {
                 mapType={this.mapType}
                 toggleSnow={this.toggleSnow}
                 toggleHistory={this.toggleHistory}
+                toggleTimes={this.toggleTimes}
                 menuOpen={this.menuOpen}
                 santaDat={this.props.santaFlyoverData}
                 getUserLocation={this.getUserLocation}
