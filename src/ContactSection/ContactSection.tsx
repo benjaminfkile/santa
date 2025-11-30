@@ -87,7 +87,7 @@ class ContactSection extends Component<{}, ContactSectionTypes> {
     sendMessage = () => {
         this.setState({ saving: true })
         let rb = this.state.params
-        axios.post(`${process.env.REACT_APP_MRS_CLAUS_API_URL}/api/contact`, rb)
+        axios.post(`${process.env.REACT_APP_API_URL}/api/contact`, rb)
             // axios.post(`http://localhost:8000/api/contact`, rb)
             .then(res => {
                 for (const [key] of Object.entries(ContactParams)) {
