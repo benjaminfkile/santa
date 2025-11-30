@@ -1,40 +1,19 @@
 import axios from "axios";
 
-let lastPercent = -1;
-
 const fundData = {
-  percent: lastPercent,
+  percent: -1,
 
   async getFundData() {
-    const primary = process.env.REACT_APP_MRS_CLAUS_API_URL!;
-    const fallback = process.env.REACT_APP_MRS_CLAUS_API_URL_FALLBACK;
+    const API = process.env.REACT_APP_API_URL!;
+    const path = "api/funds-status";
 
-    const primaryPath = "api/funds-status-cache";
-    const fallbackPath = "api/funds/get-fund-status";
-
-    // 1. Try PRIMARY
     try {
-      const res = await axios.get(`${primary}/${primaryPath}`);
+      const res = await axios.get(`${API}/${path}`);
       if (res.data?.percent !== undefined) {
         this.percent = res.data.percent;
       }
-      return; // success → done
     } catch (err) {
-      console.warn("[fundData] Primary failed, trying fallback...");
-    }
-
-    // 2. Try FALLBACK
-    if (fallback) {
-      try {
-        const res = await axios.get(`${fallback}/${fallbackPath}`);
-        if (res.data?.percent !== undefined) {
-          this.percent = res.data.percent;
-        }
-      } catch (fallbackErr) {
-        console.error("[fundData] Fallback failed:", fallbackErr);
-      }
-    } else {
-      console.error("[fundData] No fallback URL configured");
+      console.error("[fundData] Failed to fetch fund data:", err);
     }
   },
 };

@@ -1,89 +1,82 @@
-import { Component } from "react"
-import SponsorTypes from "../../SponsorsSection/SponsorTypes"
-import "./SponsorCarousel.css"
+import { useEffect, useState, useRef } from "react";
+import { ISponsor } from "../../interfaces";
+import "./SponsorCarousel.css";
 
 interface SponsorCarouselProps {
-    sponsors: Array<SponsorTypes> | []
-    theme: string
+  sponsors: ISponsor[];
+  theme: string;
 }
 
-type SponsorCarouselTypes = {
-    sponsors: Array<SponsorTypes> | []
-    sponsor: SponsorTypes | null
+export default function SponsorCarousel({ sponsors, theme }: SponsorCarouselProps) {
+  const [currentSponsor, setCurrentSponsor] = useState<ISponsor | null>(null);
+  const [shuffled, setShuffled] = useState<ISponsor[]>([]);
+  const indexRef = useRef(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Shuffle sponsors once when data arrives
+  useEffect(() => {
+    if (!sponsors || sponsors.length === 0) return;
+
+    const shuffledSponsors = shuffle([...sponsors]);
+    setShuffled(shuffledSponsors);
+    indexRef.current = 0;
+    setCurrentSponsor(shuffledSponsors[0]);
+  }, [sponsors]);
+
+  // Carousel rotation effect
+  useEffect(() => {
+    if (shuffled.length === 0) return;
+
+    const sponsor = shuffled[indexRef.current];
+    const delay = sponsor.linger ?? 2000;
+
+    timerRef.current = setTimeout(() => {
+      indexRef.current =
+        indexRef.current < shuffled.length - 1 ? indexRef.current + 1 : 0;
+
+      setCurrentSponsor(shuffled[indexRef.current]);
+    }, delay);
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [shuffled, currentSponsor]);
+
+  const shuffle = (arr: ISponsor[]) => {
+    let i = arr.length;
+    while (i > 0) {
+      const j = Math.floor(Math.random() * i);
+      i--;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
+
+  const openLink = (url: string | null) => {
+    if (url) window.open(url, "_blank");
+  };
+
+  if (!currentSponsor) return null;
+
+  const logo =
+    currentSponsor.logo?.small_url ||
+    currentSponsor.logo?.full_url ||
+    currentSponsor.logo?.small ||
+    currentSponsor.logo?.full ||
+    "";
+
+  return (
+    <div className="SponsorCarousel">
+      <div
+        id={`sponsor-carousel-item-${theme.toLowerCase()}`}
+        className="SponsorCarouselItem"
+      >
+        <img
+          src={logo}
+          alt={currentSponsor.name}
+          onClick={() => openLink(currentSponsor.website_url ?? currentSponsor.fb_url)}
+        />
+      </div>
+    </div>
+  );
 }
-
-class SponsorCarousel extends Component<SponsorCarouselProps, SponsorCarouselTypes> {
-
-    sponsorDex = 0
-    delay = 0;
-
-    state = {
-        sponsors: [],
-        sponsor: null
-    }
-
-    componentDidMount() {
-        this.awaitSposnors()
-    }
-
-    awaitSposnors = () => {
-        //@ts-ignore
-        const sponsors = this.props.sponsors ? this.props.sponsors[this.props.sponsors.length - 1].sponsors : []
-        setTimeout(() => {
-            if (sponsors.length > 0) {
-                this.setState({ sponsors: this.shuffleSponosors(sponsors) })
-                this.handleCarousel()
-            } else {
-                this.awaitSposnors()
-            }
-        }, 500)
-    }
-
-    shuffleSponosors = (sponsors: Array<SponsorTypes>) => {
-        let currentIndex = sponsors.length, randomIndex;
-        while (currentIndex !== 0) {
-            randomIndex = Math.floor(Math.random() * currentIndex)
-            currentIndex--
-            [sponsors[currentIndex], sponsors[randomIndex]] = [
-                sponsors[randomIndex], sponsors[currentIndex]]
-        }
-        return sponsors
-    }
-
-    handleCarousel = () => {
-        if (this.sponsorDex < this.state.sponsors.length - 1) {
-            this.sponsorDex++
-        } else {
-            this.sponsorDex = 0
-        }
-        let sponsor: SponsorTypes = this.state.sponsors[this.sponsorDex]
-        // this.delay = sponsor.hangTime * 20
-        this.delay = sponsor.hangTime
-        this.setState({ sponsor: sponsor })
-        setTimeout(() => {
-            this.handleCarousel()
-        }, this.delay)
-    }
-
-    openLink = (url: string) => {
-        if (url) {
-            window.open(url, '_blank')
-        }
-    }
-
-    render() {
-
-        let sponsor: SponsorTypes | any = this.state.sponsor || null
-
-        return (
-            <div className="SponsorCarousel">
-                {sponsor && <div id={`sponsor-carousel-item-${this.props.theme.toLowerCase()}`} className="SponsorCarouselItem">
-                    {/* {sponsor.sponsor_id === "2a56681e-b68f-4e88-afc5-44c4a18475bf" && <Cat/>} */}
-                    <img src={sponsor.logo} onClick={() => this.openLink(sponsor.website_url)} alt="" />
-                </div>}
-            </div>
-        )
-    }
-}
-
-export default SponsorCarousel

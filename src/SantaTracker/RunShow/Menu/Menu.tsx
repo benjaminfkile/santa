@@ -204,18 +204,15 @@ const TrackerMenu = (props: {
                     <div
                         className={`TrackerMenuSantaData TrackerMenuSantaData${currentTheme}`}
                     >
-                        {santaDat.speed && (
-                            <div className="TrackerMenuSantaDataItem">
-                                <span className="material-icons">speed</span>
-                                <p>{santaDat?.speed}</p>
-                            </div>
-                        )}
-                        {santaDat.bearing && (
-                            <div className="TrackerMenuSantaDataItem">
-                                <span className="material-icons">explore</span>
-                                <p>{santaDat?.bearing}</p>
-                            </div>
-                        )}
+                        <div className="TrackerMenuSantaDataItem">
+                            <span className="material-icons">speed</span>
+                            <p>{santaDat?.speed || "*NA*"}</p>
+                        </div>
+
+                        <div className="TrackerMenuSantaDataItem">
+                            <span className="material-icons">explore</span>
+                            <p>{santaDat?.bearing || "*NA*"}</p>
+                        </div>
 
                         {!userLocation.disable && DistanceFromUserToSanta && (
                             <div className="TrackerMenuSantaDataItem">

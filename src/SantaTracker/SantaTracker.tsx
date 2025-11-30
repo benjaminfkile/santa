@@ -5,20 +5,19 @@ import PreShow from "./PreShow/PreShow"
 import Runshow from "./RunShow/Runshow"
 //@ts-ignore
 import NoSleep from 'nosleep.js'
-import { ISantaRouteCache } from "../App"
+import { ISantaFlyoverData, ISantaRoute, ISponsor } from "../interfaces"
 
-interface SantaTrackerProps {
-    santaDat: any
-    sponsors: any
-    route: ISantaRouteCache[]
+interface Props {
+    santaFlyoverData: ISantaFlyoverData | null
+    sponsors: ISponsor[]
+    route: ISantaRoute[]
 }
 
-type SantaTrackerTypes = {
-
+type Types = {
     loading: boolean
 }
 
-class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
+class SantaTracker extends Component<Props, Types> {
 
     loadHandlerInterval: any
     loadHandlerStep = 0
@@ -40,7 +39,7 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
 
     loadHandler = () => {
         this.loadHandlerStep++
-        if (this.props.santaDat && this.loadHandlerStep > 2) {
+        if (this.props.santaFlyoverData && this.loadHandlerStep > 2) {
             this.setState({ loading: false })
             clearInterval(this.loadHandlerInterval)
         }
@@ -51,7 +50,7 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
         const props = this.props
         const state = this.state
         const loading = state.loading
-        const santaDat = props.santaDat
+        const santaDat = props.santaFlyoverData
         let mode = null
         if (santaDat) {
             mode = santaDat.mode + ""
@@ -63,17 +62,17 @@ class SantaTracker extends Component<SantaTrackerProps, SantaTrackerTypes> {
             <div className="SantaTracker">
                 {!loading && santaDat && mode === "0" && <div className="PreShow">
                     <PreShow
-                        santaDat={this.props.santaDat}
+                        santaFlyoverData={this.props.santaFlyoverData}
                     />
                 </div>}
-                {!loading && santaDat && mode === "1" && this.props.santaDat && this.props.santaDat.lat && <div className="RunShow">
+                {!loading && santaDat && mode === "1" && this.props.santaFlyoverData && this.props.santaFlyoverData.lat && <div className="RunShow">
                     <Runshow
-                        santaDat={this.props.santaDat}
+                        santaFlyoverData={this.props.santaFlyoverData}
                         sponsors={this.props.sponsors}
                         route={this.props.route}
                     />
                 </div>}
-                {!loading && santaDat && mode === "2" && this.props.santaDat && this.props.santaDat.lat && <div className="RunShow">
+                {!loading && santaDat && mode === "2" && this.props.santaFlyoverData && this.props.santaFlyoverData.lat && <div className="RunShow">
                     <Endshow
                         sponsors={this.props.sponsors}
                     />

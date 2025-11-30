@@ -105,25 +105,16 @@ class Tracker extends Component {
     this.setState({});
   }
 
-  componentDidUpdate(prevProps) {
-    const routeChanged = prevProps.route !== this.props.route;
-    const santaDatChanged = prevProps.santaDat !== this.props.santaDat;
-
-    if (routeChanged || santaDatChanged) {
-      this.drawRoutePolyline();
-    }
-  }
-
   getUserLocation = () => {
     if (
       userLocation.coordinates.lat &&
-      this.props.santaDat.lat
+      this.props.santaFlyoverData.lat
       // && userLocation.coordinates.lat !== this.userToSantaCoords[1].lat
       // && userLocation.coordinates.lng !== this.userToSantaCoords[1].lng
     ) {
       this.userToSantaCoords[0] = {
-        lat: Number(this.props.santaDat.lat),
-        lng: Number(this.props.santaDat.lng),
+        lat: this.props.santaFlyoverData.lat,
+        lng: this.props.santaFlyoverData.lng,
       };
       this.userToSantaCoords[1] = {
         lat: Number(userLocation.coordinates.lat),
@@ -195,18 +186,18 @@ class Tracker extends Component {
   };
 
   autoRecenter = () => {
-    if (this.state.mapCentered && this.props.santaDat) {
+    if (this.state.mapCentered && this.props.santaFlyoverData) {
       this.map.setCenter({
-        lat: Number(this.props.santaDat.lat),
-        lng: Number(this.props.santaDat.lng),
+        lat: Number(this.props.santaFlyoverData.lat),
+        lng: Number(this.props.santaFlyoverData.lng),
       });
     }
   };
 
   userRecenter = () => {
     this.map.setCenter({
-      lat: Number(this.props.santaDat.lat),
-      lng: Number(this.props.santaDat.lng),
+      lat: Number(this.props.santaFlyoverData.lat),
+      lng: Number(this.props.santaFlyoverData.lng),
     });
     this.setState({ mapCentered: true });
   };
@@ -439,8 +430,8 @@ class Tracker extends Component {
 
     // Build full path (lat/lng + timestamp)
     const path = this.props.route.map((p) => ({
-      lat: Number(p.lat),
-      lng: Number(p.lng ?? p.lon),
+      lat: p.lat,
+      lng: p.lng,
       time: p.time ? new Date(p.time).getTime() : null,
     }));
 
@@ -489,7 +480,6 @@ class Tracker extends Component {
 
     for (let i = 0; i < path.length; i++) {
       const point = path[i];
-
 
       if (!point.time) continue;
 
@@ -571,8 +561,8 @@ class Tracker extends Component {
   render() {
     if (this.marker) {
       this.marker.setPosition({
-        lat: Number(this.props.santaDat.lat),
-        lng: Number(this.props.santaDat.lng),
+        lat: Number(this.props.santaFlyoverData.lat),
+        lng: Number(this.props.santaFlyoverData.lng),
       });
       this.autoRecenter();
     }
@@ -603,8 +593,8 @@ class Tracker extends Component {
 
                 let marker = new window.google.maps.Marker({
                   position: {
-                    lat: parseFloat(this.props.santaDat.lat),
-                    lng: parseFloat(this.props.santaDat.lng),
+                    lat: parseFloat(this.props.santaFlyoverData.lat),
+                    lng: parseFloat(this.props.santaFlyoverData.lng),
                   },
                   map: map,
                   label: "",
@@ -624,7 +614,7 @@ class Tracker extends Component {
                 toggleSnow={this.toggleSnow}
                 toggleHistory={this.toggleHistory}
                 menuOpen={this.menuOpen}
-                santaDat={this.props.santaDat}
+                santaDat={this.props.santaFlyoverData}
                 getUserLocation={this.getUserLocation}
                 DistanceFromUserToSanta={this.state.DistanceFromUserToSanta}
                 toggleCompass={this.toggleCompass}

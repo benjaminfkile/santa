@@ -1,128 +1,126 @@
-import { Component } from "react"
-//@ts-ignore
-import { Modal, Spinner } from "react-bootstrap"
-import { Link } from "react-router-dom"
-import SponsorTypes from "../../SponsorsSection/SponsorTypes"
-import LaughingSanta from "../../Utils/LaughingSanta/LaughingSanta"
-import mutator from "../../Utils/mutator"
-import Snow from "../../Utils/Snow/Snow"
-import "./EndShow.css"
+import { useEffect, useState, useRef } from "react";
+import { Modal, Spinner } from "react-bootstrap";
+import { Link } from "react-router-dom";
+import LaughingSanta from "../../Utils/LaughingSanta/LaughingSanta";
+import Snow from "../../Utils/Snow/Snow";
+import { ISponsor } from "../../interfaces";
+import "./EndShow.css";
 
 interface EndShowProps {
-    sponsors: Array<SponsorTypes> | []
+  sponsors: ISponsor[];
 }
 
-type EndShowTypes = {
+export default function EndShow({ sponsors }: EndShowProps) {
+  const [rotatedSponsors, setRotatedSponsors] = useState<ISponsor[]>([]);
+  const [currentSponsor, setCurrentSponsor] = useState<ISponsor | null>(null);
 
-}
+  const sponsorIndex = useRef(0);
+  const delay = useRef(2000); // starter delay
 
-class Endshow extends Component<EndShowProps, EndShowTypes> {
-
-    sponsorDex = 0
-    delay = 0
-
-    state = {
-        sponsors: [],
-        sponsor: null
+  // Shuffle utility
+  const shuffle = (array: ISponsor[]) => {
+    let curr = array.length;
+    while (curr !== 0) {
+      const rand = Math.floor(Math.random() * curr);
+      curr--;
+      [array[curr], array[rand]] = [array[rand], array[curr]];
     }
+    return array;
+  };
 
-    componentDidMount(): void {
-        this.awaitSposnors()
-    }
+  // Pick best logo URL from ISponsor.logo object
+  const getLogoUrlSmall = (s: ISponsor) =>
+    s.logo?.small_url ||
+    s.logo?.full_url ||
+    s.logo?.small ||
+    s.logo?.full ||
+    "";
 
-    manageState = (keys: Array<{ key: string, value?: any }>) => {
-        this.setState(mutator.mutate(this.state, keys))
-    }
+  // Initialize once sponsors arrive
+  useEffect(() => {
+    if (!sponsors || sponsors.length === 0) return;
 
-    awaitSposnors = () => {
-        //@ts-ignore
-        const sponsors = this.props.sponsors.length > 0 ? this.props.sponsors[this.props.sponsors.length - 1].sponsors : []
-        setTimeout(() => {
-            if (sponsors.length > 0) {
-                this.manageState([{key: "sponsors", value: this.shuffleSponosors(sponsors)}])
-                this.handleCarousel()
-            } else {
-                this.awaitSposnors()
-            }
-        }, 50)
-    }
+    const shuffled = shuffle([...sponsors]);
+    setRotatedSponsors(shuffled);
 
-    shuffleSponosors = (array: Array<SponsorTypes>) => {
-        let currentIndex = array.length, randomIndex;
-        while (currentIndex !== 0) {
-            randomIndex = Math.floor(Math.random() * currentIndex)
-            currentIndex--
-            [array[currentIndex], array[randomIndex]] = [
-                array[randomIndex], array[currentIndex]]
-        }
-        return array
-    }
+    // Set first sponsor immediately
+    sponsorIndex.current = 0;
+    setCurrentSponsor(shuffled[0]);
 
-    handleCarousel = () => {
-        const self = this
-        setTimeout(() => {
-            if (self.sponsorDex < self.state.sponsors.length - 1) {
-                self.sponsorDex++
-            } else {
-                self.sponsorDex = 0
-            }
-            let sponsor: SponsorTypes = self.state.sponsors[self.sponsorDex]
-            this.delay = sponsor.hangTime * 20
-            self.setState({ sponsor: sponsor })
-            self.handleCarousel()
-        }, this.delay)
-    }
+    // Set initial delay based on sponsor linger value
+    delay.current = shuffled[0].linger ?? 2000;
+  }, [sponsors]);
 
-    openLink = (url: string) => {
-        if (url) {
-            window.open(url, '_blank')
-        }
-    }
+  // Carousel rotation loop
+  useEffect(() => {
+    if (rotatedSponsors.length === 0) return;
 
-    render() {
+    const timer = setTimeout(() => {
+      sponsorIndex.current =
+        (sponsorIndex.current + 1) % rotatedSponsors.length;
 
-        let sponsor: SponsorTypes | any = this.state.sponsor || null
+      const next = rotatedSponsors[sponsorIndex.current];
+      setCurrentSponsor(next);
 
-        return (
-            <div className="EndShow">
-                {/* <NavMenu /> */}
-                <div className="EndShowModalBodyLaughingSantaWrapper">
-                    <LaughingSanta
-                        message={"406"}
-                    />
-                </div>
-                <Modal id="endshow-modal"
-                    show={true}
-                    keyboard={false}
-                    centered={true}
-                >
-                    <Modal.Header>
-                        <div className="EndShowModalHeader">
-                            <p className="EndShowModalHeaderP1">Santa has left Missoula!</p>
-                            <p className="EndShowModalHeaderP2">Thank you to all our sponsors and donors.</p>
-                        </div>
-                    </Modal.Header>
-                    <Modal.Body>
-                        <div className="EndShowModalBody">
-                            {!sponsor && <Spinner id="endshow-waiting-for-images" animation="border" />}
-                            {sponsor && <img src={sponsor.logo_small} alt="" />}
-                        </div>
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <div className="EndShowModalFooter">
-                            <div id="end-show-sponsor-link">
-                                {sponsor && <p onClick={() => this.openLink(sponsor.website_url)}>{sponsor.name}</p>}
-                            </div>
-                            <Link to='/about'>
-                                <span id="endshow-home-btn" className="material-icons">home</span>
-                            </Link>
-                        </div>
-                    </Modal.Footer>
-                </Modal>
-                <Snow />
+      // next sponsor delay
+      delay.current = next.linger ?? 2000;
+    }, delay.current);
+
+    return () => clearTimeout(timer);
+  }, [rotatedSponsors, currentSponsor]);
+
+  const openLink = (url: string | null) => {
+    if (url) window.open(url, "_blank");
+  };
+
+  return (
+    <div className="EndShow">
+      <div className="EndShowModalBodyLaughingSantaWrapper">
+        <LaughingSanta message={"406"} />
+      </div>
+
+      <Modal id="endshow-modal" show={true} keyboard={false} centered={true}>
+        <Modal.Header>
+          <div className="EndShowModalHeader">
+            <p className="EndShowModalHeaderP1">Santa has left Missoula!</p>
+            <p className="EndShowModalHeaderP2">
+              Thank you to all our sponsors and donors.
+            </p>
+          </div>
+        </Modal.Header>
+
+        <Modal.Body>
+          <div className="EndShowModalBody">
+            {!currentSponsor && (
+              <Spinner id="endshow-waiting-for-images" animation="border" />
+            )}
+
+            {currentSponsor && (
+              <img src={getLogoUrlSmall(currentSponsor)} alt={currentSponsor.name} />
+            )}
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <div className="EndShowModalFooter">
+            <div id="end-show-sponsor-link">
+              {currentSponsor && (
+                <p onClick={() => openLink(currentSponsor.website_url)}>
+                  {currentSponsor.name}
+                </p>
+              )}
             </div>
-        )
-    }
-}
 
-export default Endshow
+            <Link to="/about">
+              <span id="endshow-home-btn" className="material-icons">
+                home
+              </span>
+            </Link>
+          </div>
+        </Modal.Footer>
+      </Modal>
+
+      <Snow />
+    </div>
+  );
+}

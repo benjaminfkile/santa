@@ -2,17 +2,18 @@ import { Component } from "react"
 import NavMenu from "../../NavMenu/NavMenu"
 import LaughingSanta from "../../Utils/LaughingSanta/LaughingSanta"
 import Snow from "../../Utils/Snow/Snow"
+import { ISantaFlyoverData } from "../../interfaces"
 import "./PreShow.css"
 
 interface PreShowProps {
-    santaDat: any
+    santaFlyoverData: ISantaFlyoverData | null
 }
 
 class PreShow extends Component<PreShowProps, {}> {
 
-    render() {//bump
+    render() {
 
-        let message = this.props.santaDat.message || null
+        let message = this.props.santaFlyoverData?.message || null
 
         return (
             <div className="PreShow">

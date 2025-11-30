@@ -1,101 +1,85 @@
-import { Component } from "react"
-import NavMenu from "../NavMenu/NavMenu"
-import JumpingElf from "../Utils/JumpingElf/JumpingElf"
-import Ornaments from "../Utils/Ornaments/Ornaments"
-import Logo from "../Utils/Logo/Logo"
-import mutator from "../Utils/mutator"
-import SponsorTypes from "./SponsorTypes"
-import "./SponsorsSection.css"
-
+import { useEffect, useState } from "react";
+import NavMenu from "../NavMenu/NavMenu";
+import JumpingElf from "../Utils/JumpingElf/JumpingElf";
+import Ornaments from "../Utils/Ornaments/Ornaments";
+import Logo from "../Utils/Logo/Logo";
+import { ISponsor } from "../interfaces";
+import "./SponsorsSection.css";
 
 interface SponsorsSectionProps {
-    sponsors: any
+  sponsors: ISponsor[];
 }
 
-interface SponsorsSectionState {
-    sponsors: Array<SponsorTypes> | []
-}
+export default function SponsorsSection({ sponsors }: SponsorsSectionProps) {
+  const [sortedSponsors, setSortedSponsors] = useState<ISponsor[]>([]);
 
-class SponsorsSection extends Component<SponsorsSectionProps, SponsorsSectionState>{
+  useEffect(() => {
+    if (!sponsors || sponsors.length === 0) return;
 
+    // Sort by linger (formerly hangTime)
+    const sorted = [...sponsors].sort((a, b) => b.linger - a.linger);
 
-    state = {
-        sponsors: [],
-    }
+    setSortedSponsors(sorted);
+  }, [sponsors]);
 
-    componentDidMount(): void {
-        this.awaitSposnors()
-    }
+  const openLink = (url: string | null) => {
+    if (url) window.open(url, "_blank");
+  };
 
-    manageState = (keys: Array<{ key: string, value?: any }>) => {
-        this.setState(mutator.mutate(this.state, keys))
-    }
+  const getLogoUrl = (s: ISponsor) =>
+    s.logo?.full_url ||
+    s.logo?.small_url ||
+    s.logo?.full ||
+    s.logo?.small ||
+    "";
 
-    awaitSposnors = () => {
-        //@ts-ignore
-        const sponsors = this.props.sponsors.length > 0 ? this.props.sponsors[this.props.sponsors.length - 1].sponsors : []
-        setTimeout(() => {
-            if (sponsors.length > 0) {
-                //@ts-ignore
-                this.manageState([{ key: "sponsors", value: sponsors.sort(({ hangTime: a }, { hangTime: b }) => b - a) }])
-            } else {
-                this.awaitSposnors()
-            }
-        }, 50)
-    }
+  return (
+    <div className="SponsorsSection">
+      <NavMenu />
+      <JumpingElf />
+      <Ornaments />
 
-    // shuffleSponosors = (sponsors: Array<SponsorTypes>) => {
-    //     let currentIndex = sponsors.length, randomIndex;
-    //     while (currentIndex !== 0) {
-    //         randomIndex = Math.floor(Math.random() * currentIndex)
-    //         currentIndex--
-    //         [sponsors[currentIndex], sponsors[randomIndex]] = [
-    //             sponsors[randomIndex], sponsors[currentIndex]]
-    //     }
-    //     return sponsors
-    // }
+      <div className="SposorSectionHeader">
+        <Logo />
+      </div>
 
-    openLink = (url: string) => {
-        window.open(url, '_blank')
-    }
+      {sortedSponsors.length > 0 && (
+        <div className="SponsorList">
+          {sortedSponsors.map((sponsor) => (
+            <div className="SponsorItem" key={sponsor.id} id={`sponsor-${sponsor.id}`}>
+              <div className="SponsorItemHeader">
+                <p>{sponsor.name}</p>
+              </div>
 
-    render() {
+              <div className="SponsorLogoWrapper">
+                <img src={getLogoUrl(sponsor)} alt={sponsor.name} />
+              </div>
 
-        const state = this.state
-        const sponsors = state.sponsors
-
-        return (
-            <div className="SponsorsSection">
-                <NavMenu />
-                <JumpingElf />
-                <Ornaments />
-                <div className="SposorSectionHeader">
-                    <Logo />
-                </div>
-                {sponsors.length > 0 && <div className="SponsorList">
-                    {sponsors.map((item: any, i: number) =>
-                        <div className="SponsorItem" key={i} id={item.sponsor_id.replace(/[0-9]/g, '')}>
-                            <div className="SponsorItemHeader">
-                                <p>{item.name}</p>
-                            </div>
-                            <div className="SponsorLogoWrapper">
-                                <img src={item.logo} alt="" />
-                            </div>
-                            {(item.website_url || item.fb_url) && <div className="SponsorFooter">
-                                <div className="SponsorFooterItem">
-                                    {item.website_url && <a href={item.website_url} target="_blank" rel="noreferrer">{item.name}</a>}
-                                </div>
-                                <div className="SponsorFooterItem SponsorFooterItemFB">
-                                    {/*@ts-ignore*/}
-                                    {item.fb_url && <img src="/res/fb-icon.png" alt="" onClick={() => this.openLink(item.fb_url)} />}
-                                </div>
-                            </div>}
-                        </div>
+              {(sponsor.website_url || sponsor.fb_url) && (
+                <div className="SponsorFooter">
+                  <div className="SponsorFooterItem">
+                    {sponsor.website_url && (
+                      <a href={sponsor.website_url} target="_blank" rel="noreferrer">
+                        {sponsor.name}
+                      </a>
                     )}
-                </div>}
-            </div>
-        )
-    }
-}
+                  </div>
 
-export default SponsorsSection
+                  <div className="SponsorFooterItem SponsorFooterItemFB">
+                    {sponsor.fb_url && (
+                      <img
+                        src="/res/fb-icon.png"
+                        alt="Facebook"
+                        onClick={() => openLink(sponsor.fb_url)}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
