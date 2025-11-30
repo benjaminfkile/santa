@@ -31,10 +31,10 @@ class AboutSection extends Component {
                         screaming “Santa” with cheer is what makes this flight a true Christmas Miracle.
                     </p>
                     <div className="AboutSectionContentImg1">
-                        <img id="idfk" src="https://wmsfo-api.com/api/images/sponsors/18/1763941064281-mdf_lettermark_wordmark_2line_fullcolor.png" alt="" />
+                        <img id="sponsor-img" src={`${process.env.REACT_APP_SPONSOR_LOGO}`} alt="" />
                     </div>
                     <h3>
-                        How the Western Montana Santa Flyover organization started:
+                        How the Western Montana Santa Flyover organization started
                     </h3>
                     <p>
                         In 2020, after a rough year of lockdowns and school closures, a group of Missoula residents
@@ -50,7 +50,7 @@ class AboutSection extends Component {
                             <p>Some Elves working on getting Santa ready to fly</p>
                             <Mistletoe id="about-lower-content-mistltoe" />
                         </div>
-                        <img src="https://i.ibb.co/g4NDrCL/working-on-santa.jpg" alt="elves-working" />
+                        <img src={`${process.env.REACT_APP_WORKING_ON_SANTA}`} alt="elves-working" />
                     </div>
                     <div className="AboutContentLowerItem">
                         <div className="AboutContentLowerItemHeader">
@@ -58,7 +58,7 @@ class AboutSection extends Component {
                             <p>Santa getting ready to take off</p>
                             <Mistletoe id="about-lower-content-mistltoe" />
                         </div>
-                        <img src="https://i.ibb.co/h73Bk7D/pre-flight.jpg" alt="pre-flight" />
+                        <img src={`${process.env.REACT_APP_PRE_FLIGHT}`} alt="pre-flight" />
                     </div>
                     <div className="AboutContentLowerItem">
                         <div className="AboutContentLowerItemHeader">
@@ -66,7 +66,7 @@ class AboutSection extends Component {
                             <p>Santa's light controller</p>
                             <Mistletoe id="about-lower-content-mistltoe" />
                         </div>
-                        <img src="https://i.ibb.co/TMNDYyL/santa-light-controler.jpg" alt="light-controler" />
+                        <img src={`${process.env.REACT_APP_SANTA_LIGHT_CONTROLER}`} alt="light-controler" />
                     </div>
                 </div>
             </div>

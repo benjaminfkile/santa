@@ -32,8 +32,7 @@ class DonateSection extends Component {
                 </div>
                 <div className="DonateSectionContent">
                     <div className="DonateSectionContentImg1">
-                        <img src="https://i.ibb.co/CHQgfv8/glass-jar-full-of-cois-with-donate-written-on-it-charity-donation-philanthropy-large.jpg" alt="" />
-                        <p id="img-credit-donate-i-1">Credit: The Motley Fool</p>
+                        <img src={`${process.env.REACT_APP_DONATE}`} alt="" />
                     </div>
                     <p>
                         We depend on donations to cover the costs of flight, storage, maintenance, and improvements. 100% of all donations go toward making the Santa flyover happen. We have partnered with the Missoula Downtown Foundation, ensuring that any donation made is tax-deductible. To donate, please click the <strong>Donate</strong> button below.
