@@ -6,22 +6,22 @@
     width: 100vw;
 }
 
-.RouteSectionControls {
+/* .RouteSectionControls {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-}
+} */
 
 .RouteSectionLogo .RouteSectionControls * {
     pointer-events: auto;
 }
 
 .RouteViewer {
-    position: absolute;
-    top: 110px;
+    position: fixed;
+    bottom: 0px;
     width: 100vw;
-    height: calc(100vh - 110px);
+    height: calc(100vh - 190px);
     z-index: 500;
     background: transparent
 }
