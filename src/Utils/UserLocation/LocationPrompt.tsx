@@ -1,84 +1,204 @@
 import { Component } from "react";
 import userLocation from "./UserLocation";
 import { Button, Modal } from "react-bootstrap";
-import "./LocationPromt.css"
+import "./LocationPromt.css";
 
 interface LocationPromptProps {
-    toggleLocationPrompt: Function
-    theme: string
-    getUserLocation: Function
+    toggleLocationPrompt: Function;
+    theme: string;
+    getUserLocation: Function;
 }
 
-type LocationPromptTypes = {
-}
+type LocationPromptTypes = {};
 
 class LocationPrompt extends Component<LocationPromptProps, LocationPromptTypes> {
+    getOSInstructions() {
+        const ua = navigator.userAgent.toLowerCase();
+
+        if (/iphone|ipad|ipod/.test(ua)) {
+            return (
+                <>
+                    <p className="LocationPromtGreenParagraph">
+                        iOS Instructions:
+                    </p>
+                    <ul>
+                        <li>Open the <strong>Settings</strong> app.</li>
+                        <li>Go to <strong>Privacy & Security → Location Services</strong>.</li>
+                        <li>Find <strong>Safari</strong> (or your browser) and allow location.</li>
+                        <li>Reload this page afterward.</li>
+                    </ul>
+                </>
+            );
+        }
+
+        if (/android/.test(ua)) {
+            return (
+                <>
+                    <p className="LocationPromtGreenParagraph">
+                        Android Instructions:
+                    </p>
+                    <ul>
+                        <li>Open your device <strong>Settings</strong>.</li>
+                        <li>Go to <strong>Location</strong>.</li>
+                        <li>Tap <strong>App Permissions</strong> and allow your browser.</li>
+                        <li>Reload this page afterward.</li>
+                    </ul>
+                </>
+            );
+        }
+
+        return (
+            <>
+                <p className="LocationPromtGreenParagraph">
+                    Desktop Instructions:
+                </p>
+                <ul>
+                    <li>Click the <strong>lock icon</strong> next to the URL.</li>
+                    <li>Find <strong>Location</strong> and select <strong>Allow</strong>.</li>
+                    <li>Reload this page afterward.</li>
+                </ul>
+            </>
+        );
+    }
+
+    getBrowserWarning() {
+        if (userLocation.inApp()) {
+            return (
+                <p className="LocationPromtYellowParagraph">
+                    You are currently using Facebook or Instagram’s in-app browser.
+                    Location updates may not work properly.  
+                    <strong>For best results, open this page in Safari, Chrome, or Edge.</strong>
+                </p>
+            );
+        }
+        return null;
+    }
 
     handleUserRevokeLocation = () => {
-        userLocation.disable = true
-        this.props.toggleLocationPrompt()
-    }
+        userLocation.disable = true;
+        this.props.toggleLocationPrompt();
+    };
 
     handleUserAllowLocation = () => {
-        userLocation.disable = false
-        this.props.toggleLocationPrompt()
+        userLocation.disable = false;
+        this.props.toggleLocationPrompt();
+
         if (!userLocation.inApp()) {
-            userLocation.getUserLocation()
+            userLocation.getUserLocation();
             setInterval(() => {
-                userLocation.getUserLocation()
-            }, 5000)
+                userLocation.getUserLocation();
+            }, 5000);
         } else {
-            userLocation.getUserLocation()
+            userLocation.getUserLocation();
         }
-    }
+    };
 
     render() {
+        const theme = this.props.theme.toLowerCase();
+
         return (
             <div className="LocationPrompt">
-                {userLocation.disable && <Modal id={`location-prompt-modal-${this.props.theme.toLowerCase()}`}
-                    show={true}
-                    keyboard={false}
-                >
-                    <Modal.Header>
-                        <div className="LocationPromptCustomModalHeader" id={`location-prompt-custom-modal-header-${this.props.theme.toLowerCase()}`}>
-                            <p>Enable Location Services?</p>
-                        </div>
-                    </Modal.Header>
-                    <Modal.Body>
-                        <div className="LocationPromptCustomModalBody" id={`location-prompt-custom-modal-body-${this.props.theme.toLowerCase()}`}>
-                            <p>If you choose to allow your location you can get real-time updates about your distance from Santa.</p>
-                            <p>Clicking "Ok" will launch a location prompt in your browser window and you will be asked if you want to allow 406santa.org to access your device’s location.</p>
-                            <p className="LocationPromtYellowParagraph">If you are visiting this website from Facebook, Instagram, or Firefox there might be issues keeping your location updated and relative to Santa.</p>
-                            <p className="LocationPromtGreenParagraph">Location services work best in Chrome, Edge, and Safari browsers.</p>
-                        </div>
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button onClick={() => this.handleUserAllowLocation()}>Ok</Button>
-                        <Button variant="secondary" onClick={() => this.props.toggleLocationPrompt()}>Back</Button>
-                    </Modal.Footer>
-                </Modal>}
-                {!userLocation.disable && <Modal id={`location-prompt-modal-${this.props.theme.toLowerCase()}`}
-                    show={true}
-                    keyboard={false}
-                >
-                    <Modal.Header>
-                        <div className="LocationPromptCustomModalHeader" id={`location-prompt-custom-modal-header-${this.props.theme.toLowerCase()}`}>
-                            <p>Disable Location Services?</p>
-                        </div>
-                    </Modal.Header>
-                    <Modal.Body>
-                        <div className="LocationPromptCustomModalBody" id={`location-prompt-custom-modal-body-${this.props.theme.toLowerCase()}`}>
-                            <p>You can always re-enable location services if you would like.</p>
-                        </div>
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button variant="danger" onClick={() => this.handleUserRevokeLocation()}>Disable</Button>
-                        <Button variant="secondary" onClick={() => this.props.toggleLocationPrompt()}>Back</Button>
-                    </Modal.Footer>
-                </Modal>}
+                {userLocation.disable && (
+                    <Modal
+                        id={`location-prompt-modal-${theme}`}
+                        show={true}
+                        keyboard={false}
+                    >
+                        <Modal.Header>
+                            <div
+                                className="LocationPromptCustomModalHeader"
+                                id={`location-prompt-custom-modal-header-${theme}`}
+                            >
+                                <p>Enable Location Services?</p>
+                            </div>
+                        </Modal.Header>
+
+                        <Modal.Body>
+                            <div
+                                className="LocationPromptCustomModalBody"
+                                id={`location-prompt-custom-modal-body-${theme}`}
+                            >
+                                <p>
+                                    Allowing your location enables real-time updates
+                                    showing how far you are from Santa.
+                                </p>
+
+                                <p>
+                                    After clicking <strong>“Ok”</strong>, your browser will ask
+                                    whether to allow 406santa.org to access your location.
+                                </p>
+
+                                {this.getBrowserWarning()}
+
+                                <p className="LocationPromtYellowParagraph">
+                                    If you previously tapped “Block,” your browser will
+                                    <strong> not show the permission popup again</strong>.
+                                    You must re-enable location manually in settings:
+                                </p>
+
+                                {this.getOSInstructions()}
+
+                                <p className="LocationPromtGreenParagraph">
+                                    Location services work best in Chrome, Safari, and Edge.
+                                </p>
+                            </div>
+                        </Modal.Body>
+
+                        <Modal.Footer>
+                            <Button onClick={this.handleUserAllowLocation}>Ok</Button>
+                            <Button
+                                variant="secondary"
+                                onClick={() => this.props.toggleLocationPrompt()}
+                            >
+                                Back
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+                )}
+
+                {!userLocation.disable && (
+                    <Modal
+                        id={`location-prompt-modal-${theme}`}
+                        show={true}
+                        keyboard={false}
+                    >
+                        <Modal.Header>
+                            <div
+                                className="LocationPromptCustomModalHeader"
+                                id={`location-prompt-custom-modal-header-${theme}`}
+                            >
+                                <p>Disable Location Services?</p>
+                            </div>
+                        </Modal.Header>
+
+                        <Modal.Body>
+                            <div
+                                className="LocationPromptCustomModalBody"
+                                id={`location-prompt-custom-modal-body-${theme}`}
+                            >
+                                <p>You can re-enable location services anytime.</p>
+                            </div>
+                        </Modal.Body>
+
+                        <Modal.Footer>
+                            <Button
+                                variant="danger"
+                                onClick={this.handleUserRevokeLocation}
+                            >
+                                Disable
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                onClick={() => this.props.toggleLocationPrompt()}
+                            >
+                                Back
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+                )}
             </div>
-        )
+        );
     }
 }
 
-export default LocationPrompt
+export default LocationPrompt;

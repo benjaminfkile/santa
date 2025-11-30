@@ -46,3 +46,24 @@
     color: #28a745;
     font-weight: 600;
 }
+
+/* Extra spacing for added instructions */
+.LocationPrompt ul {
+    padding-left: 18px;
+    margin-top: 6px;
+    margin-bottom: 12px;
+}
+
+.LocationPrompt li {
+    font-size: 14px;
+    line-height: 1.3;
+}
+
+/* Slight visual separation */
+.LocationPromptCustomModalBody p + ul {
+    margin-top: -2px;
+}
+
+.LocationPromptCustomModalBody p {
+    margin-bottom: 10px;
+}
