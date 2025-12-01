@@ -66,9 +66,9 @@ let userLocation = {
             case error.POSITION_UNAVAILABLE:
                 msg = "Location information is unavailable.";
                 break;
-            case error.TIMEOUT:
-                msg = "Location request timed out.";
-                break;
+            // case error.TIMEOUT:
+            //     msg = "Location request timed out.";
+            //     break;
         }
 
         snackBar({ type: "error", text: msg, timeout: 3000 });
