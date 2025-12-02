@@ -80,6 +80,10 @@
     margin-right: auto;
 }
 
+.SponsorLogoWrapper-CFA img {
+    transform: scale(4.5);
+}
+
 .SponsorFooter {
     display: flex;
     justify-content: space-between;

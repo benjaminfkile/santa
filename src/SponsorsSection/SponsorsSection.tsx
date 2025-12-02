@@ -4,8 +4,8 @@ import JumpingElf from "../Utils/JumpingElf/JumpingElf";
 import Ornaments from "../Utils/Ornaments/Ornaments";
 import Logo from "../Utils/Logo/Logo";
 import { ISponsor } from "../interfaces";
+import getSponsorClassName from "../Utils/getSponsorClassName";
 import "./SponsorsSection.css";
-
 interface SponsorsSectionProps {
   sponsors: ISponsor[];
 }
@@ -51,7 +51,7 @@ export default function SponsorsSection({ sponsors }: SponsorsSectionProps) {
                 <p>{sponsor.name}</p>
               </div>
 
-              <div className="SponsorLogoWrapper">
+              <div className={`SponsorLogoWrapper SponsorLogoWrapper-${getSponsorClassName(sponsor.id)}`}>
                 <img src={getLogoUrl(sponsor)} alt={sponsor.name} />
               </div>
 

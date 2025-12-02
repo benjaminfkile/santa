@@ -20,6 +20,10 @@
     object-fit: contain;
 }
 
+.SponsorCarouselItem-CFA img{
+    transform: scale(4);
+}
+
 #sponsor-carousel-item-standard{
     background-color: #ffffff;
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { ISponsor } from "../../interfaces";
+import getSponsorClassName from "../getSponsorClassName";
 import "./SponsorCarousel.css";
 
 interface SponsorCarouselProps {
@@ -69,7 +70,7 @@ export default function SponsorCarousel({ sponsors, theme }: SponsorCarouselProp
     <div className="SponsorCarousel">
       <div
         id={`sponsor-carousel-item-${theme.toLowerCase()}`}
-        className="SponsorCarouselItem"
+        className={`SponsorCarouselItem SponsorCarouselItem-${getSponsorClassName(currentSponsor.id)}`}
       >
         <img
           src={logo}
