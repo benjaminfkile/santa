@@ -47,6 +47,7 @@
 }
 
 .SponsorItem {
+    position: relative;
     display: block;
     margin-left: auto;
     margin-right: auto;
@@ -56,6 +57,7 @@
     box-shadow: 2px 2px 2px rgb(0 0 0 / 30%);
     background-color: #3a3b3c78;
     color: #FFFFFF;
+    z-index: 0;
 }
 
 .SponsorItemHeader {
@@ -71,6 +73,8 @@
 
 .SponsorLogoWrapper {
     margin-top: 5px;
+    pointer-events: none;
+    z-index: 1;
 }
 
 .SponsorLogoWrapper img {
@@ -88,6 +92,8 @@
     display: flex;
     justify-content: space-between;
     height: 50px;
+    z-index: 10;
+    /* footer above the image */
 }
 
 .SponsorFooterItem {

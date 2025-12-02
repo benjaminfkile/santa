@@ -1,50 +1,56 @@
-.SponsorCarousel{
+.SponsorCarousel {
     position: fixed;
     bottom: -25px;
     left: 5px;
     margin-bottom: 30px;
 }
 
-.SponsorCarouselItem{
-    /* width: 100%;
-    display: flex;
-    justify-content: center; */
+.SponsorCarouselItem {
+    position: relative;
+    /* creates stacking context */
+    z-index: 1;
+    overflow: hidden;
     padding: 5px;
     border-radius: 5px;
     box-shadow: 0px 1px 4px rgb(0 0 0 / 30%)
 }
 
-.SponsorCarouselItem img{
+.SponsorCarouselItem img {
     height: 70px;
     max-width: 180px;
     object-fit: contain;
+    position: relative;
+    z-index: 5;
 }
 
-.SponsorCarouselItem-CFA img{
+.SponsorCarouselItem-CFA img {
     transform: scale(4);
+    transform-origin: center;
+    pointer-events: auto;
+    /* keep clicking enabled */
+    z-index: 5;
 }
 
-#sponsor-carousel-item-standard{
+#sponsor-carousel-item-standard {
     background-color: #ffffff;
 }
 
-#sponsor-carousel-item-retro{
+#sponsor-carousel-item-retro {
     background-color: #ded1ad;
 }
 
-#sponsor-carousel-item-silver{
+#sponsor-carousel-item-silver {
     background-color: #C7D3DD;
 }
 
-#sponsor-carousel-item-dark{
+#sponsor-carousel-item-dark {
     background-color: #434343;
 }
 
-#sponsor-carousel-item-night{
+#sponsor-carousel-item-night {
     background-color: #000000;
 }
 
-#sponsor-carousel-item-aubergine{
+#sponsor-carousel-item-aubergine {
     background-color: #2d5f75;
 }
-
