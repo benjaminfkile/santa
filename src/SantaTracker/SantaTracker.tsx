@@ -30,11 +30,19 @@ class SantaTracker extends Component<Props, Types> {
 
     componentDidMount() {
         this.loadHandlerInterval = setInterval(this.loadHandler, this.loadHandlerSpeed)
-        this.noSleep.enable()
+        try {
+            this.noSleep.enable()
+        } catch (error) {
+            console.error(error)
+        }
     }
 
-    componentWillUnmount(){
-        this.noSleep.disable()
+    componentWillUnmount() {
+        try {
+            this.noSleep.disable()
+        } catch (error) {
+            console.error(error)
+        }
     }
 
     loadHandler = () => {
@@ -57,7 +65,7 @@ class SantaTracker extends Component<Props, Types> {
         }
 
         //mode = "1"
-        
+
         return (
             <div className="SantaTracker">
                 {!loading && santaDat && mode === "0" && <div className="PreShow">

@@ -1,11 +1,10 @@
 import { Component } from "react"
 import NavMenu from "../../NavMenu/NavMenu"
-import LaughingSanta from "../../Utils/LaughingSanta/LaughingSanta"
 import Snow from "../../Utils/Snow/Snow"
 import { ISantaFlyoverData } from "../../interfaces"
-import "./PreShow.css"
 import { Link } from "react-router-dom"
-
+import Logo from "../../Utils/Logo/Logo"
+import "./PreShow.css"
 interface PreShowProps {
     santaFlyoverData: ISantaFlyoverData | null
 }
@@ -20,6 +19,9 @@ class PreShow extends Component<PreShowProps, {}> {
             <div className="PreShow"
                 style={{ backgroundImage: `url("${process.env.REACT_APP_MAP_NOT_ALLOWED_IMG}")` }}
             >
+                <div className="PreShowLogoWraper">
+                    <Logo />
+                </div>
                 <NavMenu />
                 <Snow />
                 <div className="preshow-info-card">
@@ -35,11 +37,6 @@ class PreShow extends Component<PreShowProps, {}> {
                         </div>
                         {!message && <p>When he’s on the move, come back here—this page will turn into a tracker to help you locate him.</p>}
                         {message && <p>{message}</p>}
-                    </div>
-                    <div className="preshow-info-card-laughing-santa-wrapper">
-                        <LaughingSanta
-                            message="406"
-                        />
                     </div>
                 </div>
             </div>

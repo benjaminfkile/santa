@@ -1,105 +1,110 @@
 .EndShow {
     position: absolute;
-    top: 0px;
-    left: 0px;
+    inset: 0;
     width: 100%;
     height: 100%;
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center center;
-    user-select: none;
-    overflow-x: hidden;
-    overflow-y: hidden;
-}
 
-#endshow-modal .modal-content {
-    background-color: #19263c;
-
-}
-
-#endshow-modal .modal-header, #endshow-modal .modal-body, #endshow-modal .modal-footer {
-    margin: 0px;
-    padding: 0px;
-}
-
-.EndShowModalHeader {
-    width: 100%;
-}
-
-.EndShowModalHeader p {
-    margin: 0px;
-    padding: 0px;
-    text-align: center;
-}
-
-.EndShowModalHeaderP1 {
-    font-size: 25px;
-}
-
-.EndShowModalHeaderP2 {
-    font-size: 20px;
-}
-
-.EndShowModalBody {
     display: flex;
     justify-content: center;
-    height: 153px;
-    padding-left: 10px;
-    padding-right: 10px;
+    align-items: center;
+
+    overflow: hidden;
 }
 
-.EndShowModalBody img {
-    max-width: 100%;
-    margin: 5px;
+/* Same card style as PreShow */
+.endshow-info-card {
+    position: relative;
+    width: 90%;
+    max-width: 480px;
+    padding: 2rem;
+
+    background: rgba(10, 22, 40, 0.85);
+    backdrop-filter: blur(6px);
+    border-radius: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+
+    box-shadow:
+        0 0 40px rgba(0, 0, 0, 0.6),
+        0 0 80px rgba(0, 150, 255, 0.2);
+
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    max-height: 70vh;
+    overflow: hidden;
+    z-index: 200;
+}
+
+.endshow-info-card::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #ffffff50, #7ccaff40, #ffffff20);
+    filter: blur(8px);
+    z-index: -1;
+}
+
+/* Header styles */
+.endshow-header-p1 {
+    font-size: 1.3rem;
+    color: #ffffff;
+    margin: 0;
+    text-shadow: 0 0 8px rgba(120, 180, 255, 0.5);
+    font-weight: 600;
+}
+
+.endshow-header-p2 {
+    font-size: 1.05rem;
+    color: #c9e4ff;
+    margin: 0.4rem 0 0;
+    text-shadow: 0 0 8px rgba(120, 180, 255, 0.3);
+}
+
+/* Body */
+.endshow-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 1rem 0;
+}
+
+.endshow-body img {
+    max-width: 240px;
+    max-height: 240px;
+    object-fit: contain;
+}
+
+/* Footer */
+.endshow-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.endshow-footer p {
+    cursor: pointer;
+    color: #9cd3ff;
+    text-shadow: 0 0 8px rgba(100, 180, 255, 0.6);
+    font-weight: 600;
+}
+
+.endshow-footer p:hover {
+    color: #ffffff;
 }
 
 .EndShowModalBody-CFA img {
     transform: scale(3);
 }
 
-.EndShowModalBodyLaughingSantaWrapper {
-    position: absolute;
-    left: 120px;
-    transform: scale(.8);
+#endshow-home-btn{
+    font-size: 50px;
 }
 
-.EndShowModalFooter {
-    height: 50px;
+.EndShowLogoWraper{
+    position: fixed;
+    top: 0px;
 }
-
-#endshow-home-btn {
-    position: absolute;
-    right: 5px;
-    bottom: 4px;
-    cursor: pointer;
-    user-select: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 8px;
-    text-align: center;
-    background-color: #4c5561;
-    color: #FFFFFF;
-    padding-top: 5px;
-    font-size: 40px !important;
-}
-
-#endshow-waiting-for-images {
-    position: absolute;
-    right: 5px;
-    bottom: 5px;
-    color: #666666;
-    width: 30px;
-    height: 30px;
-}
-
-#end-show-sponsor-link {
-    position: absolute;
-    left: 5px;
-    bottom: 0px;
-}
-
-#end-show-sponsor-link p {
-    cursor: pointer;
-    user-select: none;
-}
-
