@@ -4,6 +4,7 @@ import LaughingSanta from "../../Utils/LaughingSanta/LaughingSanta"
 import Snow from "../../Utils/Snow/Snow"
 import { ISantaFlyoverData } from "../../interfaces"
 import "./PreShow.css"
+import { Link } from "react-router-dom"
 
 interface PreShowProps {
     santaFlyoverData: ISantaFlyoverData | null
@@ -17,17 +18,22 @@ class PreShow extends Component<PreShowProps, {}> {
 
         return (
             <div className="PreShow"
-                style={{ backgroundImage: `url("${process.env.REACT_APP_MAP_NOT_ALLOWED_IMG}")`}}
+                style={{ backgroundImage: `url("${process.env.REACT_APP_MAP_NOT_ALLOWED_IMG}")` }}
             >
                 <NavMenu />
                 <Snow />
                 <div className="preshow-info-card">
                     <div className="preshow-info-card-header">
                         <p id="preshow-info-card-header-p1">Looks like Santa is still at the North Pole.</p>
-                        <p id="preshow-info-card-header-p2">When he starts to move you can interact with the map.</p>
+                        <p id="preshow-info-card-header-p2">When he starts to move, you can interact with the map.</p>
                     </div>
                     <div className="preshow-info-card-message">
-                        {!message && <p>When he is on the move you can come back here, and it will turn into a tracker to help you locate him.</p>}
+                        <div className="preshow-info-card-route">
+                            <Link to='/route'>
+                                To view his route, click here
+                            </Link>
+                        </div>
+                        {!message && <p>When he’s on the move, come back here—this page will turn into a tracker to help you locate him.</p>}
                         {message && <p>{message}</p>}
                     </div>
                     <div className="preshow-info-card-laughing-santa-wrapper">
