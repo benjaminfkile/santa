@@ -12,6 +12,7 @@ const RouteDisclaimer: FunctionComponent<Props> = ({ onClose, isInTracker }) => 
         <Modal
             show
             centered
+            backdrop="static"
             keyboard={false}
             onHide={onClose}
             dialogClassName="rd-dialog"
