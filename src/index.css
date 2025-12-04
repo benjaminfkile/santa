@@ -25,11 +25,6 @@ html, body {
 }
 
 ::-webkit-scrollbar-thumb {
-  /* background-image: linear-gradient(rgba(0,0,0,.5), rgba(0,0,0,0.5)), url("https://i.ibb.co/f0gsh1R/0FYDzt.jpg");
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center center;
-  border-radius: 5px; */
   background-color: gray;
 }
 

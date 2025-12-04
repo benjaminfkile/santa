@@ -16,8 +16,10 @@ class PreShow extends Component<PreShowProps, {}> {
         let message = this.props.santaFlyoverData?.message || null
 
         return (
-            <div className="PreShow">
-                <NavMenu/>
+            <div className="PreShow"
+                style={{ backgroundImage: `url("${process.env.REACT_APP_MAP_NOT_ALLOWED_IMG}")`}}
+            >
+                <NavMenu />
                 <Snow />
                 <div className="preshow-info-card">
                     <div className="preshow-info-card-header">

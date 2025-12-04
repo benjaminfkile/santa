@@ -5,6 +5,7 @@ import LaughingSanta from "../../Utils/LaughingSanta/LaughingSanta";
 import Snow from "../../Utils/Snow/Snow";
 import { ISponsor } from "../../interfaces";
 import "./EndShow.css";
+import getSponsorClassName from "../../Utils/getSponsorClassName";
 
 interface EndShowProps {
   sponsors: ISponsor[];
@@ -45,10 +46,11 @@ export default function EndShow({ sponsors }: EndShowProps) {
 
     // Set first sponsor immediately
     sponsorIndex.current = 0;
-    setCurrentSponsor(shuffled[0]);
+    const sponsor = shuffled[0]
+    setCurrentSponsor(sponsor);
 
     // Set initial delay based on sponsor linger value
-    delay.current = shuffled[0].linger ?? 2000;
+    delay.current = sponsor.linger ?? 2000;
   }, [sponsors]);
 
   // Carousel rotation loop
@@ -74,7 +76,9 @@ export default function EndShow({ sponsors }: EndShowProps) {
   };
 
   return (
-    <div className="EndShow">
+    <div className="EndShow"
+      style={{ backgroundImage: `url("${process.env.REACT_APP_MAP_NOT_ALLOWED_IMG}")` }}
+    >
       <div className="EndShowModalBodyLaughingSantaWrapper">
         <LaughingSanta message={"406"} />
       </div>
@@ -90,7 +94,7 @@ export default function EndShow({ sponsors }: EndShowProps) {
         </Modal.Header>
 
         <Modal.Body>
-          <div className="EndShowModalBody">
+          <div className={`EndShowModalBody EndShowModalBody-${getSponsorClassName(currentSponsor ? currentSponsor.id : -1)}`}>
             {!currentSponsor && (
               <Spinner id="endshow-waiting-for-images" animation="border" />
             )}
