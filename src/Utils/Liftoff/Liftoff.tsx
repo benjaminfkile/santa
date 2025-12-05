@@ -16,7 +16,7 @@ const Liftoff: FunctionComponent<LiftoffProps> = ({ liftoff, theme }) => {
         <span className="material-icons" id="liftoff-icon">
           flight_takeoff
         </span>
-        <p>Flying {formatElapsed(liftoff)}</p>
+        <p>Airborne {formatElapsed(liftoff)}</p>
       </div>
     </div>
   );
