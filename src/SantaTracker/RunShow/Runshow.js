@@ -402,7 +402,7 @@ class Tracker extends Component {
     if (zoom > 12) {
       return 3;
     }
-    return 20
+    return 20;
   }
 
   drawRoutePolyline = () => {
@@ -624,6 +624,13 @@ class Tracker extends Component {
               />
             )}
             <div className="TopLeftInfoWrapper">
+              {this.props.santaFlyoverData?.liftoff != null &&
+                !this.state.menuOpen && (
+                  <Liftoff
+                    liftoff={this.props.santaFlyoverData.liftoff}
+                    theme={this.state.currentTheme}
+                  />
+                )}
               {!userLocation.disable &&
                 this.state.DistanceFromUserToSanta &&
                 !this.state.menuOpen && (
@@ -666,13 +673,6 @@ class Tracker extends Component {
                       </div>
                     )}
                   </div>
-                )}
-              {this.props.santaFlyoverData?.liftoff != null &&
-                !this.state.menuOpen && (
-                  <Liftoff
-                    liftoff={this.props.santaFlyoverData.liftoff}
-                    theme={this.state.currentTheme}
-                  />
                 )}
             </div>
 
