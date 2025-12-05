@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import LocationPrompt from "../../../Utils/UserLocation/LocationPrompt";
 import userLocation from "../../../Utils/UserLocation/UserLocation";
 import ToggleStatus from "./ToggleStatus/ToggleStatus";
-import "./Menu.css";
 import RouteDisclaimer from "../../../Utils/RouteDisclaimer/RouteDisclaimer";
-
+import formatElapsed from "../../../Utils/formatElapsed";import "./Menu.css";
 
 const TrackerMenu = (props: {
     changeTheme: Function;
@@ -242,6 +241,12 @@ const TrackerMenu = (props: {
                                 )}
                             </div>
                         )}
+                        {santaDat.liftoff &&
+                            <div className="TrackerMenuSantaDataItem">
+                                <span className="material-icons">flight_takeoff</span>
+                                <p>{formatElapsed(santaDat?.liftoff) || "*NA*"}</p>
+                            </div>
+                        }
                     </div>
 
                     {/* Footer area with two rows */}

@@ -11,6 +11,7 @@ import TrackerMenu from "./Menu/Menu";
 import Snow from "../../Utils/Snow/Snow";
 import SponsorCarousel from "../../Utils/SponsorCarousel/SponsorCarousel";
 import "./Runshow.css";
+import Liftoff from "../../Utils/Liftoff/Liftoff";
 class Tracker extends Component {
   mapThemes = [
     {
@@ -676,6 +677,9 @@ class Tracker extends Component {
                     )}
                   </div>
                 )}
+              {((this.props.santaFlyoverData?.liftoff != null) && (!this.state.menuOpen)) && (
+                <Liftoff liftoff={this.props.santaFlyoverData.liftoff} theme={this.state.currentTheme} />
+              )}
             </div>
 
             {!this.state.menuOpen && (

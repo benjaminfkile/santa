@@ -9,6 +9,7 @@ export interface ISantaFlyoverData {
   message: string;
   interval: number;
   instanceId: string;
+  liftoff: number | null | undefined
 }
 
 export interface ISponsor
@@ -45,3 +46,4 @@ export interface ISantaRoute {
   seq: number;
   time?: string;
 }
+
