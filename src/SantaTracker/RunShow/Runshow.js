@@ -399,20 +399,11 @@ class Tracker extends Component {
   }
 
   getTimeIntervalForZoom(zoom) {
-    switch (zoom) {
-      case 11:
-        return 10;
-      case 12:
-        return 10;
-      case 13:
-        return 5;
-      case 14:
-        return 1;
-      case 15:
-        return 1;
-      default:
-        return 30;
+    console.log(zoom);
+    if (zoom > 12) {
+      return 3;
     }
+    return 20
   }
 
   drawRoutePolyline = () => {
@@ -677,9 +668,13 @@ class Tracker extends Component {
                     )}
                   </div>
                 )}
-              {((this.props.santaFlyoverData?.liftoff != null) && (!this.state.menuOpen)) && (
-                <Liftoff liftoff={this.props.santaFlyoverData.liftoff} theme={this.state.currentTheme} />
-              )}
+              {this.props.santaFlyoverData?.liftoff != null &&
+                !this.state.menuOpen && (
+                  <Liftoff
+                    liftoff={this.props.santaFlyoverData.liftoff}
+                    theme={this.state.currentTheme}
+                  />
+                )}
             </div>
 
             {!this.state.menuOpen && (
