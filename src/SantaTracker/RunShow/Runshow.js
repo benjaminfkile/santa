@@ -437,7 +437,7 @@ class Tracker extends Component {
 
   getTimeIntervalForZoom(zoom) {
     if (zoom > 12) {
-      return 3;
+      return 5;
     }
     return 20;
   }
