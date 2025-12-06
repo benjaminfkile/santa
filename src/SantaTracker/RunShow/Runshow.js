@@ -54,7 +54,7 @@ class Tracker extends Component {
       routeColor: "#ffffff7c",
       arrowColor: "#ffffff7c",
       timeLabelBG: null,
-      timeLabelColor: null,
+      timeLabelColor: "#b5b5b5",
       timeLabelOpacity: null,
       routeOpacity: 1,
     },
