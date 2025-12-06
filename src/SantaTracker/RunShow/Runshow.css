@@ -1,10 +1,10 @@
-.TrackerMenu {
+/* .TrackerMenu {
   position: absolute;
   top: 0px;
   right: 0px;
   color: black;
   z-index: 10;
-}
+} */
 
 .TrackerCustomLabel img {
   height: 20px;

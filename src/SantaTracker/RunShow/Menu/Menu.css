@@ -16,10 +16,9 @@
 
 .TrackerMenu {
     position: fixed;
-    top: 5px;
-    right: 5px;
-    width: 300px;
-    max-width: 80vw;
+    top: 0px;
+    right: 0px;
+    width: 301px;
     overflow: hidden;
     z-index: 10;
 }
@@ -81,7 +80,7 @@
     display: flex;
     flex-wrap: wrap;
     padding: 0px;
-    padding-left: 4px;
+    padding-left: 5px;
     padding-top: 0px;
     padding-bottom: 4px;
 }
@@ -125,7 +124,7 @@
 
 .TrackerMenuMapTypeRow {
     display: flex;
-    padding-left: 2px;
+    margin-left: 3px;
 }
 
 
@@ -185,9 +184,9 @@
 } */
 
 .TrackerMenuSantaData {
-    width: calc(100% - 8px);
+    width: calc(100% - 10px);
     margin-top: 4px;
-    margin-left: 4px;
+    margin-left: 5px;
     margin-right: 4px;
     gap: 2px;
     border-radius: 4px;
@@ -290,7 +289,7 @@
     /* padding-left: 4px;
     padding-right: 4px; */
     padding-bottom: 4px;
-    padding-right: 4px;
+    padding-right: 5px;
 }
 
 .TrackerMenuFooterRow {
