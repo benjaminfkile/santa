@@ -91,6 +91,18 @@ class Tracker extends Component {
   };
 
   componentDidMount() {
+    // Load saved theme
+    const savedIndex = parseInt(localStorage.getItem("tracker-theme"));
+    const validIndex =
+      !isNaN(savedIndex) &&
+      savedIndex >= 0 &&
+      savedIndex < this.mapThemes.length
+        ? savedIndex
+        : 4;
+
+    this.setState({ currentTheme: this.mapThemes[validIndex].title });
+
+    // Continue your existing mount logic
     setInterval(this.getUserLocation, this.updateinterval);
   }
 
@@ -276,6 +288,11 @@ class Tracker extends Component {
   };
 
   setTheme = (index) => {
+    try {
+      localStorage.setItem("tracker-theme", index);
+    } catch (error) {
+      console.error(error);
+    }
     // 1. Apply the map style immediately
     this.map.setOptions({ styles: this.mapThemes[index].mapTheme });
 
@@ -319,6 +336,7 @@ class Tracker extends Component {
     this.map.setOptions({
       center: { lat: this.state.lat, lng: this.state.lng },
       zoom: 10,
+      minZoom: 5,
       mapTypeControl: false,
       zoomControl: false,
       fullscreenControl: false,
@@ -329,7 +347,8 @@ class Tracker extends Component {
       mapTypeControlOptions: {
         mapTypeIds: ["terrain", "roadmap", "hybrid"],
       },
-      styles: this.mapThemes[4].mapTheme,
+      styles: this.mapThemes.find((t) => t.title === this.state.currentTheme)
+        .mapTheme,
     });
     const self = this;
     window.google.maps.event.addListener(map, "dragstart", function () {

@@ -3,7 +3,7 @@ import LocationPrompt from "../../../Utils/UserLocation/LocationPrompt";
 import userLocation from "../../../Utils/UserLocation/UserLocation";
 import ToggleStatus from "./ToggleStatus/ToggleStatus";
 import RouteDisclaimer from "../../../Utils/RouteDisclaimer/RouteDisclaimer";
-import formatElapsed from "../../../Utils/formatElapsed";import "./Menu.css";
+import formatElapsed from "../../../Utils/formatElapsed"; import "./Menu.css";
 
 const TrackerMenu = (props: {
     changeTheme: Function;
@@ -40,7 +40,15 @@ const TrackerMenu = (props: {
     const [locationPrompt, setLocationPrompt] = useState(false);
     const [historyOn, setHistoryOn] = useState(true);
     const [timesOn, setTimesOn] = useState(true)
-    const [showDisclaimer, setShowDisclaimer] = useState(timesOn)
+    const [showDisclaimer, setShowDisclaimer] = useState<boolean>(() => {
+        try {
+            const hasSeen = localStorage.getItem("already-acknowledged-disclaimer") === "true";
+            return !hasSeen;  
+        } catch {
+            return true;      
+        }
+    });
+
 
     useEffect(() => {
         setMapTypeId(mapType);
@@ -323,7 +331,7 @@ const TrackerMenu = (props: {
                     />
                 )
             }
-            {showDisclaimer && <RouteDisclaimer onClose={() => setShowDisclaimer(false)} isInTracker />}
+            {showDisclaimer && <RouteDisclaimer onClose={() => setShowDisclaimer(false)} isInTracker theme={currentTheme} />}
         </div >
     );
 };
