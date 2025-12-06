@@ -10,8 +10,8 @@ import Aubergine from "./MapThemes/Aubergine";
 import TrackerMenu from "./Menu/Menu";
 import Snow from "../../Utils/Snow/Snow";
 import SponsorCarousel from "../../Utils/SponsorCarousel/SponsorCarousel";
-import "./Runshow.css";
 import Liftoff from "../../Utils/Liftoff/Liftoff";
+import "./Runshow.css";
 class Tracker extends Component {
   mapThemes = [
     {
@@ -20,18 +20,20 @@ class Tracker extends Component {
       nickName: "Standard",
       routeColor: "#00000088",
       arrowColor: "#00000088",
-      timeLabelBb: null,
+      timeLabelBG: null,
       timeLabelColor: null,
+      timeLabelOpacity: null,
       routeOpacity: 1,
     },
     {
       mapTheme: Retro,
       title: "Retro",
-      nickName: "Retro",
-      routeColor: "#646f37d1",
-      arrowColor: "#646f37d1",
-      timeLabelBb: null,
+      nickName: "Expedition",
+      routeColor: "#00000088",
+      arrowColor: "#00000088",
+      timeLabelBG: null,
       timeLabelColor: null,
+      timeLabelOpacity: null,
       routeOpacity: 1,
     },
     {
@@ -40,8 +42,9 @@ class Tracker extends Component {
       nickName: "Blizzard",
       routeColor: "#7c7c7cff",
       arrowColor: "#7c7c7cff",
-      timeLabelBb: "#7c7c7cff",
+      timeLabelBG: "#7c7c7cff",
       timeLabelColor: "#FFFFFF",
+      timeLabelOpacity: null,
       routeOpacity: 1,
     },
     {
@@ -50,8 +53,9 @@ class Tracker extends Component {
       nickName: "Charcoal",
       routeColor: "#ffffff7c",
       arrowColor: "#ffffff7c",
-      timeLabelBb: null,
+      timeLabelBG: null,
       timeLabelColor: null,
+      timeLabelOpacity: null,
       routeOpacity: 1,
     },
     {
@@ -60,8 +64,9 @@ class Tracker extends Component {
       nickName: "Night",
       routeColor: "#00eaff7d",
       arrowColor: "#ffffff81",
-      timeLabelBb: null,
+      timeLabelBG: null,
       timeLabelColor: null,
+      timeLabelOpacity: null,
       routeOpacity: 1,
     },
     {
@@ -70,8 +75,9 @@ class Tracker extends Component {
       nickName: "Nebula",
       routeColor: "#00C2C7",
       arrowColor: "#ffffff7c",
-      timeLabelBb: null,
+      timeLabelBG: null,
       timeLabelColor: null,
+      timeLabelOpacity: null,
       routeOpacity: 0.5,
     },
   ];
@@ -543,8 +549,9 @@ class Tracker extends Component {
           const charWidth = 7; // average monospace-ish width at 14px
           const textWidth = labelText.length * charWidth;
           const boxWidth = textWidth + padding * 2;
-          const tlbg = theme.timeLabelBb ?? "#000000";
+          const tlbg = theme.timeLabelBG ?? "#000000";
           const tlc = theme.timeLabelColor ?? "#ffffffff";
+          const tlo = theme.timeLabelOpacity ?? ".65";
 
           const svgWidth = boxWidth;
           const svgHeight = 38;
@@ -558,7 +565,7 @@ class Tracker extends Component {
                 encodeURIComponent(`
                 <svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}">
                   <rect width="${boxWidth}" height="28" rx="4" ry="4"
-                        fill="${tlbg}" opacity="0.65" />
+                        fill="${tlbg}" opacity="${tlo}" />
                   <text x="${boxWidth / 2}" y="18" text-anchor="middle"
                         fill="${tlc}" font-size="14" font-family="Arial">
                     ${labelText}
