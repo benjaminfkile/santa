@@ -5,6 +5,8 @@ import OpenSeadragon from "openseadragon";
 import Logo from "../Utils/Logo/Logo";
 import RouteDisclaimer from "../Utils/RouteDisclaimer/RouteDisclaimer";
 import "./RouteSection.css";
+import Ornaments from "../Utils/Ornaments/Ornaments";
+import JumpingElf from "../Utils/JumpingElf/JumpingElf";
 
 const RouteSection: FunctionComponent<{}> = () => {
     const viewerRef = useRef<HTMLDivElement | null>(null);
@@ -55,6 +57,8 @@ const RouteSection: FunctionComponent<{}> = () => {
                 className="RouteViewer"
             />
             {showDisclaimer && <RouteDisclaimer onClose={() => setShowDisclaimer(false)} />}
+            <Ornaments />
+            <JumpingElf/>
         </div>
     );
 };
