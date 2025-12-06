@@ -12,8 +12,6 @@
     --tm-theme-img-size: 58px;
 }
 
-
-
 .TrackerMenu {
     position: fixed;
     top: 0px;
@@ -23,7 +21,6 @@
     z-index: 10;
 }
 
-/* Menu toggle button */
 .TrackerMenuBtn {
     position: fixed;
     right: 0;
@@ -41,40 +38,12 @@
     margin-top: 5px;
 }
 
-/* Main panel */
-/* .TrackerMenuContent {
-    border-bottom-left-radius: 8px;
-    animation: slide-in-right 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-    box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.3);
-} */
-
 .TrackerMenuContent {
     border-bottom-left-radius: 8px;
     animation: slide-in-right 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
     box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.3);
     padding: var(--tm-padding) var(--tm-padding-lg);
 }
-
-
-/* Themes grid */
-/* .TrackerMenuThemes {
-    display: flex;
-    flex-wrap: wrap;
-    padding: 6px;
-}
-
-.TrackerMenuTheme {
-    height: 90px;
-    border-radius: 4px;
-    margin: 3px;
-    cursor: pointer;
-    user-select: none;
-    width: calc(33.33% - 6px);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-} */
 
 .TrackerMenuThemes {
     display: flex;
@@ -114,19 +83,10 @@
     margin: 2px 0 0;
 }
 
-
-/* Map type + Snow row */
-/* .TrackerMenuMapTypeRow {
-    display: flex;
-    justify-content: space-evenly;
-    padding: 0px 6px 6px;
-} */
-
 .TrackerMenuMapTypeRow {
     display: flex;
     margin-left: 3px;
 }
-
 
 .TRSToggle {
     display: flex;
@@ -175,14 +135,6 @@
     color: #ffffff;
 }
 
-/* Santa data */
-/* .TrackerMenuSantaData {
-    width: calc(100% - 8px);
-    margin: 0 4px 4px;
-    border-radius: 4px;
-    padding: 4px 6px;
-} */
-
 .TrackerMenuSantaData {
     width: calc(100% - 10px);
     margin-top: 4px;
@@ -212,7 +164,6 @@
     margin: 0;
 }
 
-/* Theme-specific Santa data backgrounds */
 .TrackerMenuSantaDataStandard {
     background-color: #bdd8bb;
 }
@@ -267,27 +218,10 @@
     color: #fff;
 }
 
-/* Footer section with two rows */
-/* .TrackerMenuFooter {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin: 4px;
-    padding-bottom: 4px;
-}
-
-.TrackerMenuFooterRow {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-} */
-
 .TrackerMenuFooter {
     display: flex;
     flex-direction: column;
     margin: 0;
-    /* padding-left: 4px;
-    padding-right: 4px; */
     padding-bottom: 4px;
     padding-right: 5px;
 }
@@ -330,7 +264,6 @@
     font-size: var(--tm-icon-size) !important;
 }
 
-/* NEW label */
 .TrackerMenuNewLabel {
     flex: 1;
     display: flex;
@@ -348,7 +281,6 @@
     color: #ffffff;
 }
 
-/* Theme-colored footer buttons */
 .TrackerMenuFooterBtn-standard {
     background-color: #bdd8bb;
     color: #000000;
@@ -383,7 +315,6 @@
     color: #FFFFFF;
 }
 
-/* Close button theme colors */
 #tracker-menu-close-btn-night {
     color: #ffffff;
 }
@@ -400,57 +331,6 @@
     color: #000000;
 }
 
-/* Location allowed/denied theme-specific buttons */
-/* #tracker-menu-location-btn-allowed-standard {
-    color: #28a745;
-}
-
-#tracker-menu-location-btn-allowed-retro {
-    color: #28a745;
-    background-color: #ded1ad;
-}
-
-#tracker-menu-location-btn-allowed-silver {
-    color: #28a745;
-    background-color: #c7d3ddba;
-}
-
-#tracker-menu-location-btn-denied-silver {
-    color: #dc3545;
-    background-color: #c7d3ddba;
-}
-
-#tracker-menu-location-btn-allowed-dark {
-    color: #b5b5b5;
-    background-color: #434343;
-}
-
-#tracker-menu-location-btn-denied-dark {
-    color: #dc3545;
-    background-color: #434343;
-}
-
-#tracker-menu-location-btn-allowed-night {
-    color: #28a745;
-    background-color: #4c5561;
-}
-
-#tracker-menu-location-btn-denied-night {
-    color: #dc3545;
-    background-color: #4c5561;
-}
-
-#tracker-menu-location-btn-allowed-aubergine {
-    color: #28a745;
-    background-color: #2c5e74;
-}
-
-#tracker-menu-location-btn-denied-aubergine {
-    color: #dc3545;
-    background-color: #2c5e74;
-} */
-
-/* Home icon colors by theme */
 #tracker-menu-home-btn-standard {
     color: #000000;
 }
@@ -475,8 +355,6 @@
     color: #ffffff;
 }
 
-
-/* Menu button backgrounds by theme */
 #standard-theme-menu-btn {
     background-color: #ffffff;
     color: #666666;
@@ -601,8 +479,22 @@
     color: #ffffff;
 }
 
+#silver-theme-menu-content .TrackerMenuTheme {
+    color: #000000;
+}
 
-/* Animation (kept from original) */
+#standard-theme-menu-content .TrackerMenuTheme {
+    color: #000000;
+}
+
+#retro-theme-menu-content .TrackerMenuTheme {
+    color: #000000;
+}
+
+
+
+
+
 @keyframes slide-in-right {
     0% {
         transform: translateX(100%);
@@ -614,4 +506,3 @@
         opacity: 1;
     }
 }
-
