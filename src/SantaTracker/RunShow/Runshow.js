@@ -18,8 +18,10 @@ class Tracker extends Component {
       mapTheme: Standard,
       title: "Standard",
       nickName: "Standard",
-      routeColor: "#2962ff",
-      arrowColor: "#000000",
+      routeColor: "#00000088",
+      arrowColor: "#00000088",
+      timeLabelBb: null,
+      timeLabelColor: null,
       routeOpacity: 1,
     },
     {
@@ -28,14 +30,18 @@ class Tracker extends Component {
       nickName: "Retro",
       routeColor: "#646f37d1",
       arrowColor: "#646f37d1",
+      timeLabelBb: null,
+      timeLabelColor: null,
       routeOpacity: 1,
     },
     {
       mapTheme: Silver,
       title: "Silver",
       nickName: "Blizzard",
-      routeColor: "#7CC9E8",
-      arrowColor: "#7CC9E8",
+      routeColor: "#7c7c7cff",
+      arrowColor: "#7c7c7cff",
+      timeLabelBb: "#7c7c7cff",
+      timeLabelColor: "#FFFFFF",
       routeOpacity: 1,
     },
     {
@@ -44,6 +50,8 @@ class Tracker extends Component {
       nickName: "Charcoal",
       routeColor: "#ffffff7c",
       arrowColor: "#ffffff7c",
+      timeLabelBb: null,
+      timeLabelColor: null,
       routeOpacity: 1,
     },
     {
@@ -52,6 +60,8 @@ class Tracker extends Component {
       nickName: "Night",
       routeColor: "#00eaff7d",
       arrowColor: "#ffffff81",
+      timeLabelBb: null,
+      timeLabelColor: null,
       routeOpacity: 1,
     },
     {
@@ -60,6 +70,8 @@ class Tracker extends Component {
       nickName: "Nebula",
       routeColor: "#00C2C7",
       arrowColor: "#ffffff7c",
+      timeLabelBb: null,
+      timeLabelColor: null,
       routeOpacity: 0.5,
     },
   ];
@@ -531,6 +543,8 @@ class Tracker extends Component {
           const charWidth = 7; // average monospace-ish width at 14px
           const textWidth = labelText.length * charWidth;
           const boxWidth = textWidth + padding * 2;
+          const tlbg = theme.timeLabelBb ?? "#000000";
+          const tlc = theme.timeLabelColor ?? "#ffffffff";
 
           const svgWidth = boxWidth;
           const svgHeight = 38;
@@ -544,15 +558,15 @@ class Tracker extends Component {
                 encodeURIComponent(`
                 <svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}">
                   <rect width="${boxWidth}" height="28" rx="4" ry="4"
-                        fill="black" opacity="0.65" />
+                        fill="${tlbg}" opacity="0.65" />
                   <text x="${boxWidth / 2}" y="18" text-anchor="middle"
-                        fill="white" font-size="14" font-family="Arial">
+                        fill="${tlc}" font-size="14" font-family="Arial">
                     ${labelText}
                   </text>
                   <circle cx="${boxWidth / 2}" cy="34" r="4"
                           fill="${routeColor}" />
                 </svg>
-                `),
+              `),
               scaledSize: new window.google.maps.Size(svgWidth, svgHeight),
               anchor: new window.google.maps.Point(svgWidth / 2, 19),
             },
