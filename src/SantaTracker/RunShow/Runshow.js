@@ -41,7 +41,7 @@ class Tracker extends Component {
     {
       mapTheme: Dark,
       title: "Dark",
-      nickName: "Dark",
+      nickName: "Charcoal",
       routeColor: "#ffffff7c",
       arrowColor: "#ffffff7c",
       routeOpacity: 1,
