@@ -26,7 +26,7 @@ const RouteSection: FunctionComponent<{}> = () => {
             tileSources: {
                 type: "image",
                 url: process.env.REACT_APP_ROUTE_IMAGE_URL!,
-                crossOriginPolicy: "Anonymous",
+                // crossOriginPolicy: "Anonymous",
             },
             showNavigationControl: true,
             drawer: 'canvas',
