@@ -6,6 +6,8 @@ import { Link } from "react-router-dom";
 import Logo from "../../Utils/Logo/Logo";
 import "./PreShow.css";
 
+const FORCED_TIMEZONE = process.env.REACT_APP_FORCED_TIMEZONE;
+const FORCED_TIME_ABBR = process.env.REACT_APP_FORCED_TIME_ABBR;
 interface PreShowProps {
     santaFlyoverData: ISantaFlyoverData | null;
 }
@@ -15,6 +17,7 @@ interface PreShowState {
 }
 
 class PreShow extends Component<PreShowProps, PreShowState> {
+
     timer: any;
 
     constructor(props: PreShowProps) {
@@ -35,8 +38,8 @@ class PreShow extends Component<PreShowProps, PreShowState> {
     }
 
     render() {
-        const eventUpdate = this.props.santaFlyoverData?.eventUpdate;
 
+        const eventUpdate = this.props.santaFlyoverData?.eventUpdate;
 
         let formattedTime: string | null = null;
         let countdown: string | null = null;
@@ -45,12 +48,17 @@ class PreShow extends Component<PreShowProps, PreShowState> {
             const target = new Date(eventUpdate.time);
 
             if (!isNaN(target.getTime())) {
-                // Localized readable date/time
-                formattedTime = target.toLocaleString(undefined, {
-                    dateStyle: "medium",
-                    timeStyle: "short"
-                });
 
+                const options: Intl.DateTimeFormatOptions = {
+                    dateStyle: "short",
+                    timeStyle: "short",
+                };
+
+                if (FORCED_TIMEZONE) {
+                    options.timeZone = FORCED_TIMEZONE;
+                }
+
+                formattedTime = target.toLocaleString("en-US", options);
 
                 const diff = target.getTime() - this.state.now;
 
@@ -98,7 +106,11 @@ class PreShow extends Component<PreShowProps, PreShowState> {
                     {formattedTime && (
                         <div className="preshow-event-top">
                             <p className="event-time-label">Scheduled Event Time</p>
-                            <p className="event-time-value">{formattedTime}</p>
+
+                            <p className="event-time-value">
+                                {formattedTime}
+                                {FORCED_TIME_ABBR ? ` ${FORCED_TIME_ABBR}` : ""}
+                            </p>
 
                             {countdown && (
                                 <p className="event-countdown">
