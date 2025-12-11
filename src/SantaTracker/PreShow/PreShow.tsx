@@ -1,19 +1,85 @@
-import { Component } from "react"
-import NavMenu from "../../NavMenu/NavMenu"
-import Snow from "../../Utils/Snow/Snow"
-import { ISantaFlyoverData } from "../../interfaces"
-import { Link } from "react-router-dom"
-import Logo from "../../Utils/Logo/Logo"
-import "./PreShow.css"
+import { Component } from "react";
+import NavMenu from "../../NavMenu/NavMenu";
+import Snow from "../../Utils/Snow/Snow";
+import { ISantaFlyoverData } from "../../interfaces";
+import { Link } from "react-router-dom";
+import Logo from "../../Utils/Logo/Logo";
+import "./PreShow.css";
+
 interface PreShowProps {
-    santaFlyoverData: ISantaFlyoverData | null
+    santaFlyoverData: ISantaFlyoverData | null;
 }
 
-class PreShow extends Component<PreShowProps, {}> {
+interface PreShowState {
+    now: number;
+}
+
+class PreShow extends Component<PreShowProps, PreShowState> {
+    timer: any;
+
+    constructor(props: PreShowProps) {
+        super(props);
+        this.state = {
+            now: Date.now()
+        };
+    }
+
+    componentDidMount() {
+        this.timer = setInterval(() => {
+            this.setState({ now: Date.now() });
+        }, 1000);
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.timer);
+    }
 
     render() {
+        const eventUpdate = this.props.santaFlyoverData?.eventUpdate;
 
-        let message = this.props.santaFlyoverData?.message || null
+
+        let formattedTime: string | null = null;
+        let countdown: string | null = null;
+
+        if (eventUpdate?.time) {
+            const target = new Date(eventUpdate.time);
+
+            if (!isNaN(target.getTime())) {
+                // Localized readable date/time
+                formattedTime = target.toLocaleString(undefined, {
+                    dateStyle: "medium",
+                    timeStyle: "short"
+                });
+
+
+                const diff = target.getTime() - this.state.now;
+
+                if (diff <= 0) {
+                    countdown = null;
+                } else {
+                    const seconds = Math.floor(diff / 1000);
+
+                    const days = Math.floor(seconds / 86400);
+                    const hours = Math.floor((seconds % 86400) / 3600);
+                    const minutes = Math.floor((seconds % 3600) / 60);
+                    const secs = seconds % 60;
+
+                    const parts: string[] = [];
+
+                    if (days > 0) parts.push(`${days}d`);
+                    if (hours > 0) parts.push(`${hours}h`);
+                    if (minutes > 0) parts.push(`${minutes}m`);
+                    if (secs > 0) parts.push(`${secs}s`);
+
+                    if (parts.length === 0) {
+                        countdown = null;
+                    } else {
+                        countdown = parts.join(" ");
+                    }
+                }
+
+            }
+        }
 
         return (
             <div className="PreShow"
@@ -22,26 +88,55 @@ class PreShow extends Component<PreShowProps, {}> {
                 <div className="PreShowLogoWraper">
                     <Logo />
                 </div>
+
                 <NavMenu />
                 <Snow />
+
                 <div className="preshow-info-card">
+
+
+                    {formattedTime && (
+                        <div className="preshow-event-top">
+                            <p className="event-time-label">Scheduled Event Time</p>
+                            <p className="event-time-value">{formattedTime}</p>
+
+                            {countdown && (
+                                <p className="event-countdown">
+                                    {countdown}
+                                </p>
+                            )}
+                        </div>
+                    )}
+
                     <div className="preshow-info-card-header">
-                        <p id="preshow-info-card-header-p1">Looks like Santa is still at the North Pole.</p>
-                        <p id="preshow-info-card-header-p2">When he starts to move, you can interact with the map.</p>
+                        <p id="preshow-info-card-header-p1">
+                            Looks like Santa is still at the North Pole.
+                        </p>
+                        <p id="preshow-info-card-header-p2">
+                            When he starts to move, you can interact with the map.
+                        </p>
                     </div>
+
                     <div className="preshow-info-card-message">
                         <div className="preshow-info-card-route">
                             <Link to='/route'>
                                 To view his route, click here
                             </Link>
                         </div>
-                        {!message && <p>When he’s on the move, come back here—this page will turn into a tracker to help you locate him.</p>}
-                        {message && <p>{message}</p>}
+
+                        {!eventUpdate?.message && (
+                            <p>
+                                When he’s on the move, come back here—this page will turn into
+                                a tracker to help you locate him.
+                            </p>
+                        )}
+
+                        {eventUpdate?.message && <p>{eventUpdate.message}</p>}
                     </div>
                 </div>
             </div>
-        )
+        );
     }
 }
 
-export default PreShow
+export default PreShow;

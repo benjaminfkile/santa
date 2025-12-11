@@ -1,15 +1,15 @@
 export interface ISantaFlyoverData {
   lat: number | null;
   lng: number | null;
-  speed: number | null;   
-  alt: number | null;        
-  bearing: number | null;      
-  mode: number | null;         
-  time: number | null;         
-  message: string;
+  speed: number | null;
+  alt: number | null;
+  bearing: number | null;
+  mode: number | null;
+  time: number | null;
+  eventUpdate: IEventUpdate;
   interval: number;
   instanceId: string;
-  liftoff: number | null | undefined
+  liftoff: number | null | undefined;
 }
 
 export interface ISponsor
@@ -47,3 +47,9 @@ export interface ISantaRoute {
   time?: string;
 }
 
+export interface IEventUpdate {
+  id?: number;
+  message: string;
+  time?: string | null;
+  created_at?: string | null;
+}
