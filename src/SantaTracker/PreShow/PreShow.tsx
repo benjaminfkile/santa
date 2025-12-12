@@ -77,7 +77,7 @@ class PreShow extends Component<PreShowProps, PreShowState> {
                     if (days > 0) parts.push(`${days}d`);
                     if (hours > 0) parts.push(`${hours}h`);
                     if (minutes > 0) parts.push(`${minutes}m`);
-                    if (secs > 0) parts.push(`${secs}s`);
+                    parts.push(`${secs}s`);
 
                     if (parts.length === 0) {
                         countdown = null;
