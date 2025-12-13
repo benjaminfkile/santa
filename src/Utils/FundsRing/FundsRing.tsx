@@ -1,76 +1,71 @@
-import { Component } from "react"
-import fundData from "./FundData"
-import { CircularProgressbar, buildStyles } from 'react-circular-progressbar'
-import 'react-circular-progressbar/dist/styles.css'
+import { useEffect, useRef, useState } from "react";
+import fundData from "./FundData";
+import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
 
 interface FundsRingProps {
-    message?: string
-    ringStrokeWidth?: number
+  message?: string;
+  ringStrokeWidth?: number;
 }
 
-type FundsRingTypes = {
+const FundsRing: React.FC<FundsRingProps> = ({
+  message,
+  ringStrokeWidth = 5,
+}) => {
+  const [progress, setProgress] = useState(0);
+  const targetRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
 
-}
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const raw = fundData.percent;
+      const parsed = typeof raw === "string" ? parseInt(raw, 10) : raw;
 
-class FundsRing extends Component<FundsRingProps, FundsRingTypes> {
+      if (Number.isFinite(parsed) && parsed >= 0) {
+        targetRef.current = Math.min(parsed, 100);
+      }
+    }, 500);
 
-    progress = 0
-    animationDex = -1;
-    state = {
-        progress: -1
-    }
+    return () => clearInterval(interval);
+  }, []);
 
-    componentDidMount() {
-        fundData.getFundData()
-        this.checkForFunds()
-    }
+  useEffect(() => {
+    const animate = () => {
+      setProgress((prev) => {
+        if (prev === targetRef.current) return prev;
+        return prev < targetRef.current ? prev + 1 : prev - 1;
+      });
 
-    checkForFunds = () => {
-        if (fundData.percent < 0) {
-            setTimeout(() => {
-                this.checkForFunds()
-            }, 500);
-        } else {
-            this.animateProgress()
-        }
-    }
+      rafRef.current = requestAnimationFrame(animate);
+    };
 
-    animateProgress = () => {
-        const self = this
-        setTimeout(() => {
-            if (this.animationDex < fundData.percent) {
-                self.progress++
-                self.setState({ progress: self.state.progress + 1 })
-                self.animateProgress()
-                this.animationDex++
-            }
-        }, 10)
-    }
+    rafRef.current = requestAnimationFrame(animate);
 
-    render() {
-        return (
-            <div className="FundsRing">
-                {this.state.progress > -1 && <div className="FundsRingContent">
-                    <CircularProgressbar
-                        value={this.state.progress}
-                        text={`${this.state.progress}%`}
-                        strokeWidth={this.props.ringStrokeWidth || 5}
-                        styles={buildStyles({
-                            rotation: 0.25,
-                            strokeLinecap: 'butt',
-                            textSize: "30px",
-                            pathTransitionDuration: 0.5,
-                            pathColor: "#007bff",
-                            textColor: "#fffffff5",
-                            trailColor: '#242526',
-                            // backgroundColor: '#242526',
-                        })}
-                    />
-                    {this.props.message && <p>{this.props.message}</p>}
-                </div>}
-            </div>
-        )
-    }
-}
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
-export default FundsRing
+  return (
+    <div className="FundsRing">
+      <div className="FundsRingContent">
+        <CircularProgressbar
+          value={progress}
+          text={`${progress}%`}
+          strokeWidth={ringStrokeWidth}
+          styles={buildStyles({
+            rotation: 0.25,
+            strokeLinecap: "butt",
+            textSize: "30px",
+            pathColor: "#007bff",
+            textColor: "#fffffff5",
+            trailColor: "#242526",
+          })}
+        />
+        {message && <p>{message}</p>}
+      </div>
+    </div>
+  );
+};
+
+export default FundsRing;
