@@ -56,7 +56,7 @@ export default function App() {
       setSantaFlyoverData(data);
     } catch (err) {
       console.error("Santa fetch failed:", err);
-      snackBar({ text: "Failed to fetch location data", type: "error", timeout: 3000 })
+      //snackBar({ text: "Failed to fetch location data", type: "error", timeout: 3000 })
     } finally {
       santaTimer.current = setTimeout(getSanta, updateFrequency.current);
     }
