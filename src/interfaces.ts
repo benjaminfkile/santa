@@ -9,7 +9,7 @@ export interface ISantaFlyoverData {
   eventUpdate: IEventUpdate;
   interval: number;
   instanceId: string;
-  liftoff: number | null | undefined;
+  liftoff: string | null;
 }
 
 export interface ISponsor

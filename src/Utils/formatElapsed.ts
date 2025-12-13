@@ -1,10 +1,11 @@
-export default function formatElapsed(liftoffTimestamp: number | null | undefined): string {
-  if (!liftoffTimestamp || liftoffTimestamp <= 0) {
-    return "0s";
-  }
+export default function formatElapsed(
+  liftoffIso: string,
+  nowMs: number
+): string {
+  const liftoffMs = Date.parse(liftoffIso);
+  if (isNaN(liftoffMs)) return "0s";
 
-  const seconds = Math.floor((Date.now() - liftoffTimestamp) / 1000);
-
+  const seconds = Math.floor((nowMs - liftoffMs) / 1000);
   if (seconds <= 0) return "0s";
 
   const d = Math.floor(seconds / 86400);

@@ -3,7 +3,8 @@ import LocationPrompt from "../../../Utils/UserLocation/LocationPrompt";
 import userLocation from "../../../Utils/UserLocation/UserLocation";
 import ToggleStatus from "./ToggleStatus/ToggleStatus";
 import RouteDisclaimer from "../../../Utils/RouteDisclaimer/RouteDisclaimer";
-import formatElapsed from "../../../Utils/formatElapsed"; import "./Menu.css";
+import formatElapsed from "../../../Utils/formatElapsed";
+import "./Menu.css";
 
 const TrackerMenu = (props: {
     changeTheme: Function;
@@ -40,19 +41,29 @@ const TrackerMenu = (props: {
     const [locationPrompt, setLocationPrompt] = useState(false);
     const [historyOn, setHistoryOn] = useState(true);
     const [timesOn, setTimesOn] = useState(true)
+    const [now, setNow] = useState(Date.now());
     const [showDisclaimer, setShowDisclaimer] = useState<boolean>(() => {
         try {
             const hasSeen = localStorage.getItem("already-acknowledged-disclaimer") === "true";
-            return !hasSeen;  
+            return !hasSeen;
         } catch {
-            return true;      
+            return true;
         }
     });
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setNow(Date.now());
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, []);
 
 
     useEffect(() => {
         setMapTypeId(mapType);
     }, [mapType]);
+
 
     const themeKey = currentTheme.toLowerCase();
 
@@ -252,7 +263,7 @@ const TrackerMenu = (props: {
                         {santaDat.liftoff &&
                             <div className="TrackerMenuSantaDataItem">
                                 <span className="material-icons">flight_takeoff</span>
-                                <p>{formatElapsed(santaDat?.liftoff) || "*NA*"}</p>
+                                <p>{formatElapsed(santaDat.liftoff, now)}</p>
                             </div>
                         }
                     </div>

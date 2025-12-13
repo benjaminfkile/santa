@@ -1,14 +1,23 @@
-import { FunctionComponent } from "react";
+import { FunctionComponent, useEffect, useState } from "react";
 import formatElapsed from "../../Utils/formatElapsed";
 import "./Liftoff.css";
 
 interface LiftoffProps {
-  liftoff: number | null | undefined;
+  liftoff: string;
   theme: string;
 }
 
 const Liftoff: FunctionComponent<LiftoffProps> = ({ liftoff, theme }) => {
   const themeId = `liftoff-${theme.toLowerCase()}`;
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <div className="LiftoffWrapper slide-in-left" id={themeId}>
@@ -16,7 +25,7 @@ const Liftoff: FunctionComponent<LiftoffProps> = ({ liftoff, theme }) => {
         <span className="material-icons" id="liftoff-icon">
           flight_takeoff
         </span>
-        <p>Airborne {formatElapsed(liftoff)}</p>
+        <p>Airborne {formatElapsed(liftoff, now)}</p>
       </div>
     </div>
   );
