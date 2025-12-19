@@ -12,6 +12,25 @@ import Snow from "../../Utils/Snow/Snow";
 import SponsorCarousel from "../../Utils/SponsorCarousel/SponsorCarousel";
 import Liftoff from "../../Utils/Liftoff/Liftoff";
 import "./Runshow.css";
+
+const getInitialThemeIndex = (mapThemes) => {
+  try {
+    const savedIndex = parseInt(localStorage.getItem("tracker-theme"), 10);
+
+    if (
+      !isNaN(savedIndex) &&
+      savedIndex >= 0 &&
+      savedIndex < mapThemes.length
+    ) {
+      return savedIndex;
+    }
+  } catch (e) {
+    // localStorage blocked / SSR / privacy mode
+  }
+
+  return 4; // Night fallback
+};
+
 class Tracker extends Component {
   mapThemes = [
     {
@@ -95,7 +114,7 @@ class Tracker extends Component {
   state = {
     lat: 46.833,
     lng: -114.03,
-    currentTheme: this.mapThemes[4].title,
+    currentTheme: this.mapThemes[getInitialThemeIndex(this.mapThemes)].title,
     snow: false,
     santaDat: {},
     DistanceFromUserToSanta: null,
@@ -110,15 +129,15 @@ class Tracker extends Component {
 
   componentDidMount() {
     // Load saved theme
-    const savedIndex = parseInt(localStorage.getItem("tracker-theme"));
-    const validIndex =
-      !isNaN(savedIndex) &&
-      savedIndex >= 0 &&
-      savedIndex < this.mapThemes.length
-        ? savedIndex
-        : 4;
+    // const savedIndex = parseInt(localStorage.getItem("tracker-theme"));
+    // const validIndex =
+    //   !isNaN(savedIndex) &&
+    //   savedIndex >= 0 &&
+    //   savedIndex < this.mapThemes.length
+    //     ? savedIndex
+    //     : 4;
 
-    this.setState({ currentTheme: this.mapThemes[validIndex].title });
+    // this.setState({ currentTheme: this.mapThemes[validIndex].title });
 
     // Continue your existing mount logic
     setInterval(this.getUserLocation, this.updateinterval);
