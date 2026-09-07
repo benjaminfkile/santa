@@ -1,0 +1,13 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Home · scheduled", "x": 0, "y": 0, "w": 1440, "h": 2400 },
+    { "file": "Live.dc.html", "title": "Home · live (desktop)", "x": 1560, "y": 0, "w": 1440, "h": 900 },
+    { "file": "LivePhone.dc.html", "title": "Home · live (phone)", "x": 3120, "y": 0, "w": 390, "h": 844 },
+    { "file": "Ended.dc.html", "title": "Home · ended", "x": 1560, "y": 1060, "w": 1440, "h": 1650 },
+    { "file": "About.dc.html", "title": "About (ordinary page)", "x": 3120, "y": 1060, "w": 1440, "h": 1850 }
+  ],
+  "annotations": [
+    { "id": "legend", "x": 0, "y": -260, "w": 620, "text": "WMSFO v2 site wireframe, round 1. Structure only, no look yet.\n\nBlack labels = section kinds from the spec (contracts 1.3a). Grey text top-right of each section = its presentation settings (width full / wide 1200 / narrow 720, background, align).\n\nHome renders one page per event status. Planned, no-event and cancelled are the scheduled page without the countdown, so they are not drawn. Every ordinary page (About, Sponsors, Route, Donate, Contact, Alerts) is the same stack of sections under the same shell." }
+  ],
+  "launch": { "view": "canvas" }
+}

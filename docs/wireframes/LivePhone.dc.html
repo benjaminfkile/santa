@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap">
+  <style>
+    body { margin: 0; background: #f6f5f2; color: #222; font-family: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive; font-size: 16px; line-height: 1.3; }
+    a { color: #222; } a:hover { color: #c9452e; }
+    .screen { width: 390px; height: 844px; position: relative; overflow: hidden; border: 2px solid #222; box-sizing: border-box; background: #e9e8e2; }
+    .grid { position: absolute; inset: 0; background-image: linear-gradient(#d9d7d0 1px, transparent 1px), linear-gradient(90deg, #d9d7d0 1px, transparent 1px); background-size: 60px 60px; }
+    .chip { border: 2px solid #222; background: #fff; padding: 6px 10px; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; box-sizing: border-box; }
+    .box { border: 2px solid #222; background: #fff; box-sizing: border-box; }
+    .kind { background: #222; color: #fff; font-size: 12px; padding: 1px 6px; display: inline-block; }
+    .muted { color: #8a877f; font-size: 13px; }
+    .line { height: 8px; background: #d6d3cc; border-radius: 4px; }
+    .img { border: 2px dashed #666; background: #ecebe7; position: relative; overflow: hidden; box-sizing: border-box; }
+    .img svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .ctl { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+  </style>
+</helmet>
+<div class="screen">
+  <div class="grid"></div>
+
+  <svg viewBox="0 0 390 844" style="position: absolute; inset: 0; width: 100%; height: 100%;" fill="none" stroke-linecap="round">
+    <path d="M 40 700 C 120 420, 200 460, 220 520 S 300 420, 340 300 S 300 160, 360 120" stroke="#222" stroke-width="4" stroke-dasharray="12 9"></path>
+    <path d="M 40 700 C 120 420, 200 460, 220 520" stroke="#c9452e" stroke-width="5"></path>
+    <circle cx="220" cy="520" r="16" fill="#fff" stroke="#c9452e" stroke-width="4"></circle>
+    <circle cx="220" cy="520" r="5" fill="#c9452e"></circle>
+  </svg>
+
+  <div style="position: absolute; top: 56px; left: 14px;">
+    <div class="box ctl"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg></div>
+  </div>
+
+  <div style="position: absolute; top: 56px; right: 14px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+    <span class="chip"><span style="width: 9px; height: 9px; border-radius: 50%; background: #c9452e; display: inline-block;"></span>Live · 2 s</span>
+    <span class="chip">Airborne 1h 12m</span>
+  </div>
+
+  <div style="position: absolute; top: 116px; left: 14px; right: 14px;">
+    <div class="box" style="padding: 8px 12px; display: flex; align-items: center; gap: 10px;">
+      <span class="kind">message</span>
+      <div class="line" style="flex: 1;"></div>
+    </div>
+  </div>
+
+  <div style="position: absolute; right: 14px; top: 420px; display: flex; flex-direction: column; gap: 8px;">
+    <div class="box ctl"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="7"></circle><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line></svg></div>
+  </div>
+
+  <div style="position: absolute; left: 14px; right: 14px; bottom: 14px; display: flex; flex-direction: column; gap: 10px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 10px;">
+      <div class="img" style="width: 150px; height: 56px; background: #fff;"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="0" y1="0" x2="100" y2="100" stroke="#999" vector-effect="non-scaling-stroke"></line><line x1="100" y1="0" x2="0" y2="100" stroke="#999" vector-effect="non-scaling-stroke"></line></svg></div>
+      <div class="box" style="padding: 12px 18px; background: #c9452e; color: #fff; font-size: 18px;">Leave a cookie</div>
+    </div>
+    <div class="box" style="padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;"><span class="kind">leaderboard · panel</span><span class="muted">expand</span></div>
+      <div style="display: flex; justify-content: space-between;"><span>Chocolate chip</span><span>412</span></div>
+      <div style="display: flex; justify-content: space-between;"><span>Gingerbread</span><span>90</span></div>
+      <div style="display: flex; justify-content: space-between;"><span>Snickerdoodle</span><span>44</span></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
