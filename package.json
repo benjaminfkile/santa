@@ -12,7 +12,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "size": "size-limit"
+    "size": "size-limit",
+    "contracts:check": "node scripts/check-contracts.mjs",
+    "contracts:types": "node scripts/gen-contracts.mjs"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.1.1",

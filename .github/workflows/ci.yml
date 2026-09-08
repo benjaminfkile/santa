@@ -1,5 +1,4 @@
-# docs/site.md section 21.3. The contracts check and type generation steps join once
-# wmsfo-api publishes contracts/ and this repository vendors it.
+# docs/site.md section 21.3.
 name: ci
 
 on:
@@ -16,6 +15,18 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: contracts:check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run contracts:check
+      - name: contracts:types (regenerate and fail on diff)
+        run: |
+          npm run contracts:types
+          if ! git diff --quiet -- src/contracts/generated; then
+            echo "Generated contract types are stale. Run 'npm run contracts:types' locally and commit."
+            git --no-pager diff -- src/contracts/generated
+            exit 1
+          fi
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
