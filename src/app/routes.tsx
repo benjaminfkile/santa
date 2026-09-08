@@ -2,15 +2,33 @@
 // live.eventStatusId === 3 every path outside the four site-coded paths
 // renders the live role page. Two legacy redirects: /santa -> /,
 // /funding -> /donate.
+//
+// Route-level lazy() for the alerts and auth chunks per section 18.
 
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { HomePage } from "../pages/HomePage";
 import { SlugPage } from "../pages/SlugPage";
 import { PreviewPage } from "../pages/PreviewPage";
 import { NotFound } from "../pages/NotFound";
+import { Loading } from "../pages/Loading";
 import { useStore } from "../store/useStore";
 
+const VerifyPage = lazy(() =>
+  import("../pages/Alerts/VerifyPage").then((m) => ({ default: m.VerifyPage })),
+);
+const UnsubscribePage = lazy(() =>
+  import("../pages/Alerts/UnsubscribePage").then((m) => ({ default: m.UnsubscribePage })),
+);
+const AuthCallback = lazy(() =>
+  import("../auth/AuthCallback").then((m) => ({ default: m.AuthCallback })),
+);
+
 const SITE_CODED = new Set(["/auth/callback", "/alerts/verify", "/alerts/unsubscribe", "/preview"]);
+
+function Lazy({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<Loading />}>{children}</Suspense>;
+}
 
 export function AppRoutes() {
   const status = useStore((s) => s.live?.eventStatusId ?? null);
@@ -20,10 +38,10 @@ export function AppRoutes() {
     return (
       <Routes>
         <Route path="/preview" element={<PreviewPage />} />
-        <Route path="/auth/callback" element={<AuthCallbackPlaceholder />} />
-        <Route path="/alerts/verify" element={<AlertsVerifyPlaceholder />} />
-        <Route path="/alerts/unsubscribe" element={<AlertsUnsubscribePlaceholder />} />
-        <Route path="*" element={<LiveTakeoverGuard><HomePage /></LiveTakeoverGuard>} />
+        <Route path="/auth/callback" element={<Lazy><AuthCallback /></Lazy>} />
+        <Route path="/alerts/verify" element={<Lazy><VerifyPage /></Lazy>} />
+        <Route path="/alerts/unsubscribe" element={<Lazy><UnsubscribePage /></Lazy>} />
+        <Route path="*" element={<HomePage />} />
       </Routes>
     );
   }
@@ -32,9 +50,9 @@ export function AppRoutes() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/preview" element={<PreviewPage />} />
-      <Route path="/auth/callback" element={<AuthCallbackPlaceholder />} />
-      <Route path="/alerts/verify" element={<AlertsVerifyPlaceholder />} />
-      <Route path="/alerts/unsubscribe" element={<AlertsUnsubscribePlaceholder />} />
+      <Route path="/auth/callback" element={<Lazy><AuthCallback /></Lazy>} />
+      <Route path="/alerts/verify" element={<Lazy><VerifyPage /></Lazy>} />
+      <Route path="/alerts/unsubscribe" element={<Lazy><UnsubscribePage /></Lazy>} />
       <Route path="/santa" element={<Navigate to="/" replace />} />
       <Route path="/funding" element={<Navigate to="/donate" replace />} />
       <Route path="/:slug" element={<SlugPage />} />
@@ -43,18 +61,4 @@ export function AppRoutes() {
   );
 }
 
-function LiveTakeoverGuard({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
-}
-
 export { SITE_CODED };
-
-function AuthCallbackPlaceholder() {
-  return <main id="main"><p>Signing in…</p></main>;
-}
-function AlertsVerifyPlaceholder() {
-  return <main id="main"><p>Alerts verify (S6).</p></main>;
-}
-function AlertsUnsubscribePlaceholder() {
-  return <main id="main"><p>Alerts unsubscribe (S6).</p></main>;
-}

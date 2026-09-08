@@ -8,6 +8,7 @@ import { AppRoutes } from "./routes";
 import { useStore } from "../store/useStore";
 import { selectBundle } from "../content/selectPage";
 import { applyTheme } from "../content/theme/applyTheme";
+import { AuthProvider } from "../auth/AuthProvider";
 
 export function App() {
   const bundle = useStore(selectBundle);
@@ -23,9 +24,11 @@ export function App() {
 
   return (
     <BrowserRouter>
-      <Shell>
-        <AppRoutes />
-      </Shell>
+      <AuthProvider>
+        <Shell>
+          <AppRoutes />
+        </Shell>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

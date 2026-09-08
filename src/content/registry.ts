@@ -25,6 +25,9 @@ export type BlockComponent = ComponentType<BlockComponentProps>;
 import { Unknown } from "./sections/Unknown";
 import { placeholderSection } from "./sections/placeholder";
 import { placeholderBlock } from "./sections/placeholderBlock";
+import { CookieControl } from "./sections/CookieControl/CookieControl";
+import { AlertsSignup } from "./sections/AlertsSignup/AlertsSignup";
+import { ContactForm } from "./sections/ContactForm/ContactForm";
 
 const SECTION_KINDS = [
   "rich_text",
@@ -58,9 +61,15 @@ const BLOCK_KINDS = [
   "divider",
 ] as const;
 
+const SECTION_OVERRIDES: Record<string, SectionComponent> = {
+  cookie_control: CookieControl,
+  alerts_signup: AlertsSignup,
+  contact_form: ContactForm,
+};
+
 const sections: Record<string, SectionComponent> = {};
 for (const kind of SECTION_KINDS) {
-  sections[kind] = placeholderSection(kind);
+  sections[kind] = SECTION_OVERRIDES[kind] ?? placeholderSection(kind);
 }
 
 const blocks: Record<string, BlockComponent> = {};

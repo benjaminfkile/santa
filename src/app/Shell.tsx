@@ -19,6 +19,7 @@ import { copy } from "../copy/copy";
 import { ReloadPrompt } from "../pages/ReloadPrompt";
 import { ContentLink } from "../content/primitives/LinkView";
 import { Icon } from "../content/primitives/Icon";
+import { useAuth } from "../auth/AuthProvider";
 import type { ContentBundle } from "../store/types";
 
 export type ShellProps = { children: ReactNode };
@@ -59,6 +60,8 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLElement | null>(null);
   const settings = bundle?.content?.settings ?? null;
+  const { state: authState, signIn, signOut } = useAuth();
+  const location = useLocation();
 
   const close = useCallback(() => {
     setOpen(false);
@@ -107,7 +110,7 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
 
   const entries: NavEntry[] = bundle?.content
     ? buildNav(bundle.content, {
-        signedIn: false,
+        signedIn: authState.status === "signedIn",
         signInLabel: copy.signIn.button,
         signOutLabel: copy.signIn.signOut,
       })
@@ -146,7 +149,10 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
         <ul>
           {entries.map((entry, i) => (
             <li key={i}>
-              {renderEntry(entry, bundle)}
+              {renderEntry(entry, bundle, {
+                onSignIn: () => void signIn(location.pathname + location.search),
+                onSignOut: () => void signOut(),
+              })}
             </li>
           ))}
         </ul>
@@ -155,14 +161,22 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
   );
 }
 
-function renderEntry(entry: NavEntry, bundle: ContentBundle | null) {
+function renderEntry(
+  entry: NavEntry,
+  bundle: ContentBundle | null,
+  actions: { onSignIn: () => void; onSignOut: () => void },
+) {
   if (entry.kind === "home") return <Link to="/">{entry.label}</Link>;
   if (entry.kind === "page") return <Link to={entry.href}>{entry.label}</Link>;
   if (entry.kind === "extra") {
     return bundle !== null ? <ContentLink link={entry.link} bundle={bundle} /> : null;
   }
   return (
-    <button type="button" className="site-header__auth-button">
+    <button
+      type="button"
+      className="site-header__auth-button"
+      onClick={entry.kind === "signIn" ? actions.onSignIn : actions.onSignOut}
+    >
       {entry.label}
     </button>
   );
