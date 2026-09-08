@@ -3,6 +3,7 @@
 // docs/site.md section 2 (project structure) and section 21.3 (CI).
 
 import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
 import { readFile, writeFile, mkdir, readdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -14,7 +15,21 @@ const ROOT = resolve(HERE, "..");
 const CONTRACTS = join(ROOT, "contracts");
 const SCHEMA_DIR = join(CONTRACTS, "schema");
 const DEFAULT_OUT = join(ROOT, "src", "contracts", "generated");
-const OPENAPI_BIN = join(ROOT, "node_modules", ".bin", "openapi-typescript");
+
+// Resolve a package's advertised CLI script from its own package.json so we can
+// invoke it with `node <script>`. On Windows the entries in node_modules/.bin
+// are .cmd shims; spawning them without `shell: true` fails with ENOENT.
+const require = createRequire(import.meta.url);
+function resolveBin(pkgName, binName = pkgName) {
+  const pkgJsonPath = require.resolve(`${pkgName}/package.json`);
+  const pkg = require(`${pkgName}/package.json`);
+  const bin = typeof pkg.bin === "string" ? { [pkg.name]: pkg.bin } : pkg.bin || {};
+  const rel = bin[binName];
+  if (!rel) throw new Error(`Package ${pkgName} has no bin entry for ${binName}`);
+  return resolve(dirname(pkgJsonPath), rel);
+}
+
+const OPENAPI_BIN = resolveBin("openapi-typescript");
 
 export const BANNER =
   "/**\n" +
@@ -76,8 +91,8 @@ async function compileJsttInto(outDir) {
 
 function runOpenapiTypescript(outFile) {
   return new Promise((resolvePromise, rejectPromise) => {
-    const args = [join(CONTRACTS, "openapi.json"), "--output", outFile];
-    const child = spawn(OPENAPI_BIN, args, { stdio: ["ignore", "pipe", "inherit"] });
+    const args = [OPENAPI_BIN, join(CONTRACTS, "openapi.json"), "--output", outFile];
+    const child = spawn(process.execPath, args, { stdio: ["ignore", "pipe", "inherit"] });
     let out = "";
     child.stdout?.on("data", (c) => (out += c.toString()));
     child.on("close", (code) => {

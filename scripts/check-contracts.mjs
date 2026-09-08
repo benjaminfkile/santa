@@ -6,7 +6,7 @@ import { spawn } from "node:child_process";
 import { readFile, readdir, mkdtemp, rm } from "node:fs/promises";
 import { existsSync, createWriteStream } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, posix, resolve, sep } from "node:path";
+import { basename, dirname, join, posix, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pipeline } from "node:stream/promises";
 import { Readable } from "node:stream";
@@ -40,13 +40,38 @@ async function downloadTarball(sha, destTarGz) {
 
 function extract(tarGz, destDir) {
   return new Promise((resolvePromise, rejectPromise) => {
-    const child = spawn("tar", ["xzf", tarGz, "-C", destDir], { stdio: ["ignore", "inherit", "inherit"] });
+    // On Windows, passing an absolute path with a drive letter to tar makes it
+    // interpret the "C:" prefix as a remote host. Spawn with cwd inside destDir
+    // and pass the archive/destination as relative paths so tar treats them as
+    // local files on every platform.
+    const cwd = destDir;
+    const archiveName = relative(cwd, tarGz) || basename(tarGz);
+    const child = spawn("tar", ["xzf", archiveName, "-C", "."], {
+      cwd,
+      stdio: ["ignore", "inherit", "inherit"],
+    });
     child.on("close", (code) => {
       if (code === 0) resolvePromise();
       else rejectPromise(new Error(`tar exited with code ${code}`));
     });
     child.on("error", rejectPromise);
   });
+}
+
+function normalizeEol(buf) {
+  const s = buf.toString("utf8");
+  if (s.indexOf("\r") === -1) return buf;
+  return Buffer.from(s.replace(/\r\n/g, "\n").replace(/\r/g, "\n"), "utf8");
+}
+
+function isBinaryPath(p) {
+  return /\.(png|jpe?g|webp|gif)$/i.test(p);
+}
+
+function bytesEqualNormalized(path, a, b) {
+  if (a.equals(b)) return true;
+  if (isBinaryPath(path)) return false;
+  return normalizeEol(a).equals(normalizeEol(b));
 }
 
 async function walk(dir, prefix = "") {
@@ -103,7 +128,7 @@ async function main() {
         problems.push(`missing locally: contracts/${path}`);
         continue;
       }
-      if (!localBytes.equals(remoteBytes)) {
+      if (!bytesEqualNormalized(path, localBytes, remoteBytes)) {
         problems.push(
           `differs: contracts/${path} (local ${localBytes.length} B vs remote ${remoteBytes.length} B)`
         );
