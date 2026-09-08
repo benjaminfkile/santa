@@ -1,11 +1,11 @@
 // docs/site.md section 5.1.
 
-import type { LiveObject, Snapshot, Route } from "../contracts";
+import type { LiveObject, Snapshot, Route, ContentDocument } from "../contracts";
 
 export type ContentBundle = {
-  content: Snapshot["content"];
-  media: Snapshot["media"];
-  icons: Snapshot["icons"];
+  content: ContentDocument;
+  media: NonNullable<Snapshot["media"]>;
+  icons: NonNullable<Snapshot["icons"]>;
 };
 
 export type HubStatus = "connecting" | "connected" | "reconnecting" | "disconnected";
