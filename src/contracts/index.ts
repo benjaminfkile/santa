@@ -4,11 +4,15 @@
 import type { LiveObject } from "./generated/live-object";
 import type { Snapshot } from "./generated/snapshot";
 import type { Route } from "./generated/route";
-import type { ContentDocument } from "./generated/content-document";
+import type { ContentDocument, Link, Presentation, MediaRef, SiteSettings } from "./generated/content-document";
 
-export type { LiveObject, Snapshot, Route, ContentDocument };
+export type { LiveObject, Snapshot, Route, ContentDocument, Link, Presentation, MediaRef, SiteSettings };
 export type Sponsor = NonNullable<Snapshot["sponsors"]>[number];
 export type CookieType = NonNullable<Snapshot["cookieTypes"]>[number];
+export type ContentPage = ContentDocument["pages"][number];
+export type ContentSection = ContentPage["sections"][number];
+export type PageRole = ContentPage["role"];
+export type IconRef = NonNullable<SiteSettings["logo"]>;
 
 // contracts 0.3 error shape. Not declared in openapi.json because the API
 // serializes it outside the endpoint-specific schemas.

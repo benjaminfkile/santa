@@ -1,0 +1,74 @@
+/* docs/site.md section 7.7. Theme tokens keyed by data attributes on
+   <html>. Values are placeholders until the visual design lands (site.md
+   section 5). Four accents, three surfaces, three font pairings. */
+
+:root {
+  --wmsfo-accent: #cc2233;
+  --wmsfo-accent-contrast: #ffffff;
+  --wmsfo-surface: #ffffff;
+  --wmsfo-surface-muted: #f4f4f5;
+  --wmsfo-surface-strong: #0b1220;
+  --wmsfo-text: #111827;
+  --wmsfo-text-muted: #4b5563;
+  --wmsfo-heading-font: system-ui, sans-serif;
+  --wmsfo-body-font: system-ui, sans-serif;
+  --wmsfo-mono-font: ui-monospace, monospace;
+}
+
+/* Accents */
+html[data-accent="red"] {
+  --wmsfo-accent: #cc2233;
+  --wmsfo-accent-contrast: #ffffff;
+}
+html[data-accent="green"] {
+  --wmsfo-accent: #1f7a3a;
+  --wmsfo-accent-contrast: #ffffff;
+}
+html[data-accent="gold"] {
+  --wmsfo-accent: #b7791f;
+  --wmsfo-accent-contrast: #111111;
+}
+html[data-accent="blue"] {
+  --wmsfo-accent: #1d4ed8;
+  --wmsfo-accent-contrast: #ffffff;
+}
+
+/* Surfaces */
+html[data-surface="night"] {
+  --wmsfo-surface: #0b1220;
+  --wmsfo-surface-muted: #111827;
+  --wmsfo-surface-strong: #030712;
+  --wmsfo-text: #f1f5f9;
+  --wmsfo-text-muted: #94a3b8;
+}
+html[data-surface="snow"] {
+  --wmsfo-surface: #ffffff;
+  --wmsfo-surface-muted: #f8fafc;
+  --wmsfo-surface-strong: #e2e8f0;
+  --wmsfo-text: #0f172a;
+  --wmsfo-text-muted: #475569;
+}
+html[data-surface="forest"] {
+  --wmsfo-surface: #14261c;
+  --wmsfo-surface-muted: #1b3125;
+  --wmsfo-surface-strong: #0a1710;
+  --wmsfo-text: #e5f1ea;
+  --wmsfo-text-muted: #9db3a4;
+}
+
+/* Font pairings */
+html[data-fonts="classic"] {
+  --wmsfo-heading-font: "Georgia", "Times New Roman", serif;
+  --wmsfo-body-font: system-ui, sans-serif;
+  --wmsfo-mono-font: ui-monospace, monospace;
+}
+html[data-fonts="festive"] {
+  --wmsfo-heading-font: "Mountains of Christmas", "Georgia", serif;
+  --wmsfo-body-font: system-ui, sans-serif;
+  --wmsfo-mono-font: ui-monospace, monospace;
+}
+html[data-fonts="modern"] {
+  --wmsfo-heading-font: "Inter", system-ui, sans-serif;
+  --wmsfo-body-font: "Inter", system-ui, sans-serif;
+  --wmsfo-mono-font: ui-monospace, monospace;
+}
