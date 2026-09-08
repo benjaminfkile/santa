@@ -4,6 +4,7 @@
 
 import { describe, it, expect, vi } from "vitest";
 import { render } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { registry, Unknown, SECTION_KIND_KEYS } from "../../../src/content/registry";
 import { _resetUnknownLog } from "../../../src/content/sections/Unknown";
 import { readFileSync } from "node:fs";
@@ -19,6 +20,10 @@ const bundle: ContentBundle = {
   media: {},
   icons: {},
 };
+
+function withRouter(node: React.ReactNode) {
+  return <MemoryRouter>{node}</MemoryRouter>;
+}
 
 describe("registry", () => {
   it("every kind in contracts/kinds.json has an entry in registry.sections", () => {
@@ -37,7 +42,7 @@ describe("registry", () => {
     for (const entry of kinds.kinds) {
       const Kind = registry.sections[entry.kind];
       expect(Kind).toBeDefined();
-      expect(() => render(<Kind data={entry.defaults} items={[]} bundle={bundle} />)).not.toThrow();
+      expect(() => render(withRouter(<Kind data={entry.defaults} items={[]} bundle={bundle} />))).not.toThrow();
     }
   });
 
