@@ -8,8 +8,8 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { resolve, relative } from "node:path";
 
 const SRC_ROOT = resolve(__dirname, "..", "..", "..", "src");
-const EM_DASH = "—";
-const EN_DASH = "–";
+const EM_DASH = "2014";
+const EN_DASH = "2013";
 
 function collectFiles(dir: string): string[] {
   const out: string[] = [];
