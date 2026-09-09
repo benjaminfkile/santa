@@ -2,12 +2,16 @@
 // SVG path, no Maps load; `map`: the route viewer of section 8 with
 // `fitRoute()` and no Santa marker; `emptyText` when `route` is null.
 
-import { useMemo } from "react";
+import { Suspense, lazy, useMemo } from "react";
 import type { SectionComponent } from "../../registry";
 import type { Route } from "../../../contracts";
 import { Inline } from "../../inline/Inline";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
+
+const LazyRoutePreviewMap = lazy(() =>
+  import("./RoutePreviewMap").then((mod) => ({ default: mod.RoutePreviewMap })),
+);
 
 type RoutePreviewData = {
   heading?: string | null;
@@ -89,8 +93,10 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
         </h2>
       ) : null}
       {style === "map" ? (
-        <div className="route-preview__map-placeholder" data-style="map">
-          <MapPlaceholder />
+        <div className="route-preview__map-wrapper" data-style="map">
+          <Suspense fallback={<div className="route-preview__map-loading" aria-busy />}>
+            <LazyRoutePreviewMap />
+          </Suspense>
         </div>
       ) : (
         <svg
@@ -114,13 +120,3 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   );
 };
 
-function MapPlaceholder() {
-  return (
-    <div
-      className="route-preview__map-frame"
-      role="img"
-      aria-label="Route on the live map"
-      data-testid="route-preview-map"
-    />
-  );
-}

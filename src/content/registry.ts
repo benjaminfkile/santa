@@ -41,6 +41,7 @@ import { Leaderboard } from "./sections/Leaderboard/Leaderboard";
 import { SponsorCarousel } from "./sections/SponsorCarousel/SponsorCarousel";
 import { SponsorGrid } from "./sections/SponsorGrid/SponsorGrid";
 import { RoutePreview } from "./sections/RoutePreview/RoutePreview";
+import { MapSection } from "./sections/Map";
 import { HeadingBlock } from "./blocks/HeadingBlock";
 import { ParagraphBlock } from "./blocks/ParagraphBlock";
 import { ListBlock } from "./blocks/ListBlock";
@@ -100,6 +101,7 @@ const SECTION_OVERRIDES: Record<string, SectionComponent> = {
   sponsor_carousel: SponsorCarousel,
   sponsor_grid: SponsorGrid,
   route_preview: RoutePreview,
+  map: MapSection,
 };
 
 const sections: Record<string, SectionComponent> = {};
