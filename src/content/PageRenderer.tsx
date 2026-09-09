@@ -24,7 +24,12 @@ export function PageRenderer({ page, bundle }: PageRendererProps) {
             kind={section.kind}
           >
             {Kind ? (
-              <Kind data={section.data} items={section.items} bundle={bundle} />
+              <Kind
+                data={section.data}
+                items={section.items}
+                bundle={bundle}
+                frame={section.presentation.width}
+              />
             ) : (
               <Unknown kind={section.kind} />
             )}
