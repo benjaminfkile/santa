@@ -35,7 +35,7 @@ export const copy = {
     updatedAgo: (seconds: number) => `Updated ${seconds}s ago`,
     waitingForFix: "Waiting for the first fix",
     signalLostAgo: (seconds: number) => `No update for ${seconds}s`,
-    unavailablePlaceholder: "—",
+    unavailablePlaceholder: "N/A",
   },
   map: {
     unavailable: "Map unavailable",
