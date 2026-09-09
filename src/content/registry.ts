@@ -1,16 +1,15 @@
 // docs/site.md section 7.2. Registry mapping section and block kinds to
-// components. In S3 the section components are placeholders that render
-// their heading (when present in data) and the kind name so the page
-// renderer, section frame, and content flow can be exercised. Real
-// components are S4 through S6.
+// components. This is the only wiring point.
 
 import type { ComponentType } from "react";
 import type { ContentBundle } from "../store/types";
+import type { FrameWidth } from "./primitives/Media";
 
 export type SectionComponentProps = {
   data: unknown;
   items: { id: number; data: unknown }[];
   bundle: ContentBundle;
+  frame?: FrameWidth;
 };
 
 export type SectionComponent = ComponentType<SectionComponentProps>;
@@ -18,16 +17,30 @@ export type SectionComponent = ComponentType<SectionComponentProps>;
 export type BlockComponentProps = {
   data: unknown;
   bundle: ContentBundle;
+  frame?: FrameWidth;
 };
 
 export type BlockComponent = ComponentType<BlockComponentProps>;
 
 import { Unknown } from "./sections/Unknown";
 import { placeholderSection } from "./sections/placeholder";
-import { placeholderBlock } from "./sections/placeholderBlock";
 import { CookieControl } from "./sections/CookieControl/CookieControl";
 import { AlertsSignup } from "./sections/AlertsSignup/AlertsSignup";
 import { ContactForm } from "./sections/ContactForm/ContactForm";
+import { RichText } from "./sections/RichText/RichText";
+import { Hero } from "./sections/Hero/Hero";
+import { MediaGallery } from "./sections/MediaGallery/MediaGallery";
+import { Links } from "./sections/Links/Links";
+import { IconRow } from "./sections/IconRow/IconRow";
+import { Divider } from "./sections/Divider/Divider";
+import { HeadingBlock } from "./blocks/HeadingBlock";
+import { ParagraphBlock } from "./blocks/ParagraphBlock";
+import { ListBlock } from "./blocks/ListBlock";
+import { QuoteBlock } from "./blocks/QuoteBlock";
+import { MediaBlock } from "./blocks/MediaBlock";
+import { LinksBlock } from "./blocks/LinksBlock";
+import { IconBlock } from "./blocks/IconBlock";
+import { DividerBlock } from "./blocks/DividerBlock";
 
 const SECTION_KINDS = [
   "rich_text",
@@ -62,6 +75,12 @@ const BLOCK_KINDS = [
 ] as const;
 
 const SECTION_OVERRIDES: Record<string, SectionComponent> = {
+  rich_text: RichText,
+  hero: Hero,
+  media: MediaGallery,
+  links: Links,
+  icon_row: IconRow,
+  divider: Divider,
   cookie_control: CookieControl,
   alerts_signup: AlertsSignup,
   contact_form: ContactForm,
@@ -72,10 +91,16 @@ for (const kind of SECTION_KINDS) {
   sections[kind] = SECTION_OVERRIDES[kind] ?? placeholderSection(kind);
 }
 
-const blocks: Record<string, BlockComponent> = {};
-for (const kind of BLOCK_KINDS) {
-  blocks[kind] = placeholderBlock(kind);
-}
+const blocks: Record<string, BlockComponent> = {
+  heading: HeadingBlock,
+  paragraph: ParagraphBlock,
+  list: ListBlock,
+  quote: QuoteBlock,
+  media: MediaBlock,
+  links: LinksBlock,
+  icon: IconBlock,
+  divider: DividerBlock,
+};
 
 export const registry: {
   sections: Record<string, SectionComponent>;

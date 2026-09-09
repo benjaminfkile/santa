@@ -1,0 +1,35 @@
+// docs/site.md section 7.5. List block: bullet, numbered, or icon-marked.
+
+import type { IconRef } from "../../contracts";
+import type { BlockComponent } from "../registry";
+import { Inline } from "../inline/Inline";
+import { Icon } from "../primitives/Icon";
+import { useSnapshotEvent } from "./useSnapshotEvent";
+
+type ListData = {
+  style?: "bullet" | "number" | "icon";
+  icon?: IconRef | null;
+  items?: string[];
+};
+
+export const ListBlock: BlockComponent = ({ data, bundle }) => {
+  const d = (data ?? {}) as ListData;
+  const style = d.style ?? "bullet";
+  const items = Array.isArray(d.items) ? d.items : [];
+  const event = useSnapshotEvent();
+  const Tag: "ol" | "ul" = style === "number" ? "ol" : "ul";
+  return (
+    <Tag className={`block-list block-list--${style}`}>
+      {items.map((text, i) => (
+        <li key={i} className="block-list__item">
+          {style === "icon" && d.icon ? (
+            <span className="block-list__icon" aria-hidden>
+              <Icon icon={d.icon} bundle={bundle} decorative inline />
+            </span>
+          ) : null}
+          <Inline text={text} bundle={bundle} event={event} />
+        </li>
+      ))}
+    </Tag>
+  );
+};
