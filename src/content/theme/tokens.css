@@ -1,19 +1,31 @@
 /* docs/site.md section 7.7. Theme tokens keyed by data attributes on
-   <html>. Values are placeholders until the visual design lands. */
+   <html>. Values follow docs/wireframes/Main.dc.html: snow surface, red
+   accent, festive font pairing built around self-hosted Patrick Hand. */
+
+@font-face {
+  font-family: "Patrick Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/PatrickHand-Regular.woff2") format("woff2");
+}
 
 :root {
-  --wmsfo-accent: #cc2233;
+  --wmsfo-accent: #c9452e;
   --wmsfo-accent-contrast: #ffffff;
-  --wmsfo-surface: #ffffff;
-  --wmsfo-surface-muted: #f4f4f5;
-  --wmsfo-surface-strong: #0b1220;
-  --wmsfo-text: #111827;
-  --wmsfo-text-muted: #4b5563;
-  --wmsfo-border: #d4d4d8;
+  --wmsfo-surface: #fbfaf8;
+  --wmsfo-surface-muted: #f6f5f2;
+  --wmsfo-surface-strong: #ecebe7;
+  --wmsfo-text: #141413;
+  --wmsfo-text-muted: #8a877f;
+  --wmsfo-border: #d6d3cc;
 
-  --wmsfo-heading-font: system-ui, sans-serif;
-  --wmsfo-body-font: system-ui, sans-serif;
-  --wmsfo-mono-font: ui-monospace, monospace;
+  --wmsfo-heading-font: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
+  --wmsfo-body-font: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
+  --wmsfo-mono-font: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+
+  --wmsfo-font-size-base: 18px;
+  --wmsfo-line-height-base: 1.3;
 
   --wmsfo-space-1: 4px;
   --wmsfo-space-2: 8px;
@@ -35,65 +47,79 @@
   --wmsfo-radius-md: 8px;
 }
 
+html {
+  font-family: var(--wmsfo-body-font);
+  font-size: var(--wmsfo-font-size-base);
+  line-height: var(--wmsfo-line-height-base);
+  color: var(--wmsfo-text);
+  background: var(--wmsfo-surface-muted);
+}
+body {
+  margin: 0;
+  background: var(--wmsfo-surface);
+  color: var(--wmsfo-text);
+  font-family: var(--wmsfo-body-font);
+  font-size: var(--wmsfo-font-size-base);
+  line-height: var(--wmsfo-line-height-base);
+}
+
 /* Accents */
 html[data-accent="red"] {
-  --wmsfo-accent: #cc2233;
+  --wmsfo-accent: #c9452e;
   --wmsfo-accent-contrast: #ffffff;
 }
 html[data-accent="green"] {
-  --wmsfo-accent: #1f7a3a;
+  --wmsfo-accent: #2f6d3a;
   --wmsfo-accent-contrast: #ffffff;
 }
 html[data-accent="gold"] {
-  --wmsfo-accent: #b7791f;
-  --wmsfo-accent-contrast: #111111;
+  --wmsfo-accent: #b58720;
+  --wmsfo-accent-contrast: #141413;
 }
 html[data-accent="blue"] {
-  --wmsfo-accent: #1d4ed8;
+  --wmsfo-accent: #2a4d8f;
   --wmsfo-accent-contrast: #ffffff;
 }
 
-/* Surfaces */
-html[data-surface="night"] {
-  --wmsfo-surface: #0b1220;
-  --wmsfo-surface-muted: #111827;
-  --wmsfo-surface-strong: #030712;
-  --wmsfo-text: #f1f5f9;
-  --wmsfo-text-muted: #94a3b8;
-  --wmsfo-border: #1f2937;
-}
+/* Surfaces. Warm greys throughout except `night`, which stays dark. */
 html[data-surface="snow"] {
-  --wmsfo-surface: #ffffff;
-  --wmsfo-surface-muted: #f8fafc;
-  --wmsfo-surface-strong: #e2e8f0;
-  --wmsfo-text: #0f172a;
-  --wmsfo-text-muted: #475569;
-  --wmsfo-border: #cbd5f5;
+  --wmsfo-surface: #fbfaf8;
+  --wmsfo-surface-muted: #f6f5f2;
+  --wmsfo-surface-strong: #ecebe7;
+  --wmsfo-text: #141413;
+  --wmsfo-text-muted: #8a877f;
+  --wmsfo-border: #d6d3cc;
+}
+html[data-surface="night"] {
+  --wmsfo-surface: #1a1917;
+  --wmsfo-surface-muted: #22201d;
+  --wmsfo-surface-strong: #0f0e0c;
+  --wmsfo-text: #f4f1ea;
+  --wmsfo-text-muted: #a8a49a;
+  --wmsfo-border: #2f2d29;
 }
 html[data-surface="forest"] {
-  --wmsfo-surface: #14261c;
-  --wmsfo-surface-muted: #1b3125;
-  --wmsfo-surface-strong: #0a1710;
-  --wmsfo-text: #e5f1ea;
-  --wmsfo-text-muted: #9db3a4;
-  --wmsfo-border: #22483a;
+  --wmsfo-surface: #f2efe6;
+  --wmsfo-surface-muted: #eae6da;
+  --wmsfo-surface-strong: #ded9c9;
+  --wmsfo-text: #1f2a1d;
+  --wmsfo-text-muted: #6b6f5f;
+  --wmsfo-border: #c7c3b4;
 }
 
-/* Font pairings */
+/* Font pairings. All share the wireframe fallback chain so any missing
+   family degrades gracefully to a friendly hand-drawn look. */
+html[data-fonts="festive"] {
+  --wmsfo-heading-font: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
+  --wmsfo-body-font: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
+}
 html[data-fonts="classic"] {
   --wmsfo-heading-font: "Georgia", "Times New Roman", serif;
-  --wmsfo-body-font: system-ui, sans-serif;
-  --wmsfo-mono-font: ui-monospace, monospace;
-}
-html[data-fonts="festive"] {
-  --wmsfo-heading-font: "Mountains of Christmas", "Georgia", serif;
-  --wmsfo-body-font: system-ui, sans-serif;
-  --wmsfo-mono-font: ui-monospace, monospace;
+  --wmsfo-body-font: "Georgia", "Times New Roman", serif;
 }
 html[data-fonts="modern"] {
-  --wmsfo-heading-font: "Inter", system-ui, sans-serif;
-  --wmsfo-body-font: "Inter", system-ui, sans-serif;
-  --wmsfo-mono-font: ui-monospace, monospace;
+  --wmsfo-heading-font: system-ui, "Segoe UI", "Helvetica Neue", sans-serif;
+  --wmsfo-body-font: system-ui, "Segoe UI", "Helvetica Neue", sans-serif;
 }
 
 /* Section frame */
