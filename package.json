@@ -51,6 +51,10 @@
     {
       "path": "dist/assets/index-*.css",
       "limit": "25 KB"
+    },
+    {
+      "path": "dist/assets/map-*.js",
+      "limit": "50 KB"
     }
   ]
 }

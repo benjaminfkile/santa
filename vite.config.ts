@@ -12,7 +12,8 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes("@microsoft/signalr")) return "signalr";
           if (id.includes("oidc-client-ts")) return "auth";
-          if (id.includes("@googlemaps/js-api-loader")) return "maps";
+          if (id.includes("@googlemaps/js-api-loader")) return "map";
+          if (id.includes("/src/map/")) return "map";
           if (id.includes("/src/pages/Alerts/")) return "alerts";
           return undefined;
         },
