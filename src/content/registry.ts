@@ -33,6 +33,14 @@ import { MediaGallery } from "./sections/MediaGallery/MediaGallery";
 import { Links } from "./sections/Links/Links";
 import { IconRow } from "./sections/IconRow/IconRow";
 import { Divider } from "./sections/Divider/Divider";
+import { FundsRing } from "./sections/FundsRing/FundsRing";
+import { Countdown } from "./sections/Countdown/Countdown";
+import { EventTimes } from "./sections/EventTimes/EventTimes";
+import { LatestMessage } from "./sections/LatestMessage/LatestMessage";
+import { Leaderboard } from "./sections/Leaderboard/Leaderboard";
+import { SponsorCarousel } from "./sections/SponsorCarousel/SponsorCarousel";
+import { SponsorGrid } from "./sections/SponsorGrid/SponsorGrid";
+import { RoutePreview } from "./sections/RoutePreview/RoutePreview";
 import { HeadingBlock } from "./blocks/HeadingBlock";
 import { ParagraphBlock } from "./blocks/ParagraphBlock";
 import { ListBlock } from "./blocks/ListBlock";
@@ -84,6 +92,14 @@ const SECTION_OVERRIDES: Record<string, SectionComponent> = {
   cookie_control: CookieControl,
   alerts_signup: AlertsSignup,
   contact_form: ContactForm,
+  funds_ring: FundsRing,
+  countdown: Countdown,
+  event_times: EventTimes,
+  latest_message: LatestMessage,
+  leaderboard: Leaderboard,
+  sponsor_carousel: SponsorCarousel,
+  sponsor_grid: SponsorGrid,
+  route_preview: RoutePreview,
 };
 
 const sections: Record<string, SectionComponent> = {};
