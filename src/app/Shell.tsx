@@ -176,6 +176,7 @@ function renderEntry(
       type="button"
       className="site-header__auth-button"
       onClick={entry.kind === "signIn" ? actions.onSignIn : actions.onSignOut}
+      data-testid={entry.kind === "signIn" ? "menu-sign-in" : undefined}
     >
       {entry.label}
     </button>
@@ -198,7 +199,9 @@ function Banners({
         </div>
       ) : null}
       {previewActive ? (
-        <div className="site-banner site-banner--preview">{copy.banners.preview}</div>
+        <div className="site-banner site-banner--preview" data-testid="preview-banner">
+          {copy.banners.preview}
+        </div>
       ) : null}
     </div>
   );

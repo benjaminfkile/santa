@@ -105,7 +105,9 @@ export const Leaderboard: SectionComponent = ({ data, bundle }) => {
                 }}
               />
             ) : null}
-            <span className="leaderboard__count">{row.count}</span>
+            <span className="leaderboard__count" data-testid="leaderboard-count">
+              {row.count}
+            </span>
           </li>
         ))}
       </ol>

@@ -91,6 +91,7 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
       bundle={bundle}
       sizeOverride={`${logoWidth}px`}
       className="sponsor-carousel__logo"
+      testId="sponsor-logo"
     />
   ) : (
     <span className="sponsor-carousel__name">{current.name}</span>

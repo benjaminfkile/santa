@@ -149,4 +149,11 @@ describe("ContactForm submit", () => {
     await userEvent.type(getByLabelText("Message"), "hello");
     await waitFor(() => expect(getByTestId("contact-message-counter").textContent).toBe("5/2000"));
   });
+
+  it("exposes contact-name, contact-email, contact-message testids on the inputs", () => {
+    const { getByTestId } = renderForm();
+    expect(getByTestId("contact-name").tagName).toBe("INPUT");
+    expect(getByTestId("contact-email").tagName).toBe("INPUT");
+    expect(getByTestId("contact-message").tagName).toBe("TEXTAREA");
+  });
 });

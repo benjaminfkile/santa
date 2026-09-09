@@ -34,7 +34,7 @@ export const Countdown: SectionComponent = ({ data, bundle }) => {
   const heading = d.heading ?? null;
 
   return (
-    <div className="countdown">
+    <div className="countdown" data-testid="countdown">
       {heading ? (
         <h2 className="countdown__heading">
           <Inline text={heading} bundle={bundle} event={event} />

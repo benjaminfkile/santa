@@ -13,6 +13,7 @@ export type MediaProps = {
   sizeOverride?: string;
   loading?: "lazy" | "eager";
   className?: string;
+  testId?: string;
 };
 
 const SIZES_BY_FRAME: Record<FrameWidth, string> = {
@@ -30,7 +31,7 @@ function isRasterKind(kind: string | undefined): boolean {
   return RASTER_KINDS.has(lower) || !["svg", "gif"].includes(lower);
 }
 
-export function Media({ media, bundle, frame = "full", sizeOverride, loading = "lazy", className }: MediaProps) {
+export function Media({ media, bundle, frame = "full", sizeOverride, loading = "lazy", className, testId }: MediaProps) {
   const entry = resolveMedia(bundle, media.mediaId);
   const alt = media.alt ?? entry?.alt ?? "";
   if (entry === null) {
@@ -38,6 +39,7 @@ export function Media({ media, bundle, frame = "full", sizeOverride, loading = "
       <span
         className={className}
         data-missing-media={media.mediaId}
+        data-testid={testId}
         role="img"
         aria-label={alt}
       />
@@ -58,6 +60,7 @@ export function Media({ media, bundle, frame = "full", sizeOverride, loading = "
         loading={loading}
         decoding="async"
         className={className}
+        data-testid={testId}
       />
     );
   }
@@ -89,6 +92,7 @@ export function Media({ media, bundle, frame = "full", sizeOverride, loading = "
       loading={loading}
       decoding="async"
       className={className}
+      data-testid={testId}
     />
   );
 }

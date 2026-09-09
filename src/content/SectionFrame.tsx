@@ -43,6 +43,7 @@ export function SectionFrame({ presentation, bundle, kind, children }: SectionFr
       data-section-kind={kind}
       data-width={width}
       data-spacing={spacing}
+      data-testid={`section-${kind}`}
     >
       {bg.kind === "media" ? (
         <div className="section-frame__background" aria-hidden data-overlay={bg.overlay}>

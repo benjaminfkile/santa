@@ -198,7 +198,8 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   }, [userState.error]);
 
   return (
-    <div className="map-section" data-testid="map-section">
+    <div className="map-section" data-testid="map">
+      <MarkerSeqHost />
       <MapView
         options={mapOptions}
         onController={setController}
@@ -311,6 +312,15 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     </div>
   );
 };
+
+function MarkerSeqHost() {
+  const seq = useStore((s) => s.live?.seq ?? null);
+  const hasFix = useStore(
+    (s) => s.live !== null && s.live.lat !== null && s.live.lng !== null,
+  );
+  if (!hasFix || seq === null) return null;
+  return <div data-testid="marker-seq" data-seq={seq} hidden aria-hidden />;
+}
 
 function MapUnavailable({ onRetry }: { onRetry: () => void }) {
   return (

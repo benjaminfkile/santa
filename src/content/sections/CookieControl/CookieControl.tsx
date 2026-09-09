@@ -308,7 +308,7 @@ function CookieSheet({
       <ul className="cookie-control__types">
         {types.map((t) => (
           <li key={num(t.id)}>
-            <label>
+            <label data-testid="cookie-type">
               <input
                 type="radio"
                 name="cookie-type"

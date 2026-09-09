@@ -124,6 +124,7 @@ export function TrackerMenu(props: TrackerMenuProps) {
           type="button"
           aria-pressed={props.snow}
           onClick={() => props.onSnowChange(!props.snow)}
+          data-testid="snow-toggle"
         >
           Snow
         </button>
@@ -159,7 +160,7 @@ export function TrackerMenu(props: TrackerMenuProps) {
         <dl className="tracker-menu__data-row" data-testid="tracker-menu-data-row">
           <div>
             <dt>Speed</dt>
-            <dd>{fmt(speedMph, "mph", 0)}</dd>
+            <dd data-testid="data-row-speed">{fmt(speedMph, "mph", 0)}</dd>
           </div>
           <div>
             <dt>Heading</dt>

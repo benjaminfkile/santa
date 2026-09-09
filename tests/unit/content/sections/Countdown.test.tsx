@@ -79,4 +79,12 @@ describe("Countdown", () => {
     expect(values[2]).toBe("0");
     expect(values[3]).toBe("0");
   });
+
+  it("exposes a data-testid=countdown on the root when rendered", () => {
+    setState({ eventStatusId: 2 }, { statusId: 2, scheduledAt: "2026-12-22T01:00:00Z" });
+    const { getByTestId } = render(
+      <Countdown data={{ heading: "Countdown" }} items={[]} bundle={bundle} />,
+    );
+    expect(getByTestId("countdown")).not.toBeNull();
+  });
 });
