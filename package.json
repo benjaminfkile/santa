@@ -34,6 +34,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
+    "axe-core": "^4.13.0",
     "jsdom": "^29.1.1",
     "json-schema-to-typescript": "^16.0.0",
     "openapi-typescript": "^7.13.0",
@@ -45,16 +46,34 @@
   },
   "size-limit": [
     {
+      "name": "index (React, router, store, shell, renderer, all sections and blocks except map)",
       "path": "dist/assets/index-*.js",
       "limit": "130 KB"
     },
     {
-      "path": "dist/assets/index-*.css",
-      "limit": "25 KB"
+      "name": "signalr (loaded after first live object)",
+      "path": "dist/assets/signalr-*.js",
+      "limit": "45 KB"
     },
     {
+      "name": "map (src/map/** + @googlemaps/js-api-loader + themes)",
       "path": "dist/assets/map-*.js",
       "limit": "50 KB"
+    },
+    {
+      "name": "auth (oidc-client-ts + AuthProvider + AuthCallback)",
+      "path": "dist/assets/auth-*.js",
+      "limit": "40 KB"
+    },
+    {
+      "name": "alerts (VerifyPage + UnsubscribePage)",
+      "path": "dist/assets/alerts-*.js",
+      "limit": "15 KB"
+    },
+    {
+      "name": "css (all styles)",
+      "path": "dist/assets/*.css",
+      "limit": "25 KB"
     }
   ]
 }

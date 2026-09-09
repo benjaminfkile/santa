@@ -1,0 +1,49 @@
+# docs/site.md section 21.3 and section 22.2.
+# Runs the Playwright specs against the dev preview site. Triggered by
+# Vercel's `deployment_status` on the `dev` branch and by manual dispatch.
+name: e2e
+
+on:
+  deployment_status:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment.ref == 'dev')
+    runs-on: ubuntu-latest
+    environment: dev
+    env:
+      E2E_BASE_URL: ${{ github.event.deployment_status.environment_url || vars.E2E_BASE_URL }}
+      E2E_API_BASE_URL: ${{ vars.E2E_API_BASE_URL }}
+      E2E_CDN_BASE_URL: ${{ vars.E2E_CDN_BASE_URL }}
+      E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+      E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+      E2E_ADMIN_TOTP_SECRET: ${{ secrets.E2E_ADMIN_TOTP_SECRET }}
+      E2E_ADMIN_ID_TOKEN: ${{ secrets.E2E_ADMIN_ID_TOKEN }}
+      E2E_PERSON_EMAIL: ${{ secrets.E2E_PERSON_EMAIL }}
+      E2E_PERSON_PASSWORD: ${{ secrets.E2E_PERSON_PASSWORD }}
+      E2E_BEACON_KEY: ${{ secrets.E2E_BEACON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: install playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: run status walk (serial, one worker)
+        run: npx playwright test tests/e2e/specs/statusWalk.spec.ts --workers=1
+      - name: run page specs (parallel)
+        run: npx playwright test tests/e2e/specs/pages.spec.ts
+      - name: upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          if-no-files-found: ignore
+          retention-days: 14

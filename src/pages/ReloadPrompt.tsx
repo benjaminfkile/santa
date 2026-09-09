@@ -13,11 +13,13 @@ export function ReloadPrompt({ onReload }: ReloadPromptProps) {
     else if (typeof window !== "undefined") window.location.reload();
   };
   return (
-    <main id="main" role="alert">
-      <p>{copy.reload.body}</p>
-      <button type="button" onClick={handle}>
-        {copy.reload.button}
-      </button>
+    <main id="main">
+      <div role="alert">
+        <p>{copy.reload.body}</p>
+        <button type="button" onClick={handle}>
+          {copy.reload.button}
+        </button>
+      </div>
     </main>
   );
 }
