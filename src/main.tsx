@@ -9,6 +9,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import { copy } from "./copy/copy";
+import { store } from "./store/useStore";
 
 function renderMisconfigured(root: HTMLElement, variable: string): void {
   root.replaceChildren();
@@ -45,6 +46,13 @@ async function boot(): Promise<void> {
 
   const { startDataLoop, pollNow } = await import("./store/loop");
   const { startHub } = await import("./store/hub");
+  const { env } = await import("./config/env");
+
+  if (env.ENV !== "production") {
+    (window as unknown as { __wmsfo: { getState: () => unknown } }).__wmsfo = {
+      getState: () => store.getState(),
+    };
+  }
 
   void startDataLoop({
     onFirstApplied: () => startHub({ pollNow }),

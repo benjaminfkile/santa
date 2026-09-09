@@ -13,9 +13,11 @@ export function Loading() {
     return () => window.clearTimeout(t);
   }, []);
   return (
-    <main id="main" role="status" aria-live="polite">
-      <p>{copy.loading.initial}</p>
-      {slow ? <p>{copy.loading.slow}</p> : null}
+    <main id="main">
+      <div role="status" aria-live="polite">
+        <p>{copy.loading.initial}</p>
+        {slow ? <p>{copy.loading.slow}</p> : null}
+      </div>
     </main>
   );
 }

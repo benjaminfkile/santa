@@ -9,13 +9,13 @@ export default defineConfig({
     sourcemap: "hidden",
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes("@microsoft/signalr")) return "signalr";
-          if (id.includes("oidc-client-ts")) return "auth";
-          if (id.includes("@googlemaps/js-api-loader")) return "map";
-          if (id.includes("/src/map/")) return "map";
-          if (id.includes("/src/pages/Alerts/")) return "alerts";
-          return undefined;
+        codeSplitting: {
+          groups: [
+            { name: "signalr", test: /@microsoft[\\/]signalr/, priority: 20 },
+            { name: "auth", test: /oidc-client-ts|[\\/]src[\\/]auth[\\/]userManager|[\\/]src[\\/]auth[\\/]AuthCallback/, priority: 20 },
+            { name: "map", test: /@googlemaps[\\/]js-api-loader|[\\/]src[\\/]map[\\/]/, priority: 20 },
+            { name: "alerts", test: /[\\/]src[\\/]pages[\\/]Alerts[\\/]/, priority: 20 },
+          ],
         },
       },
     },
