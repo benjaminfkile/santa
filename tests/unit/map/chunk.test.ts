@@ -1,6 +1,6 @@
 // docs/site.md sections 4 and 18. Acceptance criterion 831: the `map`
 // chunk is loaded only when a `map` section or map-style route preview
-// mounts. This test inspects the built `dist/` folder — it is skipped
+// mounts. This test inspects the built `dist/` folder. It is skipped
 // when there is no build output.
 
 import { describe, it, expect } from "vitest";
