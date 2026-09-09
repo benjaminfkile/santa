@@ -93,7 +93,11 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
         </h2>
       ) : null}
       {style === "map" ? (
-        <div className="route-preview__map-wrapper" data-style="map">
+        <div
+          className="route-preview__map-wrapper"
+          data-style="map"
+          data-testid="route-preview-map"
+        >
           <Suspense fallback={<div className="route-preview__map-loading" aria-busy />}>
             <LazyRoutePreviewMap />
           </Suspense>
@@ -113,6 +117,7 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
             strokeWidth={3}
             strokeLinecap="round"
             strokeLinejoin="round"
+            data-testid="route-polyline"
           />
         </svg>
       )}

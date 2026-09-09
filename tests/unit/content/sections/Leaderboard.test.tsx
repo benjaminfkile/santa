@@ -119,6 +119,21 @@ describe("Leaderboard section", () => {
     expect(rows[1]?.textContent).toContain("3");
   });
 
+  it("exposes leaderboard-count on each row count cell", () => {
+    setStore({
+      cookieTypes: [
+        { id: 1, name: "Chocolate", icon: null, sort: 10 },
+        { id: 2, name: "Ginger", icon: null, sort: 20 },
+      ],
+      cookieTally: { "1": 3, "2": 7 },
+    });
+    const { getAllByTestId } = render(
+      <Leaderboard data={{ variant: "full" }} items={[]} bundle={bundle} />,
+    );
+    const counts = getAllByTestId("leaderboard-count");
+    expect(counts.map((n) => n.textContent?.trim())).toEqual(["7", "3"]);
+  });
+
   it("panel variant caps to five rows until expanded", () => {
     const types = Array.from({ length: 8 }, (_, i) => ({
       id: i + 1,

@@ -38,6 +38,7 @@ export function InfoOverlays({ showLiveIndicator, showLiftoffTimer }: InfoOverla
           className={`info-overlays__status info-overlays__status--${liveState}`}
           role="status"
           aria-live="polite"
+          data-testid={liveState === "waitingForFix" ? "waiting-for-fix" : "signal-lost"}
         >
           {status}
         </div>

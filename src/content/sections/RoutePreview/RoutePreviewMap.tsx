@@ -28,6 +28,8 @@ export function RoutePreviewMap({ defaultCenter, defaultZoom, themeKey }: RouteP
     controller.fitRoute();
   }, [controller, route]);
 
+  const hasRoutePoints = (route?.points?.length ?? 0) >= 2;
+
   return (
     <MapView
       options={{
@@ -48,6 +50,8 @@ export function RoutePreviewMap({ defaultCenter, defaultZoom, themeKey }: RouteP
               {copy.map.retry}
             </button>
           </div>
+        ) : controller !== null && hasRoutePoints ? (
+          <div data-testid="route-polyline" aria-hidden hidden />
         ) : null
       }
     </MapView>

@@ -226,6 +226,20 @@ describe("CookieControl", () => {
     await waitFor(() => expect(container.querySelector("#cookie-note-error")?.textContent).toBe("Too long."));
   });
 
+  it("exposes cookie-type on each cookie type choice in the sheet", async () => {
+    setLiveStatus(3);
+    setCookieTypes([
+      { id: 10, name: "Chip" },
+      { id: 11, name: "Ginger" },
+    ]);
+    vi.mocked(cookiesApi.getMyCookies).mockResolvedValueOnce({ limit: 3, used: 0, remaining: 3, items: [] } as never);
+    const { getByTestId, findByTestId, getAllByTestId } = renderWith({ status: "signedIn", email: "p@e", expired: false });
+    await userEvent.click(getByTestId("cookie-control-open"));
+    await findByTestId("cookie-remaining");
+    const choices = getAllByTestId("cookie-type");
+    expect(choices.length).toBe(2);
+  });
+
   it("network/5xx shows generic copy and never renders body.message", async () => {
     setLiveStatus(3);
     setCookieTypes([{ id: 10, name: "Chip" }]);

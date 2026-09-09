@@ -132,6 +132,7 @@ export const ContactForm: SectionComponent = ({ data, bundle }) => {
           <label htmlFor="contact-name">Name</label>
           <input
             id="contact-name"
+            data-testid="contact-name"
             type="text"
             value={name}
             maxLength={NAME_MAX}
@@ -147,6 +148,7 @@ export const ContactForm: SectionComponent = ({ data, bundle }) => {
           <label htmlFor="contact-email">Email</label>
           <input
             id="contact-email"
+            data-testid="contact-email"
             type="email"
             value={email}
             maxLength={EMAIL_MAX}
@@ -162,6 +164,7 @@ export const ContactForm: SectionComponent = ({ data, bundle }) => {
           <label htmlFor="contact-message">Message</label>
           <textarea
             id="contact-message"
+            data-testid="contact-message"
             value={message}
             maxLength={MESSAGE_MAX}
             onChange={(e) => setMessage(e.target.value)}

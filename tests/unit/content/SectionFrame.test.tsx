@@ -132,6 +132,17 @@ describe("SectionFrame", () => {
     expect(container.querySelector(".section-frame__icon-after")).not.toBeNull();
   });
 
+  it("exposes data-testid=section-<kind> on the root section", () => {
+    const { container } = render(
+      <SectionFrame presentation={base()} bundle={emptyBundle} kind="rich_text">
+        <div>x</div>
+      </SectionFrame>,
+    );
+    expect(container.querySelector("section")?.getAttribute("data-testid")).toBe(
+      "section-rich_text",
+    );
+  });
+
   it("map ignores width and spacing", () => {
     const { container } = render(
       <SectionFrame

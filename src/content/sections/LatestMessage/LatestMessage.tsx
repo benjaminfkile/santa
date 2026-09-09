@@ -31,7 +31,7 @@ export const LatestMessage: SectionComponent = ({ data, bundle }) => {
 
   if (style === "ticker") {
     return (
-      <div className="latest-message latest-message--ticker" aria-live="polite">
+      <div className="latest-message latest-message--ticker" aria-live="polite" data-testid="latest-message">
         <button
           type="button"
           className="latest-message__toggle"
@@ -58,7 +58,7 @@ export const LatestMessage: SectionComponent = ({ data, bundle }) => {
   }
 
   return (
-    <div className="latest-message latest-message--card" aria-live="polite">
+    <div className="latest-message latest-message--card" aria-live="polite" data-testid="latest-message">
       {heading ? (
         <div className="latest-message__meta">
           <span className="latest-message__heading">

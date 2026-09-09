@@ -40,7 +40,13 @@ function SponsorCard({
   return (
     <li className="sponsor-grid__card">
       {media ? (
-        <Media media={media} bundle={bundle} sizeOverride="200px" className="sponsor-grid__logo" />
+        <Media
+          media={media}
+          bundle={bundle}
+          sizeOverride="200px"
+          className="sponsor-grid__logo"
+          testId="sponsor-logo"
+        />
       ) : (
         <span className="sponsor-grid__name-fallback">{sponsor.name}</span>
       )}
