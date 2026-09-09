@@ -25,3 +25,7 @@ dist-ssr
 
 # design canvas output, regenerated from docs/wireframes/*.dc.html
 docs/wireframes/wmsfo-site-wireframe.html
+
+# Playwright output
+playwright-report/
+test-results/

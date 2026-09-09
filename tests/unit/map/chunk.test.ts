@@ -5,7 +5,7 @@
 
 import { describe, it, expect } from "vitest";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
 
 const DIST_ASSETS = resolve(__dirname, "..", "..", "..", "dist", "assets");
 
@@ -25,7 +25,7 @@ describe("map chunk", () => {
       return;
     }
     const indexJs = readFileSync(indexPath, "utf8");
-    const mapChunkName = mapPath.split("/").pop() ?? "";
+    const mapChunkName = basename(mapPath);
     // A static import would look like: from"./map-XXXX.js"
     const staticImport = new RegExp(`from\\s*["\`']\\./${mapChunkName.replace(/\./g, "\\.")}["\`']`);
     expect(indexJs).not.toMatch(staticImport);
@@ -36,7 +36,7 @@ describe("map chunk", () => {
     const MapPath = findChunk("Map");
     const rpMapPath = findChunk("RoutePreviewMap");
     if (mapPath === null || MapPath === null || rpMapPath === null) return;
-    const mapChunkName = mapPath.split("/").pop() ?? "";
+    const mapChunkName = basename(mapPath);
     const importSuffix = `./${mapChunkName}`;
     const inMap = readFileSync(MapPath, "utf8").includes(importSuffix);
     const inRp = readFileSync(rpMapPath, "utf8").includes(importSuffix);
