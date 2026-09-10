@@ -73,7 +73,7 @@
     {
       "name": "css (all styles)",
       "path": "dist/assets/*.css",
-      "limit": "25 KB"
+      "limit": "40 KB"
     }
   ]
 }

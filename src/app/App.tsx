@@ -8,6 +8,7 @@ import { AppRoutes } from "./routes";
 import { useStore } from "../store/useStore";
 import { selectBundle } from "../content/selectPage";
 import { applyTheme } from "../content/theme/applyTheme";
+import { applyOverridesToDocument } from "../content/theme/themeOverrides";
 import { AuthProvider } from "../auth/AuthProvider";
 
 export function App() {
@@ -20,6 +21,7 @@ export function App() {
       favicon: bundle.content.settings.favicon,
       bundle,
     });
+    applyOverridesToDocument();
   }, [bundle]);
 
   return (

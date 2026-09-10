@@ -21,6 +21,15 @@ import { ContentLink } from "../content/primitives/LinkView";
 import { Icon } from "../content/primitives/Icon";
 import { useAuth } from "../auth/AuthProvider";
 import type { ContentBundle } from "../store/types";
+import {
+  ACCENT_KEYS,
+  SURFACE_KEYS,
+  FONT_KEYS,
+  useThemeOverrides,
+  type AccentKey,
+  type SurfaceKey,
+  type FontKey,
+} from "../content/theme/themeOverrides";
 
 export type ShellProps = { children: ReactNode };
 
@@ -116,8 +125,14 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
       })
     : [];
 
+  const returnTo = location.pathname + location.search;
+  const onSignInClick = useCallback(() => void signIn(returnTo), [signIn, returnTo]);
+
   return (
-    <header className={collapsed ? "site-header site-header--collapsed" : "site-header"}>
+    <header
+      className={collapsed ? "site-header site-header--collapsed" : "site-header"}
+      data-testid="site-header"
+    >
       {!collapsed && settings ? (
         <Link to="/" className="site-header__brand">
           {settings.logo !== null && bundle !== null ? (
@@ -126,17 +141,28 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
           <span>{settings.siteName}</span>
         </Link>
       ) : null}
-      <button
-        ref={buttonRef}
-        type="button"
-        aria-expanded={open}
-        aria-controls={panelId}
-        aria-label="Menu"
-        className="site-header__menu-button"
-        onClick={() => setOpen((v) => !v)}
-      >
-        Menu
-      </button>
+      <div className="site-header__actions">
+        {!collapsed && authState.status !== "signedIn" ? (
+          <button
+            type="button"
+            className="site-header__sign-in"
+            onClick={onSignInClick}
+          >
+            {copy.signIn.button}
+          </button>
+        ) : null}
+        <button
+          ref={buttonRef}
+          type="button"
+          aria-expanded={open}
+          aria-controls={panelId}
+          aria-label="Menu"
+          className="site-header__menu-button"
+          onClick={() => setOpen((v) => !v)}
+        >
+          <MenuGlyph />
+        </button>
+      </div>
       <nav
         id={panelId}
         ref={(el) => {
@@ -150,14 +176,82 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
           {entries.map((entry, i) => (
             <li key={i}>
               {renderEntry(entry, bundle, {
-                onSignIn: () => void signIn(location.pathname + location.search),
+                onSignIn: onSignInClick,
                 onSignOut: () => void signOut(),
               })}
             </li>
           ))}
         </ul>
+        <ThemeControls />
       </nav>
     </header>
+  );
+}
+
+function MenuGlyph() {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden
+    >
+      <line x1="4" y1="7" x2="20" y2="7" />
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <line x1="4" y1="17" x2="20" y2="17" />
+    </svg>
+  );
+}
+
+function ThemeControls() {
+  const { overrides, setAccent, setSurface, setFonts } = useThemeOverrides();
+  return (
+    <div className="site-header__theme-controls" data-testid="theme-controls">
+      <p className="site-header__theme-controls-heading">Theme</p>
+      <div className="site-header__theme-row" role="group" aria-label="Accent">
+        {ACCENT_KEYS.map((key) => (
+          <button
+            key={key}
+            type="button"
+            className="site-header__theme-chip"
+            aria-pressed={overrides.accent === key}
+            onClick={() => setAccent(key as AccentKey)}
+          >
+            {key}
+          </button>
+        ))}
+      </div>
+      <div className="site-header__theme-row" role="group" aria-label="Surface">
+        {SURFACE_KEYS.map((key) => (
+          <button
+            key={key}
+            type="button"
+            className="site-header__theme-chip"
+            aria-pressed={overrides.surface === key}
+            onClick={() => setSurface(key as SurfaceKey)}
+          >
+            {key}
+          </button>
+        ))}
+      </div>
+      <div className="site-header__theme-row" role="group" aria-label="Fonts">
+        {FONT_KEYS.map((key) => (
+          <button
+            key={key}
+            type="button"
+            className="site-header__theme-chip"
+            aria-pressed={overrides.fonts === key}
+            onClick={() => setFonts(key as FontKey)}
+          >
+            {key}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -211,7 +305,7 @@ function Footer({ bundle }: { bundle: ContentBundle | null }) {
   const settings = bundle?.content?.settings ?? null;
   if (settings === null || bundle === null) return null;
   return (
-    <footer className="site-footer">
+    <footer className="site-footer" data-testid="site-footer">
       {settings.footerLinks.length > 0 ? (
         <ul className="site-footer__links">
           {settings.footerLinks.map((link, i) => (
