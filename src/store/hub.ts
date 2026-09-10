@@ -4,7 +4,7 @@
 // 1, 2, 3, 5 s backoff, other rejections wait 10 s first.
 
 import { store as defaultStore, type StoreHandle } from "./store";
-import { applyLive as applyLiveFn } from "./applyLive";
+import { applyIncomingLive } from "./loop";
 import { backoffAt } from "./backoff";
 import { env, LOCATION_CHANNEL } from "../config/env";
 
@@ -85,8 +85,11 @@ export async function startHub(deps: HubDeps): Promise<void> {
     if (!envelope || envelope.channel !== channel) return;
     switch (envelope.event) {
       case "location": {
-        const result = applyLiveFn(store.getState(), envelope.data, now());
-        store.setState(() => ({ ...result.state, lastHubLocationAt: now() }));
+        // Same path as a poll: apply, then fetch the snapshot and route the
+        // new live object points at (site.md 6.4).
+        void applyIncomingLive(store, envelope.data, now).then(() => {
+          store.setState((s) => ({ ...s, lastHubLocationAt: now() }));
+        });
         break;
       }
       case "joined": {

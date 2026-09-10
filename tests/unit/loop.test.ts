@@ -41,7 +41,7 @@ import * as fetchers from "../../src/store/fetchers";
 import { createStore } from "../../src/store/store";
 import { initialStore } from "../../src/store/types";
 import type { LiveObject } from "../../src/contracts";
-import { startDataLoop, pollNow, _resetLoopForTests } from "../../src/store/loop";
+import { startDataLoop, pollNow, applyIncomingLive, _resetLoopForTests } from "../../src/store/loop";
 
 function live(overrides: Partial<LiveObject>): LiveObject {
   return {
@@ -328,5 +328,35 @@ describe("loop snapshot and route", () => {
     // Second snapshot has routeUrl null → route should clear.
     expect(store.getState().route).toBeNull();
     expect(store.getState().routeUrl).toBeNull();
+  });
+});
+
+describe("hub-applied live objects", () => {
+  it("fetches the snapshot a pushed live object points at, even when a later poll finds it already applied", async () => {
+    let now = 0;
+    const store = createStore({
+      ...initialStore,
+      live: live({ seq: 1, snapshotUrl: "https://cdn.example/s1.json", publishedAt: "2024-12-24T00:00:00Z" }),
+      snapshot: { schemaVersion: 1, event: { statusId: 1, routeUrl: null } } as unknown as Snapshot,
+      snapshotUrl: "https://cdn.example/s1.json",
+    });
+    f.fetchSnapshot.mockResolvedValue({
+      schemaVersion: 1,
+      event: { statusId: 2, routeUrl: null },
+    } as unknown as Snapshot);
+
+    // The hub delivers a newer live object whose snapshotUrl moved.
+    const pushed = live({ seq: 2, eventStatusId: 2, snapshotUrl: "https://cdn.example/s2.json", publishedAt: "2024-12-24T00:00:10Z" });
+    await applyIncomingLive(store, pushed, () => now);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(f.fetchSnapshot).toHaveBeenCalledWith("https://cdn.example/s2.json");
+    expect(store.getState().snapshotUrl).toBe("https://cdn.example/s2.json");
+    expect(store.getState().snapshot?.event?.statusId).toBe(2);
+
+    // A poll that returns the same object again is not applied but changes nothing.
+    f.fetchSnapshot.mockClear();
+    const applied = await applyIncomingLive(store, pushed, () => now);
+    expect(applied).toBe(false);
+    expect(f.fetchSnapshot).not.toHaveBeenCalled();
   });
 });

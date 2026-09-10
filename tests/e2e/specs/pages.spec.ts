@@ -105,7 +105,7 @@ test("the contact form posts a message that the admin endpoints then delete", as
   await expect(page.locator('[data-testid="contact-success"]')).toBeVisible({ timeout: 15_000 });
 
   const after = await listContactMessages();
-  const created = after.find((m) => m.message.includes(marker) && !beforeIds.has(m.id));
+  const created = after.find((m) => m.body.includes(marker) && !beforeIds.has(m.id));
   expect(created).toBeDefined();
   if (created) await deleteContactMessage(created.id);
 });

@@ -86,17 +86,23 @@ async function applyAndFetchDependents(
   const before = store.getState();
   const result = applyLive(before, obj, now());
   store.setState(() => result.state);
-  if (!result.applied) return false;
-  if (result.snapshotUrlChanged) {
-    const wanted = result.state.live?.snapshotUrl ?? null;
-    if (wanted !== null) {
-      void fetchSnapshotWithBackoff(store, wanted);
-    } else if (result.state.snapshotUrl !== null) {
-      // Cleared snapshotUrl: drop snapshot and route.
-      store.setState({ snapshot: null, snapshotUrl: null, route: null, routeUrl: null });
-    }
+  // The snapshot follows the live object's snapshotUrl whether or not this
+  // particular object was new: a live object applied by the hub may already be
+  // in the store while its snapshot has not been fetched yet (site.md 6.4).
+  const wanted = result.state.live?.snapshotUrl ?? null;
+  if (wanted !== null) {
+    if (wanted !== result.state.snapshotUrl) void fetchSnapshotWithBackoff(store, wanted);
+  } else if (result.state.snapshotUrl !== null) {
+    // Cleared snapshotUrl: drop snapshot and route.
+    store.setState({ snapshot: null, snapshotUrl: null, route: null, routeUrl: null });
   }
-  return true;
+  return result.applied;
+}
+
+// The hub's `location` events go through the same path as a poll so the
+// snapshot and route follow a pushed live object too.
+export function applyIncomingLive(store: StoreHandle, obj: unknown, now: () => number): Promise<boolean> {
+  return applyAndFetchDependents(store, obj, now);
 }
 
 async function fetchSnapshotWithBackoff(

@@ -57,10 +57,12 @@ test("status walk", async ({ page }) => {
     const scheduledAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
     await patchEvent(walk.id, { scheduledAt });
     await setEventStatus(walk.id, 2);
+    // The digits render only once the snapshot carrying status 2 has arrived
+    // (timeReady); the heading is there earlier, so wait for a number.
     await page.waitForFunction(
-      "!!document.querySelector('[data-testid=\"countdown\"]')?.textContent",
+      "/\\d/.test(document.querySelector('[data-testid=\"countdown\"]')?.textContent ?? '')",
       undefined,
-      { timeout: POLL_PLUS },
+      { timeout: POLL_PLUS * 3 },
     );
     const first = await page.locator('[data-testid="countdown"]').first().textContent();
     await page.waitForTimeout(3000);
