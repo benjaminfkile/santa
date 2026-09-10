@@ -114,7 +114,16 @@ test("status walk", async ({ page }) => {
     if (!routeRes.ok) throw new Error(`route fetch → ${routeRes.status}`);
     const route = (await routeRes.json()) as { points: { lat: number; lng: number }[] };
     const postedAt = Date.now();
-    const rep = replay(route.points.slice(0, 60), 2);
+    // Route points carry only lat/lng; a real fix carries speed, heading, altitude,
+    // and accuracy too, which the data row renders.
+    const fixes = route.points.slice(0, 60).map((p) => ({
+      ...p,
+      speedMps: 45,
+      headingDeg: 90,
+      altitudeM: 1200,
+      accuracyM: 5,
+    }));
+    const rep = replay(fixes, 2);
     await waitForState(page, (s) => (s?.live?.seq ?? 0) > 0, POLL_PLUS);
     const latency = Date.now() - postedAt;
     // eslint-disable-next-line no-console
