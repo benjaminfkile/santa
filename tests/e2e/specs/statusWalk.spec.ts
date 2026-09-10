@@ -36,6 +36,14 @@ test.beforeAll(async () => {
 });
 
 test("status walk", async ({ page }) => {
+  // Serial walk through every status with CDN polling waits between steps.
+  test.setTimeout(300_000);
+  // The route disclaimer dialog (site.md 7.6) opens once per session over the
+  // live page and blocks pointer events until acknowledged; dismiss it whenever
+  // it shows up.
+  await page.addLocatorHandler(page.getByRole("button", { name: /i understand/i }), async (button) => {
+    await button.click();
+  });
   const events = await listEvents();
   const walk = events.find((e) => e.year === 2100 && e.name === "E2E walk");
   if (!walk) throw new Error("Dedicated E2E walk event (year 2100) is missing");
@@ -76,7 +84,11 @@ test("status walk", async ({ page }) => {
       undefined,
       { timeout: POLL_PLUS },
     );
-    await expect(page.locator('[data-testid="waiting-for-fix"]')).toBeVisible({ timeout: POLL_PLUS });
+    // The live page mounts the map. On a fresh event the chip says waiting for a
+    // fix; locations accumulate on the walk event in dev (site.md 22.2), and a
+    // stale fix counts as tracking for 30 s after load (site.md 15), so the
+    // chip's state is not asserted here.
+    await expect(page.locator('[data-testid="map"]')).toBeVisible({ timeout: POLL_PLUS });
     const startedAt = Date.now();
     let hubLive = false;
     while (Date.now() - startedAt < 20_000) {
@@ -108,7 +120,10 @@ test("status walk", async ({ page }) => {
     // eslint-disable-next-line no-console
     console.log(`beacon-to-marker latency ${latency} ms`);
     await expect(page.locator('[data-testid="marker-seq"]')).toHaveAttribute("data-seq", /\d+/);
+    // The data row lives in the tracker menu (site.md 7.6), which opens on demand.
+    await page.getByRole("button", { name: /tracker menu/i }).click();
     await expect(page.locator('[data-testid="data-row-speed"]')).toContainText(/\d/);
+    await page.keyboard.press("Escape");
 
     // 6. Sign in as the E2E person, drop a cookie, expect leaderboard tick.
     await personSignIn(page);
