@@ -49,7 +49,7 @@ santa/
       env.ts                      typed, validated import.meta.env
     contracts/
       generated/                  types generated from ../../contracts (checked in)
-      index.ts                    LiveObject, Snapshot, Route, Sponsor, CookieType, ApiError re-exports
+      index.ts                    LiveObject, Snapshot, Sponsor, CookieType, ApiError re-exports
     store/
       store.ts                    createStore, getState, subscribe, select
       types.ts                    Store (contracts 1.9) and Diagnostics
@@ -57,7 +57,7 @@ santa/
       liveState.ts                selectLiveState, selectTimeReady (pure)
       cadence.ts                  isHubQuiet, pollCadenceMs (pure)
       loop.ts                     startDataLoop: startup, poll timer, visibility, URL changes
-      fetchers.ts                 fetchLive, fetchSnapshot, fetchRoute (schemaVersion check)
+      fetchers.ts                 fetchLive, fetchSnapshot (schemaVersion check)
       hub.ts                      startHub: connection, join, ack, evictions, reconnect
       backoff.ts                  1 s, 2 s, 3 s, then 5 s forever
       useStore.ts                 React binding and selectors
@@ -88,7 +88,7 @@ santa/
         Map/                      Map.tsx (the live screen: full-viewport map plus overlays), TrackerMenu.tsx, InfoOverlays.tsx,
                                   LiveIndicator.tsx, LiftoffTimer.tsx, DistanceChip.tsx, MapControls.tsx, RouteDisclaimer.tsx, LocationPrompt.tsx
         Unknown.tsx               renders nothing, logs once per kind
-      theme/                      tokens.css, applyTheme.ts (accent, surface, font pairing from settings)
+      theme/                      tokens.css (the only file with a colour literal), colorScheme.ts (light/dark/system), tokens.contrast.test.ts
     pages/
       HomePage.tsx                the role page for live.eventStatusId
       SlugPage.tsx                the none page for /:slug, or NotFound
@@ -213,14 +213,12 @@ The store holds exactly the contract's `Store` (contracts 1.9) plus a `diag` obj
 
 ```ts
 // src/store/types.ts
-import type { LiveObject, Snapshot, Route } from "../contracts";
+import type { LiveObject, Snapshot } from "../contracts";
 
 export type Store = {
   live: LiveObject | null;
   snapshot: Snapshot | null;
   snapshotUrl: string | null;        // the URL store.snapshot was fetched from
-  route: Route | null;
-  routeUrl: string | null;           // the URL store.route was fetched from
   hub: "connecting" | "connected" | "reconnecting" | "disconnected";
                                      // "connected" is set on the `joined` ack for `<service>:location`,
                                      // not when start() resolves; start() resolving leaves it "connecting"
@@ -235,18 +233,17 @@ export type Diagnostics = {
   lastPollOkAt: number | null;       // performance.now() of the last 200 or 304 on live/location.json
   consecutivePollFailures: number;   // reset to 0 on success
   snapshotFetchFailing: boolean;     // a wanted snapshotUrl has failed at least once and is retrying
-  routeFetchFailing: boolean;
   firstLoadStartedAt: number;        // performance.now() at startDataLoop
 };
 
 export type SiteStore = Store & { diag: Diagnostics; preview: ContentBundle | null };   // preview: set only by /preview (7.8)
 
 export const initialStore: SiteStore = {
-  live: null, snapshot: null, snapshotUrl: null, route: null, routeUrl: null,
+  live: null, snapshot: null, snapshotUrl: null,
   hub: "disconnected", lastHubLocationAt: null, lastSeqChangeAt: null, schemaMismatch: false,
   preview: null,
   diag: { online: true, lastPollOkAt: null, consecutivePollFailures: 0,
-          snapshotFetchFailing: false, routeFetchFailing: false, firstLoadStartedAt: 0 },
+          snapshotFetchFailing: false, firstLoadStartedAt: 0 },
 };
 ```
 
@@ -421,7 +418,7 @@ export function pollCadenceMs(s: SiteStore, now: number): number {
 ### 6.1 Startup
 
 1. `diag.firstLoadStartedAt = performance.now()`. `GET LIVE_URL`. On failure (network error, non-2xx, unparsable JSON) retry after 1 s, 2 s, 3 s, then every 5 s forever. The loading screen renders until the first success.
-2. Apply the object (5.3). When `snapshotUrlChanged`, fetch the snapshot (6.5), then reconcile the route (6.5).
+2. Apply the object (5.3). When `snapshotUrlChanged`, fetch the snapshot (6.5); the snapshot carries the flight history, so nothing else is fetched.
 3. Dynamically import the hub module and start the connection (6.3). Arm the poll timer (6.4). Register the `visibilitychange`, `online`, and `offline` listeners (6.6).
 
 ### 6.2 CDN fetches
@@ -439,7 +436,6 @@ async function fetchJson<T>(url: string, timeoutMs = 10000): Promise<T> {
 }
 export const fetchLive = () => fetchJson<unknown>(LIVE_URL);
 export const fetchSnapshot = (url: string) => fetchJson<unknown>(url);
-export const fetchRoute = (url: string) => fetchJson<unknown>(url, 20000);
 ```
 
 Rules: default cache mode (the browser revalidates `live/location.json` because of `max-age=0`, and a `304` is a success), `credentials: "omit"`, no custom headers, no query strings ever appended, only absolute URLs read from objects. Every fetched object is checked for `schemaVersion === 1` before it is stored; any other value sets `schemaMismatch` and the object is dropped.
@@ -519,16 +515,9 @@ if wantedSnapshotUrl !== store.snapshotUrl and no fetch for wantedSnapshotUrl is
   on success, and only if wantedSnapshotUrl still equals store.getState().live.snapshotUrl:
     schemaVersion check; store.snapshot = S; store.snapshotUrl = wantedSnapshotUrl; snapshotFetchFailing = false
   a result for a URL that is no longer wanted is discarded
-
-after any snapshot store:
-  routeUrl = store.snapshot?.event?.routeUrl ?? null
-  if routeUrl !== store.routeUrl:
-    routeUrl === null: store.route = null; store.routeUrl = null
-    otherwise fetch it with the same backoff (diag.routeFetchFailing while retrying); on success, only if still wanted:
-      schemaVersion check; store.route = R; store.routeUrl = routeUrl
 ```
 
-The old snapshot and route keep rendering while a replacement is in flight. A changed `snapshotUrl` is the only way a new sponsor, message, funds percent, cookie type, or route reaches the browser.
+The old snapshot keeps rendering while a replacement is in flight. A changed `snapshotUrl` is the only way a new sponsor, message, funds percent, cookie type, or route poster reaches the browser. The route poster is an image in `snapshot.media`; the browser fetches it like any other picture, never as data.
 
 ### 6.6 Visibility and lifecycle
 
@@ -617,11 +606,11 @@ Content kinds read `data`, `items`, and the bundle only. Live kinds read the sto
 | `countdown` | `snapshot.event.scheduledAt`, `live.eventStatusId` | `Xd Xh Xm Xs` from the 1 s clock; renders nothing unless status is 2 and `now < scheduledAt`; blank while `!timeReady` |
 | `event_times` | `snapshot.event.scheduledAt`, `wentLiveAt`, `endedAt`, `live.eventStatusId` | One labelled line per field in `data.fields` whose value exists, formatted in `America/Denver`; `airborneFor` is `formatElapsed(now - wentLiveAt)` on the 1 s clock while status is 3; blank while `!timeReady` |
 | `latest_message` | `snapshot.event.latestMessage` | `card`: body plus `eventTime` (or `createdAt` when null); `ticker`: one collapsible line; `aria-live="polite"`; nothing when null |
-| `map` | the live object, `route`, and everything section 8 lists | The live screen (7.6) |
+| `map` | the live object, `snapshot.event.flightHistory`, and everything section 8 lists | The live screen (7.6) |
 | `leaderboard` | `live.cookieTally`, `snapshot.cookieTypes` | Section 9 |
 | `sponsor_carousel` | `snapshot.sponsors`, `bundle.media` | Section 15; logo through `Media` with `sizes` fixed at `data.logoWidth` |
-| `sponsor_grid` | `snapshot.sponsors`, `bundle.media` | Every sponsor in snapshot order: logo (name text when `logoMediaId` is null), name, links for `websiteUrl`, `fbUrl`, `igUrl` when non-null, `yearsAsSponsor` as "Sponsor for N years" when `showYears`; `emptyText` when none |
-| `route_preview` | `route` | `svg`: the points as a normalized SVG path, no Maps load; `map`: the route viewer of section 8 with `fitRoute()` and no Santa marker; `emptyText` when `route` is null |
+| `sponsor_grid` | `snapshot.sponsors`, `bundle.media` | Every sponsor in snapshot order (pinned first, then largest gift first; the site never re-sorts): the first three as large cards, the rest in a four-column grid; logo (name text when `logoMediaId` is null), name, links for `websiteUrl`, `fbUrl`, `igUrl` when non-null, `yearsAsSponsor` as "Sponsor for N years" when `showYears`; no tiers, no amounts; `emptyText` when none |
+| `route_preview` | `snapshot.event.routeImageMediaId`, `bundle.media` | `image`: the poster through `Media` (960 variant, `srcset`) wrapped in a link to the page holding the `viewer` style, or unlinked when no such page is published; `viewer`: the pan-and-zoom viewer of 8.5 over the asset's original `url`, with `data.disclaimer` rendered above it; `emptyText` when the id is null or unresolvable |
 | `cookie_control` | auth, `live.eventStatusId`, `snapshot.cookieTypes` | Section 10; `closedCopy` outside status 3; `signedOutCopy` with a sign-in link when signed out |
 | `alerts_signup` | auth, `GET /me`, `GET /me/subscriptions` | Section 13; `signedOutCopy` with a sign-in link (`returnTo` the current path) when signed out |
 | `contact_form` | `settings.contactEmail` | Section 14 |
@@ -640,8 +629,8 @@ Full-viewport map with overlays, each switched by `data.overlays` and each contr
 
 | Component | Reads | Behaviour |
 |---|---|---|
-| `MapView` + `mapController` (`Map.tsx`) | `live.lat`, `live.lng`, `route.points`, theme, map type, `data.defaultCenter`, `data.defaultZoom`, `data.themes`, `data.defaultTheme` | Section 8 |
-| `santaMarker` | `live.lat/lng`, `selectLiveState` | Position on each applied object; `waitingForFix` shows no marker and fits the route; `signalLost` swaps to the signal-lost icon variant and the marker stays put |
+| `MapView` + `mapController` (`Map.tsx`) | `live.lat`, `live.lng`, `snapshot.event.flightHistory`, theme, map type, `data.defaultCenter`, `data.defaultZoom`, `data.themes`, `data.defaultTheme`, `data.flightHistoryDefault` | Section 8. The map shows one marker at Santa's current position and nothing about where he has been |
+| `santaMarker` | `live.lat/lng`, `selectLiveState` | Position on each applied object; `waitingForFix` shows no marker at the default view; `signalLost` swaps to the signal-lost icon variant and the marker stays put. The marker is the legacy idea kept: a map pin wearing a Santa hat, drawn inline in the accent |
 | `LiveIndicator` | `hub`, quiet state, `live.publishedAt` | "Live" when `hubLive`; "Updating" when `pollingOnly`; "Updated N s ago" from `publishedAt` on the device clock |
 | `LiftoffTimer` | `snapshot.event.wentLiveAt` | "Airborne 1h 12m" via `formatElapsed`; blank when `!timeReady` or `wentLiveAt` null |
 | `DistanceChip` | user location, `live.lat/lng` | Feet under one mile, miles with two decimals otherwise; only when location is enabled and a fix exists |
@@ -649,7 +638,7 @@ Full-viewport map with overlays, each switched by `data.overlays` and each contr
 | `Leaderboard` overlay | `live.cookieTally`, `snapshot.cookieTypes` | Section 9, `panel` variant; collapsible bottom panel |
 | `SponsorCarousel` overlay | `snapshot.sponsors` | Section 15 with the 480 px variant |
 | `CookieControl` overlay | auth, `snapshot.cookieTypes`, `GET /me/cookies` | Section 10 |
-| `TrackerMenu` | themes, map type, toggles, `live.speedMps/headingDeg/altitudeM/accuracyM`, distance, liftoff | Theme picker, terrain or road, snow, route lines, time labels, location (opens `LocationPrompt`), data row, close; each entry present only when its control is on |
+| `TrackerMenu` | themes, map type, toggles, `live.speedMps/headingDeg/altitudeM/accuracyM`, distance, liftoff | Map style picker (the six styles, each a round thumbnail and a nickname, as the legacy tracker had), terrain or road, snow, flight history (the projected route from a previous flight, off unless `data.flightHistoryDefault`), time labels, location (opens `LocationPrompt`), data row, close; each entry present only when its control is on, and the flight history entry also only when `snapshot.event.flightHistory` is non-null |
 | `MapControls` | follow state | Recenter button when not following; zoom in and out when following |
 | `RouteDisclaimer` | `storage` key `wmsfo.routeDisclaimerAck` | Dialog on the first live-screen visit per browser; "I understand" stores the key |
 | `Snow` | menu toggle, reduced motion | Off by default on the live screen |
@@ -661,7 +650,40 @@ Data row units: speed as mph from `speedMps`, heading as degrees plus cardinal f
 
 `Shell` wraps every route: skip link, `<header>` with the site name and logo icon from `settings`, the menu button (`aria-expanded`, `aria-controls`), the `<nav>` panel from `content/nav.ts`, the `updatesPaused` and `preview` banners, the reload prompt when `schemaMismatch`, and a `<footer>` with `settings.footerLinks` and `settings.footerText`. On a page whose first section is `map` the header collapses to the menu button and the footer is omitted so the map keeps the viewport.
 
-`content/theme/applyTheme.ts` sets `data-accent`, `data-surface`, and `data-fonts` on `<html>` from `settings.theme`; `tokens.css` defines the palette per combination (four accents, three surfaces, three font pairings; the fonts are self-hosted in the bundle, section 21). `settings.favicon` replaces the `<link rel="icon">` href with the resolved icon URL when set. `settings.theme.snowDefault` is the initial state of the snow toggle on every page except the live screen. The theme is applied whenever the bundle changes, so a publish restyles the site on the next snapshot.
+**Colour scheme.** The site has one visual direction, North Pole Night, in a dark and a light rendering, and the visitor chooses light, dark, or follow the system. `data-theme="light"` or `"dark"` on `<html>` is the resolved scheme. An inline script in `<head>` of `index.html`, before any stylesheet, reads `localStorage["wmsfo.theme"]` (`"light"` or `"dark"`; absent or anything else means system) and `matchMedia("(prefers-color-scheme: dark)")` and stamps the attribute, so the first paint is already right. `content/theme/colorScheme.ts` owns the rest: a `change` listener on the media query keeps a system-following visitor live; the header toggle (`ThemeToggle`, a moon or sun icon button, `aria-label` naming the destination) flips between light and dark and stores the choice; the menu offers "Follow system", which removes the stored key. Nothing about the scheme is in the snapshot or the site settings. Non-CSS consumers (the map's overlay palette, canvas snow) follow the attribute through a `MutationObserver`, as the portfolio does.
+
+**Tokens.** `content/theme/tokens.css` is the only file in the repository with a colour literal: the dark palette on `:root[data-theme="dark"]` and the light palette on `:root[data-theme="light"]`, the same token names in both (`--ground`, `--panel`, `--panel-2`, `--line`, `--text`, `--text-bright`, `--text-dim`, `--accent`, `--accent-soft`, `--on-accent`, `--gold`, `--link`, `--ok`, `--warn`, `--err`, `--shadow`, `--snow`, `--frost-a`, `--frost-b`), plus the type scale, spacing, and the two radii (6 and 10 px). The values are the North Pole Night set:
+
+| Token | Dark | Light | Role |
+|---|---|---|---|
+| `--ground` | `#070d1c` | `#eef3fa` | page background |
+| `--panel` | `#0f182e` | `#ffffff` | cards, header, footer |
+| `--panel-2` | `#16213c` | `#f5f8fd` | raised panel, inputs, logo tiles |
+| `--line` | `#243252` | `#d3ddee` | borders, rules |
+| `--text` | `#c9d5ec` | `#2c3850` | body text |
+| `--text-bright` | `#eef3ff` | `#0f1a30` | headings, values |
+| `--text-dim` | `#8393b5` | `#5a6885` | labels, secondary text |
+| `--accent` | `#6fd3ff` | `#0b6bb5` | the accent: eyebrows, active nav, buttons, icons |
+| `--accent-soft` | `rgba(111,211,255,.14)` | `rgba(11,107,181,.11)` | accent washes, hover fills |
+| `--on-accent` | `#070d1c` | `#ffffff` | text on a filled accent button |
+| `--gold` | `#f0c05a` | `#8a6210` | funds ring fill, the star in the brand mark |
+| `--link` | `#9cc7ff` | `#0b6bb5` | prose links |
+| `--ok` | `#56d29a` | `#1f7f4f` | status good, live dot |
+| `--warn` | `#f0c05a` | `#8a6210` | status degraded, disclaimer |
+| `--err` | `#ff7a70` | `#c2362c` | status down, validation errors, the Santa hat on the pin |
+| `--shadow` | `none` | `0 1px 3px rgba(15,26,48,.08)` | panels (dark has no shadows) |
+| `--snow` | `rgba(255,255,255,.85)` | `rgba(140,165,205,.55)` | snow flakes |
+| `--frost-a`, `--frost-b` | `rgba(111,211,255,.4)`, `rgba(255,122,112,.28)` | `rgba(11,107,181,.2)`, `rgba(194,54,44,.14)` | the aurora halo behind frost glass |
+
+`docs/design/theme-studio.html` is the reference rendering: every page and home state built on these tokens with the exact component recipes (header, hero with the liftoff card, live strip, Cheer Meter ring, sponsor cards, alerts form, footer, the live map overlays, the poster viewer, the icon set). It is a static mock kept in the repository for the build and for review; the site's CSS modules reproduce its recipes through the tokens, never by copying its literals. Open it in a browser with the "North Pole Night" direction and "Bricolage" face selected. `tokens.contrast.test.ts` parses the file and fails the build when any text token on any surface token drops under 4.5:1 or a status token on `--panel` under 3:1. A hex anywhere else is a review failure. Components are CSS modules co-located with the component (`X.module.css`, typed by `typed-css-modules` so an unknown class fails `tsc`); there is no UI library and no utility framework.
+
+**Type.** IBM Plex Sans for prose and UI, IBM Plex Mono for every value that came from the API at runtime (countdown, funds, speed, distance, times, timestamps) with `font-variant-numeric: tabular-nums`, Bricolage Grotesque for `<h1>` and `<h2>` only. All three are self-hosted through `@fontsource` (section 21; `font-src 'self'`). Body 17 px on 1.55; labels 13 px mono uppercase with 0.12 em tracking.
+
+**Seasonal layers.** `settings.theme.snowDefault` is the initial state of the snow toggle on every page except the live screen; `settings.theme.lightsDefault` is the initial state of the string of lights under the header. Both have a per-visitor switch in the menu, stored under `wmsfo.snow` and `wmsfo.lights`. Snow is a canvas of small, slow, translucent flakes coloured by `--snow`; lights are a row of 7 px bulbs on a 1 px wire in the accent, gold, ok, and err tokens with a slow twinkle. Frost glass (a translucent panel with `backdrop-filter: blur(10px)` and a blurred aurora halo in `--frost-a` and `--frost-b`) is used on the liftoff card and the live overlays and nowhere else. `settings.favicon` replaces the `<link rel="icon">` href with the resolved icon URL when set; the defaults are applied whenever the bundle changes.
+
+**Motion.** Hover is a 120 ms ease-out change of border or colour and nothing moves more than 2 px; focus is a 2 px accent outline with a 2 px offset; the hero rises 12 px on load with a 60 ms stagger; the funds ring and leaderboard reorder animate as section 17 says. Every tap target is at least 44 px.
+
+**Icons.** Library icons are inline SVG components generated at build time from the vendored `contracts/icons/<id>.svg` files (the API repository publishes its icon library there beside the schemas, so the contracts check covers them) (24 px grid, 1.75 px stroke, round caps and joins, `stroke="currentColor"`), so they take the accent; the `Icon` primitive renders a library id inline and a media id through `<img>`. A library id missing from the generated set falls back to `<img>` from `bundle.icons`.
 
 ### 7.8 Preview
 
@@ -707,15 +729,15 @@ export async function loadMaps() {
 
 Classic `google.maps.Marker` and `google.maps.Polyline` with JSON `styles` (a `mapId` would disable JSON styling, and themes live in the repo).
 
-Initial view: when `route.points` exists, fit its bounds; when a fix exists, centre on it at `data.defaultZoom`; otherwise `data.defaultCenter`.
+Initial view: when a fix exists, centre on it at `data.defaultZoom`; otherwise `data.defaultCenter` at `data.defaultZoom`.
 
 ### 8.3 Controller
 
-`mapController` owns the `google.maps.Map` and exposes: `setTheme(key)`, `setMapType("terrain" | "roadmap")`, `follow(on)`, `recenter()`, `zoomBy(delta)`, `fitRoute()`, `destroy()`. It subscribes to the store once and, on each applied object whose `seq` changed, calls `santaMarker.setPosition` and, while following, `map.panTo`. `dragstart` sets `follow(false)`; the recenter button sets `follow(true)` and pans. `zoom_changed` (debounced 150 ms) redraws the route overlay so arrow density and label interval match the zoom.
+`mapController` owns the `google.maps.Map` and exposes: `setTheme(key)`, `setMapType("terrain" | "roadmap")`, `follow(on)`, `recenter()`, `zoomBy(delta)`, `fitHistory()`, `destroy()`. It subscribes to the store once and, on each applied object whose `seq` changed, calls `santaMarker.setPosition` and, while following, `map.panTo`. `dragstart` sets `follow(false)`; the recenter button sets `follow(true)` and pans. `zoom_changed` (debounced 150 ms) redraws the flight history overlay so arrow density and label interval match the zoom.
 
 ### 8.4 Themes
 
-`src/map/themes/index.ts` exports an ordered registry; the six JSON style arrays are the starting point and each carries the overlay palette the route layer needs. The `map` section's `data.themes` picks which registry keys the theme picker offers (unknown keys are ignored; an empty result falls back to the whole registry) and `data.defaultTheme` the starting one; the registry keys are what the panel's schema enumerates.
+Map styles are separate from the site's colour scheme: the picker in the tracker menu stays, exactly as the legacy tracker had it, and the chosen style does not change when the visitor flips light and dark. `src/map/themes/index.ts` exports an ordered registry; the six JSON style arrays are the starting point and each carries the overlay palette the flight path layer needs. The `map` section's `data.themes` picks which registry keys the theme picker offers (unknown keys are ignored; an empty result falls back to the whole registry) and `data.defaultTheme` the starting one; the registry keys are what the panel's schema enumerates.
 
 ```ts
 export type MapTheme = {
@@ -730,18 +752,18 @@ export type MapTheme = {
 export const THEME_KEYS = ["standard", "expedition", "blizzard", "charcoal", "night", "nebula"] as const;   // the enum in contracts/schema/sections/map.schema.json
 ```
 
-The chosen key persists in `localStorage["wmsfo.tracker.theme"]` through `lib/storage.ts` (guarded; a blocked storage, or a stored key the section no longer offers, falls back to `data.defaultTheme`). Theme changes apply `map.setOptions({ styles })`, redraw the route overlay, and recolour the user marker and dotted line.
+The chosen key persists in `localStorage["wmsfo.tracker.theme"]` through `lib/storage.ts` (guarded; a blocked storage, or a stored key the section no longer offers, falls back to `data.defaultTheme`). Theme changes apply `map.setOptions({ styles })`, redraw the flight path overlay, and recolour the user marker and dotted line.
 
-### 8.5 Route overlay
+### 8.5 Flight history overlay and the route poster viewer
 
-Input: `route.points` (`{ lat, lng, recordedAt }[]`, array order is route order). Two toggles from the menu, `routeLines` and `timeLabels`, both on by default, kept in component state.
+**Flight history.** Input: `snapshot.event.flightHistory.points` (`{ lat, lng, recordedAt }[]`, route order, already thinned by the API; contracts 1.3). It is a previous flight drawn as the projected route, the legacy tracker's "history" toggle; it is not where Santa has been tonight. Two toggles from the menu, `flightHistory` (initial state `data.flightHistoryDefault`, off by default) and `timeLabels` (on by default), kept in component state; both absent when `flightHistory` is null.
 
 - **Line**: one geodesic `Polyline`, `strokeWeight 2`, `strokeColor theme.routeColor`, `strokeOpacity theme.routeOpacity`.
 - **Arrows**: a second `Polyline` with `strokeOpacity 0` and `icons[]` of `FORWARD_CLOSED_ARROW` symbols placed every `step` points, where `step` is 20 at zoom 15 and above, 40 at 13 to 14, 80 at 11 to 12, 150 at 9 to 10, 250 below; symbol scale 3 at zoom 9 and above, else 2.
-- **Time labels**: markers with an SVG data-URI icon (rounded box, label text, a dot in `routeColor`), one label each time the elapsed time from the first point with a non-null `recordedAt` crosses the next interval; interval 5 minutes above zoom 12, else 20 minutes. Label text `35 min`, `1 hr`, `1 hr 20 min`. Points with `recordedAt` null are skipped for labels. No labels when no point has a time.
-- Redraw on zoom, theme change, toggle change, and when `store.route` changes (a new `routeUrl`). All previous overlays are removed first.
+- **Time labels**: markers with an SVG data-URI icon (rounded box, label text, a dot in `routeColor`), one label each time the elapsed time from the first point with a non-null `recordedAt` crosses the next interval; interval 5 minutes above zoom 12, else 20 minutes. Label text `35 min`, `1 hr`, `1 hr 20 min`. Points with `recordedAt` null are skipped for labels; no labels when no point has a time.
+- Redraw on zoom, theme change, toggle change, and when a new snapshot carries a different `flightHistory.routeId`. All previous overlays are removed first. `fitHistory()` is offered as a menu action when the overlay is on.
 
-The `route_preview` section in its `map` style reuses the same module without the Santa marker or user location and with `fitRoute()` on load.
+**Route poster viewer** (`src/content/sections/RoutePreview/PosterViewer.tsx`, the `viewer` style; no Maps script). One `<img>` of the asset's original `url` inside a clipped, `touch-action: none` frame, positioned by a CSS transform `translate(x, y) scale(s)`. Fit on load (`s = min(frameW / imgW, frameH / imgH)`, centred); `s` clamps between fit and six times fit. Drag with pointer capture, wheel zoom about the cursor, pinch zoom about the midpoint, double-tap zooms in one step, and three buttons: zoom in, zoom out, fit (the same `.ibtn` recipe as the map controls). Arrow keys pan and plus and minus zoom when the frame has focus. The `image` style is a plain linked `Media` picture and loads nothing else. Neither style loads the map chunk.
 
 ### 8.6 User location and distance
 
@@ -765,7 +787,7 @@ export function createUserLocation(map, theme, onChange: (s: UserLocationState) 
 
 | State | Marker | Chip |
 |---|---|---|
-| `waitingForFix` | none; map fitted to the route (or `DEFAULT_CENTER`) | "Waiting for the first fix" |
+| `waitingForFix` | none; map at `data.defaultCenter` and `data.defaultZoom` | "Waiting for the first fix" |
 | `tracking` | Santa icon anchored bottom-centre at `live.lat/lng` | none |
 | `signalLost` | Same position, signal-lost icon variant | "No update for N s" from `lastSeqChangeAt` |
 
@@ -1021,7 +1043,7 @@ Below the form: a mailto link for `settings.contactEmail` when set. Social links
 
 ## 15. Sponsor carousel
 
-`SponsorCarousel` (the `sponsor_carousel` section and the live screen's overlay): shuffles the input list once per snapshot change (Fisher-Yates), shows one sponsor at a time for `lingerMs`, wraps around, pauses while the document is hidden, click opens `websiteUrl ?? fbUrl ?? igUrl ?? null` in a new tab. Input is every sponsor in `snapshot.sponsors`; a sponsor without a logo shows its name as text. Logos render through `Media` with `sizes` fixed at the section's `logoWidth` (480 for the overlay). Crossfade is disabled under reduced motion.
+`SponsorCarousel` (the `sponsor_carousel` section and the live screen's overlay): plays `snapshot.sponsors` in snapshot order (pinned sponsors first in their pinned order, then largest gift first; never shuffled), shows one sponsor at a time for its `lingerMs`, wraps around, pauses while the document is hidden, click opens `websiteUrl ?? fbUrl ?? igUrl ?? null` in a new tab. A snapshot change keeps the current index when the sponsor at it is unchanged, else restarts at the first. Input is every sponsor in `snapshot.sponsors`; a sponsor without a logo shows its name as text. Logos render through `Media` with `sizes` fixed at the section's `logoWidth` (480 for the overlay). Crossfade is disabled under reduced motion.
 
 There are no fixed pages: about, sponsors, route, donate, contact, and alerts are ordinary pages in the starter content, built from the sections above, and editors change or replace them at will.
 
@@ -1079,7 +1101,7 @@ Chunks (`build.rollupOptions.output.manualChunks`):
 |---|---|---|---|
 | `index` | React, router, store, shell, the page renderer, every section and block component except the map | First paint | 130 KB |
 | `signalr` | `@microsoft/signalr` | After the first live object is applied (startup step 3) | 45 KB |
-| `map` | `src/map/**`, `@googlemaps/js-api-loader`, themes | A `map` section or a `route_preview` section in `map` style mounts | 50 KB (Google's own script excluded) |
+| `map` | `src/map/**`, `@googlemaps/js-api-loader`, themes | A `map` section mounts | 50 KB (Google's own script excluded) |
 | `auth` | `oidc-client-ts`, `AuthProvider` internals, `AuthCallback` | Callback route, sign-in click, or a stored session at boot | 40 KB |
 | `alerts` | The two token landing pages | Route mounts | 15 KB |
 | CSS | all | First paint | 25 KB |
@@ -1092,7 +1114,7 @@ Other rules:
 
 - `index.html` carries `<link rel="preconnect" href="%VITE_CDN_BASE_URL%" crossorigin>` and a `modulepreload` for `index`.
 - Every image goes through the `Media` primitive with `srcset` and `sizes`, so a phone downloads the 480 px variant; every `<img>` has `loading="lazy"` and `decoding="async"` except a hero background and the first carousel logo.
-- Route overlay redraws are debounced (150 ms) and time-label markers are created once per redraw, not per point.
+- Flight history redraws on zoom are debounced (150 ms); time-label markers are created once per redraw, not per point.
 - The store publishes one state object per applied live object; components select fields, so a fix re-renders the data row and the live indicator and nothing else.
 - No polyfills for browsers without WebSockets, `fetch`, or `AbortController`; `browserslist` is "defaults, not dead".
 
@@ -1111,7 +1133,6 @@ Other rules:
 | `navigator.onLine === false` | Same banner immediately |
 | Hub never connects or keeps dropping | Live indicator shows "Updating" (polling only); polling tightens while live; no banner |
 | Snapshot fetch failing | Old snapshot keeps rendering; the page still switches on the live object; small "refreshing details" note |
-| Route fetch failing | Map without a route; retrying |
 | Maps script fails | "Map unavailable" panel with Retry; everything else on the live screen works |
 | Geolocation error | Prompt reopens on the instructions section; distance chip hidden |
 | API call fails | Inline copy per code (sections 10, 13, 14); never the server's `message` |
@@ -1159,7 +1180,7 @@ export default defineConfig({
 });
 ```
 
-Fonts for the three pairings are self-hosted in the bundle (no third-party font host), so the site loads on networks that cannot reach Google. `index.html` uses Vite's `%VITE_*%` replacement for the CSP meta and preconnect, so no environment value is written into the repository. The authority source ends in `/` because `VITE_COGNITO_AUTHORITY` carries the pool path and a CSP path source without a trailing slash matches that path alone; the slash lets the discovery document under it through:
+The three families (IBM Plex Sans 400, 500, 600; IBM Plex Mono 400, 500; Bricolage Grotesque 600, 700) are self-hosted in the bundle through `@fontsource` (no third-party font host), so the site loads on networks that cannot reach Google. `index.html` uses Vite's `%VITE_*%` replacement for the CSP meta and preconnect, so no environment value is written into the repository. The authority source ends in `/` because `VITE_COGNITO_AUTHORITY` carries the pool path and a CSP path source without a trailing slash matches that path alone; the slash lets the discovery document under it through:
 
 ```html
 <meta http-equiv="Content-Security-Policy" content="
@@ -1221,9 +1242,12 @@ Fixtures come from the vendored `contracts/fixtures/*.json`; schema validation o
 |---|---|
 | `applyLive.shouldReplace` | null store; different event with greater and lesser `publishedAt`; same event lower `seq`; null `seq` after non-null; equal `seq` with equal and lesser `publishedAt`; both-null `seq` with greater `publishedAt`; higher `seq` |
 | `applyLive` | `lastSeqChangeAt` set on first apply and on a `seq` change only; `snapshotUrlChanged` detection; `schemaVersion: 2` sets `schemaMismatch` and stores nothing |
-| `fetchers` | `credentials: "omit"`; no query string; non-2xx throws; abort on timeout; `schemaVersion` check on snapshot and route |
+| `fetchers` | `credentials: "omit"`; no query string; non-2xx throws; abort on timeout; `schemaVersion` check on the snapshot |
+| `flightHistory` overlay | absent when `snapshot.event.flightHistory` is null; initial state from `data.flightHistoryDefault`; redraw on a changed `routeId`; label skipping on null `recordedAt` |
+| `tokens.contrast.test` | every text token on every surface token in both palettes at or above 4.5:1; `--ok`, `--warn`, `--err` on `--panel` at or above 3:1; `--on-accent` on `--accent` at or above 4.5:1 |
+| `colorScheme` | stored `light` or `dark` wins over the OS; no stored value follows the OS and its `change` events; the toggle stores the destination; "Follow system" removes the key |
 | `cadence` | quiet is false outside status 3; quiet on each of the three conditions; `max(1000, base / 2)`; base when not quiet |
-| `loop` | startup backoff 1, 2, 3, 5, 5; timer re-armed after completion, never overlapping; `pollIntervalMs` change takes effect next arm; hidden stops polling and visible polls immediately; `online` triggers `pollNow`; failures keep the store and increment `consecutivePollFailures`; snapshot fetch on URL change with stale-result discard; route fetch on `routeUrl` change and `null` clears |
+| `loop` | startup backoff 1, 2, 3, 5, 5; timer re-armed after completion, never overlapping; `pollIntervalMs` change takes effect next arm; hidden stops polling and visible polls immediately; `online` triggers `pollNow`; failures keep the store and increment `consecutivePollFailures`; snapshot fetch on URL change with stale-result discard |
 | `hub` (fake `HubConnection`) | handlers registered before `start`; `connected` only on `joined`; `reconnecting` and `disconnected` transitions; re-join and `pollNow` on `onreconnected`; `auth_expired` re-join then `pollNow`; `service_removed` retry every 5 s; denied join waits 10 s; throttled join uses the short backoff; `onclose` restarts the start loop; a second `startHub` is a no-op |
 | `selectPage` | every `eventStatusId` (1, 2, 3, 4, 5, null) to its role page; an unknown id to `reload`; `reload` beats everything; `loading` before the first object or snapshot; a preview bundle wins over the snapshot; slug lookup, role slug redirect, unknown slug |
 | `liveState` | live state at 29 s and 31 s; `timeReady` |
@@ -1268,7 +1292,7 @@ Dedicated walk event: year `2100`, name `E2E walk`, created once by an admin in 
 2. Ensure status 1 (`POST .../status { statusId: 1, notify: false }`, tolerating `409 event_status_unchanged`). Open `/`. Assert the planned page (the role page's first section is present), no countdown, the event name `E2E walk` rendered through a placeholder, no map element.
 3. `PATCH { scheduledAt: now + 2 h }`, status 2 with `notify: false`. Assert the countdown appears within `pollIntervalMs + 2000` ms and decreases over 3 s; the scheduled time renders in Mountain time.
 4. Status 3 with `notify: false`. Assert the live page's map section renders within `pollIntervalMs + 2000` ms with the waiting-for-fix chip; the live indicator reaches "Live" within 20 s (hub joined) or the test records "polling only" and continues.
-5. Fetch `snapshot.event.routeUrl` from the CDN; `replay(points.slice(0, 60), 2)`. Assert the marker's `data-seq` increases and the data row shows a speed within `pollIntervalMs + 2000` ms of the first fix; log the observed latency from POST to marker update.
+5. Read `snapshot.event.flightHistory.points` from the CDN snapshot; `replay(points.slice(0, 60), 2)`. Turn the flight history toggle on and assert one polyline is drawn and the marker is the only thing that moves. Assert the marker's `data-seq` increases and the data row shows a speed within `pollIntervalMs + 2000` ms of the first fix; log the observed latency from POST to marker update.
 6. Sign in as the E2E person via the site link; open the cookie control; read `remaining`; leave one cookie of the first type; assert `201`, `remaining` decreased by one, and the leaderboard count for that type increases by one within `2 * pollIntervalMs + 2000` ms.
 7. `POST .../messages { body: "E2E <run id>", eventTime: null, notify: false }`. Assert the latest message shows the body within `pollIntervalMs + 2000` ms (snapshot URL change path).
 8. Stop replay for 35 s. Assert the signal-lost chip appears after 30 s and the marker keeps its position.
@@ -1276,7 +1300,7 @@ Dedicated walk event: year `2100`, name `E2E walk`, created once by an admin in 
 10. Status 5 with `notify: false`. Assert the cancelled page shows the message from step 7 and no countdown.
 11. Restore: status 4 on the walk event; `POST /admin/events/{previous}/current` when a previous current event existed.
 
-`pages.spec.ts` (parallel): each ordinary page in the published document (read from the CDN snapshot by the harness) renders its first section; the page holding a `route_preview` in `map` style loads the map and draws a polyline; `/preview?token=<minted by the harness through POST /admin/content/preview-token>&page=ended` renders the ended page with the preview banner while the walk event is planned; `/alerts/verify?token=wsv_<43 invalid chars>` and `/alerts/unsubscribe?token=wsu_<43 invalid chars>` render the invalid copy after one POST; `/alerts` signed in subscribes a unique address, asserts a Pending row, resends once, then deletes it; the contact form posts a message tagged with the run id and the harness finds and deletes it through the admin endpoints; the 404 page for `/nope`; reduced-motion emulation hides the snow toggle; the CSP meta is present and the hub WebSocket to `<gateway-domain>` opens (network log).
+`pages.spec.ts` (parallel): each ordinary page in the published document (read from the CDN snapshot by the harness) renders its first section; the page holding a `route_preview` in `viewer` style shows the poster and zooms on a wheel event without loading the map chunk; the header toggle flips `data-theme` and survives a reload; screenshots of every page and every home state in both schemes are compared against checked-in baselines; `/preview?token=<minted by the harness through POST /admin/content/preview-token>&page=ended` renders the ended page with the preview banner while the walk event is planned; `/alerts/verify?token=wsv_<43 invalid chars>` and `/alerts/unsubscribe?token=wsu_<43 invalid chars>` render the invalid copy after one POST; `/alerts` signed in subscribes a unique address, asserts a Pending row, resends once, then deletes it; the contact form posts a message tagged with the run id and the harness finds and deletes it through the admin endpoints; the 404 page for `/nope`; reduced-motion emulation hides the snow toggle; the CSP meta is present and the hub WebSocket to `<gateway-domain>` opens (network log).
 
 The manual pre-event rehearsal repeats the walk with Red-Nose's replay mode on the real phone in place of `beacon.ts`.
 
@@ -1290,7 +1314,7 @@ Site-specific steps within the overall cut-over:
 2. Set the Production environment to the prod set (including `VITE_ANALYTICS_ID` and `VITE_ANALYTICS_ORIGINS`), assign `<site-domain>`, and confirm the domain is in the prod hub `realtimeAllowedOrigins`, the `wmsfo-site` client's callback and sign-out URLs, and the Maps key's referrers.
 3. Merge to `main` only after the API cut-over steps have produced `live/location.json` and a snapshot on the prod CDN.
 4. Path redirects for links that exist in the wild from the previous site, handled by the router with `<Navigate replace>`: `/santa` to `/`, `/funding` to `/donate`. Every other previous path is a page slug in the starter content (`about`, `sponsors`, `route`, `contact`, `donate`, `alerts`), and editors keep those slugs when they replace the copy.
-5. The previous site's per-environment image URLs, route image, copy, and analytics inclusion are not carried; every page, image, and string is content in the panel, the route page renders the route object, and analytics follows section 16 plus the site setting.
+5. The previous site's per-environment image URLs, route image, copy, and analytics inclusion are not carried; every page, image, and string is content in the panel, the route page renders the route poster linked to the event, and analytics follows section 16 plus the site setting.
 
 ---
 
@@ -1309,20 +1333,20 @@ Site-specific steps within the overall cut-over:
 - A rejected hub join whose error text matches `/throttl|budget|rate/i` uses the 1, 2, 3, 5 s backoff; any other rejection waits 10 s first.
 - The SignalR client is imported after the first live object is applied; the map module is imported when the live screen or route page mounts; the auth chunk loads on the callback route, on a sign-in click, or when a stored session key exists at boot.
 - Classic `google.maps.Marker` and `Polyline` with in-repo JSON style arrays, no `mapId`; six themes in the registry, the `map` section chooses which to offer and the default; the chosen key persists in `localStorage["wmsfo.tracker.theme"]`.
-- The map's default center and zoom are `map` section data; the initial view fits the route when one exists.
-- Route overlay arrow step and label interval tables as in section 8.5; labels are elapsed time from the first timed point; route lines and time labels are separate toggles, both on by default.
-- `route_preview` in `svg` style draws `route.points` without the Maps script; only a `map` section or a `route_preview` in `map` style loads it.
+- The map's default center and zoom are `map` section data; the initial view centres on the fix when one exists.
+- The live map shows Santa's current position only. The flight history toggle draws the previous flight embedded in the snapshot as the projected route (off by default, admin-settable); arrow step and label interval tables as in section 8.5; history and time labels are separate toggles. The map style picker stays, independent of the site's light and dark schemes.
+- The route the public sees is the event's poster image; `route_preview` renders it as a picture or a pan-and-zoom viewer. Nothing on the site fetches the route JSON; the tracker's flight history comes embedded in the snapshot.
 - User location uses `watchPosition`, is never persisted, and shows distance in feet under one mile and miles otherwise.
 - Wake lock is acquired only on the live screen and re-acquired on visibility.
 - Snow follows `settings.theme.snowDefault` on every page except the live screen, where it is off by default, and is absent under reduced motion.
 - Countdown hides once `now >= scheduledAt`; the scheduled time stays and nothing implies liftoff. All scheduled and end times display in `America/Denver`.
 - The live indicator shows "Updated N s ago" from `publishedAt` on the device clock; no clock-skew correction anywhere.
 - Every sponsor in the snapshot appears wherever a sponsor section is placed; sponsors that may not advertise are not in the snapshot at all.
-- The carousel shuffles once per snapshot change and honours `lingerMs`; `sponsor_grid` is the static alternative.
+- The carousel plays snapshot order (pinned first, then largest gift first) and honours `lingerMs`; nothing on the site re-sorts sponsors; `sponsor_grid` is the static alternative. There are no sponsor tiers.
 - No screen components: pages are documents, kinds are components, `registry.ts` is the only wiring point, and an unknown kind renders nothing.
 - The inline grammar is parsed in the site (mirroring the API's parser) into React elements; there is no `innerHTML` anywhere.
-- Every image renders through one `Media` primitive with `srcset` from the variants; every icon through one `Icon` primitive as `<img>`.
-- Theme tokens (accent, surface, font pairing) are CSS custom properties switched by attributes on `<html>` from the site settings; fonts are self-hosted.
+- Every image renders through one `Media` primitive with `srcset` from the variants; every icon through one `Icon` primitive: library ids inline as generated SVG components, media ids as `<img>`.
+- One visual direction (North Pole Night) in a dark and a light rendering; the visitor picks light, dark, or system, stored in the browser, stamped before first paint; the site settings carry only the snow and lights defaults. Tokens live in one file with a contrast test; components are typed CSS modules with no UI library; fonts are self-hosted.
 - Preview is a route that swaps the content bundle in the store and leaves the live data alone.
 - Cookie control state is whatever the last `GET /me/cookies` or `POST /cookies` response said; the tally is never bumped locally.
 - Both alert landing pages POST on load after a token regex check.
