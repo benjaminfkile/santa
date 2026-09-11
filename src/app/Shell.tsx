@@ -1,5 +1,5 @@
 // docs/site.md section 7.7. Wraps every route: skip link, header with
-// menu button, nav panel (focus-trap and Escape), banners, footer, and
+// brand, sign-in, theme toggle and menu, nav drawer, banners, footer, and
 // the map-page collapse for the live screen.
 
 import {
@@ -18,18 +18,10 @@ import { firstSectionKind } from "../content/PageRenderer";
 import { copy } from "../copy/copy";
 import { ReloadPrompt } from "../pages/ReloadPrompt";
 import { ContentLink } from "../content/primitives/LinkView";
-import { Icon } from "../content/primitives/Icon";
 import { useAuth } from "../auth/AuthProvider";
+import { useThemeChoice } from "../content/theme/colorScheme";
 import type { ContentBundle } from "../store/types";
-import {
-  ACCENT_KEYS,
-  SURFACE_KEYS,
-  FONT_KEYS,
-  useThemeOverrides,
-  type AccentKey,
-  type SurfaceKey,
-  type FontKey,
-} from "../content/theme/themeOverrides";
+import * as styles from "./Shell.module.css";
 
 export type ShellProps = { children: ReactNode };
 
@@ -134,10 +126,8 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
       data-testid="site-header"
     >
       {!collapsed && settings ? (
-        <Link to="/" className="site-header__brand">
-          {settings.logo !== null && bundle !== null ? (
-            <Icon icon={settings.logo} bundle={bundle} alt="" decorative />
-          ) : null}
+        <Link to="/" className={`site-header__brand ${styles.brand}`}>
+          <BrandMark />
           <span>{settings.siteName}</span>
         </Link>
       ) : null}
@@ -151,6 +141,7 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
             {copy.signIn.button}
           </button>
         ) : null}
+        {!collapsed ? <ThemeToggle /> : null}
         <button
           ref={buttonRef}
           type="button"
@@ -181,10 +172,38 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
               })}
             </li>
           ))}
+          <li>
+            <FollowSystemButton />
+          </li>
         </ul>
-        <ThemeControls />
       </nav>
     </header>
+  );
+}
+
+function BrandMark() {
+  // Montana silhouette with a gold star at Missoula. Inline SVG so the
+  // outline follows --accent and the star follows --gold.
+  return (
+    <svg
+      viewBox="0 0 100 60"
+      className={styles.brandMark}
+      role="img"
+      aria-label="WMSFO"
+      focusable={false}
+    >
+      <path
+        d="M2 2 L98 2 L98 42 L60 42 L58 52 L48 50 L44 58 L34 52 L18 50 L14 42 L2 42 Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M28 22 L30.5 27.5 L36.5 28 L32 32 L33.2 38 L28 34.8 L22.8 38 L24 32 L19.5 28 L25.5 27.5 Z"
+        className={styles.brandStar}
+      />
+    </svg>
   );
 }
 
@@ -196,7 +215,7 @@ function MenuGlyph() {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.75"
       strokeLinecap="round"
       aria-hidden
     >
@@ -207,51 +226,79 @@ function MenuGlyph() {
   );
 }
 
-function ThemeControls() {
-  const { overrides, setAccent, setSurface, setFonts } = useThemeOverrides();
+function ThemeToggle() {
+  const { resolved, setLight, setDark } = useThemeChoice();
+  const nextIsLight = resolved === "dark";
+  const label = nextIsLight ? "Switch to light mode" : "Switch to dark mode";
+  const onClick = nextIsLight ? setLight : setDark;
   return (
-    <div className="site-header__theme-controls" data-testid="theme-controls">
-      <p className="site-header__theme-controls-heading">Theme</p>
-      <div className="site-header__theme-row" role="group" aria-label="Accent">
-        {ACCENT_KEYS.map((key) => (
-          <button
-            key={key}
-            type="button"
-            className="site-header__theme-chip"
-            aria-pressed={overrides.accent === key}
-            onClick={() => setAccent(key as AccentKey)}
-          >
-            {key}
-          </button>
-        ))}
-      </div>
-      <div className="site-header__theme-row" role="group" aria-label="Surface">
-        {SURFACE_KEYS.map((key) => (
-          <button
-            key={key}
-            type="button"
-            className="site-header__theme-chip"
-            aria-pressed={overrides.surface === key}
-            onClick={() => setSurface(key as SurfaceKey)}
-          >
-            {key}
-          </button>
-        ))}
-      </div>
-      <div className="site-header__theme-row" role="group" aria-label="Fonts">
-        {FONT_KEYS.map((key) => (
-          <button
-            key={key}
-            type="button"
-            className="site-header__theme-chip"
-            aria-pressed={overrides.fonts === key}
-            onClick={() => setFonts(key as FontKey)}
-          >
-            {key}
-          </button>
-        ))}
-      </div>
-    </div>
+    <button
+      type="button"
+      className={`site-header__theme-toggle ${styles.themeToggle}`}
+      aria-label={label}
+      data-testid="theme-toggle"
+      onClick={onClick}
+    >
+      {nextIsLight ? <SunGlyph /> : <MoonGlyph />}
+    </button>
+  );
+}
+
+function FollowSystemButton() {
+  const { choice, followSystem } = useThemeChoice();
+  return (
+    <button
+      type="button"
+      className={`site-header__system-button ${styles.systemButton} ${choice === "system" ? styles.systemButtonActive : ""}`}
+      data-testid="follow-system"
+      onClick={followSystem}
+    >
+      {copy.theme.followSystem}
+    </button>
+  );
+}
+
+function SunGlyph() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="4" />
+      <line x1="12" y1="2" x2="12" y2="5" />
+      <line x1="12" y1="19" x2="12" y2="22" />
+      <line x1="4.2" y1="4.2" x2="6.3" y2="6.3" />
+      <line x1="17.7" y1="17.7" x2="19.8" y2="19.8" />
+      <line x1="2" y1="12" x2="5" y2="12" />
+      <line x1="19" y1="12" x2="22" y2="12" />
+      <line x1="4.2" y1="19.8" x2="6.3" y2="17.7" />
+      <line x1="17.7" y1="6.3" x2="19.8" y2="4.2" />
+    </svg>
+  );
+}
+
+function MoonGlyph() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M21 12.7A9 9 0 0 1 11.3 3 A7 7 0 1 0 21 12.7 Z" />
+    </svg>
   );
 }
 

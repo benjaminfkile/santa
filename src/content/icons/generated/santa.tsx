@@ -1,0 +1,32 @@
+/**
+ * AUTO-GENERATED FILE. Do not edit by hand.
+ * Run `npm run icons:gen` to regenerate from contracts/icons/.
+ */
+import type { SVGProps } from "react";
+
+export function SantaIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      width={24}
+      height={24}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      {...props}
+    >
+      <path d="M6 11 Q12 2 18 11" />
+  <path d="M5.5 11 L18.5 11" />
+  <circle cx="12" cy="2.7" r="1.1" />
+  <path d="M7 14 Q12 22 17 14" />
+  <path d="M7.5 15.5 Q12 20 16.5 15.5" />
+  <circle cx="10" cy="12.5" r="0.5" />
+  <circle cx="14" cy="12.5" r="0.5" />
+  <path d="M11 14.5 Q12 15.5 13 14.5" />
+    </svg>
+  );
+}

@@ -1,0 +1,68 @@
+/* docs/site.md section 7.7. Studio-styled shell classes moved out of the
+   global sheet. Global .site-header rules stay in tokens.css until S16
+   and S17 finish the migration. */
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  color: var(--text-bright);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.brandMark {
+  color: var(--accent);
+  width: 32px;
+  height: 32px;
+}
+
+.brandStar {
+  fill: var(--gold);
+  stroke: none;
+}
+
+.themeToggle {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--hover-transition);
+}
+
+.themeToggle:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.systemButton {
+  display: block;
+  padding: var(--space-3) var(--space-5);
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  width: 100%;
+  text-align: start;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.systemButton:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.systemButtonActive {
+  color: var(--accent);
+}

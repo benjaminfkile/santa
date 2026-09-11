@@ -60,10 +60,8 @@ export interface SiteSettings {
       )
     | null;
   theme: {
-    accent: "red" | "green" | "gold" | "blue";
-    surface: "night" | "snow" | "forest";
-    fontPairing: "classic" | "festive" | "modern";
     snowDefault: boolean;
+    lightsDefault: boolean;
   };
   /**
    * @minItems 0

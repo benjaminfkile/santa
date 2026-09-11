@@ -6,9 +6,17 @@
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import "@fontsource/ibm-plex-sans/400.css";
+import "@fontsource/ibm-plex-sans/500.css";
+import "@fontsource/ibm-plex-sans/600.css";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
+import "@fontsource/bricolage-grotesque/600.css";
+import "@fontsource/bricolage-grotesque/700.css";
 import App from "./App";
 import { copy } from "./copy/copy";
 import { store } from "./store/useStore";
+import { startSystemListener } from "./content/theme/colorScheme";
 
 function renderMisconfigured(root: HTMLElement, variable: string): void {
   root.replaceChildren();
@@ -36,6 +44,8 @@ async function boot(): Promise<void> {
     renderMisconfigured(rootEl, variable || "(unknown)");
     return;
   }
+
+  startSystemListener();
 
   createRoot(rootEl).render(
     <StrictMode>

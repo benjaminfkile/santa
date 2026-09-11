@@ -21,8 +21,8 @@ describe("IconRow", () => {
       <IconRow data={{ size: "md", spacing: "normal" }} items={items} bundle={bundle} />,
     );
     expect(container.querySelectorAll(".icon-row__item").length).toBe(2);
-    const imgs = container.querySelectorAll("img");
-    expect(imgs[0]?.getAttribute("aria-hidden")).toBe("true");
+    const inline = container.querySelectorAll("svg[data-icon-source=\"library\"]");
+    expect(inline[0]?.getAttribute("aria-hidden")).toBe("true");
     expect(container.querySelectorAll(".icon-row__label").length).toBe(1);
   });
 
@@ -31,7 +31,8 @@ describe("IconRow", () => {
     const { container } = render(
       <IconRow data={{ size: "lg", spacing: "loose" }} items={items} bundle={bundle} />,
     );
-    expect(container.querySelector("img")?.getAttribute("width")).toBe("96");
+    const inline = container.querySelector("svg[data-icon-source=\"library\"]");
+    expect(inline?.getAttribute("width")).toBe("96");
     expect(container.querySelector(".icon-row--spacing-loose")).not.toBeNull();
   });
 });

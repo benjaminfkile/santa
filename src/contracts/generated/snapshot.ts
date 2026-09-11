@@ -14,7 +14,16 @@ export interface Snapshot {
     wentLiveAt?: string | null;
     endedAt?: string | null;
     fundsPercent?: number;
-    routeUrl?: string | null;
+    routeImageMediaId?: string | null;
+    flightHistory?: {
+      routeId?: number;
+      name?: string;
+      points?: {
+        lat?: number;
+        lng?: number;
+        recordedAt?: string | null;
+      }[];
+    } | null;
     latestMessage?: {
       id?: number;
       body?: string;

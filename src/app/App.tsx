@@ -1,4 +1,5 @@
-// docs/site.md section 4. App root: router, theme application, shell.
+// docs/site.md section 4. App root: router, favicon, shell, and the
+// seasonal snow and lights overlays.
 
 import { useEffect } from "react";
 import { BrowserRouter } from "react-router-dom";
@@ -7,26 +8,23 @@ import { Shell } from "./Shell";
 import { AppRoutes } from "./routes";
 import { useStore } from "../store/useStore";
 import { selectBundle } from "../content/selectPage";
-import { applyTheme } from "../content/theme/applyTheme";
-import { applyOverridesToDocument } from "../content/theme/themeOverrides";
 import { AuthProvider } from "../auth/AuthProvider";
+import { SnowLayer, LightsLayer } from "../content/theme/seasonalLayers";
+import { applyFavicon } from "../content/theme/favicon";
 
 export function App() {
   const bundle = useStore(selectBundle);
 
   useEffect(() => {
     if (bundle === null || bundle.content === null) return;
-    applyTheme({
-      theme: bundle.content.settings.theme,
-      favicon: bundle.content.settings.favicon,
-      bundle,
-    });
-    applyOverridesToDocument();
+    applyFavicon(bundle.content.settings.favicon, bundle);
   }, [bundle]);
 
   return (
     <BrowserRouter>
       <AuthProvider>
+        <SnowLayer bundle={bundle} />
+        <LightsLayer bundle={bundle} />
         <Shell>
           <AppRoutes />
         </Shell>

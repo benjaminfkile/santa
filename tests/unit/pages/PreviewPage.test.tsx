@@ -26,7 +26,7 @@ function makeContent(): ContentDocument {
       homeNavLabel: "Track",
       logo: null,
       favicon: null,
-      theme: { accent: "red", surface: "night", fontPairing: "festive", snowDefault: true },
+      theme: { snowDefault: true, lightsDefault: false },
       navExtraLinks: [],
       footerLinks: [],
       footerText: null,
