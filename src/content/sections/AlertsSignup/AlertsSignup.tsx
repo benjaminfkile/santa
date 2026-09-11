@@ -19,6 +19,8 @@ import {
 } from "../../../api/subscriptions";
 import { ApiRequestError, surfaceFor } from "../../../api/errors";
 import { SignInRequired } from "../../../auth/getIdToken";
+import { StatusPill } from "../../primitives/StatusPill";
+import "./AlertsSignup.module.css";
 
 export type AlertsSignupData = {
   heading?: string | null;
@@ -354,22 +356,43 @@ function SubscriptionRow({
 }) {
   const pending = (row.verifiedAt === null || row.verifiedAt === undefined) && (row.unsubscribedAt === null || row.unsubscribedAt === undefined);
   const unsubscribed = row.unsubscribedAt !== null && row.unsubscribedAt !== undefined;
-  const state = unsubscribed
-    ? "Unsubscribed"
-    : pending
-    ? "Pending, check your email"
-    : "Active";
+  const tone = unsubscribed ? "dim" : pending ? "warn" : "ok";
+  const label = unsubscribed ? "Unsubscribed" : pending ? "Pending" : "Verified";
   return (
-    <li data-testid={`subscription-${num(row.id)}`}>
-      <span>{row.address}</span>
-      <span data-testid="subscription-state">{state}</span>
+    <li className="alerts-signup__row" data-testid={`subscription-${num(row.id)}`}>
+      <div className="alerts-signup__row-who">
+        <span className="alerts-signup__row-address">{row.address}</span>
+        {pending ? (
+          <span className="alerts-signup__row-meta">Check your email</span>
+        ) : null}
+      </div>
+      <StatusPill tone={tone} testId="subscription-state">
+        <span data-testid="subscription-state-label">{label}</span>
+      </StatusPill>
       {pending ? (
-        <button type="button" onClick={onResend}>Resend confirmation</button>
-      ) : null}
-      {!unsubscribed ? (
-        <button type="button" onClick={onUnsubscribe}>Unsubscribe</button>
+        <button
+          type="button"
+          className="alerts-signup__row-action"
+          onClick={onResend}
+        >
+          Resend confirmation
+        </button>
+      ) : !unsubscribed ? (
+        <button
+          type="button"
+          className="alerts-signup__row-action"
+          onClick={onUnsubscribe}
+        >
+          Unsubscribe
+        </button>
       ) : (
-        <button type="button" onClick={onResubscribe}>Re-subscribe</button>
+        <button
+          type="button"
+          className="alerts-signup__row-action"
+          onClick={onResubscribe}
+        >
+          Re-subscribe
+        </button>
       )}
     </li>
   );

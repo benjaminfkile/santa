@@ -1,0 +1,40 @@
+/* docs/site.md section 7.4. Media gallery with captions: single, grid, or
+   carousel. */
+
+:global(.media-gallery) { display: block; }
+:global(.media-gallery__figure) { margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+:global(.media-gallery__caption) { color: var(--text-dim); font-size: 0.875rem; }
+:global(.media-gallery--grid) {
+  display: grid;
+  grid-template-columns: repeat(var(--media-columns, 3), minmax(0, 1fr));
+  gap: var(--space-3);
+}
+:global(.media-gallery--carousel) { position: relative; }
+:global(.media-gallery__viewport) { position: relative; min-height: 240px; }
+:global(.media-gallery__slide) {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 250ms ease-in-out;
+}
+:global(.media-gallery__slide--active) { opacity: 1; }
+:global(.media-gallery--reduced-motion) :global(.media-gallery__slide) { transition: none; }
+:global(.media-gallery__controls) { display: flex; justify-content: space-between; gap: var(--space-2); margin-top: var(--space-3); }
+:global(.media-gallery__prev),
+:global(.media-gallery__next) {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  font-size: 1.25rem;
+  transition: var(--hover-transition);
+}
+:global(.media-gallery__prev:hover),
+:global(.media-gallery__next:hover) { border-color: var(--accent); color: var(--accent); }
+
+@media (max-width: 760px) {
+  :global(.media-gallery--grid) { grid-template-columns: 1fr; }
+}

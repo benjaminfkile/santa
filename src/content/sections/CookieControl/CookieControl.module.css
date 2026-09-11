@@ -1,0 +1,113 @@
+/* docs/site.md section 10. The `cookie_control` section: the closed and
+   signed-out copy renders as a quiet panel; when signed in during the live
+   event, the primary button opens a bottom sheet. */
+
+:global(.cookie-control) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+:global(.cookie-control) h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--text-bright);
+  margin: 0;
+}
+:global(.cookie-control--closed),
+:global(.cookie-control--signed-out) {
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-2);
+  color: var(--text);
+}
+:global(.cookie-control--closed) h2,
+:global(.cookie-control--signed-out) h2 {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+:global(.cookie-control--closed) p,
+:global(.cookie-control--signed-out) p {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.9375rem;
+}
+:global(.cookie-control) button {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0.5rem 1.1rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--hover-transition);
+}
+:global(.cookie-control) button:hover {
+  background: var(--text-bright);
+  border-color: var(--text-bright);
+  color: var(--ground);
+}
+:global(.cookie-control--signed-out) button {
+  background: transparent;
+  color: var(--accent);
+  border-color: var(--accent);
+  font-weight: 500;
+}
+:global(.cookie-control--signed-out) button:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+:global(.cookie-control__sheet) {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(560px, 100%);
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  padding: var(--space-5);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  box-shadow: var(--shadow);
+}
+:global(.cookie-control__types) {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+:global(.cookie-control__types) label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--hover-transition);
+}
+:global(.cookie-control__types) label:hover { border-color: var(--accent); }
+:global(.cookie-control__sheet) textarea {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  color: var(--text);
+  font: 400 0.9375rem var(--font-sans);
+  min-height: 80px;
+  resize: vertical;
+}
+:global(.cookie-control__sheet) [role="alert"] { color: var(--err); margin: 0; font-size: 0.8125rem; }

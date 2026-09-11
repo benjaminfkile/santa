@@ -8,6 +8,7 @@ import { Inline } from "../../inline/Inline";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
 import { formatMountainTime } from "../../../lib/time";
+import "./LatestMessage.module.css";
 
 type LatestMessageData = {
   heading?: string | null;

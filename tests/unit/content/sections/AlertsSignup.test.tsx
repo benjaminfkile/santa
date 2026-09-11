@@ -83,7 +83,7 @@ describe("AlertsSignup", () => {
     await findByTestId("alerts-signed-in");
     await userEvent.click(getByTestId("alerts-submit"));
     await waitFor(() =>
-      expect(getByTestId("subscription-state").textContent).toBe("Pending, check your email"),
+      expect(getByTestId("subscription-state-label").textContent).toBe("Pending"),
     );
   });
 
@@ -97,7 +97,7 @@ describe("AlertsSignup", () => {
     await findByTestId("alerts-signed-in");
     await userEvent.click(getByTestId("alerts-submit"));
     await waitFor(() =>
-      expect(getByTestId("subscription-state").textContent).toBe("Active"),
+      expect(getByTestId("subscription-state-label").textContent).toBe("Verified"),
     );
   });
 
@@ -183,7 +183,7 @@ describe("AlertsSignup", () => {
     const resend = Array.from(container.querySelectorAll("button")).find((b) => b.textContent === "Resend confirmation")!;
     await userEvent.click(resend);
     await waitFor(() =>
-      expect(container.querySelector('[data-testid="subscription-state"]')?.textContent).toBe("Active"),
+      expect(container.querySelector('[data-testid="subscription-state-label"]')?.textContent).toBe("Verified"),
     );
   });
 
@@ -198,7 +198,7 @@ describe("AlertsSignup", () => {
     const unsub = Array.from(container.querySelectorAll("button")).find((b) => b.textContent === "Unsubscribe")!;
     await userEvent.click(unsub);
     await waitFor(() =>
-      expect(container.querySelector('[data-testid="subscription-state"]')?.textContent).toBe("Unsubscribed"),
+      expect(container.querySelector('[data-testid="subscription-state-label"]')?.textContent).toBe("Unsubscribed"),
     );
   });
 });

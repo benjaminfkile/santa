@@ -10,6 +10,7 @@ import { useStore } from "../../../store/useStore";
 import { selectTimeReady } from "../../../store/liveState";
 import { formatElapsed, formatMountainTime } from "../../../lib/time";
 import { useNow } from "../../../lib/useNow";
+import "./EventTimes.module.css";
 
 type FieldKey = "scheduledAt" | "wentLiveAt" | "endedAt" | "airborneFor";
 

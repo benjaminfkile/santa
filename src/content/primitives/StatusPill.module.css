@@ -1,0 +1,28 @@
+/* docs/site.md section 7.4. Status pill: one shared recipe used by every
+   section that shows a state (Verified, Pending, Unsubscribed, and the
+   contact-form error/success chips). Ok, warn, err, and dim variants trace
+   the semantic tokens. */
+
+:global(.status-pill) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  background: transparent;
+}
+:global(.status-pill__dot) {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+:global(.status-pill--ok) { color: var(--ok); }
+:global(.status-pill--warn) { color: var(--warn); }
+:global(.status-pill--err) { color: var(--err); }
+:global(.status-pill--dim) { color: var(--text-dim); }

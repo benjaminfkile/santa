@@ -1,6 +1,7 @@
 // docs/site.md section 7.4. Divider section: line, snowflakes, or lights.
 
 import type { SectionComponent } from "../../registry";
+import "./Divider.module.css";
 
 type DividerData = { style?: "line" | "snowflakes" | "lights" };
 

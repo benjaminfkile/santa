@@ -10,6 +10,7 @@ import { Inline } from "../../inline/Inline";
 import { submitContact } from "../../../api/contact";
 import { ApiRequestError, surfaceFor } from "../../../api/errors";
 import type { ContentDocument } from "../../../contracts";
+import "./ContactForm.module.css";
 
 export type ContactFormData = {
   heading?: string | null;

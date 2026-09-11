@@ -1,0 +1,84 @@
+/* docs/site.md section 9. Leaderboard: full variant renders icon, name,
+   count, and a bar to the leader. Panel variant collapses to the top five
+   and is used inside the map overlay. */
+
+:global(.leaderboard) { display: flex; flex-direction: column; gap: var(--space-3); }
+:global(.leaderboard__heading) {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--text-bright);
+}
+:global(.leaderboard__list) {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+:global(.leaderboard__row) {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  padding: var(--space-2) 0;
+}
+:global(.leaderboard--full) {
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+:global(.leaderboard--panel) {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+:global(.leaderboard__icon) { display: flex; align-items: center; justify-content: center; color: var(--accent); }
+:global(.leaderboard__icon--placeholder) { width: 24px; height: 24px; background: var(--panel-2); border-radius: 50%; }
+:global(.leaderboard__name) {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  color: var(--text-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+:global(.leaderboard__count) {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--text-bright);
+  text-align: end;
+  font-size: 0.9375rem;
+}
+:global(.leaderboard--full) :global(.leaderboard__row) { grid-template-columns: 28px minmax(0, 1fr) auto; }
+:global(.leaderboard--full) :global(.leaderboard__bar) {
+  grid-column: 2 / 4;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--accent);
+  display: block;
+}
+:global(.leaderboard--panel) :global(.leaderboard__bar) { display: none; }
+:global(.leaderboard__toggle) {
+  align-self: start;
+  min-height: 40px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: var(--hover-transition);
+}
+:global(.leaderboard__toggle:hover) { color: var(--accent); border-color: var(--accent); }
+:global(.leaderboard__empty-text) { margin: 0; color: var(--text-dim); }
