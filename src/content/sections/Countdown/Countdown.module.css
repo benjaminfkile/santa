@@ -1,0 +1,64 @@
+/* docs/site.md section 7.4 and the studio's liftoff card. Countdown renders
+   as the liftoff card beside the hero copy: a panel wrapped in the `frost`
+   recipe (S15) with four tabular mono counters and the scheduled time line
+   below. Global selectors keep DOM class names stable. */
+
+:global(.countdown) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+:global(.countdown__heading) {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+:global(.countdown__digits) {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+}
+:global(.countdown__cell) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--space-1) 0;
+}
+:global(.countdown__value) {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--text-bright);
+}
+:global(.countdown__label) {
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+}
+:global(.countdown__scheduled) {
+  color: var(--text-bright);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+  margin: 0;
+}
+:global(.countdown__blank) { min-height: 76px; }
+
+@media (max-width: 760px) {
+  :global(.countdown__value) { font-size: 1.6rem; }
+}

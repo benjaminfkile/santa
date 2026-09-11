@@ -1,5 +1,6 @@
-// docs/site.md section 7.4. Hero section: title as <h1>, tagline, icon
-// above title, up to two links as buttons; height picks a min-height token.
+// docs/site.md section 7.4. Hero section: eyebrow in mono accent, title as
+// <h1> in Bricolage, tagline capped at 56ch, icon above the title, up to
+// two links in the fill and outline recipes.
 
 import type { IconRef, Link } from "../../../contracts";
 import type { SectionComponent } from "../../registry";
@@ -7,10 +8,12 @@ import { Inline } from "../../inline/Inline";
 import { Icon } from "../../primitives/Icon";
 import { ContentLink } from "../../primitives/LinkView";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
+import "./Hero.module.css";
 
 type HeroData = {
   title?: string;
   tagline?: string | null;
+  eyebrow?: string | null;
   icon?: IconRef | null;
   links?: Link[];
   height?: "short" | "tall";
@@ -32,6 +35,11 @@ export const Hero: SectionComponent = ({ data, bundle }) => {
         <div className="hero__icon" aria-hidden>
           <Icon icon={d.icon} bundle={bundle} decorative size={72} />
         </div>
+      ) : null}
+      {d.eyebrow ? (
+        <p className="hero__eyebrow">
+          <Inline text={d.eyebrow} bundle={bundle} event={event} />
+        </p>
       ) : null}
       <h1 className="hero__title">
         <Inline text={d.title ?? ""} bundle={bundle} event={event} />

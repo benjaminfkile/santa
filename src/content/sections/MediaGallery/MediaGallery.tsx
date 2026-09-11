@@ -11,6 +11,7 @@ import { LinkView } from "../../primitives/LinkView";
 import { Inline } from "../../inline/Inline";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useReducedMotion } from "../../../lib/motion";
+import "./MediaGallery.module.css";
 
 type MediaItem = {
   media: MediaRef;

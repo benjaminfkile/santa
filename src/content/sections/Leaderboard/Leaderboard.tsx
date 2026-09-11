@@ -9,6 +9,7 @@ import { Inline } from "../../inline/Inline";
 import { Icon } from "../../primitives/Icon";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
+import "./Leaderboard.module.css";
 
 type LeaderboardData = {
   heading?: string | null;

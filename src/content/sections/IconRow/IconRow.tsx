@@ -6,6 +6,7 @@ import type { SectionComponent } from "../../registry";
 import { Inline } from "../../inline/Inline";
 import { Icon } from "../../primitives/Icon";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
+import "./IconRow.module.css";
 
 type IconRowItem = { icon: IconRef; label: string | null };
 

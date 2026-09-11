@@ -1,17 +1,20 @@
-// docs/site.md section 7.4. FundsRing: SVG ring filled to the percent with
-// the number in the middle, animated fill unless reduced motion; `showYear`
-// adds the year to the heading; 0 and no year when `event` is null.
+// docs/site.md section 7.4. The Cheer Meter panel: ring in --gold on
+// --line, the amount in mono, the caption, and (optional) Donate button.
 
 import type { SectionComponent } from "../../registry";
 import { Inline } from "../../inline/Inline";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useReducedMotion } from "../../../lib/motion";
+import { useStore } from "../../../store/useStore";
+import type { ContentDocument } from "../../../contracts";
+import "./FundsRing.module.css";
 
 type FundsRingData = {
   heading?: string | null;
   caption?: string | null;
   size?: "small" | "medium" | "large";
   showYear?: boolean;
+  donateLabel?: string | null;
 };
 
 const SIZE_PX: Record<"small" | "medium" | "large", number> = {
@@ -35,6 +38,11 @@ export const FundsRing: SectionComponent = ({ data, bundle }) => {
   const event = useSnapshotEvent();
   const percent = event ? clampPercent(event.fundsPercent) : 0;
   const reduced = useReducedMotion();
+  const donateUrl = useStore((s) => {
+    const content = s.snapshot?.content as ContentDocument | undefined;
+    return content?.settings?.donateUrl ?? null;
+  });
+  const donateLabel = d.donateLabel ?? "Donate";
 
   const stroke = 16;
   const radius = px / 2 - stroke / 2;
@@ -79,17 +87,27 @@ export const FundsRing: SectionComponent = ({ data, bundle }) => {
         </svg>
         <div className="funds-ring__value">{Math.round(percent)}%</div>
       </div>
-      {heading || d.caption ? (
+      {heading || d.caption || donateUrl ? (
         <div className="funds-ring__text">
           {heading ? (
-            <h2 className="funds-ring__heading">
+            <p className="funds-ring__heading">
               <Inline text={heading} bundle={bundle} event={event} />
-            </h2>
+            </p>
           ) : null}
           {d.caption ? (
             <p className="funds-ring__caption">
               <Inline text={d.caption} bundle={bundle} event={event} />
             </p>
+          ) : null}
+          {donateUrl ? (
+            <a
+              className="funds-ring__donate"
+              href={donateUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {donateLabel}
+            </a>
           ) : null}
         </div>
       ) : null}

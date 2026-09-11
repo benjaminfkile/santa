@@ -1,0 +1,97 @@
+/* docs/site.md sections 7.4 and 15. Sponsor carousel plays one sponsor at
+   a time in snapshot order, wraps around; the plate carries the logo tile
+   and the "N s on the tracker" line derived from lingerMs, plus a link to
+   the sponsors page. */
+
+:global(.sponsor-carousel) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+:global(.sponsor-carousel__heading) {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+:global(.sponsor-carousel__bar) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+:global(.sponsor-carousel__viewport) {
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+}
+:global(.sponsor-carousel__slide) {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  transition: opacity 400ms ease-in-out;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+:global(.sponsor-carousel--reduced-motion) :global(.sponsor-carousel__slide) { transition: none; }
+:global(.sponsor-carousel__logo) {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  object-fit: contain;
+  flex: none;
+}
+:global(.sponsor-carousel__name) {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  color: var(--text-bright);
+  font-size: 1rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:global(.sponsor-carousel__linger) {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+:global(.sponsor-carousel__dots) {
+  display: flex;
+  gap: 5px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+:global(.sponsor-carousel__dot) {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--line);
+}
+:global(.sponsor-carousel__dot--on) { background: var(--accent); }
+:global(.sponsor-carousel__link) {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-decoration: none;
+  transition: var(--hover-transition);
+}
+:global(.sponsor-carousel__link:hover) { color: var(--text-bright); }

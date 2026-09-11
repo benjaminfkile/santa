@@ -1,0 +1,57 @@
+/* docs/site.md section 7.4. Links section: buttons, cards, or a list. */
+
+:global(.links) { display: flex; flex-direction: column; gap: var(--space-4); }
+:global(.links__heading) {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-h2);
+  color: var(--text-bright);
+}
+:global(.links__buttons) { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+:global(.links__button) {
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  transition: var(--hover-transition);
+}
+:global(.links__button:hover) { background: var(--accent-soft); }
+:global(.links__cards) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+:global(.links__card) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: inherit;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  transition: var(--hover-transition);
+}
+:global(.links__card:hover) { border-color: var(--accent); }
+:global(.links__card-icon) { color: var(--accent); display: inline-flex; }
+:global(.links__card-label) {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  color: var(--text-bright);
+}
+:global(.links__card-description) { margin: 0; color: var(--text-dim); font-size: 0.9375rem; }
+:global(.links__list) { padding: 0; margin: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+:global(.links__list-item) { display: flex; gap: var(--space-3); align-items: baseline; }
+:global(.links__list-description) { color: var(--text-dim); }

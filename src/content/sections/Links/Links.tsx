@@ -6,6 +6,7 @@ import { Inline } from "../../inline/Inline";
 import { ContentLink, LinkView } from "../../primitives/LinkView";
 import { Icon } from "../../primitives/Icon";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
+import "./Links.module.css";
 
 type LinksItem = { link: Link; description: string | null };
 

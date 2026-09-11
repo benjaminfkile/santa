@@ -13,6 +13,7 @@ import { Inline } from "../../inline/Inline";
 import { Icon } from "../../primitives/Icon";
 import { getMyCookies, leaveCookie } from "../../../api/cookies";
 import { ApiRequestError, SignInRequired, surfaceFor } from "../../../api/errors";
+import "./CookieControl.module.css";
 
 export type CookieControlData = {
   heading?: string | null;

@@ -3,6 +3,7 @@
 
 import type { SectionComponent } from "../../registry";
 import { registry } from "../../registry";
+import "./RichText.module.css";
 
 type Block = { kind: string } & Record<string, unknown>;
 
