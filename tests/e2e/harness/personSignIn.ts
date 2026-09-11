@@ -26,9 +26,9 @@ export async function personSignIn(page: PageLike): Promise<void> {
   await signIn.waitFor({ state: "visible", timeout: 10_000 });
   await signIn.click();
 
-  // The classic hosted UI renders its form twice, one copy hidden per
-  // breakpoint, with unlabelled inputs; drive the visible copy by field
-  // name and click the visible submit. No MFA on the E2E person.
+  // The pool domain runs Cognito managed login: one form per step with
+  // inputs named username and password and a single submit button. No MFA
+  // on the E2E person, so the submit lands back on the site.
   const username = page.locator('input[name="username"]:visible').first();
   await username.waitFor({ state: "visible", timeout: 30_000 });
   await username.fill(e2eEnv.PERSON_EMAIL);

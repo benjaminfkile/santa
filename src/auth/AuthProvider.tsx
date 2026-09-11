@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import type { User, UserManager } from "oidc-client-ts";
-import { getUserManager, hasStoredSession } from "./userManager";
+import { getUserManager, hasStoredSession, onUserManagerReady } from "./userManager";
 import { signIn as signInAction, signOut as signOutAction } from "./signOut";
 
 export type AuthState =
@@ -48,54 +48,51 @@ export function AuthProvider({ children, initialState }: AuthProviderProps) {
     initialState ?? (hasStoredSession() ? { status: "unknown" } : { status: "signedOut" }),
   );
 
+  // Attach to the user manager as soon as it exists, whoever loads it:
+  // this provider (when a session is stored at boot) or AuthCallback
+  // (when a sign-in is completing). The subscriptions are what move the
+  // state to signedIn without a reload.
   useEffect(() => {
     let alive = true;
-    let manager: UserManager | null = null;
     const unsubs: Array<() => void> = [];
-    if (state.status === "unknown") {
-      void getUserManager().then(async (um) => {
-        manager = um;
-        if (!alive) return;
-        const user = await um.getUser();
-        if (!alive) return;
-        setState(fromUser(user));
-
-        const onLoaded = (user: User) => setState(fromUser(user));
-        const onUnloaded = () => setState({ status: "signedOut" });
-        const onSignedOut = () => setState({ status: "signedOut" });
-        const onSilentError = () => {
-          const cur = manager;
-          if (cur === null) return;
-          void cur.getUser().then((u) => {
-            if (u === null || u === undefined) {
-              setState({ status: "signedOut" });
-              return;
-            }
-            const base = fromUser(u);
-            if (base.status === "signedIn") {
-              setState({ ...base, expired: true });
-            } else {
-              setState(base);
-            }
-          });
-        };
-        um.events.addUserLoaded(onLoaded);
-        um.events.addUserUnloaded(onUnloaded);
-        um.events.addUserSignedOut(onSignedOut);
-        um.events.addSilentRenewError(onSilentError);
-        unsubs.push(
-          () => um.events.removeUserLoaded(onLoaded),
-          () => um.events.removeUserUnloaded(onUnloaded),
-          () => um.events.removeUserSignedOut(onSignedOut),
-          () => um.events.removeSilentRenewError(onSilentError),
-        );
+    const attach = (um: UserManager) => {
+      if (!alive) return;
+      void um.getUser().then((user) => {
+        if (alive) setState(fromUser(user));
       });
-    }
+      const onLoaded = (user: User) => setState(fromUser(user));
+      const onUnloaded = () => setState({ status: "signedOut" });
+      const onSignedOut = () => setState({ status: "signedOut" });
+      const onSilentError = () => {
+        void um.getUser().then((u) => {
+          if (!alive) return;
+          if (u === null || u === undefined) {
+            setState({ status: "signedOut" });
+            return;
+          }
+          const base = fromUser(u);
+          setState(base.status === "signedIn" ? { ...base, expired: true } : base);
+        });
+      };
+      um.events.addUserLoaded(onLoaded);
+      um.events.addUserUnloaded(onUnloaded);
+      um.events.addUserSignedOut(onSignedOut);
+      um.events.addSilentRenewError(onSilentError);
+      unsubs.push(
+        () => um.events.removeUserLoaded(onLoaded),
+        () => um.events.removeUserUnloaded(onUnloaded),
+        () => um.events.removeUserSignedOut(onSignedOut),
+        () => um.events.removeSilentRenewError(onSilentError),
+      );
+    };
+    const stop = onUserManagerReady(attach);
+    if (hasStoredSession()) void getUserManager();
     return () => {
       alive = false;
+      stop();
       for (const fn of unsubs) fn();
     };
-  }, [state.status]);
+  }, []);
 
   const signIn = useCallback(async (returnTo: string) => {
     await signInAction(returnTo);

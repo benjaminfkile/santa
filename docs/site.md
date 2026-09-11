@@ -888,7 +888,7 @@ type AuthState =
   | { status: "signedIn"; email: string; expired: boolean };
 ```
 
-`AuthProvider` subscribes to `events.addUserLoaded`, `addUserUnloaded`, `addUserSignedOut`, `addSilentRenewError`. `useAuth()` returns the state plus `signIn(returnTo)` and `signOut()`. Every public page works in `signedOut`; nothing blocks on `unknown` except the alerts page content and the cookie control, which render their signed-out variants until `signedIn` arrives.
+`AuthProvider` subscribes to `events.addUserLoaded`, `addUserUnloaded`, `addUserSignedOut`, `addSilentRenewError`. It attaches those subscriptions through `onUserManagerReady` in `userManager.ts`, which fires when the manager is constructed by whichever caller loads it first: the provider itself when a session is stored at boot, or `AuthCallback` when a sign-in is completing. The provider never imports the chunk for a signed-out visitor, and a sign-in completed on the callback page reaches it without a reload. `useAuth()` returns the state plus `signIn(returnTo)` and `signOut()`. Every public page works in `signedOut`; nothing blocks on `unknown` except the alerts page content and the cookie control, which render their signed-out variants until `signedIn` arrives.
 
 ### 11.4 Bearer for API calls
 
@@ -1159,13 +1159,13 @@ export default defineConfig({
 });
 ```
 
-Fonts for the three pairings are self-hosted in the bundle (no third-party font host), so the site loads on networks that cannot reach Google. `index.html` uses Vite's `%VITE_*%` replacement for the CSP meta and preconnect, so no environment value is written into the repository:
+Fonts for the three pairings are self-hosted in the bundle (no third-party font host), so the site loads on networks that cannot reach Google. `index.html` uses Vite's `%VITE_*%` replacement for the CSP meta and preconnect, so no environment value is written into the repository. The authority source ends in `/` because `VITE_COGNITO_AUTHORITY` carries the pool path and a CSP path source without a trailing slash matches that path alone; the slash lets the discovery document under it through:
 
 ```html
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
   script-src 'self' https://maps.googleapis.com https://www.googletagmanager.com;
-  connect-src 'self' %VITE_CDN_BASE_URL% %VITE_API_BASE_URL% %VITE_HUB_URL% %VITE_COGNITO_AUTHORITY% %VITE_COGNITO_DOMAIN%
+  connect-src 'self' %VITE_CDN_BASE_URL% %VITE_API_BASE_URL% %VITE_HUB_URL% %VITE_COGNITO_AUTHORITY%/ %VITE_COGNITO_DOMAIN%
               https://maps.googleapis.com https://www.googletagmanager.com https://*.google-analytics.com;
   img-src 'self' data: blob: %VITE_CDN_BASE_URL% https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.gstatic.com https://*.ggpht.com;
   style-src 'self' 'unsafe-inline';

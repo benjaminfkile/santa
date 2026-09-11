@@ -10,6 +10,23 @@ import type { UserManager, User } from "oidc-client-ts";
 
 let manager: UserManager | null = null;
 let modulePromise: Promise<typeof import("oidc-client-ts")> | null = null;
+const readyListeners = new Set<(um: UserManager) => void>();
+
+// Runs the callback once the manager exists: immediately when it already does,
+// otherwise when the first getUserManager() call constructs it. Lets
+// AuthProvider attach its event subscriptions without loading the chunk
+// itself, so a sign-in completed by AuthCallback reaches it. Returns the
+// unsubscribe function.
+export function onUserManagerReady(cb: (um: UserManager) => void): () => void {
+  if (manager !== null) {
+    cb(manager);
+    return () => {};
+  }
+  readyListeners.add(cb);
+  return () => {
+    readyListeners.delete(cb);
+  };
+}
 
 async function loadModule(): Promise<typeof import("oidc-client-ts")> {
   modulePromise ??= import("oidc-client-ts");
@@ -30,7 +47,10 @@ export async function getUserManager(): Promise<UserManager> {
     loadUserInfo: false,
     monitorSession: false,
   });
-  return manager;
+  const created = manager;
+  for (const cb of readyListeners) cb(created);
+  readyListeners.clear();
+  return created;
 }
 
 export const STORAGE_KEY_PREFIX = "oidc.user:";
@@ -50,6 +70,7 @@ export function hasStoredSession(): boolean {
 export function _resetUserManagerForTests(): void {
   manager = null;
   modulePromise = null;
+  readyListeners.clear();
 }
 
 export type { User };
