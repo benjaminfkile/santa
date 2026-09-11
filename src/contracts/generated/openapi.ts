@@ -1709,6 +1709,64 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/sponsors/order/{eventYear}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ItemsResponseOfSponsorOrderRow"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SponsorOrderRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ItemsResponseOfSponsorOrderRow"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/cookie-types": {
         parameters: {
             query?: never;
@@ -3332,6 +3390,99 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/api-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ItemsResponseOfApiKeyDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateApiKeyRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiKeyMintedDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/api-keys/{id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiKeyDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/realtime/authorize": {
         parameters: {
             query?: never;
@@ -3575,6 +3726,41 @@ export interface components {
             lastWriteNode?: null | string;
             node?: components["schemas"]["AdminLiveNode"];
         };
+        ApiKeyDto: {
+            /** Format: int64 */
+            id?: number | string;
+            name?: string;
+            keyPrefix?: string;
+            allCapabilities?: boolean;
+            capabilities?: string[];
+            /** Format: date-time */
+            expiresAt?: null | string;
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            lastUsedAt?: null | string;
+            /** Format: date-time */
+            revokedAt?: null | string;
+        };
+        ApiKeyMintedDto: {
+            /** Format: int64 */
+            id?: number | string;
+            name?: string;
+            keyPrefix?: string;
+            allCapabilities?: boolean;
+            capabilities?: string[];
+            /** Format: date-time */
+            expiresAt?: null | string;
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            lastUsedAt?: null | string;
+            /** Format: date-time */
+            revokedAt?: null | string;
+            key?: string;
+        };
         BeaconDto: {
             /** Format: int64 */
             id?: number | string;
@@ -3744,6 +3930,13 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        CreateApiKeyRequest: {
+            name?: null | string;
+            allCapabilities?: null | boolean;
+            capabilities?: null | string[];
+            /** Format: date-time */
+            expiresAt?: null | string;
+        };
         CreateBeaconRequest: {
             name?: string;
             notes?: string;
@@ -3868,6 +4061,8 @@ export interface components {
             /** Format: int64 */
             routeId?: null | number | string;
             routeUrl?: null | string;
+            routeImageMediaId?: null | string;
+            routeImage?: null | components["schemas"]["MediaAssetDto"];
             createdBy?: string;
             /** Format: date-time */
             createdAt?: string;
@@ -3990,6 +4185,9 @@ export interface components {
         ItemOrderRequest: {
             ids?: (number | string)[];
         };
+        ItemsResponseOfApiKeyDto: {
+            items?: components["schemas"]["ApiKeyDto"][];
+        };
         ItemsResponseOfBeaconLogDto: {
             items?: components["schemas"]["BeaconLogDto"][];
         };
@@ -4022,6 +4220,9 @@ export interface components {
         };
         ItemsResponseOfSponsorDto: {
             items?: components["schemas"]["SponsorDto"][];
+        };
+        ItemsResponseOfSponsorOrderRow: {
+            items?: components["schemas"]["SponsorOrderRow"][];
         };
         ItemsResponseOfStatusHistoryDto: {
             items?: components["schemas"]["StatusHistoryDto"][];
@@ -4363,6 +4564,7 @@ export interface components {
             fundsPercent?: null | number | string;
             /** Format: int64 */
             routeId?: null | number | string;
+            routeImageMediaId?: null | string;
         };
         PatchPageRequest: {
             slug?: null | string;
@@ -4565,6 +4767,23 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        SponsorOrderRequest: {
+            pinnedSponsorIds?: (number | string)[];
+        };
+        SponsorOrderRow: {
+            /** Format: int64 */
+            sponsorId?: number | string;
+            name?: string;
+            /** Format: int32 */
+            pinnedPosition?: null | number | string;
+            /** Format: double */
+            amountDonated?: unknown;
+            /** Format: int32 */
+            lingerMs?: number | string;
+            /** Format: int32 */
+            lingerMsOverride?: null | number | string;
+            inSnapshot?: boolean;
+        };
         SponsorYearDto: {
             /** Format: int32 */
             eventYear?: number | string;
@@ -4573,6 +4792,12 @@ export interface components {
             active?: boolean;
             canAdvertise?: boolean;
             anonymous?: boolean;
+            /** Format: int32 */
+            pinnedPosition?: null | number | string;
+            /** Format: int32 */
+            lingerMsOverride?: null | number | string;
+            /** Format: int32 */
+            lingerMs?: number | string;
             /** Format: date-time */
             registeredAt?: string;
         };
@@ -4654,6 +4879,10 @@ export interface components {
             active?: boolean;
             canAdvertise?: boolean;
             anonymous?: boolean;
+            /** Format: int32 */
+            pinnedPosition?: null | number | string;
+            /** Format: int32 */
+            lingerMsOverride?: null | number | string;
         };
     };
     responses: never;

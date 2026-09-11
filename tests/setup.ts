@@ -1,6 +1,21 @@
 import "@testing-library/jest-dom/vitest";
 import { vi } from "vitest";
 
+// docs/site.md section 7.7. Provide a matchMedia stub so the theme's
+// media-query listener and reduced-motion checks work under jsdom.
+if (typeof window !== "undefined" && !window.matchMedia) {
+  window.matchMedia = ((query: string): MediaQueryList => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia;
+}
+
 // docs/site.md section 22.1. Provide the VITE_ values so env.ts loads
 // cleanly for every test file. Individual tests may still vi.mock the
 // module directly when they need a specific value.

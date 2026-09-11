@@ -29,7 +29,7 @@ const emptyBundle: ContentBundle = {
       homeNavLabel: "h",
       logo: null,
       favicon: null,
-      theme: { accent: "red", surface: "night", fontPairing: "festive", snowDefault: false },
+      theme: { snowDefault: false, lightsDefault: false },
       navExtraLinks: [],
       footerLinks: [],
       footerText: null,

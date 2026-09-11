@@ -236,7 +236,9 @@ describe("IconBlock", () => {
         />,
       ),
     );
-    expect(container.querySelector("img")?.getAttribute("width")).toBe("48");
+    const inlineSvg = container.querySelector("svg[data-icon-source=\"library\"]");
+    expect(inlineSvg).not.toBeNull();
+    expect(inlineSvg?.getAttribute("width")).toBe("48");
     expect(container.querySelector(".block-icon--center")).not.toBeNull();
   });
 });

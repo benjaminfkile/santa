@@ -41,4 +41,9 @@ export const copy = {
     unavailable: "Map unavailable",
     retry: "Retry",
   },
+  theme: {
+    toLight: "Switch to light mode",
+    toDark: "Switch to dark mode",
+    followSystem: "Follow system",
+  },
 } as const;

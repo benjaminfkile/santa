@@ -127,7 +127,7 @@ async function fetchSnapshotWithBackoff(
           diag: { ...s.diag, snapshotFetchFailing: false },
         }));
         // Reconcile route.
-        void reconcileRoute(store, snap.event?.routeUrl ?? null);
+        void reconcileRoute(store, (snap.event as { routeUrl?: string | null } | null | undefined)?.routeUrl ?? null);
         return;
       } catch (err) {
         if (err instanceof SchemaVersionError) {
@@ -159,11 +159,11 @@ async function reconcileRoute(
   let attempt = 0;
   try {
     while (!stopping) {
-      const currentWantedRoute = store.getState().snapshot?.event?.routeUrl ?? null;
+      const currentWantedRoute = (store.getState().snapshot?.event as { routeUrl?: string | null } | null | undefined)?.routeUrl ?? null;
       if (currentWantedRoute !== wantedUrl) return;
       try {
         const route = await fetchRoute(wantedUrl);
-        if ((store.getState().snapshot?.event?.routeUrl ?? null) !== wantedUrl) return;
+        if (((store.getState().snapshot?.event as { routeUrl?: string | null } | null | undefined)?.routeUrl ?? null) !== wantedUrl) return;
         store.setState((s) => ({
           ...s,
           route: route as never,

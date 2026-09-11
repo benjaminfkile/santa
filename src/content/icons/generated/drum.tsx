@@ -1,0 +1,36 @@
+/**
+ * AUTO-GENERATED FILE. Do not edit by hand.
+ * Run `npm run icons:gen` to regenerate from contracts/icons/.
+ */
+import type { SVGProps } from "react";
+
+export function DrumIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      width={24}
+      height={24}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      {...props}
+    >
+      <ellipse cx="12" cy="8" rx="9" ry="2.5" />
+  <path d="M3 8 L3 16" />
+  <path d="M21 8 L21 16" />
+  <ellipse cx="12" cy="16" rx="9" ry="2.5" />
+  <path d="M5 8 L8 16" />
+  <path d="M8 8 L5 16" />
+  <path d="M11 8 L14 16" />
+  <path d="M14 8 L11 16" />
+  <path d="M17 8 L20 16" />
+  <path d="M20 8 L17 16" />
+  <path d="M6 20 L10 22" />
+  <path d="M18 20 L14 22" />
+    </svg>
+  );
+}

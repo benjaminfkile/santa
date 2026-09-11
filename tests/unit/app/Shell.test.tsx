@@ -21,7 +21,7 @@ function makeContent(): ContentDocument {
       homeNavLabel: "Track Santa",
       logo: null,
       favicon: null,
-      theme: { accent: "red", surface: "snow", fontPairing: "festive", snowDefault: true },
+      theme: { snowDefault: false, lightsDefault: false },
       navExtraLinks: [],
       footerLinks: [
         { label: "Facebook", href: "https://facebook.example", icon: null, newTab: true },
@@ -163,6 +163,27 @@ describe("Shell structure", () => {
     const skip = container.querySelector("a.skip-link");
     expect(skip).not.toBeNull();
     expect(skip?.getAttribute("href")).toBe("#main");
+  });
+
+  it("renders the theme toggle and the Follow system entry, and no legacy chips", () => {
+    seed(makeContent());
+    const { container, getByTestId } = render(
+      <MemoryRouter>
+        <AuthProvider>
+          <Shell>
+            <div />
+          </Shell>
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+    const toggle = getByTestId("theme-toggle");
+    expect(toggle.tagName).toBe("BUTTON");
+    expect(toggle.getAttribute("aria-label")).toMatch(/Switch to (light|dark) mode/);
+    const followSystem = getByTestId("follow-system");
+    expect(followSystem).not.toBeNull();
+    // Legacy accent/surface/font chips are gone.
+    expect(container.querySelector('[data-testid="theme-controls"]')).toBeNull();
+    expect(container.querySelector(".site-header__theme-chip")).toBeNull();
   });
 
   it("collapses the header and omits the footer on the live map page", () => {
