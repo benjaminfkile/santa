@@ -7,7 +7,6 @@ export const cookieControlSignedOut: string;
 export const cookiePill: string;
 export const count: string;
 export const countOn: string;
-export const progress: string;
 export const row: string;
 export const rowIcon: string;
 export const rowIconPlaceholder: string;

@@ -66,7 +66,7 @@ export const copy = {
     noteLabel: "Note (optional)",
     noteInvalid: "Please check your note.",
     submit: (n: number) => (n === 1 ? "Leave 1 cookie" : `Leave ${n} cookies`),
-    progress: (i: number, n: number) => `Leaving cookie ${i} of ${n}`,
+    onlyLeft: (n: number) => (n === 1 ? "You only have 1 cookie left. Please pick again." : `You only have ${n} cookies left. Please pick again.`),
     thanks: (n: number) => (n === 1 ? "Thanks for the cookie." : `Thanks for the ${n} cookies.`),
     limitReached: "You have left all your cookies for this year",
     typeGone: "That cookie type is no longer active. Please pick another.",

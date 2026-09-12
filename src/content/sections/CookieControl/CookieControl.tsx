@@ -13,7 +13,7 @@ import { useStore } from "../../../store/useStore";
 import { useAuth } from "../../../auth/AuthProvider";
 import { Inline } from "../../inline/Inline";
 import { Icon } from "../../primitives/Icon";
-import { getMyCookies, leaveCookie } from "../../../api/cookies";
+import { getMyCookies, leaveCookies } from "../../../api/cookies";
 import { ApiRequestError, SignInRequired, surfaceFor } from "../../../api/errors";
 import { copy } from "../../../copy/copy";
 import { CookieGlyph, MinusGlyph, PlusGlyph } from "../Map/glyphs";
@@ -140,7 +140,6 @@ type DialogState =
       counts: Record<number, number>;
       note: string;
       submitting: boolean;
-      progress: string | null;
       error: string | null;
       fieldError: string | null;
       cooldownUntil: number | null;
@@ -150,14 +149,6 @@ type DialogState =
   | { kind: "error"; message: string };
 
 type Ready = Extract<DialogState, { kind: "ready" }>;
-
-const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-
-// POST /cookies is limited to 1 a second with a burst of 3 per person
-// (contracts 4.0): the first three go at once, the rest a second apart.
-function paceMs(index: number): number {
-  return index < 3 ? 0 : 1000;
-}
 
 function CookieDialog({
   bundle,
@@ -203,7 +194,6 @@ function CookieDialog({
         counts: {},
         note: "",
         submitting: false,
-        progress: null,
         error: null,
         fieldError: null,
         cooldownUntil: null,
@@ -248,84 +238,82 @@ function CookieDialog({
     });
   };
 
-  // Handle one refused POST; answers whether the queue may go on.
-  function handleError(e: unknown, typeId: number): boolean {
+  // Handle a refused pick (docs/site.md 10). The request is all or nothing,
+  // so the picks stay as they were unless the refusal says otherwise.
+  function handleError(e: unknown): void {
     const s = surfaceFor(e);
     if (e instanceof ApiRequestError) {
+      const details = (e.body?.details ?? null) as { remaining?: unknown; cookieTypeIds?: unknown } | null;
       if (s.code === "cookie_limit_reached") {
-        setReady((p) => ({ ...p, submitting: false, progress: null, remaining: 0, counts: {}, error: copy.cookies.limitReached }));
-        return false;
+        const remaining = typeof details?.remaining === "number" ? Math.max(0, details.remaining) : 0;
+        setReady((p) => ({
+          ...p,
+          submitting: false,
+          remaining,
+          counts: {},
+          error: remaining === 0 ? copy.cookies.limitReached : copy.cookies.onlyLeft(remaining),
+        }));
+        return;
       }
       if (s.code === "no_live_event") {
         callbacksRef.current.onClose();
-        return false;
+        return;
       }
       if (s.code === "not_found") {
+        const gone = new Set(Array.isArray(details?.cookieTypeIds) ? details.cookieTypeIds.map(Number) : []);
         setReady((p) => {
-          const counts = { ...p.counts };
-          delete counts[typeId];
-          return { ...p, submitting: false, progress: null, counts, typesOverride: cookieTypes.slice(), error: copy.cookies.typeGone };
+          const counts: Record<number, number> = {};
+          for (const [id, count] of Object.entries(p.counts)) {
+            if (gone.size === 0 || gone.has(Number(id))) continue;
+            counts[Number(id)] = count;
+          }
+          return { ...p, submitting: false, counts, typesOverride: cookieTypes.slice(), error: copy.cookies.typeGone };
         });
-        return false;
+        return;
       }
       if (s.code === "validation_failed") {
-        setReady((p) => ({ ...p, submitting: false, progress: null, fieldError: s.fieldErrors.note ?? copy.cookies.noteInvalid }));
-        return false;
+        setReady((p) => ({ ...p, submitting: false, fieldError: s.fieldErrors.note ?? copy.cookies.noteInvalid }));
+        return;
       }
       if (s.code === "rate_limited") {
         const secs = s.retryAfterSeconds ?? 30;
-        setReady((p) => ({ ...p, submitting: false, progress: null, cooldownUntil: Date.now() + secs * 1000, error: copy.cookies.tooMany(secs) }));
-        return false;
+        setReady((p) => ({ ...p, submitting: false, cooldownUntil: Date.now() + secs * 1000, error: copy.cookies.tooMany(secs) }));
+        return;
       }
     }
     if (e instanceof SignInRequired || s.code === "unauthenticated") {
       callbacksRef.current.onSignInRequired();
       callbacksRef.current.onClose();
-      return false;
+      return;
     }
-    setReady((p) => ({ ...p, submitting: false, progress: null, error: s.message }));
-    return false;
+    setReady((p) => ({ ...p, submitting: false, error: s.message }));
   }
 
   const submit = useCallback(async () => {
     if (state.kind !== "ready") return;
     if (state.submitting || state.remaining <= 0) return;
     if (state.cooldownUntil !== null && state.cooldownUntil > Date.now()) return;
-    const queue: number[] = [];
-    for (const [id, count] of Object.entries(state.counts)) {
-      for (let i = 0; i < count; i += 1) queue.push(Number(id));
-    }
-    if (queue.length === 0) return;
+    const items = Object.entries(state.counts)
+      .map(([id, count]) => ({ cookieTypeId: Number(id), count }))
+      .filter((it) => it.count > 0);
+    const total = items.reduce((a, it) => a + it.count, 0);
+    if (total === 0) return;
     const note = state.note.trim() === "" ? null : state.note.trim();
-    setReady((p) => ({ ...p, submitting: true, progress: copy.cookies.progress(1, queue.length), error: null, fieldError: null, confirmation: null }));
-    let left = 0;
-    for (let i = 0; i < queue.length; i += 1) {
-      const typeId = queue[i];
-      if (paceMs(i) > 0) await sleep(paceMs(i));
-      setReady((p) => ({ ...p, progress: copy.cookies.progress(i + 1, queue.length) }));
-      try {
-        const res = await leaveCookie({ cookieTypeId: typeId, note });
-        left = num(res.remaining);
-        setReady((p) => {
-          const counts = { ...p.counts };
-          const cur = (counts[typeId] ?? 1) - 1;
-          if (cur <= 0) delete counts[typeId];
-          else counts[typeId] = cur;
-          return { ...p, remaining: left, counts };
-        });
-      } catch (e) {
-        handleError(e, typeId);
-        return;
-      }
+    setReady((p) => ({ ...p, submitting: true, error: null, fieldError: null, confirmation: null }));
+    try {
+      const res = await leaveCookies({ items, note });
+      const left = num(res.left) > 0 ? num(res.left) : total;
+      setReady((p) => ({
+        ...p,
+        submitting: false,
+        remaining: num(res.remaining),
+        note: "",
+        counts: {},
+        confirmation: copy.cookies.thanks(left),
+      }));
+    } catch (e) {
+      handleError(e);
     }
-    setReady((p) => ({
-      ...p,
-      submitting: false,
-      progress: null,
-      note: "",
-      counts: {},
-      confirmation: copy.cookies.thanks(queue.length),
-    }));
   }, [state, setReady]);
 
   const close = () => {
@@ -417,9 +405,6 @@ function CookieDialog({
         ) : null}
         {state.error !== null ? (
           <p role="alert" className={dlg.alert} data-testid="cookie-error">{state.error}</p>
-        ) : null}
-        {state.progress !== null ? (
-          <p className={styles.progress} role="status" data-testid="cookie-progress">{state.progress}</p>
         ) : null}
         {state.confirmation !== null ? (
           <p className={dlg.notice} role="status" data-testid="cookie-confirmation">{state.confirmation}</p>

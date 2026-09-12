@@ -15,7 +15,7 @@ import { ApiRequestError } from "../../../../src/api/client";
 
 vi.mock("../../../../src/api/cookies", () => ({
   getMyCookies: vi.fn(),
-  leaveCookie: vi.fn(),
+  leaveCookies: vi.fn(),
 }));
 
 import * as cookiesApi from "../../../../src/api/cookies";
@@ -99,7 +99,7 @@ async function openWith(limit: number, used: number, remaining: number) {
 beforeEach(() => {
   act(() => store.setState({ ...initialStore }));
   vi.mocked(cookiesApi.getMyCookies).mockReset();
-  vi.mocked(cookiesApi.leaveCookie).mockReset();
+  vi.mocked(cookiesApi.leaveCookies).mockReset();
 });
 
 afterEach(() => {
@@ -148,16 +148,22 @@ describe("CookieControl", () => {
     expect(getByTestId("cookie-submit").textContent).toBe("Leave 2 cookies");
   });
 
-  it("posts one /cookies call per cookie picked and updates remaining from the last response", async () => {
+  it("posts the whole pick in one /cookies call and updates remaining from the response", async () => {
     setLiveStatus(3);
     setCookieTypes([
       { id: 10, name: "Chip" },
       { id: 11, name: "Ginger" },
     ]);
-    vi.mocked(cookiesApi.leaveCookie)
-      .mockResolvedValueOnce({ id: 1, eventId: 1, cookieTypeId: 10, note: null, leftAt: "", remaining: 4 } as never)
-      .mockResolvedValueOnce({ id: 2, eventId: 1, cookieTypeId: 10, note: null, leftAt: "", remaining: 3 } as never)
-      .mockResolvedValueOnce({ id: 3, eventId: 1, cookieTypeId: 11, note: null, leftAt: "", remaining: 2 } as never);
+    vi.mocked(cookiesApi.leaveCookies).mockResolvedValueOnce({
+      eventId: 1,
+      left: 3,
+      remaining: 2,
+      cookies: [
+        { id: 1, cookieTypeId: 10, leftAt: "" },
+        { id: 2, cookieTypeId: 10, leftAt: "" },
+        { id: 3, cookieTypeId: 11, leftAt: "" },
+      ],
+    } as never);
     const { getAllByTestId, getByTestId } = await openWith(5, 0, 5);
     const plus = getAllByTestId("cookie-type");
     await userEvent.click(plus[0]);
@@ -166,15 +172,20 @@ describe("CookieControl", () => {
     await userEvent.click(getByTestId("cookie-submit"));
     await waitFor(() => expect(getByTestId("cookie-remaining").textContent).toBe("2 of 5 left"));
     expect(getByTestId("cookie-confirmation").textContent).toContain("3 cookies");
-    expect(cookiesApi.leaveCookie).toHaveBeenCalledTimes(3);
-    expect(cookiesApi.leaveCookie).toHaveBeenNthCalledWith(1, { cookieTypeId: 10, note: null });
-    expect(cookiesApi.leaveCookie).toHaveBeenNthCalledWith(3, { cookieTypeId: 11, note: null });
+    expect(cookiesApi.leaveCookies).toHaveBeenCalledTimes(1);
+    expect(cookiesApi.leaveCookies).toHaveBeenCalledWith({
+      items: [
+        { cookieTypeId: 10, count: 2 },
+        { cookieTypeId: 11, count: 1 },
+      ],
+      note: null,
+    });
   });
 
   it("handles 409 cookie_limit_reached: remaining=0, disables submit, shows fixed copy (not server message)", async () => {
     setLiveStatus(3);
     setCookieTypes([{ id: 10, name: "Chocolate chip" }]);
-    vi.mocked(cookiesApi.leaveCookie).mockRejectedValueOnce(
+    vi.mocked(cookiesApi.leaveCookies).mockRejectedValueOnce(
       new ApiRequestError(409, { code: "cookie_limit_reached", message: "server text should be ignored", details: null, requestId: "r" }, null),
     );
     const { getByTestId, queryByText } = await openWith(3, 3, 1);
@@ -186,10 +197,27 @@ describe("CookieControl", () => {
     expect(queryByText(/server text should be ignored/)).toBeNull();
   });
 
+  it("handles 409 cookie_limit_reached with details.remaining by keeping the dialog open for a smaller pick", async () => {
+    setLiveStatus(3);
+    setCookieTypes([{ id: 10, name: "Chocolate chip" }]);
+    vi.mocked(cookiesApi.leaveCookies).mockRejectedValueOnce(
+      new ApiRequestError(409, { code: "cookie_limit_reached", message: "x", details: { remaining: 2 }, requestId: "r" }, null),
+    );
+    const { getByTestId } = await openWith(10, 5, 5);
+    await userEvent.click(getByTestId("cookie-type"));
+    await userEvent.click(getByTestId("cookie-type"));
+    await userEvent.click(getByTestId("cookie-type"));
+    await userEvent.click(getByTestId("cookie-submit"));
+    await waitFor(() => expect(getByTestId("cookie-remaining").textContent).toBe("2 of 10 left"));
+    expect(getByTestId("cookie-error").textContent).toMatch(/only have 2 cookies left/);
+    expect(getByTestId("cookie-count").textContent).toBe("0");
+    expect(getByTestId("cookie-type")).not.toBeDisabled();
+  });
+
   it("handles 409 no_live_event by closing the dialog", async () => {
     setLiveStatus(3);
     setCookieTypes([{ id: 10, name: "Chocolate chip" }]);
-    vi.mocked(cookiesApi.leaveCookie).mockRejectedValueOnce(
+    vi.mocked(cookiesApi.leaveCookies).mockRejectedValueOnce(
       new ApiRequestError(409, { code: "no_live_event", message: "x", details: null, requestId: "r" }, null),
     );
     const { getByTestId, queryByTestId } = await openWith(3, 0, 3);
@@ -201,8 +229,8 @@ describe("CookieControl", () => {
   it("handles 404 not_found by refreshing the picker and dropping that pick", async () => {
     setLiveStatus(3);
     setCookieTypes([{ id: 10, name: "Old" }]);
-    vi.mocked(cookiesApi.leaveCookie).mockRejectedValueOnce(
-      new ApiRequestError(404, { code: "not_found", message: "x", details: null, requestId: "r" }, null),
+    vi.mocked(cookiesApi.leaveCookies).mockRejectedValueOnce(
+      new ApiRequestError(404, { code: "not_found", message: "x", details: { cookieTypeIds: [10] }, requestId: "r" }, null),
     );
     const { getByTestId } = await openWith(3, 0, 3);
     await userEvent.click(getByTestId("cookie-type"));
@@ -215,7 +243,7 @@ describe("CookieControl", () => {
   it("handles 429 rate_limited by showing a wait message and disabling submit", async () => {
     setLiveStatus(3);
     setCookieTypes([{ id: 10, name: "Chip" }]);
-    vi.mocked(cookiesApi.leaveCookie).mockRejectedValueOnce(
+    vi.mocked(cookiesApi.leaveCookies).mockRejectedValueOnce(
       new ApiRequestError(429, { code: "rate_limited", message: "x", details: { retryAfterSeconds: 5 }, requestId: "r" }, 5),
     );
     const { getByTestId } = await openWith(3, 0, 3);
@@ -228,7 +256,7 @@ describe("CookieControl", () => {
   it("handles 400 validation_failed by showing the note field error", async () => {
     setLiveStatus(3);
     setCookieTypes([{ id: 10, name: "Chip" }]);
-    vi.mocked(cookiesApi.leaveCookie).mockRejectedValueOnce(
+    vi.mocked(cookiesApi.leaveCookies).mockRejectedValueOnce(
       new ApiRequestError(400, {
         code: "validation_failed",
         message: "x",
@@ -256,7 +284,7 @@ describe("CookieControl", () => {
   it("network/5xx shows generic copy and never renders body.message", async () => {
     setLiveStatus(3);
     setCookieTypes([{ id: 10, name: "Chip" }]);
-    vi.mocked(cookiesApi.leaveCookie).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    vi.mocked(cookiesApi.leaveCookies).mockRejectedValueOnce(new TypeError("Failed to fetch"));
     const { getByTestId, queryByText } = await openWith(3, 0, 3);
     await userEvent.click(getByTestId("cookie-type"));
     await userEvent.click(getByTestId("cookie-submit"));

@@ -840,16 +840,16 @@ Rendered by the `cookie_control` section and by the live screen's overlay. Outsi
 Flow:
 
 1. On open: `GET /me/cookies` once. Render `remaining` of `limit` in the heading row, one row per `snapshot.cookieTypes` entry (icon, name, and a stepper: fewer, count, more), and an optional note field (max 140 characters, counter shown). The visitor picks any mix of types; the more buttons disable once the picks reach `remaining`. Notes are never displayed anywhere on the site.
-2. Submit ("Leave N cookies", disabled while nothing is picked, while a run is in flight, and while `remaining === 0`): one `POST /cookies { cookieTypeId, note }` per cookie picked, in type order, the first three at once and the rest a second apart (the endpoint allows one a second with a burst of three); a progress line counts them off. `note` is sent as `null` when empty, and the same note goes on every cookie of the run.
-3. Each `201` sets `remaining` from the response and removes that cookie from the picks; after the last one a confirmation names the count and the note clears. The leaderboard changes when the next live object carries the new tally; the control does not touch the store.
+2. Submit ("Leave N cookies", disabled while nothing is picked, while a request is in flight, and while `remaining === 0`): one `POST /cookies { items: [ { cookieTypeId, count } ], note }` carrying the whole pick, one entry per type with a count above zero, in type order. `note` is sent as `null` when empty, and the same note goes on every cookie of the pick. One request per submit whatever the count; the site never posts cookies one at a time.
+3. `201`: `remaining` is set from the response, the picks and the note clear, and a confirmation names `left`. The leaderboard changes when the next live object carries the new tally; the control does not touch the store.
 
 | Response | Handling |
 |---|---|
-| `409 cookie_limit_reached` | the run stops; `remaining = 0`, picks cleared, submit disabled, copy "You have left all your cookies for this year" |
+| `409 cookie_limit_reached` | Nothing was stored. `remaining` is set from `details.remaining` (0 when absent) and the picks clear; at 0 submit is disabled with the copy "You have left all your cookies for this year", otherwise the copy asks for a smaller pick and the visitor picks again |
 | `409 no_live_event` | Close the sheet, `pollNow()`; the screen switch follows the live object |
-| `404 not_found` | The run stops; that type's picks are dropped, the picker refreshes from the current snapshot, and the copy asks to pick again |
+| `404 not_found` | Nothing was stored. The picks for the types in `details.cookieTypeIds` are dropped (every pick when the list is absent), the picker refreshes from the current snapshot, and the copy asks to pick again |
 | `401 unauthenticated` | Attempt a silent renew; on failure show the sign-in link |
-| `429 rate_limited` | The run stops with the remaining picks kept; submit is disabled for `details.retryAfterSeconds` seconds with a countdown, then the visitor submits again |
+| `429 rate_limited` | The picks are kept; submit is disabled for `details.retryAfterSeconds` seconds with a countdown, then the visitor submits again |
 | `400 validation_failed` | Show the note field error from `details.fields.note` |
 | Network or `5xx` | Generic retry copy; `message` from the error body is never shown |
 
