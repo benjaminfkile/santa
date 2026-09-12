@@ -275,15 +275,15 @@ function ThemeToggle() {
   );
 }
 
-function SnowSwitch({ bundle }: { bundle: ContentBundle | null }) {
+function SnowSwitch({ bundle, compact = false }: { bundle: ContentBundle | null; compact?: boolean }) {
   const defaultOn = bundle?.content?.settings.theme.snowDefault ?? false;
   const enabled = useSnowEnabled(defaultOn);
   return (
     <button
       type="button"
-      className={styles.systemButton}
+      className={compact ? styles.displayChip : styles.systemButton}
       aria-pressed={enabled}
-      data-testid="menu-snow-toggle"
+      data-testid={compact ? "footer-snow-toggle" : "menu-snow-toggle"}
       onClick={() => setSnowOverride(!enabled)}
     >
       Snow
@@ -291,15 +291,15 @@ function SnowSwitch({ bundle }: { bundle: ContentBundle | null }) {
   );
 }
 
-function LightsSwitch({ bundle }: { bundle: ContentBundle | null }) {
+function LightsSwitch({ bundle, compact = false }: { bundle: ContentBundle | null; compact?: boolean }) {
   const defaultOn = bundle?.content?.settings.theme.lightsDefault ?? false;
   const enabled = useLightsEnabled(defaultOn);
   return (
     <button
       type="button"
-      className={styles.systemButton}
+      className={compact ? styles.displayChip : styles.systemButton}
       aria-pressed={enabled}
-      data-testid="menu-lights-toggle"
+      data-testid={compact ? "footer-lights-toggle" : "menu-lights-toggle"}
       onClick={() => setLightsOverride(!enabled)}
     >
       Lights
@@ -307,13 +307,19 @@ function LightsSwitch({ bundle }: { bundle: ContentBundle | null }) {
   );
 }
 
-function FollowSystemButton() {
+function FollowSystemButton({ compact = false }: { compact?: boolean }) {
   const { choice, followSystem } = useThemeChoice();
+  const active = choice === "system";
   return (
     <button
       type="button"
-      className={`${styles.systemButton}${choice === "system" ? ` ${styles.systemButtonActive}` : ""}`}
-      data-testid="follow-system"
+      className={
+        compact
+          ? styles.displayChip
+          : `${styles.systemButton}${active ? ` ${styles.systemButtonActive}` : ""}`
+      }
+      aria-pressed={compact ? active : undefined}
+      data-testid={compact ? "footer-follow-system" : "follow-system"}
       onClick={followSystem}
     >
       {copy.theme.followSystem}
@@ -428,6 +434,12 @@ function Footer({ bundle }: { bundle: ContentBundle | null }) {
       {settings.footerText !== null ? (
         <p className={styles.footerText}>{settings.footerText}</p>
       ) : null}
+      <div className={styles.footerDisplay} data-testid="footer-display">
+        <span className={styles.footerDisplayLabel}>Display</span>
+        <FollowSystemButton compact />
+        <SnowSwitch bundle={bundle} compact />
+        <LightsSwitch bundle={bundle} compact />
+      </div>
     </footer>
   );
 }
