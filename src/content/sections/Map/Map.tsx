@@ -275,7 +275,14 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     .join(" ");
 
   return (
-    <div className={rootClass} style={chromeStyle} data-testid="map" data-theme-key={theme.key} data-takeover={takeover ? "live" : undefined}>
+    <div
+      className={rootClass}
+      style={chromeStyle}
+      data-testid="map"
+      data-theme-key={theme.key}
+      data-takeover={takeover ? "live" : undefined}
+      data-flight-history={flightHistoryOn && flightHistoryAvailable ? "on" : "off"}
+    >
       <MarkerSeqHost />
       <MapView
         options={mapOptions}

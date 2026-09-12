@@ -137,19 +137,18 @@ test("status walk", async ({ page }) => {
     // eslint-disable-next-line no-console
     console.log(`beacon-to-marker latency ${latency} ms`);
     await expect(page.locator('[data-testid="marker-seq"]')).toHaveAttribute("data-seq", /\d+/);
-    // The flight history overlay draws its polyline path onto the map's
-    // SVG plane; the Santa marker updates in place via the imperative
-    // controller. Count is captured at two points 2 s apart: the polyline
-    // path count stays constant (marker is the only thing that moves)
+    // The flight history overlay draws onto the Maps canvas (no DOM of its
+    // own), so the map root reports it through `data-flight-history`; the
+    // Santa marker updates in place via the imperative controller. Across
+    // 2 s the overlay stays on (the marker is the only thing that moves)
     // while the marker's `data-seq` increases.
+    const mapRoot = page.locator('[data-testid="map"]');
+    await expect(mapRoot).toHaveAttribute("data-flight-history", "on");
     const seqFirst = await page.locator('[data-testid="marker-seq"]').getAttribute("data-seq");
-    const paths = await page.locator('[data-testid="map"] svg path[stroke]').count();
-    expect(paths).toBeGreaterThan(0);
     await page.waitForTimeout(2000);
     const seqLater = await page.locator('[data-testid="marker-seq"]').getAttribute("data-seq");
-    const pathsLater = await page.locator('[data-testid="map"] svg path[stroke]').count();
     expect(seqLater).not.toBe(seqFirst);
-    expect(pathsLater).toBe(paths);
+    await expect(mapRoot).toHaveAttribute("data-flight-history", "on");
     // The data row lives in the tracker menu (site.md 7.6), which opens on demand.
     await page.getByRole("button", { name: /tracker menu/i }).click();
     await expect(page.locator('[data-testid="data-row-speed"]')).toContainText(/\d/);
