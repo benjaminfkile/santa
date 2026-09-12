@@ -105,7 +105,7 @@ santa/
       MapView.tsx                 React host for the map element
       mapController.ts            imperative controller: follow, recenter, zoom, mapType, theme
       santaMarker.ts
-      routeOverlay.ts             polyline, arrows, time labels
+      flightHistoryOverlay.ts     polyline, arrows, time labels (the previous flight from the snapshot)
       userLocation.ts             watchPosition, user marker, dotted line, distance
       themes/                     index.ts plus one file per theme
       wakeLock.ts
@@ -1257,7 +1257,6 @@ Fixtures come from the vendored `contracts/fixtures/*.json`; schema validation o
 | `primitives/Media` | `srcset` from a full variant set, a partial set, and none; `sizes` per frame width; svg and gif use `src` only; missing id |
 | `SectionFrame` | each width, background kind, spacing, decoration icons, anchor id |
 | `nav` | home entry, hidden pages excluded, role pages excluded, extra links appended, order |
-| `applyTheme` | attributes per settings combination; favicon swap |
 | `Leaderboard.rankCookieTypes` | zero fill; sort by count, then `sort`, then `id`; empty types renders nothing |
 | `Countdown`, `EventTimes` | countdown format and hide at zero, nothing outside status 2; each field shown only when present; `airborneFor` ticks; `America/Denver` formatting |
 | `time`, `units` | `formatElapsed`, `formatCountdown`, `mpsToMph`, feet under a mile and miles over, heading to cardinal |

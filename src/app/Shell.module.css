@@ -8,15 +8,18 @@
   gap: var(--space-3);
   text-decoration: none;
   color: var(--text-bright);
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.25rem;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
 }
 
 .brandMark {
   color: var(--accent);
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 18px;
+  flex: none;
 }
 
 .brandStar {

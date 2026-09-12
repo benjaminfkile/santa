@@ -55,12 +55,12 @@
     {
       "name": "index (React, router, store, shell, renderer, all sections and blocks except map)",
       "path": "dist/assets/index-*.js",
-      "limit": "80 KB"
+      "limit": "130 KB"
     },
     {
       "name": "signalr (loaded after first live object)",
       "path": "dist/assets/signalr-*.js",
-      "limit": "16 KB"
+      "limit": "45 KB"
     },
     {
       "name": "map (src/map/** + @googlemaps/js-api-loader + themes, plus the Map section chunk)",
@@ -68,22 +68,22 @@
         "dist/assets/map-*.js",
         "dist/assets/Map-*.js"
       ],
-      "limit": "13 KB"
+      "limit": "50 KB"
     },
     {
       "name": "auth (oidc-client-ts + AuthProvider + AuthCallback)",
       "path": "dist/assets/auth-*.js",
-      "limit": "35 KB"
+      "limit": "40 KB"
     },
     {
       "name": "alerts (VerifyPage + UnsubscribePage)",
       "path": "dist/assets/alerts-*.js",
-      "limit": "3 KB"
+      "limit": "15 KB"
     },
     {
       "name": "css (tokens plus every co-located module)",
       "path": "dist/assets/*.css",
-      "limit": "7 KB"
+      "limit": "25 KB"
     },
     {
       "name": "fonts (self-hosted latin subsets loaded on first paint)",

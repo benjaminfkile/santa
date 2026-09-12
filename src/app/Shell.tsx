@@ -131,6 +131,22 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
           <span>{settings.siteName}</span>
         </Link>
       ) : null}
+      {!collapsed && entries.length > 0 ? (
+        <nav aria-label="Pages" className="site-header__inline-nav">
+          <ul>
+            {entries
+              .filter((entry) => entry.kind === "home" || entry.kind === "page" || entry.kind === "extra")
+              .map((entry, i) => (
+                <li key={i}>
+                  {renderEntry(entry, bundle, {
+                    onSignIn: onSignInClick,
+                    onSignOut: () => void signOut(),
+                  })}
+                </li>
+              ))}
+          </ul>
+        </nav>
+      ) : null}
       <div className="site-header__actions">
         {!collapsed && authState.status !== "signedIn" ? (
           <button
@@ -194,9 +210,9 @@ function BrandMark() {
     >
       <path
         d="M2 2 L98 2 L98 42 L60 42 L58 52 L48 50 L44 58 L34 52 L18 50 L14 42 L2 42 Z"
-        fill="none"
+        fill="var(--panel-2)"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="4"
         strokeLinejoin="round"
       />
       <path
