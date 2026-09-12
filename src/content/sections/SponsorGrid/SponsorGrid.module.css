@@ -92,6 +92,7 @@
 }
 :global(.sponsor-grid__links a:hover) { color: var(--text-bright); }
 :global(.sponsor-grid__empty-text) { margin: 0; color: var(--text-dim); }
+:global(.sponsor-grid--empty) { color: var(--text-dim); }
 
 @media (max-width: 760px) {
   :global(.sponsor-grid__top),

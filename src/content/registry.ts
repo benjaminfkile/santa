@@ -23,7 +23,6 @@ export type BlockComponentProps = {
 export type BlockComponent = ComponentType<BlockComponentProps>;
 
 import { Unknown } from "./sections/Unknown";
-import { placeholderSection } from "./sections/placeholder";
 import { CookieControl } from "./sections/CookieControl/CookieControl";
 import { AlertsSignup } from "./sections/AlertsSignup/AlertsSignup";
 import { ContactForm } from "./sections/ContactForm/ContactForm";
@@ -106,7 +105,8 @@ const SECTION_OVERRIDES: Record<string, SectionComponent> = {
 
 const sections: Record<string, SectionComponent> = {};
 for (const kind of SECTION_KINDS) {
-  sections[kind] = SECTION_OVERRIDES[kind] ?? placeholderSection(kind);
+  const impl = SECTION_OVERRIDES[kind];
+  if (impl) sections[kind] = impl;
 }
 
 const blocks: Record<string, BlockComponent> = {

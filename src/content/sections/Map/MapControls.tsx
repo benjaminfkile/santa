@@ -59,7 +59,7 @@ export function MapControls({ snowOn, showSnow, onRecenter, onZoomIn, onZoomOut,
     <div className="map-controls" data-testid="map-controls">
       <button
         type="button"
-        className="ibtn map-controls__button map-controls__button--zoom-in"
+        className="ibtn"
         aria-label={copy.map.zoomIn}
         onClick={onZoomIn}
       >
@@ -67,7 +67,7 @@ export function MapControls({ snowOn, showSnow, onRecenter, onZoomIn, onZoomOut,
       </button>
       <button
         type="button"
-        className="ibtn map-controls__button map-controls__button--zoom-out"
+        className="ibtn"
         aria-label={copy.map.zoomOut}
         onClick={onZoomOut}
       >
@@ -75,7 +75,7 @@ export function MapControls({ snowOn, showSnow, onRecenter, onZoomIn, onZoomOut,
       </button>
       <button
         type="button"
-        className="ibtn map-controls__button map-controls__button--recenter"
+        className="ibtn"
         aria-label={copy.map.centerOnSanta}
         onClick={onRecenter}
       >
@@ -84,7 +84,7 @@ export function MapControls({ snowOn, showSnow, onRecenter, onZoomIn, onZoomOut,
       {showSnow ? (
         <button
           type="button"
-          className="ibtn map-controls__button map-controls__button--snow"
+          className="ibtn"
           aria-label={copy.map.snow}
           aria-pressed={snowOn}
           onClick={onSnowToggle}

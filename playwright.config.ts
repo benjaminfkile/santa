@@ -9,6 +9,17 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   retries: 0,
   reporter: [["list"], ["html", { open: "never" }]],
+  // Screenshot baselines are committed side-by-side with the specs at
+  // tests/e2e/baselines/; the screenshots spec drives both colour schemes
+  // and two viewport widths against these files (site.md 22.2).
+  snapshotDir: "tests/e2e/baselines",
+  snapshotPathTemplate: "{snapshotDir}/{testFilePath}/{arg}{ext}",
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.02,
+      animations: "disabled",
+    },
+  },
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:5173",
     trace: "retain-on-failure",

@@ -1,6 +1,15 @@
 /* docs/site.md section 7.4. Latest message: card and ticker. */
 
 :global(.latest-message) { display: flex; flex-direction: column; gap: var(--space-2); }
+:global(.latest-message--ticker) { flex-direction: row; align-items: center; gap: var(--space-3); }
+:global(.latest-message__heading) {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 0;
+}
 :global(.latest-message--card) {
   padding: var(--space-4) var(--space-5);
   border: 1px solid var(--line);

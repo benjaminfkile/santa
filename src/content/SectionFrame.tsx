@@ -55,7 +55,7 @@ export function SectionFrame({ presentation, bundle, kind, children }: SectionFr
             className="section-frame__background-media"
           />
           <div
-            className="section-frame__background-overlay"
+            aria-hidden
             style={{
               position: "absolute",
               inset: 0,

@@ -690,9 +690,13 @@ main[data-page-role="live"] .map-section {
   background: var(--ok);
   display: inline-block;
 }
+.live-indicator__label { color: var(--text-bright); }
+.live-indicator__ago { color: var(--text-dim); }
+.live-indicator--live .live-indicator__dot { background: var(--ok); }
 .live-indicator--polling .live-indicator__dot { background: var(--text-dim); }
 .liftoff-timer--blank { visibility: hidden; }
 .liftoff-timer__label { color: var(--text-dim); }
+.liftoff-timer__value { color: var(--text-bright); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .info-overlays {
   display: inline-flex;
   gap: var(--space-2);
@@ -719,6 +723,39 @@ main[data-page-role="live"] .map-section {
   gap: var(--space-2);
 }
 
+/* Route disclaimer and location prompt dialogs on the live screen use
+   the browser's <dialog> plus these hooks for spacing and layout. */
+.route-disclaimer,
+.location-prompt {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  max-width: min(480px, 92vw);
+}
+.route-disclaimer::backdrop,
+.location-prompt::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+.location-prompt__actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.location-prompt__inapp {
+  color: var(--warn);
+  margin-block: var(--space-3);
+}
+.location-prompt__denied {
+  margin-block: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+}
+
 /* Route preview: `image` renders the poster picture (linked to the
    viewer page when one is published) and `viewer` renders the disclaimer
    plus the pan-and-zoom PosterViewer. Neither loads the map chunk. */
@@ -739,6 +776,9 @@ main[data-page-role="live"] .map-section {
   height: auto;
 }
 .route-preview__link .route-preview__image { border-radius: 0; }
+.route-preview--empty { color: var(--text-dim); }
+.route-preview--viewer { gap: var(--space-4); }
+.route-preview--image { gap: var(--space-3); }
 
 .route-disclaimer-recipe {
   display: flex;

@@ -51,6 +51,7 @@
 
 :global(.block-links) { display: flex; gap: var(--space-3); flex-wrap: wrap; margin: 0; padding: 0; list-style: none; }
 :global(.block-links--list) { flex-direction: column; }
+:global(.block-links--buttons) { flex-direction: row; }
 :global(.block-links__item) { list-style: none; }
 :global(.block-links__button) {
   min-height: 44px;
