@@ -38,7 +38,7 @@ test("published pages render their first section", async ({ page }) => {
   }
 });
 
-test("a page with a route_preview in viewer style renders the poster and zooms on a wheel event", async ({ page }) => {
+test("a page with a route_preview in viewer style renders the poster and zooms on a wheel event without loading the map chunk", async ({ page }) => {
   const adminSnap = await getAdminSnapshot();
   const snap = (await fetchCdnSnapshot(adminSnap.url)) as { content?: { pages?: PublishedPage[] } };
   const pages = snap.content?.pages ?? [];
@@ -47,12 +47,38 @@ test("a page with a route_preview in viewer style renders the poster and zooms o
   );
   test.skip(target === undefined, "no route_preview in viewer style in the published document");
   if (!target) return;
+  // Track every script fetched during the visit; the map chunk (`map-*.js`)
+  // must not appear when the viewer renders (site.md 8.5).
+  const scripts: string[] = [];
+  page.on("response", (res) => {
+    const url = res.url();
+    if (/\/assets\/map-[^/]+\.js$/.test(url)) scripts.push(url);
+  });
   await goto(page, `/${target.slug}`);
   await expect(page.locator('[data-testid="poster-viewer"]')).toBeVisible({ timeout: 20_000 });
   const before = await page.locator('[data-testid="poster-viewer"] img').getAttribute("style");
   await page.locator('[data-testid="poster-viewer"]').dispatchEvent("wheel", { deltaY: -100, clientX: 100, clientY: 100 });
   const after = await page.locator('[data-testid="poster-viewer"] img').getAttribute("style");
   expect(after).not.toBe(before);
+  expect(scripts).toEqual([]);
+});
+
+test("the header theme toggle flips data-theme and the choice survives a reload", async ({ page }) => {
+  await goto(page, "/");
+  await expect(page.locator('[data-testid="theme-toggle"]')).toBeVisible({ timeout: 15_000 });
+  const before = await page.evaluate(
+    "document.documentElement.getAttribute('data-theme')",
+  );
+  await page.locator('[data-testid="theme-toggle"]').click();
+  const flipped = await page.evaluate(
+    "document.documentElement.getAttribute('data-theme')",
+  );
+  expect(flipped).not.toBe(before);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  const afterReload = await page.evaluate(
+    "document.documentElement.getAttribute('data-theme')",
+  );
+  expect(afterReload).toBe(flipped);
 });
 
 test("/preview renders the ended page with the preview banner while the walk is planned", async ({ page }) => {

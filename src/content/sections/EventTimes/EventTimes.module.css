@@ -40,3 +40,4 @@
   font-size: 1rem;
 }
 :global(.event-times--blank) { min-height: 100px; }
+:global(.event-times--empty) { color: var(--text-dim); }

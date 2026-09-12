@@ -13,6 +13,7 @@
   color: var(--text-bright);
   margin: 0;
 }
+:global(.cookie-control--pending) { min-height: 60px; }
 :global(.cookie-control--closed),
 :global(.cookie-control--signed-out) {
   padding: var(--space-4) var(--space-5);
