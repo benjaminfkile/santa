@@ -40,11 +40,14 @@ export function byTestId(page: PageLike, id: string): Locator {
 
 export async function waitForState(
   page: PageLike,
-  predicate: (s: SiteState) => boolean,
+  predicate: (s: SiteState, arg?: unknown) => boolean,
   timeoutMs: number,
+  arg?: unknown,
 ): Promise<void> {
+  // The predicate is stringified and runs in the page, so it must not close
+  // over spec variables; pass them through `arg` (JSON-inlined here).
   await page.waitForFunction(
-    `((pred) => { const s = window.__wmsfo && window.__wmsfo.getState(); return pred(s); })(${predicate.toString()})`,
+    `((pred, a) => { const s = window.__wmsfo && window.__wmsfo.getState(); return pred(s, a); })(${predicate.toString()}, ${JSON.stringify(arg ?? null)})`,
     undefined,
     { timeout: timeoutMs },
   );

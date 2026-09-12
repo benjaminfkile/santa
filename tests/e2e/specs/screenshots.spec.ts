@@ -123,8 +123,9 @@ test.describe("home states", () => {
             if (state.statusId !== null) {
               await waitForState(
                 page,
-                (s) => (s?.live?.eventStatusId ?? null) === state.statusId,
+                (s, want) => (s?.live?.eventStatusId ?? null) === want,
                 20_000,
+                state.statusId,
               );
             }
             await snapMain(page, `home-${state.name}-${scheme}-${size.name}.png`);
