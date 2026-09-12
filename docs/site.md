@@ -1278,11 +1278,11 @@ Fixtures come from the vendored `contracts/fixtures/*.json`; schema validation o
 
 Configuration: `baseURL = https://<preview-site-domain>`, Chromium desktop and Pixel 7 emulation, `E2E_API_BASE_URL` (the dev API), `E2E_CDN_BASE_URL`, and the secrets below from the `dev` GitHub environment. The harness refuses to run when `E2E_API_BASE_URL` does not contain `dev`, when `GET /me` for the admin token reports `isAdmin: false`, or when any event in `GET /admin/events` has `statusId` 3 at start.
 
-Secrets: `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`, `E2E_ADMIN_TOTP_SECRET`, `E2E_PERSON_EMAIL`, `E2E_PERSON_PASSWORD`, `E2E_BEACON_KEY` (a dev beacon marked active, role `beacon`, named `e2e`).
+Secrets: `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`, `E2E_ADMIN_TOTP_SECRET`, `E2E_PERSON_EMAIL`, `E2E_PERSON_PASSWORD`, `E2E_BEACON_KEY` (a dev beacon marked active, role `beacon`, named `e2e`). Variables: `E2E_ADMIN_CLIENT_ID` (the dev admin pool client that allows `USER_PASSWORD_AUTH`, contracts 3.1) and optionally `E2E_COGNITO_REGION` (default `us-east-1`).
 
 Harness (`tests/e2e/harness/`):
 
-- `adminToken.ts`: obtains an ID token for the E2E admin (section 25 item 2 decides the mechanism).
+- `adminToken.ts`: obtains an ID token for the E2E admin: `E2E_ADMIN_ID_TOKEN` when set, otherwise `InitiateAuth` (`USER_PASSWORD_AUTH`) on `E2E_ADMIN_CLIENT_ID` with the `SOFTWARE_TOKEN_MFA` challenge answered by a TOTP computed from `E2E_ADMIN_TOTP_SECRET`; minted once per process.
 - `adminApi.ts`: typed wrappers for `GET /admin/events`, `POST /admin/events/{id}/current`, `POST /admin/events/{id}/status`, `PATCH /admin/events/{id}`, `POST /admin/events/{id}/messages`, `GET /admin/contact-messages`, `DELETE /admin/contact-messages/{id}`, `GET /admin/snapshot`.
 - `beacon.ts`: `replay(points, ratePerSecond)` posting fixes over `POST /locations` with `X-Beacon-Key`, `recordedAt = now`.
 - `personSignIn.ts`: drives the hosted UI sign-in form for the E2E person (no MFA) through the site's own sign-in link.

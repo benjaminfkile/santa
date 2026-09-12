@@ -22,6 +22,7 @@ jobs:
       E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
       E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
       E2E_ADMIN_TOTP_SECRET: ${{ secrets.E2E_ADMIN_TOTP_SECRET }}
+      E2E_ADMIN_CLIENT_ID: ${{ vars.E2E_ADMIN_CLIENT_ID }}
       E2E_ADMIN_ID_TOKEN: ${{ secrets.E2E_ADMIN_ID_TOKEN }}
       E2E_PERSON_EMAIL: ${{ secrets.E2E_PERSON_EMAIL }}
       E2E_PERSON_PASSWORD: ${{ secrets.E2E_PERSON_PASSWORD }}
