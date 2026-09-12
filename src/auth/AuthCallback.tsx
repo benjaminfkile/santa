@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserManager } from "./userManager";
 import { signIn } from "./signOut";
+import * as btn from "../ui/Button.module.css";
 
 export function AuthCallback() {
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +46,7 @@ export function AuthCallback() {
       <p>
         <button
           type="button"
+          className={btn.btn}
           onClick={() => {
             void signIn("/");
           }}

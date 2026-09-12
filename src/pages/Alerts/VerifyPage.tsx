@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { verifySubscription } from "../../api/subscriptions";
 import { ApiRequestError } from "../../api/errors";
+import * as btn from "../../ui/Button.module.css";
 
 const TOKEN_RE = /^wsv_[A-Za-z0-9_-]{43}$/;
 
@@ -73,7 +74,7 @@ export function VerifyPage() {
       <main id="main">
         <h1>Alerts</h1>
         <p>Could not reach the server.</p>
-        <button type="button" onClick={() => void run()}>Retry</button>
+        <button type="button" className={btn.btn} onClick={() => void run()}>Retry</button>
       </main>
     );
   }

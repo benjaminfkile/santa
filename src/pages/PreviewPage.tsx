@@ -13,6 +13,7 @@ import { NotFound } from "./NotFound";
 import { fetchPreviewBundle } from "../api/preview";
 import { ApiRequestError } from "../api/errors";
 import { selectHome } from "../content/selectPage";
+import * as btn from "../ui/Button.module.css";
 
 type LoadState =
   | { kind: "loading" }
@@ -82,7 +83,7 @@ export function PreviewPage() {
       <main id="main">
         <h1>Preview</h1>
         <p>{state.message}</p>
-        <button type="button" onClick={() => void load()}>Retry</button>
+        <button type="button" className={btn.btn} onClick={() => void load()}>Retry</button>
       </main>
     );
   }

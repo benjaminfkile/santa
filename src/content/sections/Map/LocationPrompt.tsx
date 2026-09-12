@@ -7,6 +7,7 @@
 import { useEffect, useRef } from "react";
 import { inAppBrowser } from "../../../lib/inAppBrowser";
 import * as styles from "../RoutePreview/RoutePreview.module.css";
+import * as btn from "../../../ui/Button.module.css";
 
 export type LocationPromptProps = {
   open: boolean;
@@ -57,8 +58,8 @@ export function LocationPrompt({
         <>
           <p>You are showing your location on the map.</p>
           <div className={styles.locationPromptActions}>
-            <button type="button" onClick={onDisable}>Disable</button>
-            <button type="button" onClick={onClose}>Back</button>
+            <button type="button" className={btn.btn} onClick={onDisable}>Disable</button>
+            <button type="button" className={btn.btnQuiet} onClick={onClose}>Back</button>
           </div>
         </>
       ) : (
@@ -91,8 +92,8 @@ export function LocationPrompt({
             </div>
           ) : null}
           <div className={styles.locationPromptActions}>
-            <button type="button" onClick={onEnable}>Enable</button>
-            <button type="button" onClick={onClose}>Cancel</button>
+            <button type="button" className={btn.btnFill} onClick={onEnable}>Enable</button>
+            <button type="button" className={btn.btnQuiet} onClick={onClose}>Cancel</button>
           </div>
         </>
       )}

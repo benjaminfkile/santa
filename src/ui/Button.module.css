@@ -1,0 +1,47 @@
+/* docs/site.md section 7.7. The shared button recipes: outline in the
+   accent (the default), the accent fill for the one primary action, and
+   the quiet line-coloured outline for secondary actions. Every button on
+   the site that is not an icon button composes one of these. */
+
+.btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding: 0.4rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--hover-transition);
+}
+.btn:hover { background: var(--accent-soft); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:disabled:hover { background: transparent; }
+.btnFill {
+  composes: btn;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+.btnFill:hover { background: var(--text-bright); border-color: var(--text-bright); color: var(--ground); }
+.btnFill:disabled:hover { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btnQuiet {
+  composes: btn;
+  border-color: var(--line);
+  color: var(--text);
+}
+.btnQuiet:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.btnSm {
+  min-height: 34px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+}

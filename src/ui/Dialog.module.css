@@ -1,0 +1,55 @@
+/* docs/site.md section 7.7. The shared dialog recipe: a native <dialog>
+   opened with showModal, so it is centred in the viewport on every screen
+   (the live screen included) with a dimmed backdrop; the panel, its
+   heading row, and its action row. Colours come from the tokens, which
+   the live screen rebinds to the map style. */
+
+.dialog {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  padding: 0;
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+}
+.dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+}
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--text-bright);
+}
+.meta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.copy { margin: 0; font-size: 0.9375rem; }
+.actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: var(--space-2);
+}
+.alert { color: var(--err); margin: 0; font-size: 0.875rem; }
+.notice { color: var(--ok); margin: 0; font-size: 0.875rem; }

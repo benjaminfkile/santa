@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import { storageGet, storageSet } from "../../../lib/storage";
 import * as styles from "../RoutePreview/RoutePreview.module.css";
+import * as btn from "../../../ui/Button.module.css";
 
 const KEY = "wmsfo.routeDisclaimerAck";
 
@@ -43,7 +44,7 @@ export function RouteDisclaimer() {
         The route shown is a plan and may change. Please stay clear of any moving
         vehicles.
       </p>
-      <button type="button" onClick={acknowledge}>
+      <button type="button" className={btn.btnFill} onClick={acknowledge}>
         I understand
       </button>
     </dialog>

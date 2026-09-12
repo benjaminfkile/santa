@@ -22,6 +22,8 @@ import { ApiRequestError, surfaceFor } from "../../../api/errors";
 import { SignInRequired } from "../../../auth/getIdToken";
 import { StatusPill } from "../../primitives/StatusPill";
 import * as styles from "./AlertsSignup.module.css";
+import * as btn from "../../../ui/Button.module.css";
+import * as field from "../../../ui/Field.module.css";
 
 export type AlertsSignupData = {
   heading?: string | null;
@@ -89,7 +91,7 @@ function SignedOut({
     <div className={`${styles.alertsSignup} ${styles.alertsSignupSignedOut}`}>
       {data.heading ? <h2>{data.heading}</h2> : null}
       <p><Inline text={data.signedOutCopy ?? ""} bundle={bundle} /></p>
-      <button type="button" onClick={onSignIn}>Sign in</button>
+      <button type="button" className={btn.btn} onClick={onSignIn}>Sign in</button>
     </div>
   );
 }
@@ -280,7 +282,7 @@ function SignedIn({
     return (
       <div className={styles.alertsSignup} data-testid="alerts-error">
         <p role="alert">{state.message}</p>
-        <button type="button" onClick={() => void load()}>Retry</button>
+        <button type="button" className={btn.btn} onClick={() => void load()}>Retry</button>
       </div>
     );
   }
@@ -292,16 +294,18 @@ function SignedIn({
     <div className={styles.alertsSignup} data-testid="alerts-signed-in">
       {data.heading ? <h2>{data.heading}</h2> : null}
       {data.copy ? <p><Inline text={data.copy} bundle={bundle} /></p> : null}
-      <p data-testid="alerts-account">Account: {state.email}</p>
+      <p className={styles.alertsSignupAccount} data-testid="alerts-account">Account: {state.email}</p>
       <form
+        className={styles.alertsSignupForm}
         onSubmit={(e) => {
           e.preventDefault();
           void submitCreate();
         }}
       >
-        <label>
-          Email address
+        <label className={field.field}>
+          <span className={field.label}>Email address</span>
           <input
+            className={field.input}
             type="email"
             value={state.formAddress}
             onChange={(e) => setReady((s) => ({ ...s, formAddress: e.target.value }))}
@@ -319,6 +323,7 @@ function SignedIn({
         ) : null}
         <button
           type="submit"
+          className={btn.btnFill}
           disabled={state.submitting || cooldownSecs > 0 || state.formAddress.trim() === ""}
           data-testid="alerts-submit"
         >
@@ -326,7 +331,7 @@ function SignedIn({
         </button>
       </form>
 
-      <ul data-testid="alerts-subscriptions">
+      <ul className={styles.alertsSignupRows} data-testid="alerts-subscriptions">
         {state.subscriptions.map((row) => (
           <SubscriptionRow
             key={num(row.id)}

@@ -835,21 +835,21 @@ export function rankCookieTypes(cookieTypes, tally) {
 
 ## 10. Cookie control
 
-Rendered by the `cookie_control` section and by the live screen's overlay. Outside `live.eventStatusId === 3` it renders `data.closedCopy` and nothing else. Signed out: `data.signedOutCopy` and a sign-in link using the auth sign-in action with `returnTo` the current path. Signed in: a button opening a bottom sheet.
+Rendered by the `cookie_control` section and by the live screen's overlay. Outside `live.eventStatusId === 3` it renders `data.closedCopy` and nothing else. Signed out: `data.signedOutCopy` and a sign-in button using the auth sign-in action with `returnTo` the current path. Signed in: a button (the pill on the live screen) opening the cookie dialog, a native `<dialog>` opened with `showModal` so it is centred in the viewport on every screen, the live screen included, over a dimmed backdrop; it closes on Close, on Escape, and on a tap outside it (not while a submission is running). Every control in it composes the shared button, field, and dialog recipes in `src/ui`.
 
 Flow:
 
-1. On open: `GET /me/cookies`. Render `remaining` of `limit`, the type picker from `snapshot.cookieTypes` (icon and name), and an optional note field (max 140 characters, counter shown). Notes are never displayed anywhere on the site.
-2. Submit: `POST /cookies { cookieTypeId, note }` (`note` omitted when empty, sent as `null`). Disabled while a request is in flight and while `remaining === 0`.
-3. `201`: show a confirmation, set `remaining` from the response, clear the note. The leaderboard changes when the next live object carries the new tally; the control does not touch the store.
+1. On open: `GET /me/cookies` once. Render `remaining` of `limit` in the heading row, one row per `snapshot.cookieTypes` entry (icon, name, and a stepper: fewer, count, more), and an optional note field (max 140 characters, counter shown). The visitor picks any mix of types; the more buttons disable once the picks reach `remaining`. Notes are never displayed anywhere on the site.
+2. Submit ("Leave N cookies", disabled while nothing is picked, while a run is in flight, and while `remaining === 0`): one `POST /cookies { cookieTypeId, note }` per cookie picked, in type order, the first three at once and the rest a second apart (the endpoint allows one a second with a burst of three); a progress line counts them off. `note` is sent as `null` when empty, and the same note goes on every cookie of the run.
+3. Each `201` sets `remaining` from the response and removes that cookie from the picks; after the last one a confirmation names the count and the note clears. The leaderboard changes when the next live object carries the new tally; the control does not touch the store.
 
 | Response | Handling |
 |---|---|
-| `409 cookie_limit_reached` | `remaining = 0`, submit disabled, copy "You have left all your cookies for this year" |
+| `409 cookie_limit_reached` | the run stops; `remaining = 0`, picks cleared, submit disabled, copy "You have left all your cookies for this year" |
 | `409 no_live_event` | Close the sheet, `pollNow()`; the screen switch follows the live object |
-| `404 not_found` | The type is no longer active; refresh the picker from the current snapshot and ask to pick again |
+| `404 not_found` | The run stops; that type's picks are dropped, the picker refreshes from the current snapshot, and the copy asks to pick again |
 | `401 unauthenticated` | Attempt a silent renew; on failure show the sign-in link |
-| `429 rate_limited` | Disable submit for `details.retryAfterSeconds` seconds with a countdown |
+| `429 rate_limited` | The run stops with the remaining picks kept; submit is disabled for `details.retryAfterSeconds` seconds with a countdown, then the visitor submits again |
 | `400 validation_failed` | Show the note field error from `details.fields.note` |
 | Network or `5xx` | Generic retry copy; `message` from the error body is never shown |
 

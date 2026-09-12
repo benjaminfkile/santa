@@ -37,6 +37,7 @@ import { LocationPrompt } from "./LocationPrompt";
 import { ChevronGlyph, TrackerMenuGlyph } from "./glyphs";
 import * as styles from "./Map.module.css";
 import * as ibtn from "../../../ui/IconButton.module.css";
+import * as btn from "../../../ui/Button.module.css";
 
 const THEME_STORAGE_KEY = "wmsfo.tracker.theme";
 
@@ -423,7 +424,7 @@ function MapUnavailable({ onRetry }: { onRetry: () => void }) {
       data-testid="map-unavailable"
     >
       <p>{copy.map.unavailable}</p>
-      <button type="button" onClick={onRetry}>
+      <button type="button" className={btn.btn} onClick={onRetry}>
         {copy.map.retry}
       </button>
     </div>

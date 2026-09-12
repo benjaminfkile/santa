@@ -1,6 +1,7 @@
 /* docs/site.md section 10. The `cookie_control` section: the closed and
-   signed-out copy renders as a quiet panel; when signed in during the live
-   event, the primary button opens a bottom sheet. */
+   signed-out copy as a quiet panel; the live screen's pill; and the
+   cookie dialog, centred in the viewport, with one row per cookie type
+   carrying a stepper, the note, and the two actions. */
 
 .cookieControl {
   display: flex;
@@ -36,82 +37,7 @@
   color: var(--text);
   font-size: 0.9375rem;
 }
-.cookieControl > button {
-  align-self: flex-start;
-  min-height: 44px;
-  padding: 0.5rem 1.1rem;
-  background: var(--accent);
-  color: var(--on-accent);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-sans);
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--hover-transition);
-}
-.cookieControl > button:hover {
-  background: var(--text-bright);
-  border-color: var(--text-bright);
-  color: var(--ground);
-}
-.cookieControlSignedOut button {
-  background: transparent;
-  color: var(--accent);
-  border-color: var(--accent);
-  font-weight: 500;
-}
-.cookieControlSignedOut button:hover {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-color: var(--accent);
-}
-.cookieControlSheet {
-  position: fixed;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%);
-  width: min(560px, 100%);
-  background: var(--panel);
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-  padding: var(--space-5);
-  z-index: 50;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  box-shadow: var(--shadow);
-}
-.cookieControlTypes {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-.cookieControlTypes label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: var(--hover-transition);
-}
-.cookieControlTypes label:hover { border-color: var(--accent); }
-.cookieControlSheet textarea {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--panel-2);
-  color: var(--text);
-  font: 400 0.9375rem var(--font-sans);
-  min-height: 80px;
-  resize: vertical;
-}
-.cookieControlSheet [role="alert"] { color: var(--err); margin: 0; font-size: 0.8125rem; }
+.cookieControlOpen { align-self: flex-start; }
 
 /* The live screen's pill: 34 px, glass, the cookie glyph and one line. */
 .cookiePill {
@@ -136,3 +62,71 @@
 }
 .cookiePill svg { color: var(--accent); flex: none; }
 .cookiePill:hover { border-color: var(--accent); color: var(--accent); }
+
+/* The dialog's rows. */
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  min-height: 48px;
+  padding: var(--space-1) var(--space-3);
+  border-top: 1px solid var(--line);
+}
+.row:first-child { border-top: 0; }
+.rowIcon { display: flex; align-items: center; justify-content: center; color: var(--accent); }
+.rowIconPlaceholder { width: 20px; height: 20px; border-radius: 50%; background: var(--panel-2); }
+.rowName {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  color: var(--text-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.stepBtn {
+  appearance: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  transition: var(--hover-transition);
+}
+.stepBtn:hover { border-color: var(--accent); color: var(--accent); }
+.stepBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.stepBtn:disabled:hover { border-color: var(--line); color: var(--text); }
+.count {
+  min-width: 1.5ch;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--text-bright);
+}
+.countOn { color: var(--accent); }
+.progress {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--text-dim);
+  margin: 0;
+}
