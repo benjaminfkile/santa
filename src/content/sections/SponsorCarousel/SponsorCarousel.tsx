@@ -1,25 +1,27 @@
 // docs/site.md sections 7.4 and 15. SponsorCarousel plays snapshot order
 // (never shuffled): one sponsor at a time for its `lingerMs`, wraps around,
-// pauses while the document is hidden. The plate shows the logo tile and
-// an "N s on the tracker" line derived from `lingerMs`; a compact link
-// jumps to the sponsors page.
+// pauses while the document is hidden. The `card` variant (the section)
+// shows the logo tile, the name, and the "N s on the tracker" line; the
+// `tile` variant (the live screen) is the legacy tracker's bare logo tile.
+// Tapping a sponsor opens a small centred dialog with the logo, the name,
+// and a link to the sponsor's site; the dialog closes on its button, on
+// Escape, or on a tap outside it.
 
 import { useEffect, useRef, useState } from "react";
 import type { SectionComponent } from "../../registry";
-import type { ContentDocument, MediaRef, Sponsor } from "../../../contracts";
+import type { MediaRef, Sponsor } from "../../../contracts";
 import { Inline } from "../../inline/Inline";
 import { Media } from "../../primitives/Media";
-import { ContentLink } from "../../primitives/LinkView";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
 import { useReducedMotion } from "../../../lib/motion";
+import { copy } from "../../../copy/copy";
 import * as styles from "./SponsorCarousel.module.css";
 
 type SponsorCarouselData = {
   heading?: string | null;
   logoWidth?: number;
-  sponsorsPageSlug?: string | null;
-  sponsorsPageLabel?: string | null;
+  variant?: "card" | "tile";
 };
 
 const DEFAULT_LINGER_MS = 8000;
@@ -33,26 +35,16 @@ function lingerLabel(ms: number): string {
   return `${seconds}s on the tracker`;
 }
 
-function findSponsorsPage(content: ContentDocument | null | undefined, slug: string | null): string | null {
-  if (!content?.pages) return null;
-  if (slug) {
-    const found = content.pages.find((p) => p.slug === slug && p.role === "none");
-    return found ? `/${found.slug}` : null;
-  }
-  const found = content.pages.find((p) => p.slug === "sponsors" && p.role === "none");
-  return found ? `/${found.slug}` : null;
-}
-
 export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
   const d = (data ?? {}) as SponsorCarouselData;
   const logoWidth = d.logoWidth ?? 480;
+  const variant = d.variant ?? "card";
   const sponsors = useStore((s) => s.snapshot?.sponsors ?? null);
-  const content = useStore((s) => (s.snapshot?.content ?? null) as ContentDocument | null);
   const event = useSnapshotEvent();
   const reduced = useReducedMotion();
-  const sponsorsHref = findSponsorsPage(content, d.sponsorsPageSlug ?? null);
 
   const [index, setIndex] = useState(0);
+  const [open, setOpen] = useState<Sponsor | null>(null);
   const prevIdAtIndexRef = useRef<number | null>(sponsors?.[0]?.id ?? null);
 
   useEffect(() => {
@@ -101,78 +93,131 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
   const current = sponsors[index] ?? sponsors[0];
   if (!current) return null;
 
-  const href = sponsorHref(current);
   const media: MediaRef | null = current.logoMediaId
     ? { mediaId: current.logoMediaId, alt: current.name ?? null }
     : null;
-
   const linger = current.lingerMs ?? DEFAULT_LINGER_MS;
-
-  const plate = (
-    <>
-      {media ? (
-        <Media
-          media={media}
-          bundle={bundle}
-          sizeOverride={`${logoWidth}px`}
-          className={styles.sponsorCarouselLogo}
-          testId="sponsor-logo"
-        />
-      ) : (
-        <span className={styles.sponsorCarouselLogo} aria-hidden />
-      )}
-      <span className={styles.sponsorCarouselName}>{current.name}</span>
-      <span className={styles.sponsorCarouselLinger} data-testid="sponsor-linger">
-        {lingerLabel(linger)}
-      </span>
-    </>
-  );
+  const rootClass = [
+    styles.sponsorCarousel,
+    variant === "tile" ? styles.sponsorCarouselTile : styles.sponsorCarouselCard,
+    reduced ? styles.sponsorCarouselReducedMotion : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <div
-      className={`${styles.sponsorCarousel}${reduced ? " " + styles.sponsorCarouselReducedMotion : ""}`}
-    >
-      {d.heading ? (
+    <div className={rootClass} data-variant={variant}>
+      {variant === "card" && d.heading ? (
         <p className={styles.sponsorCarouselHeading}>
           <Inline text={d.heading} bundle={bundle} event={event} />
         </p>
       ) : null}
       <div className={styles.sponsorCarouselBar}>
-        <div className={styles.sponsorCarouselViewport}>
+        <button
+          type="button"
+          className={styles.sponsorCarouselSlide}
+          onClick={() => setOpen(current)}
+          aria-label={current.name ?? copy.sponsors.open}
+          data-testid="sponsor-open"
+        >
+          {media ? (
+            <Media
+              media={media}
+              bundle={bundle}
+              sizeOverride={`${logoWidth}px`}
+              className={styles.sponsorCarouselLogo}
+              testId="sponsor-logo"
+            />
+          ) : (
+            <span className={styles.sponsorCarouselNameOnly}>{current.name}</span>
+          )}
+          {variant === "card" ? (
+            <>
+              <span className={styles.sponsorCarouselName}>{current.name}</span>
+              <span className={styles.sponsorCarouselLinger} data-testid="sponsor-linger">
+                {lingerLabel(linger)}
+              </span>
+            </>
+          ) : null}
+        </button>
+        {variant === "card" && sponsors.length > 1 ? (
+          <ul className={styles.sponsorCarouselDots} aria-hidden>
+            {sponsors.map((_, i) => (
+              <li
+                key={i}
+                className={`${styles.sponsorCarouselDot}${i === index ? " " + styles.sponsorCarouselDotOn : ""}`}
+              />
+            ))}
+          </ul>
+        ) : null}
+      </div>
+      {open !== null ? (
+        <SponsorDialog sponsor={open} bundle={bundle} logoWidth={logoWidth} onClose={() => setOpen(null)} />
+      ) : null}
+    </div>
+  );
+};
+
+function SponsorDialog({
+  sponsor,
+  bundle,
+  logoWidth,
+  onClose,
+}: {
+  sponsor: Sponsor;
+  bundle: Parameters<typeof Media>[0]["bundle"];
+  logoWidth: number;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDialogElement | null>(null);
+  useEffect(() => {
+    const dlg = ref.current;
+    if (dlg === null) return;
+    if (typeof dlg.showModal === "function" && !dlg.open) {
+      try {
+        dlg.showModal();
+      } catch {
+        // ignore; some jsdom builds do not implement showModal.
+      }
+    }
+  }, []);
+  const href = sponsorHref(sponsor);
+  const media: MediaRef | null = sponsor.logoMediaId
+    ? { mediaId: sponsor.logoMediaId, alt: sponsor.name ?? null }
+    : null;
+  return (
+    <dialog
+      ref={ref}
+      className={styles.sponsorDialog}
+      aria-label={sponsor.name ?? copy.sponsors.open}
+      data-testid="sponsor-dialog"
+      onClose={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className={styles.sponsorDialogBody}>
+        {media ? (
+          <Media media={media} bundle={bundle} sizeOverride={`${logoWidth}px`} className={styles.sponsorDialogLogo} />
+        ) : null}
+        <p className={styles.sponsorDialogName}>{sponsor.name}</p>
+        <div className={styles.sponsorDialogActions}>
           {href ? (
             <a
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className={styles.sponsorCarouselSlide}
+              className={styles.sponsorDialogVisit}
+              data-testid="sponsor-visit"
             >
-              {plate}
+              {copy.sponsors.visit}
             </a>
-          ) : (
-            <div className={styles.sponsorCarouselSlide}>{plate}</div>
-          )}
+          ) : null}
+          <button type="button" className={styles.sponsorDialogClose} onClick={onClose}>
+            {copy.sponsors.close}
+          </button>
         </div>
-        <ul className={styles.sponsorCarouselDots} aria-hidden>
-          {sponsors.map((_, i) => (
-            <li
-              key={i}
-              className={`${styles.sponsorCarouselDot}${i === index ? " " + styles.sponsorCarouselDotOn : ""}`}
-            />
-          ))}
-        </ul>
-        {sponsorsHref ? (
-          <ContentLink
-            link={{
-              label: d.sponsorsPageLabel ?? "All sponsors",
-              href: sponsorsHref,
-              icon: null,
-              newTab: false,
-            }}
-            bundle={bundle}
-            className={styles.sponsorCarouselLink}
-          />
-        ) : null}
       </div>
-    </div>
+    </dialog>
   );
-};
+}

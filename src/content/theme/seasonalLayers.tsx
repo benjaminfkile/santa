@@ -2,12 +2,11 @@
 // translucent flakes coloured by --snow, and a string of 7 px bulbs on a
 // 1 px wire under the header. Each has a settings default and a
 // per-visitor override in localStorage. The live screen is detected
-// through `live.eventStatusId === 3` at `/` (docs 24), not by path:
-// snow is off by default there and the lights are not rendered over the
-// map.
+// through `live.eventStatusId === 3` (docs 24), whatever the path, since
+// every path renders the tracker then: snow is off by default there and
+// the lights are not rendered over the map.
 
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
-import { useLocation } from "react-router-dom";
 import { storageGet, storageSet } from "../../lib/storage";
 import type { ContentBundle } from "../../store/types";
 import { useStore } from "../../store/useStore";
@@ -63,8 +62,7 @@ export function useLightsEnabled(defaultOn: boolean): boolean {
 
 function useIsLiveScreen(): boolean {
   const eventStatusId = useStore((s) => s.live?.eventStatusId ?? null);
-  const location = useLocation();
-  return eventStatusId === 3 && location.pathname === "/";
+  return eventStatusId === 3;
 }
 
 export function SnowLayer({ bundle }: { bundle: ContentBundle | null }) {

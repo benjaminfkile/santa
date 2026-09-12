@@ -1,6 +1,6 @@
 // docs/site.md sections 5.2 and 7.6. "Live" when connected and not quiet;
 // "Updating" when polling only; a trailing "updated N s ago" from
-// `publishedAt` on the device clock.
+// `publishedAt` on the device clock. One 34 px pill.
 
 import { useEffect, useState } from "react";
 import { useStore } from "../../../store/useStore";
@@ -41,7 +41,7 @@ export function LiveIndicator() {
       <span className={styles.liveIndicatorDot} aria-hidden />
       <span className={styles.liveIndicatorLabel}>{labelPrefix}</span>
       {secondsAgo !== null ? (
-        <span className={styles.liveIndicatorAgo}> · {copy.live.updatedAgo(secondsAgo)}</span>
+        <span className={styles.liveIndicatorAgo}>{copy.live.updatedAgo(secondsAgo)}</span>
       ) : null}
     </div>
   );

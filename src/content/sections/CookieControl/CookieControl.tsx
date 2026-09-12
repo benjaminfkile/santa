@@ -2,7 +2,7 @@
 // status 3; signedOutCopy with a sign-in link when signed out; a button
 // opens a bottom sheet that fetches /me/cookies and posts /cookies.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import type { SectionComponent } from "../../registry";
 import type { ContentBundle } from "../../../store/types";
@@ -13,6 +13,8 @@ import { Inline } from "../../inline/Inline";
 import { Icon } from "../../primitives/Icon";
 import { getMyCookies, leaveCookie } from "../../../api/cookies";
 import { ApiRequestError, SignInRequired, surfaceFor } from "../../../api/errors";
+import { copy } from "../../../copy/copy";
+import { CookieGlyph } from "../Map/glyphs";
 import * as styles from "./CookieControl.module.css";
 
 export type CookieControlData = {
@@ -20,6 +22,7 @@ export type CookieControlData = {
   copy?: string | null;
   signedOutCopy?: string | null;
   closedCopy?: string | null;
+  compact?: boolean;
 };
 
 function readData(data: unknown): CookieControlData {
@@ -30,6 +33,7 @@ function readData(data: unknown): CookieControlData {
     copy: d.copy ?? null,
     signedOutCopy: d.signedOutCopy ?? null,
     closedCopy: d.closedCopy ?? null,
+    compact: d.compact === true,
   };
 }
 
@@ -48,6 +52,49 @@ export const CookieControl: SectionComponent = ({ data, bundle }: CookieControlP
   const { state: auth, signIn } = useAuth();
   const location = useLocation();
   const [open, setOpen] = useState(false);
+
+  // The live screen's pill: one button, the sheet on tap, nothing else.
+  if (d.compact === true) {
+    if (eventStatusId !== 3 || auth.status === "unknown") return null;
+    if (auth.status !== "signedIn") {
+      return (
+        <button
+          type="button"
+          className={styles.cookiePill}
+          onClick={() => {
+            void signIn(location.pathname + location.search);
+          }}
+          data-testid="cookie-control-sign-in"
+        >
+          <CookieGlyph />
+          {copy.cookies.signInToLeave}
+        </button>
+      );
+    }
+    return (
+      <>
+        <button
+          type="button"
+          className={styles.cookiePill}
+          onClick={() => setOpen(true)}
+          data-testid="cookie-control-open"
+        >
+          <CookieGlyph />
+          {copy.cookies.leave}
+        </button>
+        {open ? (
+          <CookieSheet
+            bundle={bundle}
+            cookieTypes={cookieTypes}
+            onClose={() => setOpen(false)}
+            onSignInRequired={() => {
+              void signIn(location.pathname + location.search);
+            }}
+          />
+        ) : null}
+      </>
+    );
+  }
 
   if (eventStatusId !== 3) {
     return (
@@ -132,6 +179,12 @@ function CookieSheet({
 }) {
   const [state, setState] = useState<SheetState>({ kind: "loading" });
   const [nowMs, setNowMs] = useState(() => Date.now());
+  // The parent passes fresh arrow functions on every render; the loader
+  // reads them through a ref so a store update never refetches /me/cookies.
+  const callbacksRef = useRef({ onClose, onSignInRequired });
+  useEffect(() => {
+    callbacksRef.current = { onClose, onSignInRequired };
+  }, [onClose, onSignInRequired]);
 
   const load = useCallback(async () => {
     setState({ kind: "loading" });
@@ -155,13 +208,13 @@ function CookieSheet({
     } catch (e) {
       const s = surfaceFor(e);
       if (s.code === "unauthenticated") {
-        onSignInRequired();
-        onClose();
+        callbacksRef.current.onSignInRequired();
+        callbacksRef.current.onClose();
         return;
       }
       setState({ kind: "error", message: s.message });
     }
-  }, [onClose, onSignInRequired]);
+  }, []);
 
   useEffect(() => {
     void load();

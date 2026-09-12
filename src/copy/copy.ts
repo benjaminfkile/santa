@@ -51,6 +51,15 @@ export const copy = {
       fit: "Fit",
     },
   },
+  sponsors: {
+    open: "Sponsor",
+    visit: "Visit website",
+    close: "Close",
+  },
+  cookies: {
+    leave: "Leave a cookie",
+    signInToLeave: "Sign in to leave a cookie",
+  },
   theme: {
     toLight: "Switch to light mode",
     toDark: "Switch to dark mode",

@@ -22,22 +22,12 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  padding: var(--space-4) var(--space-6);
+  padding: var(--space-2) var(--space-5);
   background: var(--panel);
   color: var(--text);
   border-bottom: 1px solid var(--line);
   position: relative;
   z-index: 10;
-}
-.siteHeaderCollapsed {
-  position: absolute;
-  top: 0;
-  left: auto;
-  right: 0;
-  padding: var(--space-3);
-  background: transparent;
-  border-bottom: 0;
-  z-index: 15;
 }
 .brand {
   display: inline-flex;
@@ -146,10 +136,6 @@
   z-index: 20;
   box-shadow: var(--shadow);
 }
-.siteHeaderCollapsed .nav {
-  right: var(--space-3);
-  top: calc(var(--space-3) + 44px + var(--space-2));
-}
 .nav ul {
   list-style: none;
   padding: 0;
@@ -223,8 +209,9 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-6);
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  margin-top: auto;
   background: var(--panel);
   color: var(--text-dim);
   border-top: 1px solid var(--line);

@@ -3,7 +3,7 @@
 
 import { Navigate, useParams } from "react-router-dom";
 import { useStore } from "../store/useStore";
-import { selectBundle, selectSlug } from "../content/selectPage";
+import { selectBundle, selectSlug, surfaceEqual } from "../content/selectPage";
 import { PageRenderer } from "../content/PageRenderer";
 import { Loading } from "./Loading";
 import { ReloadPrompt } from "./ReloadPrompt";
@@ -11,7 +11,7 @@ import { NotFound } from "./NotFound";
 
 export function SlugPage() {
   const { slug = "" } = useParams();
-  const surface = useStore((s) => selectSlug(s, slug));
+  const surface = useStore((s) => selectSlug(s, slug), surfaceEqual);
   const bundle = useStore(selectBundle);
   if (surface.kind === "loading") return <Loading />;
   if (surface.kind === "reload") return <ReloadPrompt />;

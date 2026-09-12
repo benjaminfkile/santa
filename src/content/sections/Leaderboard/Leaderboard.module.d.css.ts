@@ -1,6 +1,7 @@
 export const __esModule: true;
 export const leaderboard: string;
 export const leaderboardBar: string;
+export const leaderboardCompact: string;
 export const leaderboardCount: string;
 export const leaderboardEmpty: string;
 export const leaderboardEmptyText: string;

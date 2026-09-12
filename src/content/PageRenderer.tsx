@@ -2,10 +2,14 @@
 // frames wrapping the kind's component. A `hero` section immediately
 // followed by a `countdown` section on the same page renders as one
 // two-column row at 760 px and up, with the hero copy left-aligned in the
-// first column and the countdown card in the second.
+// first column and the countdown card in the second. While the event is
+// live the live page renders its `map` section alone: the tracker owns
+// the viewport and nothing else on the page is reachable.
 
 import type { ContentPage, ContentSection } from "../contracts";
 import type { ContentBundle } from "../store/types";
+import { useStore } from "../store/useStore";
+import { selectTakeover } from "./selectPage";
 import { SectionFrame } from "./SectionFrame";
 import { registry, Unknown } from "./registry";
 import * as frameStyles from "./SectionFrame.module.css";
@@ -33,8 +37,10 @@ function renderSection(section: ContentSection, bundle: ContentBundle, extraData
 }
 
 export function PageRenderer({ page, bundle }: PageRendererProps) {
+  const liveTakeover = useStore(selectTakeover);
+  const takeover = liveTakeover && page.role === "live";
   const rows: React.ReactNode[] = [];
-  const sections = page.sections;
+  const sections = takeover ? page.sections.filter((s) => s.kind === "map") : page.sections;
   for (let i = 0; i < sections.length; i += 1) {
     const section = sections[i];
     const next = sections[i + 1];
@@ -75,7 +81,13 @@ export function PageRenderer({ page, bundle }: PageRendererProps) {
     );
   }
   return (
-    <main id="main" tabIndex={-1} data-page-slug={page.slug} data-page-role={page.role}>
+    <main
+      id="main"
+      tabIndex={-1}
+      data-page-slug={page.slug}
+      data-page-role={page.role}
+      data-takeover={takeover ? "live" : undefined}
+    >
       {rows}
     </main>
   );

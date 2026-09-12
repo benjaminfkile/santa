@@ -1,13 +1,12 @@
-/* docs/site.md sections 7.4 and 15. Sponsor carousel plays one sponsor at
-   a time in snapshot order, wraps around; the plate carries the logo tile
-   and the "N s on the tracker" line derived from lingerMs, plus a link to
-   the sponsors page. */
+/* docs/site.md sections 7.4 and 15. Sponsor carousel: the card variant on
+   ordinary pages (logo tile, name, the "N s on the tracker" line, the
+   dots), the tile variant on the live screen (the legacy tracker's bare
+   logo tile: 70 px tall, at most 180 px wide, 5 px padding), and the
+   centred dialog either opens on a tap. */
 
-.sponsorCarousel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
+.sponsorCarousel { display: flex; flex-direction: column; gap: var(--space-2); }
+.sponsorCarouselCard {
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--panel);
@@ -25,40 +24,45 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
-.sponsorCarouselViewport {
-  min-height: 88px;
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex: 1;
-}
 .sponsorCarouselSlide {
+  appearance: none;
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
-  transition: opacity 400ms ease-in-out;
-  text-decoration: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: opacity 400ms ease-in-out;
   min-width: 0;
 }
 .sponsorCarouselReducedMotion .sponsorCarouselSlide { transition: none; }
 .sponsorCarouselLogo {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-sm);
   background: var(--panel-2);
   border: 1px solid var(--line);
   object-fit: contain;
   flex: none;
 }
+.sponsorCarouselNameOnly {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  color: var(--text-bright);
+  font-size: 0.9375rem;
+}
 .sponsorCarouselName {
   font-family: var(--font-sans);
   font-weight: 600;
   color: var(--text-bright);
-  font-size: 1rem;
+  font-size: 0.9375rem;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -66,7 +70,7 @@
 }
 .sponsorCarouselLinger {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
@@ -85,13 +89,85 @@
   background: var(--line);
 }
 .sponsorCarouselDotOn { background: var(--accent); }
-.sponsorCarouselLink {
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent);
+
+/* The live screen's tile. */
+.sponsorCarouselTile .sponsorCarouselBar { gap: 0; }
+.sponsorCarouselTile .sponsorCarouselSlide {
+  padding: 5px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--panel) 86%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.sponsorCarouselTile .sponsorCarouselLogo {
+  width: auto;
+  height: 70px;
+  max-width: 180px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+}
+.sponsorCarouselTile .sponsorCarouselNameOnly {
+  display: inline-flex;
+  align-items: center;
+  height: 70px;
+  max-width: 180px;
+  padding: 0 var(--space-2);
+  font-size: 0.875rem;
+}
+
+/* The dialog. */
+.sponsorDialog {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  padding: 0;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  width: min(360px, 92vw);
+}
+.sponsorDialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+.sponsorDialogBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5);
+}
+.sponsorDialogLogo {
+  max-width: 100%;
+  max-height: 140px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+.sponsorDialogName {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  color: var(--text-bright);
+  text-align: center;
+}
+.sponsorDialogActions { display: flex; gap: var(--space-2); flex-wrap: wrap; justify-content: center; }
+.sponsorDialogVisit,
+.sponsorDialogClose {
+  min-height: 40px;
+  padding: 0.4rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.9375rem;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
   transition: var(--hover-transition);
 }
-.sponsorCarouselLink:hover { color: var(--text-bright); }
+.sponsorDialogVisit { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.sponsorDialogVisit:hover { background: var(--text-bright); border-color: var(--text-bright); color: var(--ground); }
+.sponsorDialogClose { background: transparent; color: var(--accent); }
+.sponsorDialogClose:hover { background: var(--accent-soft); }

@@ -5,15 +5,15 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: var(--space-4);
+  gap: var(--space-3);
   padding-inline: var(--space-5);
-  padding-block: var(--space-6);
+  padding-block: var(--space-5);
   color: var(--text);
   background: transparent;
 }
-.spacingTight { padding-block: var(--space-4); }
-.spacingNormal { padding-block: var(--space-6); }
-.spacingLoose { padding-block: var(--space-8); }
+.spacingTight { padding-block: var(--space-3); }
+.spacingNormal { padding-block: var(--space-5); }
+.spacingLoose { padding-block: var(--space-7); }
 .spacingNone { padding-block: 0; padding-inline: 0; }
 
 .alignStart { text-align: start; }
@@ -60,9 +60,9 @@
 .heroCountdownPair {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
   padding-inline: var(--space-5);
-  padding-block: var(--space-6);
+  padding-block: var(--space-5);
   color: var(--text);
 }
 .heroCountdownPair > .content {
@@ -77,7 +77,7 @@
 @media (min-width: 760px) {
   .heroCountdownPair > .content {
     grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.9fr);
-    gap: 40px;
+    gap: var(--space-7);
   }
 }
 .heroCountdownPairSlot { min-width: 0; }

@@ -20,7 +20,6 @@ export const menuButton: string;
 export const nav: string;
 export const signIn: string;
 export const siteHeader: string;
-export const siteHeaderCollapsed: string;
 export const skipLink: string;
 export const systemButton: string;
 export const systemButtonActive: string;

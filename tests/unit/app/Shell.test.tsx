@@ -221,7 +221,7 @@ describe("Shell structure", () => {
     expect(header.contains(lights)).toBe(true);
   });
 
-  it("collapses the header and omits the footer on the live map page", () => {
+  it("renders only the page while the event is live: no header, no footer, the scroll lock on html", () => {
     seed(makeContent(), true);
     const { getByTestId, queryByTestId, queryByText } = render(
       <MemoryRouter initialEntries={["/"]}>
@@ -234,11 +234,10 @@ describe("Shell structure", () => {
         </AuthProvider>
       </MemoryRouter>,
     );
-    const header = getByTestId("site-header");
-    expect(header.dataset.collapsed).toBe("true");
-    // Brand text is hidden when collapsed.
+    expect(getByTestId("map-placeholder")).not.toBeNull();
+    expect(queryByTestId("site-header")).toBeNull();
     expect(queryByText("WMSFO Test")).toBeNull();
-    // Footer is omitted so the map keeps the viewport.
     expect(queryByTestId("site-footer")).toBeNull();
+    expect(document.documentElement.getAttribute("data-takeover")).toBe("live");
   });
 });

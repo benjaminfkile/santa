@@ -1,15 +1,16 @@
-// docs/site.md sections 7.6 and 8. The live screen: full-viewport map
-// with overlays composed from the shared frost recipe. Live strip
-// top-left with four mono instruments, latest-message ticker under it,
-// leaderboard panel top-right (hidden at phone width), cookie control
-// bottom-centre, sponsor plate bottom-left, control column bottom-right
-// with the shared icon-button recipe. The Santa marker is drawn inline
-// in accent with an `--err` hat.
+// docs/site.md sections 7.6 and 8. The live screen, laid out as the legacy
+// tracker: the map fills the viewport; pills top-left (live state, airborne
+// time, distance, instruments, the message ticker); the tracker menu button
+// and the cookie panel top-right; the cookie pill and the sponsor tile
+// bottom-left; zoom while following and recenter after a drag bottom-right.
+// While the event is live the section is fixed to the viewport and nothing
+// else on the site renders.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SectionComponent } from "../../registry";
 import { store, useStore } from "../../../store/useStore";
 import { selectLiveState } from "../../../store/liveState";
+import { selectTakeover } from "../../selectPage";
 import { storageGet, storageSet } from "../../../lib/storage";
 import { setSnowOverride, useSnowEnabled } from "../../theme/seasonalLayers";
 import { LatestMessage } from "../LatestMessage/LatestMessage";
@@ -24,15 +25,17 @@ import { resolveOfferedThemes, resolveDefaultTheme } from "../../../map/themes";
 import { acquire as acquireWakeLock, release as releaseWakeLock } from "../../../map/wakeLock";
 import type { Snapshot } from "../../../contracts";
 import { copy } from "../../../copy/copy";
-import { InfoOverlays } from "./InfoOverlays";
+import { FixStatus } from "./InfoOverlays";
+import { LiveIndicator } from "./LiveIndicator";
+import { LiftoffTimer } from "./LiftoffTimer";
 import { LiveStrip } from "./LiveStrip";
 import { DistanceChip } from "./DistanceChip";
 import { MapControls } from "./MapControls";
 import { RouteDisclaimer } from "./RouteDisclaimer";
 import { TrackerMenu } from "./TrackerMenu";
 import { LocationPrompt } from "./LocationPrompt";
+import { ChevronGlyph, TrackerMenuGlyph } from "./glyphs";
 import * as styles from "./Map.module.css";
-import * as frost from "../../theme/Frost.module.css";
 import * as ibtn from "../../../ui/IconButton.module.css";
 
 const THEME_STORAGE_KEY = "wmsfo.tracker.theme";
@@ -83,6 +86,12 @@ function normalizePoints(fh: FlightHistory | null): { lat: number; lng: number; 
   return filtered;
 }
 
+function isPhoneWidth(): boolean {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function"
+    ? window.matchMedia("(max-width: 760px)").matches
+    : false;
+}
+
 export const Map: SectionComponent = ({ data, bundle }) => {
   const d = (data ?? {}) as MapSectionData;
   const offered = useMemo(() => resolveOfferedThemes(d.themes ?? null), [d.themes]);
@@ -125,8 +134,9 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const snow = useSnowEnabled(false);
   const [flightHistoryOn, setFlightHistoryOn] = useState<boolean>(flightHistoryDefault);
   const [timeLabels, setTimeLabels] = useState<boolean>(true);
-  const [, setFollowing] = useState<boolean>(true);
+  const [following, setFollowing] = useState<boolean>(true);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const [leaderboardOpen, setLeaderboardOpen] = useState<boolean>(() => !isPhoneWidth());
   const [locationOpen, setLocationOpen] = useState<boolean>(false);
   const [controller, setController] = useState<MapController | null>(null);
   const [userState, setUserState] = useState<UserLocationState>({
@@ -136,11 +146,11 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     distanceMetres: null,
   });
 
+  const takeover = useStore(selectTakeover);
   const flightHistory = useStore((s) => s.snapshot?.event?.flightHistory ?? null);
   const hasMessage = useStore((s) => (s.snapshot?.event?.latestMessage ?? null) !== null);
   const flightPoints = useMemo(() => normalizePoints(flightHistory as FlightHistory | null), [flightHistory]);
   const flightHistoryAvailable = flightPoints !== null;
-  const snowVisible = controls.snow && snow;
 
   const defaultCenter = d.defaultCenter ?? { lat: 39.7392, lng: -104.9903 };
   const defaultZoom = d.defaultZoom ?? 8;
@@ -152,7 +162,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
       defaultZoom,
       showSantaMarker: true,
       showUserLocation: controls.location,
-      onFollowChange: (following: boolean) => setFollowing(following),
+      onFollowChange: (f: boolean) => setFollowing(f),
       onUserLocationChange: (s: UserLocationState) => setUserState(s),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -235,8 +245,16 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     if (userState.error === 1) setLocationOpen(true);
   }, [userState.error]);
 
+  const rootClass = [
+    styles.mapSection,
+    takeover ? styles.mapSectionTakeover : "",
+    menuOpen ? styles.menuOpen : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className={styles.mapSection} data-testid="map">
+    <div className={rootClass} data-testid="map" data-takeover={takeover ? "live" : undefined}>
       <MarkerSeqHost />
       <MapView
         options={mapOptions}
@@ -247,49 +265,77 @@ export const Map: SectionComponent = ({ data, bundle }) => {
             <MapUnavailable onRetry={retry} />
           ) : (
             <>
-              {overlays.liveStrip ? (
-                <div className={`${styles.stripOverlay} ${frost.frost}`}>
-                  <LiveStrip
-                    distanceMetres={userState.distanceMetres}
-                    showLiveIndicator={overlays.liveIndicator}
-                    showLiftoffTimer={overlays.liftoffTimer}
-                  />
-                </div>
-              ) : (
-                <div className={styles.topOverlays}>
-                  <InfoOverlays
-                    showLiveIndicator={overlays.liveIndicator}
-                    showLiftoffTimer={overlays.liftoffTimer}
-                  />
-                </div>
-              )}
-              {overlays.latestMessage && hasMessage ? (
-                <div className={`${styles.messageOverlay} ${frost.frost}`}>
-                  <LatestMessage
-                    data={{ style: "ticker" }}
-                    items={[]}
-                    bundle={bundle}
-                  />
-                </div>
-              ) : null}
-              {overlays.distanceChip ? (
-                <div className={styles.distanceOverlay}>
-                  <DistanceChip distanceMetres={userState.distanceMetres} />
-                </div>
-              ) : null}
-              <div className={styles.sideControls}>
+              <div className={styles.topLeft}>
+                {overlays.liveIndicator ? <LiveIndicator /> : null}
+                <FixStatus />
+                {overlays.liftoffTimer ? <LiftoffTimer /> : null}
+                {overlays.distanceChip ? <DistanceChip distanceMetres={userState.distanceMetres} /> : null}
+                {overlays.liveStrip ? <LiveStrip /> : null}
+                {overlays.latestMessage && hasMessage ? (
+                  <div className={styles.messageOverlay}>
+                    <LatestMessage
+                      data={{ style: "ticker" }}
+                      items={[]}
+                      bundle={bundle}
+                    />
+                  </div>
+                ) : null}
+              </div>
+
+              <div className={styles.topRight}>
                 <button
                   type="button"
-                  className={`${styles.menuButton} ${ibtn.ibtn}`}
+                  className={`${ibtn.ibtn} ${styles.menuButton}`}
                   aria-label={copy.map.trackerMenu}
                   aria-expanded={menuOpen}
                   onClick={() => setMenuOpen(true)}
                 >
-                  <TrackerMenuIcon />
+                  <TrackerMenuGlyph size={22} />
                 </button>
+                {overlays.leaderboardPanel ? (
+                  <div className={styles.leaderboardOverlay} data-testid="leaderboard-panel">
+                    <button
+                      type="button"
+                      className={styles.leaderboardHead}
+                      aria-expanded={leaderboardOpen}
+                      onClick={() => setLeaderboardOpen((v) => !v)}
+                    >
+                      <span>Cookies</span>
+                      <ChevronGlyph size={16} />
+                    </button>
+                    {leaderboardOpen ? (
+                      <div className={styles.leaderboardBody}>
+                        <Leaderboard
+                          data={{ variant: "panel", compact: true }}
+                          items={[]}
+                          bundle={bundle}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className={styles.bottomLeft}>
+                {overlays.cookieControl ? (
+                  <div className={styles.cookieOverlay}>
+                    <CookieControl data={{ compact: true }} items={[]} bundle={bundle} />
+                  </div>
+                ) : null}
+                {overlays.sponsorCarousel ? (
+                  <div className={styles.sponsorOverlay}>
+                    <SponsorCarousel
+                      data={{ logoWidth: 480, variant: "tile" }}
+                      items={[]}
+                      bundle={bundle}
+                    />
+                  </div>
+                ) : null}
+              </div>
+
+              <div className={styles.bottomRight}>
                 <MapControls
-                  snowOn={snowVisible}
-                  showSnow={controls.snow}
+                  following={following}
                   onRecenter={() => {
                     const live = store.getState().live;
                     const pos =
@@ -300,32 +346,9 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                   }}
                   onZoomIn={() => controller?.zoomBy(1)}
                   onZoomOut={() => controller?.zoomBy(-1)}
-                  onSnowToggle={() => setSnowOverride(!snow)}
                 />
               </div>
-              {overlays.leaderboardPanel ? (
-                <div className={`${styles.leaderboardOverlay} ${frost.frost}`}>
-                  <Leaderboard
-                    data={{ variant: "panel" }}
-                    items={[]}
-                    bundle={bundle}
-                  />
-                </div>
-              ) : null}
-              {overlays.sponsorCarousel ? (
-                <div className={`${styles.sponsorOverlay} ${frost.frost}`}>
-                  <SponsorCarousel
-                    data={{ logoWidth: 480 }}
-                    items={[]}
-                    bundle={bundle}
-                  />
-                </div>
-              ) : null}
-              {overlays.cookieControl ? (
-                <div className={styles.cookieOverlay}>
-                  <CookieControl data={{}} items={[]} bundle={bundle} />
-                </div>
-              ) : null}
+
               <TrackerMenu
                 open={menuOpen}
                 onClose={() => setMenuOpen(false)}
@@ -355,7 +378,6 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 onDisable={onDisableLocation}
               />
               <RouteDisclaimer />
-              {snowVisible ? <div className={styles.snow} aria-hidden /> : null}
             </>
           )
         }
@@ -363,17 +385,6 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     </div>
   );
 };
-
-function TrackerMenuIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M4 7h10M4 12h4M12 12h8M4 17h10M18 17h2" />
-      <circle cx="17" cy="7" r="2" />
-      <circle cx="9" cy="12" r="2" />
-      <circle cx="15" cy="17" r="2" />
-    </svg>
-  );
-}
 
 function MarkerSeqHost() {
   const seq = useStore((s) => s.live?.seq ?? null);

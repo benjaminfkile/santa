@@ -1,25 +1,37 @@
-/* docs/site.md section 7.7. Shared frost recipe: the liftoff card (S16
-   countdown) and the live-screen overlays (S17) both compose this class
-   for the aurora halo behind a translucent panel. */
+/* docs/site.md section 7.7. Shared frost recipe (the studio's liftoff
+   card): an aurora halo blurred just outside the panel, a translucent
+   glass layer with a backdrop blur over it, and an accent-tinted border.
+   The halo and the glass are the two pseudo-elements so a composing
+   class only sets its own padding and layout; the element paints no
+   background of its own. */
 
 .frost {
   position: relative;
-  background: color-mix(in srgb, var(--panel) 70%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  overflow: hidden;
   isolation: isolate;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: 0;
 }
 .frost::before {
   content: "";
   position: absolute;
-  inset: -20%;
-  background:
-    radial-gradient(circle at 20% 30%, var(--frost-a), transparent 55%),
-    radial-gradient(circle at 80% 70%, var(--frost-b), transparent 60%);
-  filter: blur(30px);
+  inset: -6px;
+  z-index: -2;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--frost-a), transparent 45%, var(--frost-b));
+  filter: blur(12px);
+  pointer-events: none;
+}
+.frost::after {
+  content: "";
+  position: absolute;
+  inset: 0;
   z-index: -1;
+  border-radius: inherit;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
+  background: color-mix(in srgb, var(--panel) 78%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   pointer-events: none;
 }

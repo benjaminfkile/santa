@@ -1,6 +1,7 @@
 // docs/site.md section 7.7. Wraps every route: skip link, header with
-// brand, sign-in, theme toggle and menu, nav drawer, banners, footer, and
-// the map-page collapse for the live screen.
+// brand, sign-in, theme toggle and menu, nav drawer, banners, footer.
+// While the event is live the shell steps aside: the live screen owns the
+// viewport and nothing else on the site renders or scrolls.
 
 import {
   useCallback,
@@ -12,9 +13,8 @@ import {
 } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useStore } from "../store/useStore";
-import { selectBundle, selectHome } from "../content/selectPage";
+import { selectBundle, selectTakeover } from "../content/selectPage";
 import { buildNav, type NavEntry } from "../content/nav";
-import { firstSectionKind } from "../content/PageRenderer";
 import { copy } from "../copy/copy";
 import { ReloadPrompt } from "../pages/ReloadPrompt";
 import { ContentLink } from "../content/primitives/LinkView";
@@ -37,32 +37,42 @@ export function Shell({ children }: ShellProps) {
   const online = useStore((s) => s.diag.online);
   const consecutiveFailures = useStore((s) => s.diag.consecutivePollFailures);
   const preview = useStore((s) => s.preview);
-  const bundle = useStore(selectBundle);
-  const homeSurface = useStore(selectHome);
-  const location = useLocation();
+  const bundle = useStore(selectBundle, bundleEqual);
+  const takeover = useStore(selectTakeover);
 
   const updatesPaused = !online || consecutiveFailures >= 3;
-  const isMapCollapsed =
-    location.pathname === "/" &&
-    homeSurface.kind === "page" &&
-    firstSectionKind(homeSurface.page) === "map";
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (takeover) root.setAttribute("data-takeover", "live");
+    else root.removeAttribute("data-takeover");
+    return () => root.removeAttribute("data-takeover");
+  }, [takeover]);
 
   if (schemaMismatch) return <ReloadPrompt />;
+
+  if (takeover) return <>{children}</>;
 
   return (
     <>
       <a href="#main" className={styles.skipLink}>
         Skip to content
       </a>
-      <Header collapsed={isMapCollapsed} bundle={bundle} />
+      <Header bundle={bundle} />
       <Banners updatesPaused={updatesPaused} previewActive={preview !== null} />
       {children}
-      {!isMapCollapsed ? <Footer bundle={bundle} /> : null}
+      <Footer bundle={bundle} />
     </>
   );
 }
 
-function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBundle | null }) {
+function bundleEqual(a: ContentBundle | null, b: ContentBundle | null): boolean {
+  if (a === b) return true;
+  if (a === null || b === null) return false;
+  return a.content === b.content && a.media === b.media && a.icons === b.icons;
+}
+
+function Header({ bundle }: { bundle: ContentBundle | null }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -128,18 +138,14 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
   const onSignInClick = useCallback(() => void signIn(returnTo), [signIn, returnTo]);
 
   return (
-    <header
-      className={collapsed ? `${styles.siteHeader} ${styles.siteHeaderCollapsed}` : styles.siteHeader}
-      data-testid="site-header"
-      data-collapsed={collapsed ? "true" : undefined}
-    >
-      {!collapsed && settings ? (
+    <header className={styles.siteHeader} data-testid="site-header">
+      {settings ? (
         <Link to="/" className={styles.brand}>
           <BrandMark />
           <span>{settings.siteName}</span>
         </Link>
       ) : null}
-      {!collapsed && entries.length > 0 ? (
+      {entries.length > 0 ? (
         <nav aria-label="Pages" className={styles.inlineNav}>
           <ul>
             {entries
@@ -156,7 +162,7 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
         </nav>
       ) : null}
       <div className={styles.actions}>
-        {!collapsed && authState.status !== "signedIn" ? (
+        {authState.status !== "signedIn" ? (
           <button
             type="button"
             className={styles.signIn}
@@ -165,7 +171,7 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
             {copy.signIn.button}
           </button>
         ) : null}
-        {!collapsed ? <ThemeToggle /> : null}
+        <ThemeToggle />
         <button
           ref={buttonRef}
           type="button"

@@ -1,155 +1,175 @@
-/* docs/site.md section 7.6. Tracker menu drawer with the map-style
-   thumbnails, terrain/road pills, feature toggles, and the data row.
-   Stays independent of the site's colour scheme. */
+/* docs/site.md section 7.6. The tracker menu, laid out as the legacy
+   tracker's: a card in the top-right corner (301 px, the full width on a
+   phone), the six map styles as round thumbnails with a nickname and an
+   accent underline on the active one, a row of Terrain, Road, and Snow
+   toggles, the data row, and a row of square buttons (location, history,
+   time labels, fit, close). */
 
 .trackerMenu {
   position: absolute;
   z-index: 5;
   top: 0;
-  bottom: 0;
   right: 0;
-  width: min(360px, 100%);
+  width: min(301px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
   box-sizing: border-box;
+}
+.panel {
+  composes: frost from "../../theme/Frost.module.css";
+  border-radius: 0 0 0 8px;
+  padding: 6px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  padding: var(--space-5);
-  background: var(--panel);
-  color: var(--text);
-  border-left: 1px solid var(--line);
-  overflow-y: auto;
+  gap: 6px;
 }
-.header {
+.themes {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-3);
-}
-.header h2 {
-  margin: 0;
-  font-size: 1.125rem;
-  color: var(--text-bright);
-}
-.header button {
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--line);
-  background: var(--panel);
-  color: var(--text);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 1.25rem;
-}
-.section {
-  display: flex;
-  gap: var(--space-3);
   flex-wrap: wrap;
-}
-.sectionTheme {
-  gap: var(--space-3) var(--space-4);
+  gap: 4px;
 }
 .theme {
   appearance: none;
+  position: relative;
+  width: 91px;
+  height: 90px;
   border: 0;
-  background: transparent;
+  border-radius: 4px;
+  background: var(--panel-2);
   padding: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
+  justify-content: flex-start;
+  gap: 2px;
   cursor: pointer;
   color: var(--text);
   font-family: var(--font-sans);
-  min-width: 60px;
+  overflow: hidden;
 }
 .themeThumb {
   display: block;
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
+  margin-top: 6px;
   border-radius: 50%;
   border: 1px solid var(--line);
   box-sizing: border-box;
 }
-.themeLabel {
+.themeLabel { font-size: 0.8125rem; color: var(--text); }
+.themeSelected .themeLabel { color: var(--text-bright); }
+.onMark::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--accent);
+}
+.row {
+  display: flex;
+  gap: 4px;
+}
+.rowToggle {
+  appearance: none;
+  position: relative;
+  flex: 1;
+  height: 32px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--panel-2);
+  color: var(--text);
+  font-family: var(--font-sans);
   font-size: 0.8125rem;
-  color: var(--text-dim);
-  padding-bottom: 3px;
-  border-bottom: 3px solid transparent;
-}
-.themeSelected .themeLabel {
-  color: var(--text-bright);
-  border-bottom-color: var(--accent);
-}
-.sectionPills { gap: var(--space-2); }
-.pill {
-  appearance: none;
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--text);
-  border-radius: 999px;
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   cursor: pointer;
+  overflow: hidden;
   transition: var(--hover-transition);
 }
-.pill:hover { border-color: var(--accent); }
-.pillSelected {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-.sectionToggles {
-  gap: var(--space-2);
-}
-.toggle {
-  appearance: none;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--text);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: var(--hover-transition);
-}
-.toggle:hover { border-color: var(--accent); }
-.toggle[aria-pressed="true"] {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  color: var(--accent);
+.rowToggle:hover { color: var(--accent); }
+.pill { composes: rowToggle; }
+.pillSelected { composes: onMark; color: var(--text-bright); }
+.toggle { composes: rowToggle; }
+.toggle[aria-pressed="true"] { color: var(--text-bright); }
+.toggle[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--accent);
 }
 .dataRow {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: var(--space-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
   margin: 0;
-  padding: var(--space-3);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
+  padding: 6px 8px;
+  border-radius: 4px;
   background: var(--panel-2);
 }
 .dataRow > div {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+  align-items: center;
+  gap: 5px;
+  min-height: 26px;
 }
-.dataRow dt {
-  color: var(--text-dim);
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-family: var(--font-mono);
+.dataRow dt { display: inline-flex; color: var(--accent); }
+.dataRow dt span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 .dataRow dd {
   margin: 0;
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: 1.15rem;
+  font-size: 0.8125rem;
   color: var(--text-bright);
 }
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+.footerBtn {
+  appearance: none;
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--panel-2);
+  color: var(--text);
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: var(--hover-transition);
+}
+.footerBtn:hover { color: var(--accent); }
+.footerBtn[aria-pressed="true"] { color: var(--text-bright); }
+.footerBtn[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--accent);
+}
+.close { composes: footerBtn; }
 
 @media (max-width: 760px) {
   .trackerMenu { width: 100%; }
+  .panel { border-radius: 0; }
+  .theme { width: calc((100% - 8px) / 3); }
 }

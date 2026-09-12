@@ -41,7 +41,7 @@ export const Hero: SectionComponent = ({ data, bundle }) => {
     <div className={rootClass}>
       {d.icon ? (
         <div className={styles.heroIcon} aria-hidden>
-          <Icon icon={d.icon} bundle={bundle} decorative size={72} />
+          <Icon icon={d.icon} bundle={bundle} decorative size={56} />
         </div>
       ) : null}
       {d.eyebrow ? (

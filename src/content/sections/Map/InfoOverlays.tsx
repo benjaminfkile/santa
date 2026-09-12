@@ -1,18 +1,12 @@
-// docs/site.md section 7.6. Grouped overlay chips shown above the map:
-// live indicator, liftoff timer, waiting/signal-lost status.
+// docs/site.md section 7.6. The waiting-for-fix and signal-lost status
+// pill, shown under the live pill only while either state holds.
 
 import { useEffect, useState } from "react";
 import { useStore } from "../../../store/useStore";
 import { selectLiveState } from "../../../store/liveState";
 import { copy } from "../../../copy/copy";
-import { LiveIndicator } from "./LiveIndicator";
-import { LiftoffTimer } from "./LiftoffTimer";
+import { SignalGlyph } from "./glyphs";
 import * as styles from "./Map.module.css";
-
-export type InfoOverlaysProps = {
-  showLiveIndicator: boolean;
-  showLiftoffTimer: boolean;
-};
 
 function usePerfNow(intervalMs = 1000): number {
   const [now, setNow] = useState<number>(() => performance.now());
@@ -23,27 +17,23 @@ function usePerfNow(intervalMs = 1000): number {
   return now;
 }
 
-export function InfoOverlays({ showLiveIndicator, showLiftoffTimer }: InfoOverlaysProps) {
+export function FixStatus() {
   const nowPerf = usePerfNow(1000);
   const liveState = useStore((s) => selectLiveState(s, nowPerf));
   const lastSeqChangeAt = useStore((s) => s.lastSeqChangeAt);
 
   const status = statusChipText(liveState, nowPerf, lastSeqChangeAt);
+  if (status === null) return null;
 
   return (
-    <div className={styles.infoOverlays}>
-      {showLiveIndicator ? <LiveIndicator /> : null}
-      {showLiftoffTimer ? <LiftoffTimer /> : null}
-      {status !== null ? (
-        <div
-          className={`${styles.infoOverlaysStatus}${liveState === "signalLost" ? " " + styles.infoOverlaysStatusSignalLost : ""}`}
-          role="status"
-          aria-live="polite"
-          data-testid={liveState === "waitingForFix" ? "waiting-for-fix" : "signal-lost"}
-        >
-          {status}
-        </div>
-      ) : null}
+    <div
+      className={`${styles.infoOverlaysStatus}${liveState === "signalLost" ? " " + styles.infoOverlaysStatusSignalLost : ""}`}
+      role="status"
+      aria-live="polite"
+      data-testid={liveState === "waitingForFix" ? "waiting-for-fix" : "signal-lost"}
+    >
+      <SignalGlyph />
+      <span>{status}</span>
     </div>
   );
 }

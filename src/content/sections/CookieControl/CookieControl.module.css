@@ -36,7 +36,7 @@
   color: var(--text);
   font-size: 0.9375rem;
 }
-.cookieControl button {
+.cookieControl > button {
   align-self: flex-start;
   min-height: 44px;
   padding: 0.5rem 1.1rem;
@@ -49,7 +49,7 @@
   cursor: pointer;
   transition: var(--hover-transition);
 }
-.cookieControl button:hover {
+.cookieControl > button:hover {
   background: var(--text-bright);
   border-color: var(--text-bright);
   color: var(--ground);
@@ -112,3 +112,27 @@
   resize: vertical;
 }
 .cookieControlSheet [role="alert"] { color: var(--err); margin: 0; font-size: 0.8125rem; }
+
+/* The live screen's pill: 34 px, glass, the cookie glyph and one line. */
+.cookiePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px 0 8px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--panel) 86%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  color: var(--text-bright);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: var(--hover-transition);
+}
+.cookiePill svg { color: var(--accent); flex: none; }
+.cookiePill:hover { border-color: var(--accent); color: var(--accent); }

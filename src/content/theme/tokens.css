@@ -50,28 +50,28 @@
   --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
   --font-display: "Bricolage Grotesque", "IBM Plex Sans", system-ui, sans-serif;
 
-  --font-size-base: 17px;
-  --line-height-base: 1.55;
+  --font-size-base: 16px;
+  --line-height-base: 1.5;
   --font-size-label: 13px;
-  --font-size-h1: 2.5rem;
-  --font-size-h2: 1.875rem;
-  --font-size-h3: 1.375rem;
+  --font-size-h1: 2.125rem;
+  --font-size-h2: 1.5rem;
+  --font-size-h3: 1.1875rem;
 
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-7: 48px;
-  --space-8: 64px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 36px;
+  --space-8: 48px;
 
   --width-full: 100%;
-  --width-wide: 1200px;
+  --width-wide: 1120px;
   --width-narrow: 720px;
 
-  --hero-tall: 320px;
-  --hero-short: 200px;
+  --hero-tall: 200px;
+  --hero-short: 120px;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -89,6 +89,19 @@ html, body {
   color: var(--text);
   background: var(--ground);
 }
+/* The footer sits at the bottom of the viewport on short pages and after
+   the content on long ones: the root is a column that fills the viewport
+   and the page's main element takes the slack. */
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+#root > main { flex: 1 0 auto; }
+/* The live screen owns the viewport: nothing scrolls behind the map. */
+html[data-takeover="live"],
+html[data-takeover="live"] body { overflow: hidden; height: 100%; }
 h1, h2 { font-family: var(--font-display); color: var(--text-bright); margin: 0; line-height: 1.15; }
 h3, h4, h5, h6 { font-family: var(--font-sans); color: var(--text-bright); margin: 0; line-height: 1.2; }
 code, kbd, samp, pre { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }

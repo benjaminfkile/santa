@@ -1,5 +1,6 @@
 // docs/site.md section 13.1. Signed-in: fetches /me and /me/subscriptions
-// in parallel, shows a form (address prefilled with the account email)
+// in parallel once per mount (the loader has no render-time dependencies,
+// so a store update never refetches), shows a form (address prefilled with the account email)
 // and one row per subscription with resend/unsubscribe/re-subscribe
 // actions. Signed-out: signedOutCopy plus a sign-in link.
 
@@ -72,7 +73,7 @@ export const AlertsSignup: SectionComponent = ({ data, bundle }) => {
       />
     );
   }
-  return <SignedIn data={d} bundle={bundle} onSignedOut={() => {}} />;
+  return <SignedIn data={d} bundle={bundle} />;
 };
 
 function SignedOut({
@@ -96,11 +97,9 @@ function SignedOut({
 function SignedIn({
   data,
   bundle,
-  onSignedOut,
 }: {
   data: AlertsSignupData;
   bundle: ContentBundle;
-  onSignedOut: () => void;
 }) {
   const [state, setState] = useState<LoadState>({ kind: "loading" });
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -123,13 +122,12 @@ function SignedIn({
     } catch (e) {
       const s = surfaceFor(e);
       if (e instanceof SignInRequired || s.code === "unauthenticated") {
-        onSignedOut();
         setState({ kind: "signedOut" });
         return;
       }
       setState({ kind: "error", message: s.message });
     }
-  }, [onSignedOut]);
+  }, []);
 
   useEffect(() => {
     void load();

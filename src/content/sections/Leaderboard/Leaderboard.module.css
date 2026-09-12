@@ -83,3 +83,25 @@
 .leaderboardToggle:hover { color: var(--accent); border-color: var(--accent); }
 .leaderboardEmptyText { margin: 0; color: var(--text-dim); }
 .leaderboardEmpty { color: var(--text-dim); }
+
+/* The live screen's panel: no border or padding of its own (the map's
+   cookie panel supplies them), 24 px rows, small type. */
+.leaderboardCompact { gap: 0; }
+.leaderboardCompact.leaderboardPanel { padding: 0; border: 0; background: transparent; box-shadow: none; }
+.leaderboardCompact .leaderboardList { gap: 0; }
+.leaderboardCompact .leaderboardRow {
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: 0 6px;
+  padding: 3px 0;
+  min-height: 24px;
+}
+.leaderboardCompact .leaderboardIcon svg { width: 16px; height: 16px; }
+.leaderboardCompact .leaderboardIconPlaceholder { width: 16px; height: 16px; }
+.leaderboardCompact .leaderboardName,
+.leaderboardCompact .leaderboardCount { font-size: 0.78125rem; }
+.leaderboardCompact .leaderboardToggle {
+  min-height: 28px;
+  padding: 2px 8px;
+  font-size: 0.6875rem;
+  margin-top: 4px;
+}

@@ -3,13 +3,13 @@
 // says something has changed schema.
 
 import { useStore } from "../store/useStore";
-import { selectBundle, selectHome } from "../content/selectPage";
+import { selectBundle, selectHome, surfaceEqual } from "../content/selectPage";
 import { PageRenderer } from "../content/PageRenderer";
 import { Loading } from "./Loading";
 import { ReloadPrompt } from "./ReloadPrompt";
 
 export function HomePage() {
-  const surface = useStore(selectHome);
+  const surface = useStore(selectHome, surfaceEqual);
   const bundle = useStore(selectBundle);
   if (surface.kind === "reload") return <ReloadPrompt />;
   if (surface.kind !== "page") return <Loading />;

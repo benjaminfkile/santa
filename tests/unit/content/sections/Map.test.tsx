@@ -115,15 +115,18 @@ describe("Map section class coverage", () => {
     const trackerCss = readFileSync(trackerModulePath, "utf8");
     for (const name of [
       ".mapSection",
-      ".topOverlays",
-      ".stripOverlay",
+      ".mapSectionTakeover",
+      ".topLeft",
+      ".topRight",
+      ".bottomLeft",
+      ".bottomRight",
       ".messageOverlay",
-      ".sideControls",
       ".liveStrip",
       ".liveIndicator",
       ".liftoffTimer",
       ".mapControls",
       ".menuButton",
+      ".leaderboardOverlay",
     ]) {
       expect(mapCss).toContain(name);
     }
@@ -132,9 +135,12 @@ describe("Map section class coverage", () => {
     }
     for (const name of [
       ".trackerMenu",
+      ".panel",
+      ".theme",
       ".pill",
       ".toggle",
       ".dataRow",
+      ".footerBtn",
     ]) {
       expect(trackerCss).toContain(name);
     }

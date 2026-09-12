@@ -6,7 +6,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
   text-align: center;
 }
 .heroTall { min-height: var(--hero-tall); justify-content: center; }
@@ -31,8 +31,8 @@
 }
 
 .heroIcon {
-  width: 72px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background: var(--panel);
   color: var(--accent);
@@ -55,7 +55,7 @@
   text-wrap: balance;
 }
 .heroTagline {
-  font-size: 1.0625rem;
+  font-size: 1rem;
   margin: 0;
   color: inherit;
   max-width: 56ch;
@@ -69,8 +69,8 @@
 }
 .heroPaired .heroLinks { justify-content: flex-start; }
 .heroLink {
-  min-height: 44px;
-  padding: 0.5rem 1.1rem;
+  min-height: 40px;
+  padding: 0.4rem 1rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--accent);
   text-decoration: none;

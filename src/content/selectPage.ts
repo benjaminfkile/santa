@@ -55,3 +55,18 @@ export function selectSlug(s: SiteStore, slug: string): Surface {
   if (!page) return { kind: "notFound" };
   return page.role === "none" ? { kind: "page", page } : { kind: "redirectHome" };
 }
+
+// Two surfaces are the same when their kind and their page (by identity,
+// which the store keeps stable across live polls) match. useStore callers
+// pass this so a poll never re-renders a page whose document is unchanged.
+export function surfaceEqual(a: Surface, b: Surface): boolean {
+  if (a.kind !== b.kind) return false;
+  if (a.kind === "page" && b.kind === "page") return a.page === b.page;
+  return true;
+}
+
+// The live takeover: while the event is live and no preview is loaded,
+// every path renders the tracker alone (docs 7.6, 24).
+export function selectTakeover(s: SiteStore): boolean {
+  return s.live?.eventStatusId === 3 && s.preview === null;
+}

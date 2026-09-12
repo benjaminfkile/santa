@@ -1,7 +1,10 @@
-/* docs/site.md sections 7.6 and 8. Live-screen map recipes: the section
-   root, the map view canvas, overlays anchored to each corner, the live
-   strip with four mono instruments, the live indicator, liftoff timer,
-   info overlays and distance chip, and the vertical control column. */
+/* docs/site.md sections 7.6 and 8. The live screen, laid out as the legacy
+   tracker was: the map owns the viewport; small pills top-left (live state,
+   airborne time, distance, the instrument line, the message ticker); the
+   tracker menu button and the cookie panel top-right; the cookie pill and
+   the sponsor tile bottom-left; zoom or recenter bottom-right. Every
+   overlay sits 8 px from its corner and nothing on the map is taller than
+   44 px except the two panels. */
 
 .mapSection {
   position: relative;
@@ -11,118 +14,177 @@
   background: var(--ground);
   color: var(--text);
 }
-:global(main[data-page-role="live"]) .mapSection {
+.mapSectionTakeover {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  min-height: 0;
   height: 100vh;
   height: 100dvh;
-  min-height: 100vh;
-  min-height: 100dvh;
 }
 .mapSectionLoading {
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.topOverlays,
-.stripOverlay,
-.messageOverlay,
-.distanceOverlay,
-.sideControls,
-.leaderboardOverlay,
-.sponsorOverlay,
-.cookieOverlay {
+
+/* The translucent surface every pill and button on the map shares. */
+.glass {
+  background: color-mix(in srgb, var(--panel) 86%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  color: var(--text);
+}
+
+.topLeft,
+.topRight,
+.bottomLeft,
+.bottomRight {
   position: absolute;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   pointer-events: none;
 }
-.topOverlays > *,
-.stripOverlay > *,
-.messageOverlay > *,
-.distanceOverlay > *,
-.sideControls > *,
-.leaderboardOverlay > *,
-.sponsorOverlay > *,
-.cookieOverlay > * {
-  pointer-events: auto;
+.topLeft > *,
+.topRight > *,
+.bottomLeft > *,
+.bottomRight > * { pointer-events: auto; }
+.topLeft { top: 8px; left: 8px; align-items: flex-start; max-width: calc(100% - 68px); }
+.topRight { top: 8px; right: 8px; align-items: flex-end; }
+.bottomLeft { bottom: 8px; left: 8px; align-items: flex-start; }
+.bottomRight { bottom: 8px; right: 8px; align-items: flex-end; }
+.menuOpen .topLeft,
+.menuOpen .bottomRight,
+.menuOpen .leaderboardOverlay { display: none; }
+
+/* Pills: 34 px, a glyph and a short line. */
+.pill {
+  composes: glass;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 10px 0 8px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-bright);
+  white-space: nowrap;
+  user-select: none;
 }
-.stripOverlay,
-.messageOverlay,
-.leaderboardOverlay,
-.sponsorOverlay {
-  pointer-events: auto;
+.pill svg { flex: none; color: var(--accent); }
+.liveIndicator { composes: pill; }
+.liveIndicatorDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+  display: inline-block;
+  flex: none;
 }
-/* Two classes so the overlay wins over the shared frost recipe, which sets
-   position: relative for its halo and loads after this module. */
-.mapSection .stripOverlay,
-.mapSection .messageOverlay,
-.mapSection .leaderboardOverlay,
-.mapSection .sponsorOverlay {
-  position: absolute;
+.liveIndicatorLive .liveIndicatorDot {
+  background: var(--ok);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 35%, transparent);
 }
-.topOverlays {
-  top: var(--space-3);
-  right: var(--space-3);
-  display: flex;
-  gap: var(--space-3);
-  align-items: flex-start;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+.liveIndicatorPolling .liveIndicatorDot { background: var(--text-dim); }
+.liveIndicatorLabel { color: var(--text-bright); }
+.liveIndicatorAgo { color: var(--text-dim); }
+.liftoffTimer { composes: pill; }
+.liftoffTimerBlank { display: none; }
+.liftoffTimerLabel { color: var(--text-dim); }
+.liftoffTimerValue { color: var(--text-bright); }
+.distanceChip { composes: pill; }
+.infoOverlaysStatus { composes: pill; color: var(--text-dim); }
+.infoOverlaysStatusSignalLost { color: var(--err); }
+.infoOverlaysStatusSignalLost svg { color: var(--err); }
+
+/* The instrument line: speed, heading, altitude on one pill. */
+.liveStrip { composes: pill; gap: 10px; }
+.liveStripInst {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
 }
-.stripOverlay {
-  top: var(--space-3);
-  left: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  max-width: min(560px, calc(100% - var(--space-8)));
-}
+.liveStripValue { color: var(--text-bright); }
+.liveStripUnit { color: var(--text-dim); font-size: 0.6875rem; }
+
+/* The message ticker under the pills. */
 .messageOverlay {
-  top: calc(var(--space-8) + var(--space-4));
-  left: var(--space-3);
-  right: calc(320px + var(--space-6));
-  padding: var(--space-3) var(--space-4);
+  composes: glass;
+  border-radius: 8px;
+  max-width: min(360px, 100%);
+  font-size: 0.8125rem;
 }
-.distanceOverlay {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-.sideControls {
-  bottom: var(--space-3);
-  right: var(--space-3);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
+
+/* Tracker menu button, 44 px, top-right. */
+.menuButton { composes: glass; border-radius: 8px; }
+
+/* Cookie panel under the menu button. */
 .leaderboardOverlay {
-  right: var(--space-3);
-  top: var(--space-3);
-  width: min(300px, calc(100% - var(--space-8)));
-  padding: var(--space-3) var(--space-4);
+  composes: glass;
+  border-radius: 8px;
+  width: 200px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  overflow: hidden;
 }
-.sponsorOverlay {
-  left: var(--space-3);
-  bottom: var(--space-3);
-  max-width: min(440px, calc(50% - var(--space-8)));
-  padding: var(--space-2) var(--space-3);
+.leaderboardHead {
+  appearance: none;
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  height: 32px;
+  padding: 0 6px 0 10px;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
 }
-.cookieOverlay {
-  left: 50%;
-  bottom: var(--space-3);
-  transform: translateX(-50%);
+.leaderboardHead svg { transition: transform 120ms ease-out; color: var(--text-dim); }
+.leaderboardHead[aria-expanded="true"] svg { transform: rotate(180deg); }
+.leaderboardBody { padding: 0 10px 8px; border-top: 1px solid var(--line); }
+
+/* Bottom-right: zoom in and out while following, recenter when not. */
+.mapControls { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.zoomGroup {
+  composes: glass;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
-.menuButton {
-  order: -1;
+.zoomGroup .ctrl:first-child { border-bottom: 1px solid var(--line); }
+.ctrl {
+  appearance: none;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  transition: var(--hover-transition);
 }
-.snow {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-}
+.ctrl:hover { color: var(--accent); background: var(--accent-soft); }
+.recenter { composes: glass; border-radius: 8px; }
+.recenter .ctrl { color: var(--accent); }
+
+/* Bottom-left: the cookie pill above the sponsor tile. */
+.cookieOverlay { display: flex; }
+.sponsorOverlay { display: flex; }
+
 .unavailable {
   position: absolute;
   inset: 0;
@@ -138,149 +200,8 @@
   text-align: center;
 }
 
-.liveStrip {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  color: var(--text);
-}
-.liveStripTags {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  flex-wrap: wrap;
-}
-.liveStripInstruments {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-4);
-  margin: 0;
-}
-.liveStripInst {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
-}
-.liveStripInst dt {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-.liveStripInst dd {
-  margin: 0;
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--space-1);
-}
-.liveStripValue {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  color: var(--text-bright);
-  font-size: 1.0625rem;
-  font-weight: 500;
-}
-.liveStripUnit {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  letter-spacing: 0.06em;
-}
-
-.liveIndicator,
-.liftoffTimer,
-.distanceChip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: var(--panel);
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  font-size: 0.95rem;
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-}
-.liveIndicatorDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--ok);
-  display: inline-block;
-}
-.liveIndicatorLabel { color: var(--text-bright); }
-.liveIndicatorAgo { color: var(--text-dim); }
-.liveIndicatorLive .liveIndicatorDot { background: var(--ok); }
-.liveIndicatorPolling .liveIndicatorDot { background: var(--text-dim); }
-.liftoffTimerBlank { visibility: hidden; }
-.liftoffTimerLabel { color: var(--text-dim); }
-.liftoffTimerValue { color: var(--text-bright); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.infoOverlays {
-  display: inline-flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-}
-.infoOverlaysStatus {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--space-2) var(--space-3);
-  background: var(--panel);
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  font-size: 0.95rem;
-}
-.infoOverlaysStatusSignalLost { color: var(--err); }
-
-.mapControls {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
 @media (max-width: 760px) {
-  .topOverlays {
-    top: var(--space-6);
-    right: var(--space-3);
-    flex-direction: column;
-    align-items: flex-end;
-  }
-  .stripOverlay {
-    top: var(--space-3);
-    left: var(--space-3);
-    right: var(--space-3);
-    max-width: none;
-    padding: var(--space-3);
-  }
-  .liveStripInstruments {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .messageOverlay {
-    top: calc(var(--space-8) + var(--space-8));
-    left: var(--space-3);
-    right: var(--space-3);
-    padding: var(--space-3);
-  }
-  .sideControls {
-    bottom: var(--space-3);
-    right: var(--space-3);
-  }
-  .leaderboardOverlay { display: none; }
-  .sponsorOverlay {
-    left: var(--space-3);
-    right: calc(var(--space-3) + 44px + var(--space-3));
-    max-width: none;
-    bottom: calc(var(--space-3) + 84px);
-  }
-  .cookieOverlay {
-    left: var(--space-3);
-    right: var(--space-3);
-    bottom: var(--space-3);
-    transform: none;
-  }
+  .topLeft { max-width: calc(100% - 64px); }
+  .leaderboardOverlay { width: 180px; }
+  .messageOverlay { max-width: min(300px, 100%); }
 }
