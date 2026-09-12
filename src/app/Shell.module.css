@@ -32,8 +32,8 @@
 .siteHeaderCollapsed {
   position: absolute;
   top: 0;
-  left: 0;
-  right: auto;
+  left: auto;
+  right: 0;
   padding: var(--space-3);
   background: transparent;
   border-bottom: 0;

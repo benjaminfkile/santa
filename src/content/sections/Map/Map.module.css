@@ -50,6 +50,14 @@
 .sponsorOverlay {
   pointer-events: auto;
 }
+/* Two classes so the overlay wins over the shared frost recipe, which sets
+   position: relative for its halo and loads after this module. */
+.mapSection .stripOverlay,
+.mapSection .messageOverlay,
+.mapSection .leaderboardOverlay,
+.mapSection .sponsorOverlay {
+  position: absolute;
+}
 .topOverlays {
   top: var(--space-3);
   right: var(--space-3);
@@ -106,10 +114,7 @@
   transform: translateX(-50%);
 }
 .menuButton {
-  position: absolute;
-  z-index: 3;
-  top: var(--space-3);
-  right: var(--space-3);
+  order: -1;
 }
 .snow {
   position: absolute;
@@ -276,5 +281,4 @@
     bottom: var(--space-3);
     transform: none;
   }
-  .menuButton { top: var(--space-3); right: var(--space-3); }
 }

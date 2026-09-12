@@ -137,6 +137,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   });
 
   const flightHistory = useStore((s) => s.snapshot?.event?.flightHistory ?? null);
+  const hasMessage = useStore((s) => (s.snapshot?.event?.latestMessage ?? null) !== null);
   const flightPoints = useMemo(() => normalizePoints(flightHistory as FlightHistory | null), [flightHistory]);
   const flightHistoryAvailable = flightPoints !== null;
   const snowVisible = controls.snow && snow;
@@ -262,7 +263,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                   />
                 </div>
               )}
-              {overlays.latestMessage ? (
+              {overlays.latestMessage && hasMessage ? (
                 <div className={`${styles.messageOverlay} ${frost.frost}`}>
                   <LatestMessage
                     data={{ style: "ticker" }}
@@ -277,6 +278,15 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 </div>
               ) : null}
               <div className={styles.sideControls}>
+                <button
+                  type="button"
+                  className={`${styles.menuButton} ${ibtn.ibtn}`}
+                  aria-label={copy.map.trackerMenu}
+                  aria-expanded={menuOpen}
+                  onClick={() => setMenuOpen(true)}
+                >
+                  <TrackerMenuIcon />
+                </button>
                 <MapControls
                   snowOn={snowVisible}
                   showSnow={controls.snow}
@@ -316,15 +326,6 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                   <CookieControl data={{}} items={[]} bundle={bundle} />
                 </div>
               ) : null}
-              <button
-                type="button"
-                className={`${styles.menuButton} ${ibtn.ibtn}`}
-                aria-label={copy.map.trackerMenu}
-                aria-expanded={menuOpen}
-                onClick={() => setMenuOpen(true)}
-              >
-                <TrackerMenuIcon />
-              </button>
               <TrackerMenu
                 open={menuOpen}
                 onClose={() => setMenuOpen(false)}
@@ -366,7 +367,10 @@ export const Map: SectionComponent = ({ data, bundle }) => {
 function TrackerMenuIcon() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M4 7h16M4 12h16M4 17h16" />
+      <path d="M4 7h10M4 12h4M12 12h8M4 17h10M18 17h2" />
+      <circle cx="17" cy="7" r="2" />
+      <circle cx="9" cy="12" r="2" />
+      <circle cx="15" cy="17" r="2" />
     </svg>
   );
 }
