@@ -1,11 +1,12 @@
-// docs/site.md section 8.5. Route overlay: a solid `Polyline`, a second
-// `Polyline` of arrow symbols, and time-label markers at fixed elapsed
-// intervals. Arrow step and label interval tables are pure and unit-tested.
+// docs/site.md section 8.5. Flight history overlay: a solid `Polyline`, a
+// second `Polyline` of arrow symbols, and time-label markers at fixed
+// elapsed intervals. Arrow step and label interval tables are pure and
+// unit-tested. The points come from `snapshot.event.flightHistory.points`
+// (route order, already thinned by the API).
 
-import type { Route } from "../contracts";
 import type { MapTheme } from "./themes";
 
-export type RoutePoint = { lat: number; lng: number; recordedAt?: string | null };
+export type HistoryPoint = { lat: number; lng: number; recordedAt?: string | null };
 
 export function arrowStepForZoom(zoom: number): number {
   if (zoom >= 15) return 20;
@@ -40,7 +41,7 @@ export type LabelPoint = {
 };
 
 export function pickLabelPoints(
-  points: RoutePoint[],
+  points: HistoryPoint[],
   intervalMinutes: number,
 ): LabelPoint[] {
   if (points.length === 0 || intervalMinutes <= 0) return [];
@@ -81,16 +82,16 @@ export function timeLabelSvgDataUri(text: string, theme: MapTheme): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-export type RouteOverlay = {
-  redraw(theme: MapTheme, zoom: number, opts: { routeLines: boolean; timeLabels: boolean }): void;
+export type FlightHistoryOverlay = {
+  redraw(theme: MapTheme, zoom: number, opts: { flightHistory: boolean; timeLabels: boolean }): void;
   destroy(): void;
 };
 
-export function createRouteOverlay(
+export function createFlightHistoryOverlay(
   libs: { maps: google.maps.MapsLibrary; marker: google.maps.MarkerLibrary },
   map: google.maps.Map,
-  route: Route | null,
-): RouteOverlay {
+  points: HistoryPoint[] | null,
+): FlightHistoryOverlay {
   let line: google.maps.Polyline | null = null;
   let arrows: google.maps.Polyline | null = null;
   let labels: google.maps.Marker[] = [];
@@ -107,50 +108,49 @@ export function createRouteOverlay(
   return {
     redraw(theme, zoom, opts) {
       clear();
-      const points = (route?.points ?? []).filter(
-        (p): p is RoutePoint =>
+      if (!opts.flightHistory || points === null) return;
+      const filtered = points.filter(
+        (p): p is HistoryPoint =>
           typeof p.lat === "number" && typeof p.lng === "number",
       );
-      if (points.length < 2) return;
-      const path = points.map((p) => ({ lat: p.lat, lng: p.lng }));
+      if (filtered.length < 2) return;
+      const path = filtered.map((p) => ({ lat: p.lat, lng: p.lng }));
 
-      if (opts.routeLines) {
-        line = new libs.maps.Polyline({
-          path,
-          map,
-          geodesic: true,
-          strokeColor: theme.routeColor,
-          strokeOpacity: theme.routeOpacity,
-          strokeWeight: 2,
-        });
+      line = new libs.maps.Polyline({
+        path,
+        map,
+        geodesic: true,
+        strokeColor: theme.routeColor,
+        strokeOpacity: theme.routeOpacity,
+        strokeWeight: 2,
+      });
 
-        const step = arrowStepForZoom(zoom);
-        const scale = arrowScaleForZoom(zoom);
-        const arrowIcons: google.maps.IconSequence[] = [];
-        for (let i = step; i < points.length; i += step) {
-          arrowIcons.push({
-            icon: {
-              path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-              scale,
-              strokeColor: theme.arrowColor,
-              fillColor: theme.arrowColor,
-              fillOpacity: 1,
-            },
-            offset: `${(i / points.length) * 100}%`,
-          });
-        }
-        arrows = new libs.maps.Polyline({
-          path,
-          map,
-          geodesic: true,
-          strokeOpacity: 0,
-          icons: arrowIcons,
+      const step = arrowStepForZoom(zoom);
+      const scale = arrowScaleForZoom(zoom);
+      const arrowIcons: google.maps.IconSequence[] = [];
+      for (let i = step; i < filtered.length; i += step) {
+        arrowIcons.push({
+          icon: {
+            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+            scale,
+            strokeColor: theme.arrowColor,
+            fillColor: theme.arrowColor,
+            fillOpacity: 1,
+          },
+          offset: `${(i / filtered.length) * 100}%`,
         });
       }
+      arrows = new libs.maps.Polyline({
+        path,
+        map,
+        geodesic: true,
+        strokeOpacity: 0,
+        icons: arrowIcons,
+      });
 
       if (opts.timeLabels) {
         const intervalMin = labelIntervalMinutesForZoom(zoom);
-        const labelPts = pickLabelPoints(points, intervalMin);
+        const labelPts = pickLabelPoints(filtered, intervalMin);
         for (const l of labelPts) {
           const url = timeLabelSvgDataUri(l.labelText, theme);
           const marker = new libs.marker.Marker({

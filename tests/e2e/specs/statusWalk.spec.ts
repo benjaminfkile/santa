@@ -105,18 +105,16 @@ test("status walk", async ({ page }) => {
       console.warn("hub did not reach connected within 20 s; polling only");
     }
 
-    // 5. Replay 60 points; seq must increase; speed shows.
+    // 5. Replay 60 points from the embedded flight history; seq must increase; speed shows.
     const adminSnap = await getAdminSnapshot();
     const snapshot = await fetchCdnSnapshot(adminSnap.url);
-    const routeUrl = snapshot.event?.routeUrl ?? null;
-    if (routeUrl === null) throw new Error("Walk event has no route");
-    const routeRes = await fetch(routeUrl, { credentials: "omit" });
-    if (!routeRes.ok) throw new Error(`route fetch → ${routeRes.status}`);
-    const route = (await routeRes.json()) as { points: { lat: number; lng: number }[] };
+    const points = snapshot.event?.flightHistory?.points ?? null;
+    if (points === null || points.length === 0) throw new Error("Walk event has no flight history");
     const postedAt = Date.now();
-    // Route points carry only lat/lng; a real fix carries speed, heading, altitude,
-    // and accuracy too, which the data row renders.
-    const fixes = route.points.slice(0, 60).map((p) => ({
+    // Flight-history points carry only lat/lng (and recordedAt); a real fix
+    // carries speed, heading, altitude, and accuracy too, which the data
+    // row renders.
+    const fixes = points.slice(0, 60).map((p) => ({
       ...p,
       speedMps: 45,
       headingDeg: 90,

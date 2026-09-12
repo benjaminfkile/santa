@@ -5,7 +5,7 @@ import { store as defaultStore, type StoreHandle } from "./store";
 import { applyLive } from "./applyLive";
 import { pollCadenceMs } from "./cadence";
 import { backoffAt } from "./backoff";
-import { fetchLive, fetchSnapshot, fetchRoute, SchemaVersionError } from "./fetchers";
+import { fetchLive, fetchSnapshot, SchemaVersionError } from "./fetchers";
 import type { Snapshot } from "../contracts";
 
 export type LoopDeps = {
@@ -21,7 +21,6 @@ let stopping = false;
 let pollTimer: ReturnType<typeof setTimeout> | null = null;
 let inFlight = false;
 let snapshotInFlight: string | null = null;
-let routeInFlight: string | null = null;
 let pollNowFn: (() => void) | null = null;
 let visibilityHandler: (() => void) | null = null;
 let onlineHandler: (() => void) | null = null;
@@ -93,14 +92,14 @@ async function applyAndFetchDependents(
   if (wanted !== null) {
     if (wanted !== result.state.snapshotUrl) void fetchSnapshotWithBackoff(store, wanted);
   } else if (result.state.snapshotUrl !== null) {
-    // Cleared snapshotUrl: drop snapshot and route.
-    store.setState({ snapshot: null, snapshotUrl: null, route: null, routeUrl: null });
+    // Cleared snapshotUrl: drop snapshot.
+    store.setState({ snapshot: null, snapshotUrl: null });
   }
   return result.applied;
 }
 
 // The hub's `location` events go through the same path as a poll so the
-// snapshot and route follow a pushed live object too.
+// snapshot follows a pushed live object too.
 export function applyIncomingLive(store: StoreHandle, obj: unknown, now: () => number): Promise<boolean> {
   return applyAndFetchDependents(store, obj, now);
 }
@@ -126,8 +125,6 @@ async function fetchSnapshotWithBackoff(
           snapshotUrl: wantedUrl,
           diag: { ...s.diag, snapshotFetchFailing: false },
         }));
-        // Reconcile route.
-        void reconcileRoute(store, (snap.event as { routeUrl?: string | null } | null | undefined)?.routeUrl ?? null);
         return;
       } catch (err) {
         if (err instanceof SchemaVersionError) {
@@ -141,48 +138,6 @@ async function fetchSnapshotWithBackoff(
     }
   } finally {
     if (snapshotInFlight === wantedUrl) snapshotInFlight = null;
-  }
-}
-
-async function reconcileRoute(
-  store: StoreHandle,
-  wantedUrl: string | null,
-): Promise<void> {
-  const current = store.getState().routeUrl;
-  if (wantedUrl === current) return;
-  if (wantedUrl === null) {
-    store.setState({ route: null, routeUrl: null });
-    return;
-  }
-  if (routeInFlight === wantedUrl) return;
-  routeInFlight = wantedUrl;
-  let attempt = 0;
-  try {
-    while (!stopping) {
-      const currentWantedRoute = (store.getState().snapshot?.event as { routeUrl?: string | null } | null | undefined)?.routeUrl ?? null;
-      if (currentWantedRoute !== wantedUrl) return;
-      try {
-        const route = await fetchRoute(wantedUrl);
-        if (((store.getState().snapshot?.event as { routeUrl?: string | null } | null | undefined)?.routeUrl ?? null) !== wantedUrl) return;
-        store.setState((s) => ({
-          ...s,
-          route: route as never,
-          routeUrl: wantedUrl,
-          diag: { ...s.diag, routeFetchFailing: false },
-        }));
-        return;
-      } catch (err) {
-        if (err instanceof SchemaVersionError) {
-          store.setState({ schemaMismatch: true });
-          return;
-        }
-        store.setState((s) => ({ ...s, diag: { ...s.diag, routeFetchFailing: true } }));
-        await sleep(backoffAt(attempt));
-        attempt += 1;
-      }
-    }
-  } finally {
-    if (routeInFlight === wantedUrl) routeInFlight = null;
   }
 }
 
@@ -267,7 +222,6 @@ export function _resetLoopForTests(): void {
   }
   inFlight = false;
   snapshotInFlight = null;
-  routeInFlight = null;
   if (currentDoc && visibilityHandler) {
     currentDoc.removeEventListener("visibilitychange", visibilityHandler);
   }

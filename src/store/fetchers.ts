@@ -49,9 +49,3 @@ export async function fetchSnapshot(url: string): Promise<unknown> {
   checkSchemaVersion(obj, url);
   return obj;
 }
-
-export async function fetchRoute(url: string): Promise<unknown> {
-  const obj = await fetchJson<unknown>(url, 20000);
-  checkSchemaVersion(obj, url);
-  return obj;
-}

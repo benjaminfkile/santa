@@ -1,73 +1,52 @@
-// docs/site.md section 7.4. RoutePreview: `svg`: the points as a normalized
-// SVG path, no Maps load; `map`: the route viewer of section 8 with
-// `fitRoute()` and no Santa marker; `emptyText` when `route` is null.
+// docs/site.md section 7.4 and 8.5. `route_preview`:
+//  - `image`: the poster through `Media` (960 variant, srcset) wrapped in a
+//     link to the page whose `route_preview` has style `viewer`, or
+//     unlinked when no such page is published.
+//  - `viewer`: `data.disclaimer` in the disclaimer recipe plus the pan-and
+//     -zoom `PosterViewer` over the asset's original url. No map chunk.
 
-import { Suspense, lazy, useMemo } from "react";
+import { useMemo } from "react";
 import type { SectionComponent } from "../../registry";
-import type { Route } from "../../../contracts";
+import type { ContentDocument, MediaRef } from "../../../contracts";
 import { Inline } from "../../inline/Inline";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
-
-const LazyRoutePreviewMap = lazy(() =>
-  import("./RoutePreviewMap").then((mod) => ({ default: mod.RoutePreviewMap })),
-);
+import { Link } from "react-router-dom";
+import { Media } from "../../primitives/Media";
+import { resolveMedia } from "../../primitives/resolve";
+import { PosterViewer } from "./PosterViewer";
 
 type RoutePreviewData = {
   heading?: string | null;
-  style?: "svg" | "map";
+  style?: "image" | "viewer";
   emptyText?: string | null;
+  disclaimer?: string | null;
 };
 
-const SVG_WIDTH = 1200;
-const SVG_HEIGHT = 300;
-const PADDING = 20;
-
-type Point = { x: number; y: number };
-
-function normalizePoints(route: Route): Point[] {
-  const points = (route.points ?? []).filter(
-    (p) => typeof p.lat === "number" && typeof p.lng === "number",
-  ) as { lat: number; lng: number }[];
-  if (points.length === 0) return [];
-  let minLat = points[0].lat;
-  let maxLat = points[0].lat;
-  let minLng = points[0].lng;
-  let maxLng = points[0].lng;
-  for (const p of points) {
-    if (p.lat < minLat) minLat = p.lat;
-    if (p.lat > maxLat) maxLat = p.lat;
-    if (p.lng < minLng) minLng = p.lng;
-    if (p.lng > maxLng) maxLng = p.lng;
-  }
-  const rangeLng = maxLng - minLng || 1;
-  const rangeLat = maxLat - minLat || 1;
-  const w = SVG_WIDTH - PADDING * 2;
-  const h = SVG_HEIGHT - PADDING * 2;
-  return points.map((p) => ({
-    x: PADDING + ((p.lng - minLng) / rangeLng) * w,
-    y: PADDING + (1 - (p.lat - minLat) / rangeLat) * h,
-  }));
-}
-
-function pointsToPath(points: Point[]): string {
-  if (points.length === 0) return "";
-  const [first, ...rest] = points;
-  const move = `M ${first.x.toFixed(2)} ${first.y.toFixed(2)}`;
-  const segments = rest.map((p) => `L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`);
-  return [move, ...segments].join(" ");
+function findViewerPageSlug(content: ContentDocument | null | undefined): string | null {
+  if (!content?.pages) return null;
+  const page = content.pages.find((p) =>
+    p.role === "none" &&
+    p.sections.some(
+      (s) =>
+        s.kind === "route_preview" &&
+        ((s.data as { style?: string } | null | undefined)?.style ?? "image") === "viewer",
+    ),
+  );
+  return page?.slug ?? null;
 }
 
 export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   const d = (data ?? {}) as RoutePreviewData;
-  const style = d.style ?? "svg";
+  const style = d.style === "viewer" ? "viewer" : "image";
   const emptyText = d.emptyText ?? null;
-  const route = useStore((s) => s.route);
+  const mediaId = useStore((s) => s.snapshot?.event?.routeImageMediaId ?? null);
   const event = useSnapshotEvent();
+  const content = bundle.content;
 
-  const path = useMemo(() => (route ? pointsToPath(normalizePoints(route)) : ""), [route]);
+  const viewerSlug = useMemo(() => findViewerPageSlug(content), [content]);
 
-  if (route === null || path === "") {
+  if (mediaId === null || mediaId === undefined || mediaId === "") {
     if (emptyText) {
       return (
         <div className="route-preview route-preview--empty">
@@ -85,43 +64,99 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
     return null;
   }
 
+  const entry = resolveMedia(bundle, mediaId);
+  if (entry === null) {
+    if (emptyText) {
+      return (
+        <div className="route-preview route-preview--empty">
+          {d.heading ? (
+            <h2 className="route-preview__heading">
+              <Inline text={d.heading} bundle={bundle} event={event} />
+            </h2>
+          ) : null}
+          <p className="route-preview__empty-text">
+            <Inline text={emptyText} bundle={bundle} event={event} />
+          </p>
+        </div>
+      );
+    }
+    return null;
+  }
+
+  const media: MediaRef = { mediaId, alt: entry.alt ?? "Route poster" };
+
+  if (style === "viewer") {
+    const variants = entry.variants ?? {};
+    const parts: string[] = [];
+    for (const [key, value] of Object.entries(variants)) {
+      if (value === undefined) continue;
+      const w = Number(key);
+      if (!Number.isFinite(w)) continue;
+      parts.push(`${value} ${w}w`);
+    }
+    const srcSet = parts.length > 0 ? parts.join(", ") : undefined;
+    const alt = entry.alt ?? "Route poster";
+    return (
+      <div className="route-preview route-preview--viewer" data-testid="route-preview-viewer">
+        {d.heading ? (
+          <h2 className="route-preview__heading">
+            <Inline text={d.heading} bundle={bundle} event={event} />
+          </h2>
+        ) : null}
+        {d.disclaimer ? (
+          <div className="route-disclaimer-recipe" role="note">
+            <DisclaimerIcon />
+            <p>
+              <Inline text={d.disclaimer} bundle={bundle} event={event} />
+            </p>
+          </div>
+        ) : null}
+        <PosterViewer
+          src={entry.url ?? ""}
+          srcSet={srcSet}
+          sizes="100vw"
+          alt={alt}
+          width={entry.width ?? undefined}
+          height={entry.height ?? undefined}
+        />
+      </div>
+    );
+  }
+
+  const picture = (
+    <Media
+      media={media}
+      bundle={bundle}
+      sizeOverride="(min-width: 960px) 960px, 100vw"
+      testId="route-preview-image"
+      className="route-preview__image"
+    />
+  );
+
   return (
-    <div className={`route-preview route-preview--${style}`}>
+    <div className="route-preview route-preview--image" data-testid="route-preview-image-wrap">
       {d.heading ? (
         <h2 className="route-preview__heading">
           <Inline text={d.heading} bundle={bundle} event={event} />
         </h2>
       ) : null}
-      {style === "map" ? (
-        <div
-          className="route-preview__map-wrapper"
-          data-style="map"
-          data-testid="route-preview-map"
-        >
-          <Suspense fallback={<div className="route-preview__map-loading" aria-busy />}>
-            <LazyRoutePreviewMap />
-          </Suspense>
-        </div>
+      {viewerSlug !== null ? (
+        <Link to={`/${viewerSlug}`} className="route-preview__link" data-testid="route-preview-link">
+          {picture}
+        </Link>
       ) : (
-        <svg
-          className="route-preview__svg"
-          viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
-          preserveAspectRatio="xMidYMid meet"
-          role="img"
-          aria-label={route.name ?? "Route preview"}
-        >
-          <path
-            d={path}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={3}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            data-testid="route-polyline"
-          />
-        </svg>
+        picture
       )}
     </div>
   );
 };
 
+function DisclaimerIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 3l10 18H2z" />
+      <path d="M12 10v5" />
+      <path d="M12 18h.01" />
+    </svg>
+  );
+}

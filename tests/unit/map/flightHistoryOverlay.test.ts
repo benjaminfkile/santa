@@ -1,7 +1,7 @@
-// docs/site.md section 8.5. Pure parts of the route overlay: arrow step
-// and scale by zoom, label interval by zoom, label text formatting, and
-// the label-point selection that walks the timed points and picks a
-// label each time the elapsed time crosses the next interval.
+// docs/site.md section 8.5. Pure parts of the flight history overlay:
+// arrow step and scale by zoom, label interval by zoom, label text
+// formatting, and the label-point selection that walks the timed points
+// and picks a label each time the elapsed time crosses the next interval.
 
 import { describe, it, expect } from "vitest";
 import {
@@ -10,8 +10,8 @@ import {
   labelIntervalMinutesForZoom,
   formatLabelText,
   pickLabelPoints,
-  type RoutePoint,
-} from "../../../src/map/routeOverlay";
+  type HistoryPoint,
+} from "../../../src/map/flightHistoryOverlay";
 
 describe("arrowStepForZoom", () => {
   it("uses 20 at zoom 15 and above", () => {
@@ -75,7 +75,7 @@ describe("formatLabelText", () => {
 });
 
 describe("pickLabelPoints", () => {
-  function ptAt(minute: number): RoutePoint {
+  function ptAt(minute: number): HistoryPoint {
     const t = new Date(Date.UTC(2025, 11, 24, 20, 0, 0) + minute * 60000);
     return { lat: 40 + minute * 0.01, lng: -105 + minute * 0.01, recordedAt: t.toISOString() };
   }
@@ -86,7 +86,7 @@ describe("pickLabelPoints", () => {
   });
 
   it("picks the first point past each interval boundary", () => {
-    const points: RoutePoint[] = Array.from({ length: 61 }, (_, i) => ptAt(i));
+    const points: HistoryPoint[] = Array.from({ length: 61 }, (_, i) => ptAt(i));
     const labels = pickLabelPoints(points, 5);
     expect(labels.map((l) => l.minutesElapsed)).toEqual([5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]);
     expect(labels.map((l) => l.labelText)).toEqual([
@@ -96,7 +96,7 @@ describe("pickLabelPoints", () => {
   });
 
   it("uses the first timed point as the anchor and skips null recordedAt", () => {
-    const points: RoutePoint[] = [
+    const points: HistoryPoint[] = [
       { lat: 0, lng: 0, recordedAt: null },
       ptAt(0),
       { lat: 0, lng: 0, recordedAt: null },
@@ -110,7 +110,7 @@ describe("pickLabelPoints", () => {
   });
 
   it("returns nothing when no point carries a timestamp", () => {
-    const points: RoutePoint[] = [
+    const points: HistoryPoint[] = [
       { lat: 0, lng: 0, recordedAt: null },
       { lat: 1, lng: 1, recordedAt: null },
     ];

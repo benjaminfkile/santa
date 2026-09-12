@@ -442,8 +442,38 @@ main#main > [role="alert"] {
   width: 100%;
 }
 
-/* Live screen: map section, overlays, tracker menu (S17 migrates these
-   into their own modules). */
+/* Live screen: map section, overlays, tracker menu. S17 keeps them in
+   tokens.css (the site's only CSS entry that carries live-screen
+   recipes); the module-per-component rule from S16 does not apply to the
+   live overlays because they are all tied to the `.frost` recipe. */
+.ibtn {
+  appearance: none;
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  border: 1px solid var(--line);
+  color: var(--text);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  transition: var(--hover-transition);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.ibtn:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.ibtn svg {
+  width: 18px;
+  height: 18px;
+}
+.ibtn[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
 .map-section {
   position: relative;
   width: 100%;
@@ -476,6 +506,7 @@ main[data-page-role="live"] .map-section {
   background: var(--panel-2);
 }
 .map-section__top-overlays,
+.map-section__strip-overlay,
 .map-section__message-overlay,
 .map-section__distance-overlay,
 .map-section__side-controls,
@@ -487,12 +518,19 @@ main[data-page-role="live"] .map-section {
   pointer-events: none;
 }
 .map-section__top-overlays > *,
+.map-section__strip-overlay > *,
 .map-section__message-overlay > *,
 .map-section__distance-overlay > *,
 .map-section__side-controls > *,
 .map-section__leaderboard-overlay > *,
 .map-section__sponsor-overlay > *,
 .map-section__cookie-overlay > * {
+  pointer-events: auto;
+}
+.map-section__strip-overlay,
+.map-section__message-overlay,
+.map-section__leaderboard-overlay,
+.map-section__sponsor-overlay {
   pointer-events: auto;
 }
 .map-section__top-overlays {
@@ -504,11 +542,17 @@ main[data-page-role="live"] .map-section {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+.map-section__strip-overlay {
+  top: var(--space-3);
+  left: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  max-width: min(560px, calc(100% - var(--space-8)));
+}
 .map-section__message-overlay {
-  top: var(--space-5);
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(640px, calc(100% - var(--space-8)));
+  top: calc(var(--space-8) + var(--space-4));
+  left: var(--space-3);
+  right: calc(320px + var(--space-6));
+  padding: var(--space-3) var(--space-4);
 }
 .map-section__distance-overlay {
   top: 50%;
@@ -516,45 +560,39 @@ main[data-page-role="live"] .map-section {
   transform: translate(-50%, -50%);
 }
 .map-section__side-controls {
-  top: 50%;
+  bottom: var(--space-3);
   right: var(--space-3);
-  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
 .map-section__leaderboard-overlay {
-  left: var(--space-3);
-  bottom: var(--space-3);
-  width: min(320px, calc(100% - var(--space-8)));
+  right: var(--space-3);
+  top: var(--space-3);
+  width: min(300px, calc(100% - var(--space-8)));
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 .map-section__sponsor-overlay {
+  left: var(--space-3);
+  bottom: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.map-section__cookie-overlay {
   left: 50%;
   bottom: var(--space-3);
   transform: translateX(-50%);
-}
-.map-section__cookie-overlay {
-  right: var(--space-3);
-  bottom: var(--space-3);
 }
 .map-section__menu-button {
   position: absolute;
   z-index: 3;
   top: var(--space-3);
-  left: var(--space-3);
-  width: 44px;
-  height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  background: var(--panel);
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-sans);
-  cursor: pointer;
-  font-size: 0.9rem;
+  right: var(--space-3);
 }
 .map-section__snow {
   position: absolute;
@@ -575,6 +613,58 @@ main[data-page-role="live"] .map-section {
   background: var(--panel);
   color: var(--text);
   text-align: center;
+}
+
+/* Live strip: four mono instruments (speed, heading, altitude, distance). */
+.live-strip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  color: var(--text);
+}
+.live-strip__tags {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.live-strip__instruments {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+}
+.live-strip__inst {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.live-strip__inst dt {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.live-strip__inst dd {
+  margin: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+}
+.live-strip__value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-bright);
+  font-size: 1.0625rem;
+  font-weight: 500;
+}
+.live-strip__unit {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
 }
 
 /* Live-screen indicator, timer, distance chip (S17 migrates these). */
@@ -622,71 +712,102 @@ main[data-page-role="live"] .map-section {
 }
 .info-overlays__status--signalLost { color: var(--err); }
 
-/* Map controls (S17 migrates). */
+/* Map controls: vertical column in the studio's `.ibtn` recipe. */
 .map-controls {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
-.map-controls__button {
-  width: 44px;
-  height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  background: var(--panel);
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-family: var(--font-sans);
-  font-size: 1.25rem;
-  line-height: 1;
-}
-.map-controls__button--recenter {
-  width: auto;
-  padding: 0 var(--space-3);
-  font-size: 0.95rem;
-}
 
-/* Route preview (S17 migrates). */
+/* Route preview: `image` renders the poster picture (linked to the
+   viewer page when one is published) and `viewer` renders the disclaimer
+   plus the pan-and-zoom PosterViewer. Neither loads the map chunk. */
 .route-preview { display: flex; flex-direction: column; gap: var(--space-3); }
 .route-preview__heading { margin: 0; font-family: var(--font-display); font-size: var(--font-size-h2); color: var(--text-bright); }
-.route-preview__svg {
+.route-preview__empty-text { margin: 0; color: var(--text-dim); }
+.route-preview__link {
+  display: block;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  transition: var(--hover-transition);
+}
+.route-preview__link:hover { border-color: var(--accent); }
+.route-preview__image {
+  display: block;
   width: 100%;
   height: auto;
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  color: var(--text);
-  padding: var(--space-3);
-  box-sizing: border-box;
 }
-.route-preview__map-placeholder {
-  min-height: 320px;
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-}
-.route-preview__empty-text { margin: 0; color: var(--text-dim); }
+.route-preview__link .route-preview__image { border-radius: 0; }
 
-/* Tracker menu drawer (S17 migrates). */
+.route-disclaimer-recipe {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--line));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--warn) 8%, var(--panel));
+  color: var(--text);
+}
+.route-disclaimer-recipe svg {
+  color: var(--warn);
+  flex: none;
+  margin-top: 2px;
+}
+.route-disclaimer-recipe p { margin: 0; font-size: 0.9375rem; }
+
+.route-poster {
+  position: relative;
+  width: 100%;
+  height: min(620px, 80vh);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  cursor: grab;
+  touch-action: none;
+  outline: none;
+}
+.route-poster:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+.route-poster--drag { cursor: grabbing; }
+.route-poster__img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  user-select: none;
+  -webkit-user-drag: none;
+  max-width: none;
+}
+.route-poster__controls {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  z-index: 2;
+}
+
+/* Tracker menu drawer: the studio's recipe. Stays independent of the
+   site's colour scheme (the map style picker is not affected by
+   :root[data-theme]). */
 .tracker-menu {
   position: absolute;
   z-index: 5;
   top: 0;
   bottom: 0;
-  left: 0;
+  right: 0;
   width: min(360px, 100%);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
   padding: var(--space-5);
   background: var(--panel);
   color: var(--text);
-  border-right: 1px solid var(--line);
+  border-left: 1px solid var(--line);
   overflow-y: auto;
 }
 .tracker-menu__header {
@@ -694,6 +815,11 @@ main[data-page-role="live"] .map-section {
   justify-content: space-between;
   align-items: center;
   gap: var(--space-3);
+}
+.tracker-menu__header h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  color: var(--text-bright);
 }
 .tracker-menu__header button {
   width: 44px;
@@ -707,23 +833,83 @@ main[data-page-role="live"] .map-section {
 }
 .tracker-menu__section {
   display: flex;
-  gap: var(--space-2);
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
-.tracker-menu__section--theme { flex-wrap: wrap; }
+.tracker-menu__section--theme {
+  gap: var(--space-3) var(--space-4);
+}
 .tracker-menu__theme {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  cursor: pointer;
+  color: var(--text);
+  font-family: var(--font-sans);
+  min-width: 60px;
+}
+.tracker-menu__theme-thumb {
+  display: block;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  box-sizing: border-box;
+}
+.tracker-menu__theme-label {
+  font-size: 0.8125rem;
+  color: var(--text-dim);
+  padding-bottom: 3px;
+  border-bottom: 3px solid transparent;
+}
+.tracker-menu__theme--selected .tracker-menu__theme-label {
+  color: var(--text-bright);
+  border-bottom-color: var(--accent);
+}
+.tracker-menu__section--pills { gap: var(--space-2); }
+.tracker-menu__pill {
+  appearance: none;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: var(--hover-transition);
+}
+.tracker-menu__pill:hover { border-color: var(--accent); }
+.tracker-menu__pill--selected {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.tracker-menu__section--toggles {
+  gap: var(--space-2);
+}
+.tracker-menu__toggle {
+  appearance: none;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--line);
-  background: var(--panel);
+  background: transparent;
   color: var(--text);
   border-radius: var(--radius-sm);
   font-family: var(--font-sans);
+  font-size: 0.875rem;
   cursor: pointer;
+  transition: var(--hover-transition);
 }
-.tracker-menu__theme--selected {
+.tracker-menu__toggle:hover { border-color: var(--accent); }
+.tracker-menu__toggle[aria-pressed="true"] {
+  background: var(--accent-soft);
   border-color: var(--accent);
-  background: var(--accent);
-  color: var(--on-accent);
+  color: var(--accent);
 }
 .tracker-menu__data-row {
   display: grid;
@@ -772,31 +958,41 @@ main[data-page-role="live"] .map-section {
     flex-direction: column;
     align-items: flex-end;
   }
-  .map-section__message-overlay {
-    top: calc(var(--space-8) + var(--space-6));
+  .map-section__strip-overlay {
+    top: var(--space-3);
     left: var(--space-3);
     right: var(--space-3);
-    transform: none;
-    width: auto;
+    max-width: none;
+    padding: var(--space-3);
+  }
+  .live-strip__instruments {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .map-section__message-overlay {
+    top: calc(var(--space-8) + var(--space-8));
+    left: var(--space-3);
+    right: var(--space-3);
+    padding: var(--space-3);
   }
   .map-section__side-controls {
-    top: auto;
-    bottom: 35%;
-    transform: none;
+    bottom: var(--space-3);
+    right: var(--space-3);
   }
-  .map-section__leaderboard-overlay,
-  .map-section__sponsor-overlay,
+  .map-section__leaderboard-overlay { display: none; }
+  .map-section__sponsor-overlay {
+    left: var(--space-3);
+    right: auto;
+    bottom: calc(var(--space-3) + 60px);
+  }
   .map-section__cookie-overlay {
     left: var(--space-3);
     right: var(--space-3);
+    bottom: var(--space-3);
     transform: none;
-    width: auto;
   }
-  .map-section__leaderboard-overlay { bottom: var(--space-3); }
-  .map-section__sponsor-overlay { bottom: calc(var(--space-3) + 200px); }
-  .map-section__cookie-overlay { bottom: calc(var(--space-3) + 200px); }
-  .map-section__menu-button { top: var(--space-6); }
+  .map-section__menu-button { top: var(--space-3); right: var(--space-3); }
   .tracker-menu { width: 100%; }
+  .route-poster { height: min(460px, 70vh); }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -26,13 +26,11 @@ vi.mock("../../src/config/env", () => ({
 type Fetchers = {
   fetchLive: ReturnType<typeof vi.fn>;
   fetchSnapshot: ReturnType<typeof vi.fn>;
-  fetchRoute: ReturnType<typeof vi.fn>;
 };
 
 vi.mock("../../src/store/fetchers", () => ({
   fetchLive: vi.fn(),
   fetchSnapshot: vi.fn(),
-  fetchRoute: vi.fn(),
   CdnError: class CdnError extends Error {},
   SchemaVersionError: class SchemaVersionError extends Error {},
 }));
@@ -80,7 +78,6 @@ beforeEach(() => {
   vi.useFakeTimers();
   f.fetchLive.mockReset();
   f.fetchSnapshot.mockReset();
-  f.fetchRoute.mockReset();
   _resetLoopForTests();
 });
 
@@ -103,7 +100,7 @@ describe("loop startup", () => {
     ]);
     f.fetchSnapshot.mockResolvedValue({
       schemaVersion: 1,
-      event: { routeUrl: null },
+      event: {},
     } as Snapshot);
     void startDataLoop({ store, now: () => now });
 
@@ -142,7 +139,7 @@ describe("loop poll timer", () => {
     ]);
     f.fetchSnapshot.mockResolvedValue({
       schemaVersion: 1,
-      event: { routeUrl: null },
+      event: {},
     } as Snapshot);
     void startDataLoop({ store, now: () => now });
     await vi.advanceTimersByTimeAsync(0);
@@ -164,7 +161,7 @@ describe("loop poll timer", () => {
     ]);
     f.fetchSnapshot.mockResolvedValue({
       schemaVersion: 1,
-      event: { routeUrl: null },
+      event: {},
     } as Snapshot);
     void startDataLoop({ store, now: () => now });
     await vi.advanceTimersByTimeAsync(0);
@@ -183,7 +180,7 @@ describe("loop poll timer", () => {
     queue(f.fetchLive, [live({ seq: 1 }), new Error("boom"), new Error("boom")]);
     f.fetchSnapshot.mockResolvedValue({
       schemaVersion: 1,
-      event: { routeUrl: null },
+      event: {},
     } as Snapshot);
     void startDataLoop({ store, now: () => now });
     await vi.advanceTimersByTimeAsync(0);
@@ -204,7 +201,7 @@ describe("loop visibility and online", () => {
     queue(f.fetchLive, [live({ seq: 1 }), live({ seq: 2 }), live({ seq: 3 })]);
     f.fetchSnapshot.mockResolvedValue({
       schemaVersion: 1,
-      event: { routeUrl: null },
+      event: {},
     } as Snapshot);
     let hidden = false;
     const doc = {
@@ -233,7 +230,7 @@ describe("loop visibility and online", () => {
     queue(f.fetchLive, [live({ seq: 1 }), live({ seq: 2 })]);
     f.fetchSnapshot.mockResolvedValue({
       schemaVersion: 1,
-      event: { routeUrl: null },
+      event: {},
     } as Snapshot);
     void startDataLoop({ store, now: () => now });
     await vi.advanceTimersByTimeAsync(0);
@@ -250,7 +247,7 @@ describe("loop visibility and online", () => {
     queue(f.fetchLive, [live({ seq: 1 })]);
     f.fetchSnapshot.mockResolvedValue({
       schemaVersion: 1,
-      event: { routeUrl: null },
+      event: {},
     } as Snapshot);
     void startDataLoop({ store, now: () => now });
     await vi.advanceTimersByTimeAsync(0);
@@ -264,7 +261,7 @@ describe("loop visibility and online", () => {
     queue(f.fetchLive, [live({ seq: 1 }), live({ seq: 2 })]);
     f.fetchSnapshot.mockResolvedValue({
       schemaVersion: 1,
-      event: { routeUrl: null },
+      event: {},
     } as Snapshot);
     void startDataLoop({ store, now: () => now });
     await vi.advanceTimersByTimeAsync(0);
@@ -274,7 +271,7 @@ describe("loop visibility and online", () => {
   });
 });
 
-describe("loop snapshot and route", () => {
+describe("loop snapshot", () => {
   it("fetches the snapshot on URL change and discards stale results", async () => {
     let now = 0;
     const store = createStore({ ...initialStore });
@@ -289,7 +286,7 @@ describe("loop snapshot and route", () => {
           resolveA = r;
         });
       }
-      return Promise.resolve({ schemaVersion: 1, event: { routeUrl: null } });
+      return Promise.resolve({ schemaVersion: 1, event: {} });
     });
     void startDataLoop({ store, now: () => now });
     await vi.advanceTimersByTimeAsync(0);
@@ -299,35 +296,37 @@ describe("loop snapshot and route", () => {
     expect(store.getState().live?.snapshotUrl).toBe("https://cdn.example/B.json");
     expect(f.fetchSnapshot).toHaveBeenCalledWith("https://cdn.example/B.json");
     // Now resolve A. It should be discarded.
-    resolveA({ schemaVersion: 1, event: { routeUrl: null } });
+    resolveA({ schemaVersion: 1, event: {} });
     await vi.advanceTimersByTimeAsync(0);
     expect(store.getState().snapshotUrl).toBe("https://cdn.example/B.json");
   });
 
-  it("fetches the route on routeUrl change and clears when null", async () => {
+  it("clears the snapshot when the live object's snapshotUrl becomes null", async () => {
     let now = 0;
     const store = createStore({ ...initialStore });
     queue(f.fetchLive, [
       live({ seq: 1, snapshotUrl: "https://cdn.example/A.json" }),
-      live({ seq: 2, snapshotUrl: "https://cdn.example/B.json" }),
+      live({ seq: 2, snapshotUrl: null }),
     ]);
-    let call = 0;
-    f.fetchSnapshot.mockImplementation(() => {
-      call += 1;
-      if (call === 1) {
-        return Promise.resolve({ schemaVersion: 1, event: { routeUrl: "https://cdn.example/route.json" } });
-      }
-      return Promise.resolve({ schemaVersion: 1, event: { routeUrl: null } });
-    });
-    f.fetchRoute.mockResolvedValue({ schemaVersion: 1, points: [] });
+    f.fetchSnapshot.mockResolvedValue({ schemaVersion: 1, event: {} });
     void startDataLoop({ store, now: () => now });
     await vi.advanceTimersByTimeAsync(0);
-    expect(f.fetchRoute).toHaveBeenCalledWith("https://cdn.example/route.json");
-    expect(store.getState().routeUrl).toBe("https://cdn.example/route.json");
+    expect(store.getState().snapshotUrl).toBe("https://cdn.example/A.json");
     now += 5000; await vi.advanceTimersByTimeAsync(5000);
-    // Second snapshot has routeUrl null → route should clear.
-    expect(store.getState().route).toBeNull();
-    expect(store.getState().routeUrl).toBeNull();
+    expect(store.getState().snapshot).toBeNull();
+    expect(store.getState().snapshotUrl).toBeNull();
+  });
+});
+
+describe("store shape", () => {
+  it("does not carry route, routeUrl, or routeFetchFailing anywhere", () => {
+    const store = createStore({ ...initialStore });
+    const state = store.getState() as Record<string, unknown> & {
+      diag: Record<string, unknown>;
+    };
+    expect("route" in state).toBe(false);
+    expect("routeUrl" in state).toBe(false);
+    expect("routeFetchFailing" in state.diag).toBe(false);
   });
 });
 
@@ -337,12 +336,12 @@ describe("hub-applied live objects", () => {
     const store = createStore({
       ...initialStore,
       live: live({ seq: 1, snapshotUrl: "https://cdn.example/s1.json", publishedAt: "2024-12-24T00:00:00Z" }),
-      snapshot: { schemaVersion: 1, event: { statusId: 1, routeUrl: null } } as unknown as Snapshot,
+      snapshot: { schemaVersion: 1, event: { statusId: 1 } } as unknown as Snapshot,
       snapshotUrl: "https://cdn.example/s1.json",
     });
     f.fetchSnapshot.mockResolvedValue({
       schemaVersion: 1,
-      event: { statusId: 2, routeUrl: null },
+      event: { statusId: 2 },
     } as unknown as Snapshot);
 
     // The hub delivers a newer live object whose snapshotUrl moved.

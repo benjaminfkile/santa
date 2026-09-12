@@ -40,6 +40,16 @@ export const copy = {
   map: {
     unavailable: "Map unavailable",
     retry: "Retry",
+    trackerMenu: "Tracker menu",
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
+    centerOnSanta: "Center on Santa",
+    snow: "Snow",
+    poster: {
+      zoomIn: "Zoom in",
+      zoomOut: "Zoom out",
+      fit: "Fit",
+    },
   },
   theme: {
     toLight: "Switch to light mode",

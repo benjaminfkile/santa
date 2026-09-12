@@ -57,13 +57,19 @@ export async function readCspMeta(page: PageLike): Promise<string | null> {
 }
 
 export async function fetchCdnSnapshot(url: string): Promise<{
-  event: { routeUrl: string | null; latestMessage?: { body: string } | null } | null;
+  event: {
+    flightHistory?: { points?: { lat: number; lng: number; recordedAt?: string | null }[] } | null;
+    latestMessage?: { body: string } | null;
+  } | null;
   content?: unknown;
 }> {
   const res = await fetch(url, { credentials: "omit" });
   if (!res.ok) throw new Error(`snapshot fetch ${url} → ${res.status}`);
   return (await res.json()) as {
-    event: { routeUrl: string | null; latestMessage?: { body: string } | null } | null;
+    event: {
+      flightHistory?: { points?: { lat: number; lng: number; recordedAt?: string | null }[] } | null;
+      latestMessage?: { body: string } | null;
+    } | null;
     content?: unknown;
   };
 }
