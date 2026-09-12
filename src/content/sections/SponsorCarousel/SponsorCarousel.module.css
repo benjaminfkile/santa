@@ -6,11 +6,8 @@
 
 .sponsorCarousel { display: flex; flex-direction: column; gap: var(--space-2); }
 .sponsorCarouselCard {
+  composes: frost from "../../theme/Frost.module.css";
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--panel);
-  box-shadow: var(--shadow);
 }
 .sponsorCarouselHeading {
   margin: 0;

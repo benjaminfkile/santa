@@ -160,7 +160,7 @@ describe("Shell structure", () => {
     expect(skip).not.toBeNull();
   });
 
-  it("renders the theme toggle and the Follow system entry, and no legacy chips", () => {
+  it("renders the theme picker with Light, Dark, and System, and no legacy chips", () => {
     seed(makeContent());
     const { container, getByTestId } = render(
       <MemoryRouter>
@@ -173,16 +173,25 @@ describe("Shell structure", () => {
     );
     const toggle = getByTestId("theme-toggle");
     expect(toggle.tagName).toBe("BUTTON");
-    expect(toggle.getAttribute("aria-label")).toMatch(/Switch to (light|dark) mode/);
-    const followSystem = getByTestId("follow-system");
-    expect(followSystem).not.toBeNull();
+    expect(toggle.getAttribute("aria-haspopup")).toBe("menu");
+    act(() => {
+      toggle.click();
+    });
+    const menu = getByTestId("theme-menu");
+    expect(menu.getAttribute("role")).toBe("menu");
+    expect(getByTestId("theme-light").textContent).toBe("Light");
+    expect(getByTestId("theme-dark").textContent).toBe("Dark");
+    expect(getByTestId("theme-system").textContent).toBe("System");
+    expect(getByTestId("theme-system").getAttribute("aria-checked")).toBe("true");
+    expect(container.querySelector('[data-testid="follow-system"]')).toBeNull();
+    expect(container.querySelector('[data-testid="footer-lights-toggle"]')).toBeNull();
     // Legacy accent/surface/font chips are gone.
     expect(container.querySelector('[data-testid="theme-controls"]')).toBeNull();
   });
 
-  it("shows the Snow and Lights switches in the menu drawer with aria-pressed", () => {
+  it("shows the Snow switch in the menu drawer with aria-pressed, and no Lights switch", () => {
     seed(makeContent());
-    const { getByTestId } = render(
+    const { getByTestId, queryByTestId } = render(
       <MemoryRouter>
         <AuthProvider>
           <Shell>
@@ -195,10 +204,7 @@ describe("Shell structure", () => {
     expect(snow.tagName).toBe("BUTTON");
     expect(snow.getAttribute("aria-pressed")).toBe("false");
     expect(snow.textContent).toBe("Snow");
-    const lights = getByTestId("menu-lights-toggle");
-    expect(lights.tagName).toBe("BUTTON");
-    expect(lights.getAttribute("aria-pressed")).toBe("false");
-    expect(lights.textContent).toBe("Lights");
+    expect(queryByTestId("menu-lights-toggle")).toBeNull();
   });
 
   it("renders the LightsLayer inside the <header> element", () => {

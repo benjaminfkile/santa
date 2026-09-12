@@ -2,7 +2,7 @@
 // Vite React template should not be checked in. The site's only image
 // assets live in the content bundle (media served through the CDN);
 // nothing under src/assets or public/ is site-coded except the favicon,
-// the web manifest, and robots.txt.
+// the web manifest, robots.txt, and the tracker's six style thumbnails.
 
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -24,6 +24,12 @@ const required = [
   "public/favicon.svg",
   "public/robots.txt",
   "public/manifest.webmanifest",
+  "public/tracker-themes/standard.png",
+  "public/tracker-themes/expedition.png",
+  "public/tracker-themes/blizzard.png",
+  "public/tracker-themes/charcoal.png",
+  "public/tracker-themes/night.png",
+  "public/tracker-themes/nebula.png",
 ];
 
 describe("static assets", () => {

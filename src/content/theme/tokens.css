@@ -18,7 +18,7 @@
   --warn: #f0c05a;
   --err: #ff7a70;
   --shadow: none;
-  --snow: rgba(255, 255, 255, 0.85);
+  --snow: rgba(255, 255, 255, 0.5);
   --frost-a: rgba(111, 211, 255, 0.4);
   --frost-b: rgba(255, 122, 112, 0.28);
 }
@@ -40,7 +40,7 @@
   --warn: #8a6210;
   --err: #c2362c;
   --shadow: 0 1px 3px rgba(15, 26, 48, 0.08);
-  --snow: rgba(140, 165, 205, 0.55);
+  --snow: rgba(140, 165, 205, 0.35);
   --frost-a: rgba(11, 107, 181, 0.2);
   --frost-b: rgba(194, 54, 44, 0.14);
 }

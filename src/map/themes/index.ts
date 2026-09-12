@@ -31,6 +31,18 @@ export type MapTheme = {
   timeLabelFg: string;
   timeLabelOpacity: number;
   userColor: string;
+  // What the tracker's pills, panels, tiles, and buttons paint with while
+  // this style is on (the legacy tracker's per-theme colours): the map
+  // section rebinds the site's surface tokens to these.
+  chrome: {
+    bg: string;      // pills and buttons
+    fg: string;      // their secondary text and glyphs
+    text: string;    // their primary text
+    tile: string;    // menu tiles and toggles
+    tileFg: string;  // text on a tile
+    panel: string;   // the menu card
+    accent: string;  // the active underline and the accent
+  };
 };
 
 export const THEMES: Record<ThemeKey, MapTheme> = {

@@ -61,8 +61,9 @@ export const copy = {
     signInToLeave: "Sign in to leave a cookie",
   },
   theme: {
-    toLight: "Switch to light mode",
-    toDark: "Switch to dark mode",
-    followSystem: "Follow system",
+    picker: "Theme",
+    light: "Light",
+    dark: "Dark",
+    system: "System",
   },
 } as const;

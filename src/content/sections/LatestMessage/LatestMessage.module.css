@@ -11,11 +11,8 @@
   margin: 0;
 }
 .latestMessageCard {
+  composes: frost from "../../theme/Frost.module.css";
   padding: var(--space-4) var(--space-5);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--panel);
-  box-shadow: var(--shadow);
 }
 .latestMessageMeta {
   color: var(--text-dim);

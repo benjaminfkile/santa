@@ -9,11 +9,8 @@ import {
   SnowLayer,
   LightsLayer,
   SNOW_KEY,
-  LIGHTS_KEY,
   setSnowOverride,
-  setLightsOverride,
   useSnowEnabled,
-  useLightsEnabled,
 } from "../../../../src/content/theme/seasonalLayers";
 import { store } from "../../../../src/store/useStore";
 import { initialStore } from "../../../../src/store/types";
@@ -95,13 +92,6 @@ describe("seasonal layer storage keys and defaults", () => {
     expect(window.localStorage.getItem(SNOW_KEY)).toBe("off");
   });
 
-  it("stores the lights override under wmsfo.lights", () => {
-    setLightsOverride(true);
-    expect(window.localStorage.getItem(LIGHTS_KEY)).toBe("on");
-    setLightsOverride(false);
-    expect(window.localStorage.getItem(LIGHTS_KEY)).toBe("off");
-  });
-
   it("useSnowEnabled prefers the stored value over the site default", () => {
     setSnowOverride(true);
     let seen: boolean | null = null;
@@ -130,20 +120,6 @@ describe("seasonal layer storage keys and defaults", () => {
     expect(seen2).toBe(false);
   });
 
-  it("useLightsEnabled prefers the stored value over the site default", () => {
-    setLightsOverride(true);
-    let seen: boolean | null = null;
-    function Probe() {
-      seen = useLightsEnabled(false);
-      return null;
-    }
-    render(
-      <MemoryRouter>
-        <Probe />
-      </MemoryRouter>,
-    );
-    expect(seen).toBe(true);
-  });
 });
 
 describe("SnowLayer live-screen detection", () => {

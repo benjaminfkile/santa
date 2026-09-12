@@ -1,16 +1,19 @@
 /* docs/site.md section 7.7. Seasonal layers: canvas snow (fixed, full
-   viewport, above every page surface, below dialogs) and the string of
-   bulbs on a wire under the header. A canvas is a replaced element, so
-   inset alone leaves it at its intrinsic 300 x 150; the size is explicit. */
+   viewport, over the ground and the section backgrounds but behind every
+   positioned surface: cards, header, footer) and the string of bulbs on a
+   wire under the header. A canvas is a replaced element, so inset alone
+   leaves it at its intrinsic 300 x 150; the size is explicit. On the live
+   screen the canvas sits over the map. */
 
 .snow {
   position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 40;
+  z-index: 0;
   pointer-events: none;
 }
+:global(html[data-takeover="live"]) .snow { z-index: 31; }
 
 .lights {
   height: 8px;

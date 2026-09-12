@@ -11,7 +11,6 @@ export const brandStar: string;
 export const displayChip: string;
 export const footer: string;
 export const footerDisplay: string;
-export const footerDisplayLabel: string;
 export const footerLinks: string;
 export const footerText: string;
 export const inlineNav: string;
@@ -22,6 +21,8 @@ export const signIn: string;
 export const siteHeader: string;
 export const skipLink: string;
 export const systemButton: string;
-export const systemButtonActive: string;
+export const themeMenu: string;
+export const themeOption: string;
+export const themePicker: string;
 export const themeToggle: string;
 

@@ -1,6 +1,6 @@
 // docs/site.md section 7.6. Tracker menu: the legacy tracker's card in the
-// top-right corner. Map styles as round thumbnails with a nickname and an
-// accent underline on the active one, then Terrain, Road, and Snow, then
+// top-right corner. Map styles as the legacy round thumbnails (three by two)
+// with a nickname and an accent underline on the active one, then Terrain, Road, and Snow, then
 // the data row (a glyph and a value per item), then location, flight
 // history, time labels, fit, and close as square buttons.
 
@@ -120,13 +120,7 @@ export function TrackerMenu(props: TrackerMenuProps) {
                   className={selected ? `${styles.theme} ${styles.themeSelected} ${styles.onMark}` : styles.theme}
                   data-testid={`tracker-menu-theme-${t.key}`}
                 >
-                  <span
-                    className={styles.themeThumb}
-                    aria-hidden
-                    style={{
-                      background: `radial-gradient(circle at 30% 30%, ${t.timeLabelBg}, ${t.routeColor} 70%, ${t.arrowColor})`,
-                    }}
-                  />
+                  <img className={styles.themeThumb} src={`/tracker-themes/${t.key}.png`} alt="" width={54} height={54} />
                   <span className={styles.themeLabel}>{t.label}</span>
                 </button>
               );

@@ -1,7 +1,8 @@
 // docs/site.md section 7.7. Two seasonal layers: a canvas of small, slow,
-// translucent flakes coloured by --snow, and a string of 7 px bulbs on a
-// 1 px wire under the header. Each has a settings default and a
-// per-visitor override in localStorage. The live screen is detected
+// translucent flakes coloured by --snow behind the page's cards, and a
+// string of 7 px bulbs on a 1 px wire under the header. Snow has a settings
+// default and a per-visitor override in localStorage; the lights follow the
+// site setting alone. The live screen is detected
 // through `live.eventStatusId === 3` (docs 24), whatever the path, since
 // every path renders the tracker then: snow is off by default there and
 // the lights are not rendered over the map.
@@ -14,7 +15,6 @@ import { subscribeScheme } from "./colorScheme";
 import * as styles from "./SeasonalLayers.module.css";
 
 export const SNOW_KEY = "wmsfo.snow";
-export const LIGHTS_KEY = "wmsfo.lights";
 
 const overrideListeners = new Set<() => void>();
 
@@ -34,27 +34,12 @@ export function setSnowOverride(next: boolean): void {
   notifyOverrides();
 }
 
-export function setLightsOverride(next: boolean): void {
-  storageSet(LIGHTS_KEY, next ? "on" : "off");
-  notifyOverrides();
-}
-
 function getSnowSnapshot(): string {
   return storageGet(SNOW_KEY) ?? "";
-}
-function getLightsSnapshot(): string {
-  return storageGet(LIGHTS_KEY) ?? "";
 }
 
 export function useSnowEnabled(defaultOn: boolean): boolean {
   const stored = useSyncExternalStore(subscribeOverrides, getSnowSnapshot, () => "");
-  if (stored === "on") return true;
-  if (stored === "off") return false;
-  return defaultOn;
-}
-
-export function useLightsEnabled(defaultOn: boolean): boolean {
-  const stored = useSyncExternalStore(subscribeOverrides, getLightsSnapshot, () => "");
   if (stored === "on") return true;
   if (stored === "off") return false;
   return defaultOn;
@@ -107,13 +92,13 @@ export function SnowLayer({ bundle }: { bundle: ContentBundle | null }) {
       c.height = Math.floor(height * dpr);
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
       flakes.length = 0;
-      const target = Math.floor((width * height) / 15000);
+      const target = Math.floor((width * height) / 30000);
       for (let i = 0; i < target; i += 1) {
         flakes.push({
           x: Math.random() * width,
           y: Math.random() * height,
-          r: 1 + Math.random() * 1.6,
-          v: 0.2 + Math.random() * 0.6,
+          r: 0.8 + Math.random() * 1.3,
+          v: 0.15 + Math.random() * 0.45,
           d: (Math.random() - 0.5) * 0.15,
         });
       }
@@ -162,8 +147,7 @@ const LIGHT_COLORS = ["var(--accent)", "var(--gold)", "var(--ok)", "var(--err)"]
 export function LightsLayer({ bundle }: { bundle: ContentBundle | null }) {
   const isLive = useIsLiveScreen();
   const settingsDefault = bundle?.content?.settings.theme.lightsDefault ?? false;
-  const defaultOn = isLive ? false : settingsDefault;
-  const enabled = useLightsEnabled(defaultOn) && !isLive;
+  const enabled = settingsDefault && !isLive;
 
   const bulbs = useMemo(() => {
     const items = [];

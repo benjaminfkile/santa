@@ -20,13 +20,7 @@ import { ReloadPrompt } from "../pages/ReloadPrompt";
 import { ContentLink } from "../content/primitives/LinkView";
 import { useAuth } from "../auth/AuthProvider";
 import { useThemeChoice } from "../content/theme/colorScheme";
-import {
-  LightsLayer,
-  useLightsEnabled,
-  useSnowEnabled,
-  setLightsOverride,
-  setSnowOverride,
-} from "../content/theme/seasonalLayers";
+import { LightsLayer, useSnowEnabled, setSnowOverride } from "../content/theme/seasonalLayers";
 import type { ContentBundle } from "../store/types";
 import * as styles from "./Shell.module.css";
 
@@ -171,7 +165,7 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
             {copy.signIn.button}
           </button>
         ) : null}
-        <ThemeToggle />
+        <ThemePicker />
         <button
           ref={buttonRef}
           type="button"
@@ -204,12 +198,6 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
           ))}
           <li>
             <SnowSwitch bundle={bundle} />
-          </li>
-          <li>
-            <LightsSwitch bundle={bundle} />
-          </li>
-          <li>
-            <FollowSystemButton />
           </li>
         </ul>
       </nav>
@@ -263,21 +251,71 @@ function MenuGlyph() {
   );
 }
 
-function ThemeToggle() {
-  const { resolved, setLight, setDark } = useThemeChoice();
-  const nextIsLight = resolved === "dark";
-  const label = nextIsLight ? "Switch to light mode" : "Switch to dark mode";
-  const onClick = nextIsLight ? setLight : setDark;
+// The header's theme control: a sun or moon button opening a small menu
+// with Light, Dark, and System; the current choice is checked.
+function ThemePicker() {
+  const { choice, resolved, setLight, setDark, followSystem } = useThemeChoice();
+  const [open, setOpen] = useState(false);
+  const menuId = useId();
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      if (rootRef.current !== null && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const options: { key: "light" | "dark" | "system"; label: string; act: () => void }[] = [
+    { key: "light", label: copy.theme.light, act: setLight },
+    { key: "dark", label: copy.theme.dark, act: setDark },
+    { key: "system", label: copy.theme.system, act: followSystem },
+  ];
+
   return (
-    <button
-      type="button"
-      className={styles.themeToggle}
-      aria-label={label}
-      data-testid="theme-toggle"
-      onClick={onClick}
-    >
-      {nextIsLight ? <SunGlyph /> : <MoonGlyph />}
-    </button>
+    <div className={styles.themePicker} ref={rootRef}>
+      <button
+        type="button"
+        className={styles.themeToggle}
+        aria-label={copy.theme.picker}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={menuId}
+        data-testid="theme-toggle"
+        onClick={() => setOpen((v) => !v)}
+      >
+        {resolved === "dark" ? <MoonGlyph /> : <SunGlyph />}
+      </button>
+      {open ? (
+        <div id={menuId} role="menu" aria-label={copy.theme.picker} className={styles.themeMenu} data-testid="theme-menu">
+          {options.map((o) => (
+            <button
+              key={o.key}
+              type="button"
+              role="menuitemradio"
+              aria-checked={choice === o.key}
+              className={styles.themeOption}
+              data-testid={`theme-${o.key}`}
+              onClick={() => {
+                o.act();
+                setOpen(false);
+              }}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -293,42 +331,6 @@ function SnowSwitch({ bundle, compact = false }: { bundle: ContentBundle | null;
       onClick={() => setSnowOverride(!enabled)}
     >
       Snow
-    </button>
-  );
-}
-
-function LightsSwitch({ bundle, compact = false }: { bundle: ContentBundle | null; compact?: boolean }) {
-  const defaultOn = bundle?.content?.settings.theme.lightsDefault ?? false;
-  const enabled = useLightsEnabled(defaultOn);
-  return (
-    <button
-      type="button"
-      className={compact ? styles.displayChip : styles.systemButton}
-      aria-pressed={enabled}
-      data-testid={compact ? "footer-lights-toggle" : "menu-lights-toggle"}
-      onClick={() => setLightsOverride(!enabled)}
-    >
-      Lights
-    </button>
-  );
-}
-
-function FollowSystemButton({ compact = false }: { compact?: boolean }) {
-  const { choice, followSystem } = useThemeChoice();
-  const active = choice === "system";
-  return (
-    <button
-      type="button"
-      className={
-        compact
-          ? styles.displayChip
-          : `${styles.systemButton}${active ? ` ${styles.systemButtonActive}` : ""}`
-      }
-      aria-pressed={compact ? active : undefined}
-      data-testid={compact ? "footer-follow-system" : "follow-system"}
-      onClick={followSystem}
-    >
-      {copy.theme.followSystem}
     </button>
   );
 }
@@ -441,10 +443,7 @@ function Footer({ bundle }: { bundle: ContentBundle | null }) {
         <p className={styles.footerText}>{settings.footerText}</p>
       ) : null}
       <div className={styles.footerDisplay} data-testid="footer-display">
-        <span className={styles.footerDisplayLabel}>Display</span>
-        <FollowSystemButton compact />
         <SnowSwitch bundle={bundle} compact />
-        <LightsSwitch bundle={bundle} compact />
       </div>
     </footer>
   );

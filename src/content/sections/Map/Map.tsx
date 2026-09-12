@@ -6,7 +6,7 @@
 // While the event is live the section is fixed to the viewport and nothing
 // else on the site renders.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { SectionComponent } from "../../registry";
 import { store, useStore } from "../../../store/useStore";
 import { selectLiveState } from "../../../store/liveState";
@@ -245,6 +245,26 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     if (userState.error === 1) setLocationOpen(true);
   }, [userState.error]);
 
+  // The tracker follows the map style, not the site's scheme (8.4): the
+  // section rebinds the surface tokens to the theme's chrome so every pill,
+  // panel, tile, button, and dialog inside it takes the theme's colours.
+  const chromeStyle = useMemo<CSSProperties>(() => {
+    const c = theme.chrome;
+    return {
+      "--panel": c.bg,
+      "--panel-2": c.tile,
+      "--text": c.fg,
+      "--text-dim": c.fg,
+      "--text-bright": c.text,
+      "--line": `color-mix(in srgb, ${c.fg} 30%, transparent)`,
+      "--accent": c.accent,
+      "--accent-soft": `color-mix(in srgb, ${c.accent} 18%, transparent)`,
+      "--tracker-panel": c.panel,
+      "--tracker-tile-fg": c.tileFg,
+      "--shadow": "0 1px 4px rgba(0, 0, 0, 0.3)",
+    } as CSSProperties;
+  }, [theme]);
+
   const rootClass = [
     styles.mapSection,
     takeover ? styles.mapSectionTakeover : "",
@@ -254,7 +274,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     .join(" ");
 
   return (
-    <div className={rootClass} data-testid="map" data-takeover={takeover ? "live" : undefined}>
+    <div className={rootClass} style={chromeStyle} data-testid="map" data-theme-key={theme.key} data-takeover={takeover ? "live" : undefined}>
       <MarkerSeqHost />
       <MapView
         options={mapOptions}

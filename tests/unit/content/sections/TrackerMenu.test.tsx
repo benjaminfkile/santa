@@ -30,6 +30,15 @@ const themes: MapTheme[] = [
     timeLabelFg: "hsl(0 0% 0%)",
     timeLabelOpacity: 1,
     userColor: "hsl(210 100% 40%)",
+    chrome: {
+      bg: "hsl(0 0% 100%)",
+      fg: "hsl(0 0% 40%)",
+      text: "hsl(0 0% 0%)",
+      tile: "hsl(120 30% 80%)",
+      tileFg: "hsl(0 0% 0%)",
+      panel: "hsl(0 0% 100%)",
+      accent: "hsl(210 100% 40%)",
+    },
   },
 ];
 

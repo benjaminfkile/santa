@@ -2,15 +2,12 @@
    --line, the amount in mono, the caption, the Donate button. */
 
 .fundsRing {
+  composes: frost from "../../theme/Frost.module.css";
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: var(--space-5);
   align-items: center;
   padding: var(--space-5);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--panel);
-  box-shadow: var(--shadow);
 }
 .fundsRingRing { position: relative; }
 .fundsRingSvg { display: block; }

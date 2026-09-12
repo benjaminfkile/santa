@@ -16,22 +16,24 @@
   box-sizing: border-box;
 }
 .panel {
-  composes: frost from "../../theme/Frost.module.css";
+  background: var(--tracker-panel);
+  color: var(--text-bright);
   border-radius: 0 0 0 8px;
+  box-shadow: var(--shadow);
   padding: 6px;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 .themes {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
 }
 .theme {
   appearance: none;
   position: relative;
-  width: 91px;
+  width: 100%;
   height: 90px;
   border: 0;
   border-radius: 4px;
@@ -43,7 +45,7 @@
   justify-content: flex-start;
   gap: 2px;
   cursor: pointer;
-  color: var(--text);
+  color: var(--tracker-tile-fg);
   font-family: var(--font-sans);
   overflow: hidden;
 }
@@ -53,11 +55,10 @@
   height: 54px;
   margin-top: 6px;
   border-radius: 50%;
-  border: 1px solid var(--line);
-  box-sizing: border-box;
+  object-fit: cover;
 }
-.themeLabel { font-size: 0.8125rem; color: var(--text); }
-.themeSelected .themeLabel { color: var(--text-bright); }
+.themeLabel { font-size: 0.8125rem; color: var(--tracker-tile-fg); }
+.themeSelected .themeLabel { color: var(--tracker-tile-fg); }
 .onMark::after {
   content: "";
   position: absolute;
@@ -79,7 +80,7 @@
   border: 0;
   border-radius: 4px;
   background: var(--panel-2);
-  color: var(--text);
+  color: var(--tracker-tile-fg);
   font-family: var(--font-sans);
   font-size: 0.8125rem;
   display: inline-flex;
@@ -92,9 +93,8 @@
 }
 .rowToggle:hover { color: var(--accent); }
 .pill { composes: rowToggle; }
-.pillSelected { composes: onMark; color: var(--text-bright); }
+.pillSelected { composes: onMark; }
 .toggle { composes: rowToggle; }
-.toggle[aria-pressed="true"] { color: var(--text-bright); }
 .toggle[aria-pressed="true"]::after {
   content: "";
   position: absolute;
@@ -119,7 +119,7 @@
   gap: 5px;
   min-height: 26px;
 }
-.dataRow dt { display: inline-flex; color: var(--accent); }
+.dataRow dt { display: inline-flex; color: var(--tracker-tile-fg); }
 .dataRow dt span {
   position: absolute;
   width: 1px;
@@ -133,7 +133,7 @@
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   font-size: 0.8125rem;
-  color: var(--text-bright);
+  color: var(--tracker-tile-fg);
 }
 .footer {
   display: flex;
@@ -148,7 +148,7 @@
   border: 0;
   border-radius: 4px;
   background: var(--panel-2);
-  color: var(--text);
+  color: var(--tracker-tile-fg);
   display: inline-grid;
   place-items: center;
   cursor: pointer;
@@ -156,7 +156,6 @@
   transition: var(--hover-transition);
 }
 .footerBtn:hover { color: var(--accent); }
-.footerBtn[aria-pressed="true"] { color: var(--text-bright); }
 .footerBtn[aria-pressed="true"]::after {
   content: "";
   position: absolute;
@@ -171,5 +170,4 @@
 @media (max-width: 760px) {
   .trackerMenu { width: 100%; }
   .panel { border-radius: 0; }
-  .theme { width: calc((100% - 8px) / 3); }
 }
