@@ -1,0 +1,25 @@
+/* docs/site.md section 7.7. Shared frost recipe: the liftoff card (S16
+   countdown) and the live-screen overlays (S17) both compose this class
+   for the aurora halo behind a translucent panel. */
+
+.frost {
+  position: relative;
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  isolation: isolate;
+}
+.frost::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(circle at 20% 30%, var(--frost-a), transparent 55%),
+    radial-gradient(circle at 80% 70%, var(--frost-b), transparent 60%);
+  filter: blur(30px);
+  z-index: -1;
+  pointer-events: none;
+}

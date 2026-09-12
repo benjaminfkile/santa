@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { storageGet, storageSet } from "../../../lib/storage";
+import * as styles from "../RoutePreview/RoutePreview.module.css";
 
 const KEY = "wmsfo.routeDisclaimerAck";
 
@@ -33,7 +34,7 @@ export function RouteDisclaimer() {
   return (
     <dialog
       ref={dialogRef}
-      className="route-disclaimer"
+      className={styles.routeDisclaimer}
       aria-labelledby="route-disclaimer-heading"
       data-testid="route-disclaimer"
     >

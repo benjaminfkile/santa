@@ -1,7 +1,10 @@
 // docs/site.md section 7.6. Bottom-right icon-button control column: zoom
-// in, zoom out, centre, and (when enabled) snow. Uses the `.ibtn` recipe.
+// in, zoom out, centre, and (when enabled) snow. Uses the shared
+// IconButton recipe.
 
 import { copy } from "../../../copy/copy";
+import * as styles from "./Map.module.css";
+import * as ibtn from "../../../ui/IconButton.module.css";
 
 export type MapControlsProps = {
   snowOn: boolean;
@@ -56,10 +59,10 @@ function SnowIcon() {
 
 export function MapControls({ snowOn, showSnow, onRecenter, onZoomIn, onZoomOut, onSnowToggle }: MapControlsProps) {
   return (
-    <div className="map-controls" data-testid="map-controls">
+    <div className={styles.mapControls} data-testid="map-controls">
       <button
         type="button"
-        className="ibtn"
+        className={ibtn.ibtn}
         aria-label={copy.map.zoomIn}
         onClick={onZoomIn}
       >
@@ -67,7 +70,7 @@ export function MapControls({ snowOn, showSnow, onRecenter, onZoomIn, onZoomOut,
       </button>
       <button
         type="button"
-        className="ibtn"
+        className={ibtn.ibtn}
         aria-label={copy.map.zoomOut}
         onClick={onZoomOut}
       >
@@ -75,7 +78,7 @@ export function MapControls({ snowOn, showSnow, onRecenter, onZoomIn, onZoomOut,
       </button>
       <button
         type="button"
-        className="ibtn"
+        className={ibtn.ibtn}
         aria-label={copy.map.centerOnSanta}
         onClick={onRecenter}
       >
@@ -84,7 +87,7 @@ export function MapControls({ snowOn, showSnow, onRecenter, onZoomIn, onZoomOut,
       {showSnow ? (
         <button
           type="button"
-          className="ibtn"
+          className={ibtn.ibtn}
           aria-label={copy.map.snow}
           aria-pressed={snowOn}
           onClick={onSnowToggle}

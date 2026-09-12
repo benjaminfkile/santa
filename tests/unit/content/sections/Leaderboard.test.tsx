@@ -111,7 +111,7 @@ describe("Leaderboard section", () => {
     const { container } = render(
       <Leaderboard data={{ variant: "full" }} items={[]} bundle={bundle} />,
     );
-    const rows = container.querySelectorAll(".leaderboard__row");
+    const rows = container.querySelectorAll("ol > li");
     expect(rows.length).toBe(2);
     expect(rows[0]?.textContent).toContain("Ginger");
     expect(rows[0]?.textContent).toContain("7");
@@ -147,6 +147,6 @@ describe("Leaderboard section", () => {
     const { container } = render(
       <Leaderboard data={{ variant: "panel" }} items={[]} bundle={bundle} />,
     );
-    expect(container.querySelectorAll(".leaderboard__row").length).toBe(5);
+    expect(container.querySelectorAll("ol > li").length).toBe(5);
   });
 });

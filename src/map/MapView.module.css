@@ -1,0 +1,15 @@
+/* docs/site.md section 8. The map view host: a positioning wrapper and a
+   canvas node that fills it. The section frame supplies its own class
+   from the caller; these two rules cover the default render. */
+
+.mapView {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.mapViewCanvas {
+  position: absolute;
+  inset: 0;
+  background: var(--panel-2);
+}

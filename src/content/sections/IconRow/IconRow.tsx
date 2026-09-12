@@ -6,7 +6,7 @@ import type { SectionComponent } from "../../registry";
 import { Inline } from "../../inline/Inline";
 import { Icon } from "../../primitives/Icon";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
-import "./IconRow.module.css";
+import * as styles from "./IconRow.module.css";
 
 type IconRowItem = { icon: IconRef; label: string | null };
 
@@ -16,6 +16,12 @@ type IconRowData = {
 };
 
 const ICON_SIZES: Record<"sm" | "md" | "lg", number> = { sm: 24, md: 48, lg: 96 };
+
+const SPACING_CLASS: Record<"tight" | "normal" | "loose", string> = {
+  tight: styles.iconRowSpacingTight,
+  normal: styles.iconRowSpacingNormal,
+  loose: styles.iconRowSpacingLoose,
+};
 
 function readItems(items: { id: number; data: unknown }[]): IconRowItem[] {
   return items
@@ -31,9 +37,9 @@ export const IconRow: SectionComponent = ({ data, items, bundle }) => {
   const parsed = readItems(items);
   const event = useSnapshotEvent();
   return (
-    <div className={`icon-row icon-row--${size} icon-row--spacing-${spacing}`}>
+    <div className={`${styles.iconRow} ${SPACING_CLASS[spacing]}`} data-size={size}>
       {parsed.map((item, i) => (
-        <div key={i} className="icon-row__item">
+        <div key={i} className={styles.iconRowItem}>
           <Icon
             icon={item.icon}
             bundle={bundle}
@@ -42,7 +48,7 @@ export const IconRow: SectionComponent = ({ data, items, bundle }) => {
             size={ICON_SIZES[size]}
           />
           {item.label ? (
-            <span className="icon-row__label">
+            <span className={styles.iconRowLabel}>
               <Inline text={item.label} bundle={bundle} event={event} />
             </span>
           ) : null}

@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { storageGet } from "../../lib/storage";
 import type { ContentBundle } from "../../store/types";
+import * as styles from "./SeasonalLayers.module.css";
 
 const SNOW_KEY = "wmsfo.snow";
 const LIGHTS_KEY = "wmsfo.lights";
@@ -104,7 +105,7 @@ export function SnowLayer({ bundle }: { bundle: ContentBundle | null }) {
   }, [enabled]);
 
   if (!enabled) return null;
-  return <canvas ref={canvasRef} className="site-snow" aria-hidden data-testid="snow-canvas" />;
+  return <canvas ref={canvasRef} className={styles.snow} aria-hidden data-testid="snow-canvas" />;
 }
 
 const LIGHT_COLORS = ["var(--accent)", "var(--gold)", "var(--ok)", "var(--err)"] as const;
@@ -128,12 +129,12 @@ export function LightsLayer({ bundle }: { bundle: ContentBundle | null }) {
 
   if (!enabled) return null;
   return (
-    <div className="site-lights" aria-hidden data-testid="site-lights">
-      <div className="site-lights__wire" />
+    <div className={styles.lights} aria-hidden data-testid="site-lights">
+      <div className={styles.lightsWire} />
       {bulbs.map((b, i) => (
         <span
           key={i}
-          className="site-lights__bulb"
+          className={styles.lightsBulb}
           style={{ left: b.left, background: b.color, animationDelay: b.delay }}
         />
       ))}

@@ -10,7 +10,7 @@ import { Inline } from "../../inline/Inline";
 import { submitContact } from "../../../api/contact";
 import { ApiRequestError, surfaceFor } from "../../../api/errors";
 import type { ContentDocument } from "../../../contracts";
-import "./ContactForm.module.css";
+import * as styles from "./ContactForm.module.css";
 
 export type ContactFormData = {
   heading?: string | null;
@@ -120,7 +120,7 @@ export const ContactForm: SectionComponent = ({ data, bundle }) => {
   const isSuccess = state.kind === "success";
 
   return (
-    <div className="contact-form">
+    <div className={styles.contactForm}>
       {d.heading ? <h2>{d.heading}</h2> : null}
       {d.copy ? <p><Inline text={d.copy} bundle={bundle} /></p> : null}
       {isSuccess ? (

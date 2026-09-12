@@ -1,0 +1,40 @@
+/* docs/site.md section 7.7. Seasonal layers: canvas snow (fixed, full
+   viewport) and the string of bulbs on a wire under the header. */
+
+.snow {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.lights {
+  height: 8px;
+  width: 100%;
+  background: transparent;
+  overflow: hidden;
+  pointer-events: none;
+  position: relative;
+  z-index: 8;
+}
+.lightsWire {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 3px;
+  height: 1px;
+  background: var(--line);
+}
+.lightsBulb {
+  position: absolute;
+  top: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  animation: seasonal-lights-twinkle 3s ease-in-out infinite;
+}
+
+@keyframes seasonal-lights-twinkle {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}

@@ -6,6 +6,7 @@ import type { BlockComponent } from "../registry";
 import { Media } from "../primitives/Media";
 import { Inline } from "../inline/Inline";
 import { useSnapshotEvent } from "./useSnapshotEvent";
+import * as styles from "../sections/RichText/RichText.module.css";
 
 type MediaBlockData = {
   media?: MediaRef;
@@ -24,8 +25,14 @@ export const MediaBlock: BlockComponent = ({ data, bundle, frame }) => {
   const event = useSnapshotEvent();
   if (!d.media) return null;
   const sizeOverride = size === "full" ? undefined : FIXED_SIZES[size];
+  const sizeClass =
+    size === "small"
+      ? styles.blockMediaSmall
+      : size === "medium"
+      ? styles.blockMediaMedium
+      : styles.blockMediaFull;
   return (
-    <figure className={`block-media block-media--${size}`}>
+    <figure className={`${styles.blockMedia} ${sizeClass}`}>
       <Media
         media={d.media}
         bundle={bundle}
@@ -33,7 +40,7 @@ export const MediaBlock: BlockComponent = ({ data, bundle, frame }) => {
         sizeOverride={sizeOverride}
       />
       {d.caption ? (
-        <figcaption className="block-media__caption">
+        <figcaption className={styles.blockMediaCaption}>
           <Inline text={d.caption} bundle={bundle} event={event} />
         </figcaption>
       ) : null}

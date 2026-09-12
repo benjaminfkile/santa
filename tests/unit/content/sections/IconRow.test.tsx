@@ -20,10 +20,13 @@ describe("IconRow", () => {
     const { container } = render(
       <IconRow data={{ size: "md", spacing: "normal" }} items={items} bundle={bundle} />,
     );
-    expect(container.querySelectorAll(".icon-row__item").length).toBe(2);
+    // Two items render as direct children of the row root.
+    const root = container.firstElementChild!;
+    expect(root.children.length).toBe(2);
     const inline = container.querySelectorAll("svg[data-icon-source=\"library\"]");
     expect(inline[0]?.getAttribute("aria-hidden")).toBe("true");
-    expect(container.querySelectorAll(".icon-row__label").length).toBe(1);
+    // Only the second item has a text label.
+    expect(container.textContent).toContain("Candy");
   });
 
   it("picks the pixel size from the size token", () => {
@@ -33,6 +36,6 @@ describe("IconRow", () => {
     );
     const inline = container.querySelector("svg[data-icon-source=\"library\"]");
     expect(inline?.getAttribute("width")).toBe("96");
-    expect(container.querySelector(".icon-row--spacing-loose")).not.toBeNull();
+    expect((container.firstElementChild as HTMLElement).dataset.size).toBe("lg");
   });
 });

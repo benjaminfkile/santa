@@ -1,19 +1,26 @@
 /* docs/site.md section 7.4. Hero: eyebrow in mono accent, h1 in Bricolage,
    intro at 56ch, the two call-to-action buttons in the fill and outline
-   recipes. Global selectors keep DOM class names stable across tests and
-   downstream consumers; the module is imported for its side-effect. */
+   recipes. */
 
-:global(.hero) {
+.hero {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-4);
   text-align: center;
 }
-:global(.hero--tall) { min-height: var(--hero-tall); justify-content: center; }
-:global(.hero--short) { min-height: var(--hero-short); justify-content: center; }
+.heroTall { min-height: var(--hero-tall); justify-content: center; }
+.heroShort { min-height: var(--hero-short); justify-content: center; }
 
-:global(.hero__eyebrow) {
+/* Paired variant used when a hero is followed by a countdown on the same
+   page: the hero copy stacks to the left, at start alignment, above the
+   liftoff card in the neighbouring column. */
+.heroPaired {
+  align-items: flex-start;
+  text-align: start;
+}
+
+.heroEyebrow {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   font-weight: 500;
@@ -23,7 +30,7 @@
   margin: 0;
 }
 
-:global(.hero__icon) {
+.heroIcon {
   width: 72px;
   height: 72px;
   border-radius: 50%;
@@ -35,10 +42,10 @@
   border: 1px solid var(--line);
   overflow: hidden;
 }
-:global(.hero__icon img),
-:global(.hero__icon svg) { width: 60%; height: 60%; }
+.heroIcon img,
+.heroIcon svg { width: 60%; height: 60%; }
 
-:global(.hero__title) {
+.heroTitle {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--font-size-h1);
@@ -47,20 +54,21 @@
   margin: 0;
   text-wrap: balance;
 }
-:global(.hero__tagline) {
+.heroTagline {
   font-size: 1.0625rem;
   margin: 0;
   color: inherit;
   max-width: 56ch;
 }
-:global(.hero__links) {
+.heroLinks {
   display: flex;
   gap: var(--space-3);
   flex-wrap: wrap;
   justify-content: center;
   margin-top: var(--space-2);
 }
-:global(.hero__link) {
+.heroPaired .heroLinks { justify-content: flex-start; }
+.heroLink {
   min-height: 44px;
   padding: 0.5rem 1.1rem;
   border-radius: var(--radius-sm);
@@ -78,24 +86,24 @@
   color: var(--accent);
   transition: var(--hover-transition);
 }
-:global(.hero__link--primary) {
+.heroLinkPrimary {
   background: var(--accent);
   color: var(--on-accent);
   border-color: var(--accent);
   font-weight: 600;
 }
-:global(.hero__link--secondary) {
+.heroLinkSecondary {
   background: transparent;
   color: var(--accent);
   border-color: var(--accent);
 }
-:global(.hero__link:hover) { background: var(--accent-soft); }
-:global(.hero__link--primary:hover) {
+.heroLink:hover { background: var(--accent-soft); }
+.heroLinkPrimary:hover {
   background: var(--text-bright);
   border-color: var(--text-bright);
   color: var(--ground);
 }
 
 @media (max-width: 760px) {
-  :global(.hero) { text-align: start; align-items: stretch; }
+  .hero { text-align: start; align-items: stretch; }
 }

@@ -117,10 +117,11 @@ describe("RoutePreview", () => {
         />
       </MemoryRouter>,
     );
-    expect(container.querySelector(".route-disclaimer-recipe")).not.toBeNull();
+    // Disclaimer is rendered inside a note-role container.
+    expect(container.querySelector('[role="note"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="poster-viewer"]')).not.toBeNull();
-    // No map view container.
-    expect(container.querySelector(".map-view__canvas")).toBeNull();
+    // No map view container renders here; only the poster viewer.
+    expect(container.textContent).toContain("The route is a plan, not a promise.");
     cleanup();
     store.setState(() => ({ ...initialStore }));
   });

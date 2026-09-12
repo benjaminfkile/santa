@@ -1,7 +1,44 @@
-/* docs/site.md section 7.7. Studio-styled shell classes moved out of the
-   global sheet. Global .site-header rules stay in tokens.css until S16
-   and S17 finish the migration. */
+/* docs/site.md section 7.7. Site shell recipes: header, brand mark, theme
+   toggle, nav drawer, banners, footer, skip link, snow canvas, string of
+   lights. All classes are scoped through this module (no :global rules). */
 
+.skipLink {
+  position: absolute;
+  left: var(--space-3);
+  top: -100px;
+  z-index: 100;
+  padding: var(--space-2) var(--space-4);
+  background: var(--panel);
+  color: var(--text-bright);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+}
+.skipLink:focus,
+.skipLink:focus-visible { top: var(--space-3); }
+
+.siteHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  background: var(--panel);
+  color: var(--text);
+  border-bottom: 1px solid var(--line);
+  position: relative;
+  z-index: 10;
+}
+.siteHeaderCollapsed {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: auto;
+  padding: var(--space-3);
+  background: transparent;
+  border-bottom: 0;
+  z-index: 15;
+}
 .brand {
   display: inline-flex;
   align-items: center;
@@ -14,19 +51,70 @@
   letter-spacing: -0.005em;
   white-space: nowrap;
 }
-
+.brand img,
+.brand svg { width: 30px; height: 18px; }
 .brandMark {
   color: var(--accent);
   width: 30px;
   height: 18px;
   flex: none;
 }
-
 .brandStar {
   fill: var(--gold);
   stroke: none;
 }
-
+.inlineNav { display: none; }
+.inlineNav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+.inlineNav a {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  transition: var(--hover-transition);
+}
+.inlineNav a:hover,
+.inlineNav a[aria-current="page"] { color: var(--accent); }
+@media (min-width: 761px) {
+  .inlineNav {
+    display: flex;
+    flex: 1;
+    margin-inline-start: var(--space-4);
+    min-width: 0;
+    overflow-x: auto;
+  }
+}
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.signIn {
+  color: var(--accent);
+  text-decoration: none;
+  min-height: 36px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid var(--accent);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: var(--hover-transition);
+}
+.signIn:hover { background: var(--accent-soft); }
+.menuButton,
 .themeToggle {
   width: 44px;
   height: 44px;
@@ -39,14 +127,61 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
   transition: var(--hover-transition);
 }
-
-.themeToggle:hover {
-  color: var(--accent);
-  border-color: var(--accent);
+.menuButton:hover,
+.themeToggle:hover { color: var(--accent); border-color: var(--accent); }
+.nav {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: var(--space-6);
+  min-width: 280px;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) 0;
+  z-index: 20;
+  box-shadow: var(--shadow);
 }
-
+.siteHeaderCollapsed .nav {
+  right: var(--space-3);
+  top: calc(var(--space-3) + 44px + var(--space-2));
+}
+.nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+.nav li { display: block; }
+.nav a,
+.nav button.authButton,
+.nav button.systemButton {
+  display: block;
+  padding: var(--space-3) var(--space-5);
+  color: var(--text);
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  width: 100%;
+  text-align: start;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 1rem;
+  transition: var(--hover-transition);
+}
+.nav a:hover,
+.nav button.authButton:hover,
+.nav button.systemButton:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.authButton,
 .systemButton {
   display: block;
   padding: var(--space-3) var(--space-5);
@@ -60,12 +195,77 @@
   font-weight: 500;
   font-size: 1rem;
 }
-
-.systemButton:hover {
-  background: var(--accent-soft);
+.systemButtonActive {
   color: var(--accent);
 }
 
-.systemButtonActive {
-  color: var(--accent);
+.banners {
+  display: flex;
+  flex-direction: column;
+}
+.banner {
+  padding: var(--space-3) var(--space-6);
+  text-align: center;
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--line);
+}
+.bannerUpdatesPaused {
+  background: var(--panel-2);
+  color: var(--text);
+}
+.bannerPreview {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: var(--panel);
+  color: var(--text-dim);
+  border-top: 1px solid var(--line);
+}
+.footerLinks {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+.footerLinks a {
+  color: var(--text);
+  text-decoration: none;
+}
+.footerLinks a:hover { color: var(--accent); }
+.footerText {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.mainFallback:focus { outline: none; }
+.mainFallback > h1 { padding: var(--space-6); }
+.mainFallback > p { padding: 0 var(--space-6); }
+.mainFallback > [role="status"],
+.mainFallback > [role="alert"] {
+  padding: var(--space-6);
+  max-width: var(--width-narrow);
+  margin: 0 auto;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .siteHeader { padding: var(--space-3) var(--space-4); }
+  .brand { font-size: 0.9375rem; white-space: normal; }
+  .signIn { display: none; }
+  .footer {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: start;
+  }
 }

@@ -12,9 +12,10 @@ const bundle: ContentBundle = {
 };
 
 describe("Divider", () => {
-  it.each(["line", "snowflakes", "lights"] as const)("renders style %s", (style) => {
+  it.each(["line", "snowflakes", "lights"] as const)("renders style %s with role=separator", (style) => {
     const { container } = render(<Divider data={{ style }} items={[]} bundle={bundle} />);
-    expect(container.querySelector(`.divider--${style}`)).not.toBeNull();
-    expect(container.querySelector('[role="separator"]')).not.toBeNull();
+    const sep = container.querySelector('[role="separator"]');
+    expect(sep).not.toBeNull();
+    expect(sep!.getAttribute("data-divider-style")).toBe(style);
   });
 });

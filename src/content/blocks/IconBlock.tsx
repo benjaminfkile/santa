@@ -4,6 +4,7 @@
 import type { IconRef } from "../../contracts";
 import type { BlockComponent } from "../registry";
 import { Icon } from "../primitives/Icon";
+import * as styles from "../sections/RichText/RichText.module.css";
 
 type IconBlockData = {
   icon?: IconRef;
@@ -23,8 +24,9 @@ export const IconBlock: BlockComponent = ({ data, bundle }) => {
   if (!d.icon) return null;
   const size = d.size ?? "md";
   const align = d.align ?? "start";
+  const alignClass = align === "center" ? styles.blockIconCenter : styles.blockIconStart;
   return (
-    <div className={`block-icon block-icon--${align}`}>
+    <div className={`${styles.blockIcon} ${alignClass}`}>
       <Icon icon={d.icon} bundle={bundle} decorative size={ICON_SIZES[size]} />
     </div>
   );

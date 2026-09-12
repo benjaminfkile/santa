@@ -4,6 +4,7 @@
 
 import { Suspense, lazy } from "react";
 import type { SectionComponent } from "../../registry";
+import * as styles from "./Map.module.css";
 
 const LazyMap = lazy(() =>
   import("./Map").then((mod) => ({ default: mod.Map as SectionComponent })),
@@ -11,7 +12,7 @@ const LazyMap = lazy(() =>
 
 export const MapSection: SectionComponent = (props) => {
   return (
-    <Suspense fallback={<div className="map-section map-section--loading" aria-busy />}>
+    <Suspense fallback={<div className={`${styles.mapSection} ${styles.mapSectionLoading}`} aria-busy />}>
       <LazyMap {...props} />
     </Suspense>
   );

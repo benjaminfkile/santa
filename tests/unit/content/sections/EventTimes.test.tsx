@@ -57,7 +57,7 @@ describe("EventTimes", () => {
         bundle={bundle}
       />,
     );
-    const rows = container.querySelectorAll(".event-times__row");
+    const rows = container.querySelectorAll("dl > [data-row]");
     expect(rows.length).toBe(3);
     expect(container.textContent).toContain("Scheduled");
     expect(container.textContent).toContain("Liftoff");
@@ -84,7 +84,7 @@ describe("EventTimes", () => {
         bundle={bundle}
       />,
     );
-    const value = container.querySelector(".event-times__value")?.textContent ?? "";
+    const value = container.querySelector("dd")?.textContent ?? "";
     expect(value).toMatch(/Dec\s+21/);
     expect(value).toMatch(/PM/);
     expect(value).toMatch(/M[SD]T/);
@@ -133,7 +133,7 @@ describe("EventTimes", () => {
         bundle={bundle}
       />,
     );
-    expect(container.querySelector(".event-times--blank")).not.toBeNull();
-    expect(container.querySelector(".event-times__row")).toBeNull();
+    expect(container.querySelector('[aria-hidden="true"]')).not.toBeNull();
+    expect(container.querySelector("dl")).toBeNull();
   });
 });

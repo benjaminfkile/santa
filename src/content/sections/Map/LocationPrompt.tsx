@@ -6,6 +6,7 @@
 
 import { useEffect, useRef } from "react";
 import { inAppBrowser } from "../../../lib/inAppBrowser";
+import * as styles from "../RoutePreview/RoutePreview.module.css";
 
 export type LocationPromptProps = {
   open: boolean;
@@ -47,7 +48,7 @@ export function LocationPrompt({
   return (
     <dialog
       ref={dialogRef}
-      className="location-prompt"
+      className={styles.locationPrompt}
       aria-labelledby="location-prompt-heading"
       data-testid="location-prompt"
     >
@@ -55,7 +56,7 @@ export function LocationPrompt({
       {enabled ? (
         <>
           <p>You are showing your location on the map.</p>
-          <div className="location-prompt__actions">
+          <div className={styles.locationPromptActions}>
             <button type="button" onClick={onDisable}>Disable</button>
             <button type="button" onClick={onClose}>Back</button>
           </div>
@@ -67,13 +68,13 @@ export function LocationPrompt({
             location is used on this page only and never leaves your browser.
           </p>
           {inAppBrowser() ? (
-            <p className="location-prompt__inapp">
+            <p className={styles.locationPromptInapp}>
               You appear to be inside the Facebook or Instagram browser. Location
               may not work there. Try opening this page in your regular browser.
             </p>
           ) : null}
           {showDeniedHelp ? (
-            <div className="location-prompt__denied" data-testid="location-denied">
+            <div className={styles.locationPromptDenied} data-testid="location-denied">
               <h3>Location is blocked</h3>
               <ul>
                 <li>
@@ -89,7 +90,7 @@ export function LocationPrompt({
               </ul>
             </div>
           ) : null}
-          <div className="location-prompt__actions">
+          <div className={styles.locationPromptActions}>
             <button type="button" onClick={onEnable}>Enable</button>
             <button type="button" onClick={onClose}>Cancel</button>
           </div>

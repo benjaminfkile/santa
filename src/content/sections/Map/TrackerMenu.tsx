@@ -7,6 +7,7 @@ import { useStore } from "../../../store/useStore";
 import { mpsToMph, metresToFeet, headingToCardinal } from "../../../lib/units";
 import { copy } from "../../../copy/copy";
 import type { MapTheme } from "../../../map/themes";
+import * as styles from "./TrackerMenu.module.css";
 
 type Toggles = {
   themePicker: boolean;
@@ -75,19 +76,19 @@ export function TrackerMenu(props: TrackerMenuProps) {
   return (
     <div
       ref={dialogRef}
-      className="tracker-menu"
+      className={styles.trackerMenu}
       role="dialog"
       aria-label="Tracker menu"
       data-testid="tracker-menu"
     >
-      <div className="tracker-menu__header">
+      <div className={styles.header}>
         <h2>Tracker</h2>
         <button type="button" onClick={props.onClose} aria-label="Close menu">×</button>
       </div>
 
       {props.controls.themePicker ? (
         <div
-          className="tracker-menu__section tracker-menu__section--theme"
+          className={`${styles.section} ${styles.sectionTheme}`}
           role="radiogroup"
           aria-label="Map style"
         >
@@ -102,19 +103,19 @@ export function TrackerMenu(props: TrackerMenuProps) {
                 onClick={() => props.onThemeChange(t.key)}
                 className={
                   selected
-                    ? "tracker-menu__theme tracker-menu__theme--selected"
-                    : "tracker-menu__theme"
+                    ? `${styles.theme} ${styles.themeSelected}`
+                    : styles.theme
                 }
                 data-testid={`tracker-menu-theme-${t.key}`}
               >
                 <span
-                  className="tracker-menu__theme-thumb"
+                  className={styles.themeThumb}
                   aria-hidden
                   style={{
                     background: `radial-gradient(circle at 30% 30%, ${t.timeLabelBg}, ${t.routeColor} 70%, ${t.arrowColor})`,
                   }}
                 />
-                <span className="tracker-menu__theme-label">{t.label}</span>
+                <span className={styles.themeLabel}>{t.label}</span>
               </button>
             );
           })}
@@ -122,7 +123,7 @@ export function TrackerMenu(props: TrackerMenuProps) {
       ) : null}
 
       {props.controls.terrain ? (
-        <div className="tracker-menu__section tracker-menu__section--pills" role="radiogroup" aria-label="Map type">
+        <div className={`${styles.section} ${styles.sectionPills}`} role="radiogroup" aria-label="Map type">
           <button
             type="button"
             role="radio"
@@ -130,8 +131,8 @@ export function TrackerMenu(props: TrackerMenuProps) {
             onClick={() => props.onMapTypeChange("terrain")}
             className={
               props.mapType === "terrain"
-                ? "tracker-menu__pill tracker-menu__pill--selected"
-                : "tracker-menu__pill"
+                ? `${styles.pill} ${styles.pillSelected}`
+                : styles.pill
             }
           >
             Terrain
@@ -143,8 +144,8 @@ export function TrackerMenu(props: TrackerMenuProps) {
             onClick={() => props.onMapTypeChange("roadmap")}
             className={
               props.mapType === "roadmap"
-                ? "tracker-menu__pill tracker-menu__pill--selected"
-                : "tracker-menu__pill"
+                ? `${styles.pill} ${styles.pillSelected}`
+                : styles.pill
             }
           >
             Road
@@ -152,11 +153,11 @@ export function TrackerMenu(props: TrackerMenuProps) {
         </div>
       ) : null}
 
-      <div className="tracker-menu__section tracker-menu__section--toggles">
+      <div className={`${styles.section} ${styles.sectionToggles}`}>
         {props.controls.snow ? (
           <button
             type="button"
-            className="tracker-menu__toggle"
+            className={styles.toggle}
             aria-pressed={props.snow}
             onClick={() => props.onSnowChange(!props.snow)}
             data-testid="tracker-menu-snow"
@@ -169,7 +170,7 @@ export function TrackerMenu(props: TrackerMenuProps) {
           <>
             <button
               type="button"
-              className="tracker-menu__toggle"
+              className={styles.toggle}
               aria-pressed={props.flightHistory}
               onClick={() => props.onFlightHistoryChange(!props.flightHistory)}
               data-testid="tracker-menu-flight-history"
@@ -179,7 +180,7 @@ export function TrackerMenu(props: TrackerMenuProps) {
             {props.flightHistory ? (
               <button
                 type="button"
-                className="tracker-menu__toggle"
+                className={styles.toggle}
                 aria-pressed={props.timeLabels}
                 onClick={() => props.onTimeLabelsChange(!props.timeLabels)}
                 data-testid="tracker-menu-time-labels"
@@ -190,7 +191,7 @@ export function TrackerMenu(props: TrackerMenuProps) {
             {props.flightHistory ? (
               <button
                 type="button"
-                className="tracker-menu__toggle"
+                className={styles.toggle}
                 onClick={props.onFitHistory}
                 data-testid="tracker-menu-fit-history"
               >
@@ -201,14 +202,14 @@ export function TrackerMenu(props: TrackerMenuProps) {
         ) : null}
 
         {props.controls.location ? (
-          <button type="button" className="tracker-menu__toggle" onClick={props.onOpenLocation}>
+          <button type="button" className={styles.toggle} onClick={props.onOpenLocation}>
             Location
           </button>
         ) : null}
       </div>
 
       {props.controls.dataRow ? (
-        <dl className="tracker-menu__data-row" data-testid="tracker-menu-data-row">
+        <dl className={styles.dataRow} data-testid="tracker-menu-data-row">
           <div>
             <dt>Speed</dt>
             <dd data-testid="data-row-speed">{fmt(speedMph, "mph", 0)}</dd>

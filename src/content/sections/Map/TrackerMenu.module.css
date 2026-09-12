@@ -1,0 +1,155 @@
+/* docs/site.md section 7.6. Tracker menu drawer with the map-style
+   thumbnails, terrain/road pills, feature toggles, and the data row.
+   Stays independent of the site's colour scheme. */
+
+.trackerMenu {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: min(360px, 100%);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--panel);
+  color: var(--text);
+  border-left: 1px solid var(--line);
+  overflow-y: auto;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+}
+.header h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  color: var(--text-bright);
+}
+.header button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 1.25rem;
+}
+.section {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.sectionTheme {
+  gap: var(--space-3) var(--space-4);
+}
+.theme {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  cursor: pointer;
+  color: var(--text);
+  font-family: var(--font-sans);
+  min-width: 60px;
+}
+.themeThumb {
+  display: block;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  box-sizing: border-box;
+}
+.themeLabel {
+  font-size: 0.8125rem;
+  color: var(--text-dim);
+  padding-bottom: 3px;
+  border-bottom: 3px solid transparent;
+}
+.themeSelected .themeLabel {
+  color: var(--text-bright);
+  border-bottom-color: var(--accent);
+}
+.sectionPills { gap: var(--space-2); }
+.pill {
+  appearance: none;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: var(--hover-transition);
+}
+.pill:hover { border-color: var(--accent); }
+.pillSelected {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.sectionToggles {
+  gap: var(--space-2);
+}
+.toggle {
+  appearance: none;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: var(--hover-transition);
+}
+.toggle:hover { border-color: var(--accent); }
+.toggle[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.dataRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-2);
+}
+.dataRow > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.dataRow dt {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-family: var(--font-mono);
+}
+.dataRow dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.15rem;
+  color: var(--text-bright);
+}
+
+@media (max-width: 760px) {
+  .trackerMenu { width: 100%; }
+}

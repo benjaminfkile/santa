@@ -3,7 +3,7 @@
 
 import type { SectionComponent } from "../../registry";
 import { registry } from "../../registry";
-import "./RichText.module.css";
+import * as styles from "./RichText.module.css";
 
 type Block = { kind: string } & Record<string, unknown>;
 
@@ -13,7 +13,7 @@ export const RichText: SectionComponent = ({ data, bundle, frame }) => {
   const d = (data ?? {}) as RichTextData;
   const blocks = Array.isArray(d.blocks) ? d.blocks : [];
   return (
-    <div className="rich-text">
+    <div className={styles.richText}>
       {blocks.map((block, i) => {
         const Block = registry.blocks[block.kind];
         if (!Block) return null;

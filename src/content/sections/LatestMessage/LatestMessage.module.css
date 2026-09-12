@@ -1,8 +1,8 @@
 /* docs/site.md section 7.4. Latest message: card and ticker. */
 
-:global(.latest-message) { display: flex; flex-direction: column; gap: var(--space-2); }
-:global(.latest-message--ticker) { flex-direction: row; align-items: center; gap: var(--space-3); }
-:global(.latest-message__heading) {
+.latestMessage { display: flex; flex-direction: column; gap: var(--space-2); }
+.latestMessageTicker { flex-direction: row; align-items: center; gap: var(--space-3); }
+.latestMessageHeading {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   letter-spacing: 0.12em;
@@ -10,22 +10,22 @@
   color: var(--text-dim);
   margin: 0;
 }
-:global(.latest-message--card) {
+.latestMessageCard {
   padding: var(--space-4) var(--space-5);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--panel);
   box-shadow: var(--shadow);
 }
-:global(.latest-message__meta) {
+.latestMessageMeta {
   color: var(--text-dim);
   font-family: var(--font-mono);
   font-size: 0.75rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-:global(.latest-message__body) { margin: 0; font-size: 1.0625rem; color: var(--text-bright); }
-:global(.latest-message__toggle) {
+.latestMessageBody { margin: 0; font-size: 1.0625rem; color: var(--text-bright); }
+.latestMessageToggle {
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -42,14 +42,14 @@
   font-size: inherit;
   transition: var(--hover-transition);
 }
-:global(.latest-message__toggle:hover) { border-color: var(--accent); color: var(--accent); }
-:global(.latest-message__ticker-body) {
+.latestMessageToggle:hover { border-color: var(--accent); color: var(--accent); }
+.latestMessageTickerBody {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-:global(.latest-message__time) {
+.latestMessageTime {
   color: var(--text-dim);
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
@@ -57,5 +57,5 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-:global(.latest-message__stale) { color: var(--text-dim); font-size: 0.85rem; margin: 0; }
-:global(.latest-message__expanded) { padding: var(--space-3) var(--space-4); }
+.latestMessageStale { color: var(--text-dim); font-size: 0.85rem; margin: 0; }
+.latestMessageExpanded { padding: var(--space-3) var(--space-4); }

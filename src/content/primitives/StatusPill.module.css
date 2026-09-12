@@ -3,7 +3,7 @@
    contact-form error/success chips). Ok, warn, err, and dim variants trace
    the semantic tokens. */
 
-:global(.status-pill) {
+.statusPill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -16,13 +16,13 @@
   border: 1px solid currentColor;
   background: transparent;
 }
-:global(.status-pill__dot) {
+.statusPillDot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: currentColor;
 }
-:global(.status-pill--ok) { color: var(--ok); }
-:global(.status-pill--warn) { color: var(--warn); }
-:global(.status-pill--err) { color: var(--err); }
-:global(.status-pill--dim) { color: var(--text-dim); }
+.statusPillOk { color: var(--ok); }
+.statusPillWarn { color: var(--warn); }
+.statusPillErr { color: var(--err); }
+.statusPillDim { color: var(--text-dim); }

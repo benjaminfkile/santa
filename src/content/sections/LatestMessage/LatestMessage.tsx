@@ -8,7 +8,7 @@ import { Inline } from "../../inline/Inline";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
 import { formatMountainTime } from "../../../lib/time";
-import "./LatestMessage.module.css";
+import * as styles from "./LatestMessage.module.css";
 
 type LatestMessageData = {
   heading?: string | null;
@@ -32,25 +32,25 @@ export const LatestMessage: SectionComponent = ({ data, bundle }) => {
 
   if (style === "ticker") {
     return (
-      <div className="latest-message latest-message--ticker" aria-live="polite" data-testid="latest-message">
+      <div className={`${styles.latestMessage} ${styles.latestMessageTicker}`} aria-live="polite" data-testid="latest-message">
         <button
           type="button"
-          className="latest-message__toggle"
+          className={styles.latestMessageToggle}
           aria-expanded={expanded}
           onClick={() => setExpanded((v) => !v)}
         >
-          <span className="latest-message__ticker-body">
+          <span className={styles.latestMessageTickerBody}>
             <Inline text={body} bundle={bundle} event={event} />
           </span>
-          <span className="latest-message__time">{timeText}</span>
+          <span className={styles.latestMessageTime}>{timeText}</span>
         </button>
         {expanded ? (
-          <div className="latest-message__expanded">
-            <p className="latest-message__body">
+          <div className={styles.latestMessageExpanded}>
+            <p className={styles.latestMessageBody}>
               <Inline text={body} bundle={bundle} event={event} />
             </p>
             {snapshotStale ? (
-              <p className="latest-message__stale">Refreshing details...</p>
+              <p className={styles.latestMessageStale}>Refreshing details...</p>
             ) : null}
           </div>
         ) : null}
@@ -59,24 +59,24 @@ export const LatestMessage: SectionComponent = ({ data, bundle }) => {
   }
 
   return (
-    <div className="latest-message latest-message--card" aria-live="polite" data-testid="latest-message">
+    <div className={`${styles.latestMessage} ${styles.latestMessageCard}`} aria-live="polite" data-testid="latest-message">
       {heading ? (
-        <div className="latest-message__meta">
-          <span className="latest-message__heading">
+        <div className={styles.latestMessageMeta}>
+          <span className={styles.latestMessageHeading}>
             <Inline text={heading} bundle={bundle} event={event} />
           </span>
-          {timeText ? <span className="latest-message__time"> · {timeText}</span> : null}
+          {timeText ? <span className={styles.latestMessageTime}> · {timeText}</span> : null}
         </div>
       ) : timeText ? (
-        <div className="latest-message__meta">
-          <span className="latest-message__time">{timeText}</span>
+        <div className={styles.latestMessageMeta}>
+          <span className={styles.latestMessageTime}>{timeText}</span>
         </div>
       ) : null}
-      <p className="latest-message__body">
+      <p className={styles.latestMessageBody}>
         <Inline text={body} bundle={bundle} event={event} />
       </p>
       {snapshotStale ? (
-        <p className="latest-message__stale">Refreshing details...</p>
+        <p className={styles.latestMessageStale}>Refreshing details...</p>
       ) : null}
     </div>
   );

@@ -3,6 +3,7 @@
 import type { Link } from "../../contracts";
 import type { BlockComponent } from "../registry";
 import { ContentLink } from "../primitives/LinkView";
+import * as styles from "../sections/RichText/RichText.module.css";
 
 type LinksBlockData = {
   links?: Link[];
@@ -15,9 +16,9 @@ export const LinksBlock: BlockComponent = ({ data, bundle }) => {
   const links = Array.isArray(d.links) ? d.links : [];
   if (style === "list") {
     return (
-      <ul className="block-links block-links--list">
+      <ul className={`${styles.blockLinks} ${styles.blockLinksList}`}>
         {links.map((link, i) => (
-          <li key={i} className="block-links__item">
+          <li key={i} className={styles.blockLinksItem}>
             <ContentLink link={link} bundle={bundle} />
           </li>
         ))}
@@ -25,13 +26,13 @@ export const LinksBlock: BlockComponent = ({ data, bundle }) => {
     );
   }
   return (
-    <div className="block-links block-links--buttons">
+    <div className={`${styles.blockLinks} ${styles.blockLinksButtons}`}>
       {links.map((link, i) => (
         <ContentLink
           key={i}
           link={link}
           bundle={bundle}
-          className="block-links__button"
+          className={styles.blockLinksButton}
         />
       ))}
     </div>

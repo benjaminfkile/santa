@@ -7,6 +7,7 @@ import { selectLiveState } from "../../../store/liveState";
 import { copy } from "../../../copy/copy";
 import { LiveIndicator } from "./LiveIndicator";
 import { LiftoffTimer } from "./LiftoffTimer";
+import * as styles from "./Map.module.css";
 
 export type InfoOverlaysProps = {
   showLiveIndicator: boolean;
@@ -30,12 +31,12 @@ export function InfoOverlays({ showLiveIndicator, showLiftoffTimer }: InfoOverla
   const status = statusChipText(liveState, nowPerf, lastSeqChangeAt);
 
   return (
-    <div className="info-overlays">
+    <div className={styles.infoOverlays}>
       {showLiveIndicator ? <LiveIndicator /> : null}
       {showLiftoffTimer ? <LiftoffTimer /> : null}
       {status !== null ? (
         <div
-          className={`info-overlays__status info-overlays__status--${liveState}`}
+          className={`${styles.infoOverlaysStatus}${liveState === "signalLost" ? " " + styles.infoOverlaysStatusSignalLost : ""}`}
           role="status"
           aria-live="polite"
           data-testid={liveState === "waitingForFix" ? "waiting-for-fix" : "signal-lost"}

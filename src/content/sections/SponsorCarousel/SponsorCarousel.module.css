@@ -3,7 +3,7 @@
    and the "N s on the tracker" line derived from lingerMs, plus a link to
    the sponsors page. */
 
-:global(.sponsor-carousel) {
+.sponsorCarousel {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -13,7 +13,7 @@
   background: var(--panel);
   box-shadow: var(--shadow);
 }
-:global(.sponsor-carousel__heading) {
+.sponsorCarouselHeading {
   margin: 0;
   font-family: var(--font-mono);
   font-size: 0.75rem;
@@ -21,21 +21,21 @@
   text-transform: uppercase;
   color: var(--accent);
 }
-:global(.sponsor-carousel__bar) {
+.sponsorCarouselBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   flex-wrap: wrap;
 }
-:global(.sponsor-carousel__viewport) {
+.sponsorCarouselViewport {
   min-height: 88px;
   display: flex;
   align-items: center;
   gap: var(--space-3);
   flex: 1;
 }
-:global(.sponsor-carousel__slide) {
+.sponsorCarouselSlide {
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
@@ -44,8 +44,8 @@
   color: inherit;
   min-width: 0;
 }
-:global(.sponsor-carousel--reduced-motion) :global(.sponsor-carousel__slide) { transition: none; }
-:global(.sponsor-carousel__logo) {
+.sponsorCarouselReducedMotion .sponsorCarouselSlide { transition: none; }
+.sponsorCarouselLogo {
   width: 56px;
   height: 56px;
   border-radius: var(--radius-sm);
@@ -54,7 +54,7 @@
   object-fit: contain;
   flex: none;
 }
-:global(.sponsor-carousel__name) {
+.sponsorCarouselName {
   font-family: var(--font-sans);
   font-weight: 600;
   color: var(--text-bright);
@@ -64,28 +64,28 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-:global(.sponsor-carousel__linger) {
+.sponsorCarouselLinger {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
 }
-:global(.sponsor-carousel__dots) {
+.sponsorCarouselDots {
   display: flex;
   gap: 5px;
   padding: 0;
   margin: 0;
   list-style: none;
 }
-:global(.sponsor-carousel__dot) {
+.sponsorCarouselDot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: var(--line);
 }
-:global(.sponsor-carousel__dot--on) { background: var(--accent); }
-:global(.sponsor-carousel__link) {
+.sponsorCarouselDotOn { background: var(--accent); }
+.sponsorCarouselLink {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   letter-spacing: 0.08em;
@@ -94,4 +94,4 @@
   text-decoration: none;
   transition: var(--hover-transition);
 }
-:global(.sponsor-carousel__link:hover) { color: var(--text-bright); }
+.sponsorCarouselLink:hover { color: var(--text-bright); }

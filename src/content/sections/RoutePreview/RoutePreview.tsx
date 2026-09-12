@@ -15,6 +15,7 @@ import { Link } from "react-router-dom";
 import { Media } from "../../primitives/Media";
 import { resolveMedia } from "../../primitives/resolve";
 import { PosterViewer } from "./PosterViewer";
+import * as styles from "./RoutePreview.module.css";
 
 type RoutePreviewData = {
   heading?: string | null;
@@ -49,13 +50,13 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   if (mediaId === null || mediaId === undefined || mediaId === "") {
     if (emptyText) {
       return (
-        <div className="route-preview route-preview--empty">
+        <div className={`${styles.routePreview} ${styles.routePreviewEmpty}`}>
           {d.heading ? (
-            <h2 className="route-preview__heading">
+            <h2 className={styles.routePreviewHeading}>
               <Inline text={d.heading} bundle={bundle} event={event} />
             </h2>
           ) : null}
-          <p className="route-preview__empty-text">
+          <p className={styles.routePreviewEmptyText}>
             <Inline text={emptyText} bundle={bundle} event={event} />
           </p>
         </div>
@@ -68,13 +69,13 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   if (entry === null) {
     if (emptyText) {
       return (
-        <div className="route-preview route-preview--empty">
+        <div className={`${styles.routePreview} ${styles.routePreviewEmpty}`}>
           {d.heading ? (
-            <h2 className="route-preview__heading">
+            <h2 className={styles.routePreviewHeading}>
               <Inline text={d.heading} bundle={bundle} event={event} />
             </h2>
           ) : null}
-          <p className="route-preview__empty-text">
+          <p className={styles.routePreviewEmptyText}>
             <Inline text={emptyText} bundle={bundle} event={event} />
           </p>
         </div>
@@ -97,14 +98,14 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
     const srcSet = parts.length > 0 ? parts.join(", ") : undefined;
     const alt = entry.alt ?? "Route poster";
     return (
-      <div className="route-preview route-preview--viewer" data-testid="route-preview-viewer">
+      <div className={`${styles.routePreview} ${styles.routePreviewViewer}`} data-testid="route-preview-viewer">
         {d.heading ? (
-          <h2 className="route-preview__heading">
+          <h2 className={styles.routePreviewHeading}>
             <Inline text={d.heading} bundle={bundle} event={event} />
           </h2>
         ) : null}
         {d.disclaimer ? (
-          <div className="route-disclaimer-recipe" role="note">
+          <div className={styles.disclaimerRecipe} role="note">
             <DisclaimerIcon />
             <p>
               <Inline text={d.disclaimer} bundle={bundle} event={event} />
@@ -129,19 +130,19 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
       bundle={bundle}
       sizeOverride="(min-width: 960px) 960px, 100vw"
       testId="route-preview-image"
-      className="route-preview__image"
+      className={styles.routePreviewImage}
     />
   );
 
   return (
-    <div className="route-preview route-preview--image" data-testid="route-preview-image-wrap">
+    <div className={`${styles.routePreview} ${styles.routePreviewImageWrap}`} data-testid="route-preview-image-wrap">
       {d.heading ? (
-        <h2 className="route-preview__heading">
+        <h2 className={styles.routePreviewHeading}>
           <Inline text={d.heading} bundle={bundle} event={event} />
         </h2>
       ) : null}
       {viewerSlug !== null ? (
-        <Link to={`/${viewerSlug}`} className="route-preview__link" data-testid="route-preview-link">
+        <Link to={`/${viewerSlug}`} className={styles.routePreviewLink} data-testid="route-preview-link">
           {picture}
         </Link>
       ) : (

@@ -9,7 +9,7 @@ import { Inline } from "../../inline/Inline";
 import { Icon } from "../../primitives/Icon";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
-import "./Leaderboard.module.css";
+import * as styles from "./Leaderboard.module.css";
 
 type LeaderboardData = {
   heading?: string | null;
@@ -49,13 +49,13 @@ export const Leaderboard: SectionComponent = ({ data, bundle }) => {
   if (cookieTypes.length === 0) {
     if (emptyText) {
       return (
-        <div className="leaderboard leaderboard--empty">
+        <div className={`${styles.leaderboard} ${styles.leaderboardEmpty}`}>
           {d.heading ? (
-            <h2 className="leaderboard__heading">
+            <h2 className={styles.leaderboardHeading}>
               <Inline text={d.heading} bundle={bundle} event={event} />
             </h2>
           ) : null}
-          <p className="leaderboard__empty-text">
+          <p className={styles.leaderboardEmptyText}>
             <Inline text={emptyText} bundle={bundle} event={event} />
           </p>
         </div>
@@ -69,23 +69,25 @@ export const Leaderboard: SectionComponent = ({ data, bundle }) => {
   const visible =
     variant === "panel" && !expanded ? ranked.slice(0, PANEL_LIMIT) : ranked;
 
+  const variantClass = variant === "full" ? styles.leaderboardFull : styles.leaderboardPanel;
+
   return (
-    <div className={`leaderboard leaderboard--${variant}`}>
+    <div className={`${styles.leaderboard} ${variantClass}`} data-variant={variant}>
       {d.heading ? (
-        <h2 className="leaderboard__heading">
+        <h2 className={styles.leaderboardHeading}>
           <Inline text={d.heading} bundle={bundle} event={event} />
         </h2>
       ) : null}
-      <ol className="leaderboard__list">
+      <ol className={styles.leaderboardList}>
         {visible.map((row) => (
           <li
             key={row.id}
-            className="leaderboard__row"
+            className={styles.leaderboardRow}
             data-count={row.count}
           >
             {row.icon && typeof row.icon.id === "string" &&
              (row.icon.source === "library" || row.icon.source === "media") ? (
-              <span className="leaderboard__icon" aria-hidden>
+              <span className={styles.leaderboardIcon} aria-hidden>
                 <Icon
                   icon={{ source: row.icon.source, id: row.icon.id } as IconRef}
                   bundle={bundle}
@@ -94,19 +96,19 @@ export const Leaderboard: SectionComponent = ({ data, bundle }) => {
                 />
               </span>
             ) : (
-              <span className="leaderboard__icon leaderboard__icon--placeholder" aria-hidden />
+              <span className={`${styles.leaderboardIcon} ${styles.leaderboardIconPlaceholder}`} aria-hidden />
             )}
-            <span className="leaderboard__name">{row.name}</span>
+            <span className={styles.leaderboardName}>{row.name}</span>
             {variant === "full" ? (
               <span
-                className="leaderboard__bar"
+                className={styles.leaderboardBar}
                 aria-hidden
                 style={{
                   width: max > 0 ? `${(row.count / max) * 100}%` : "0",
                 }}
               />
             ) : null}
-            <span className="leaderboard__count" data-testid="leaderboard-count">
+            <span className={styles.leaderboardCount} data-testid="leaderboard-count">
               {row.count}
             </span>
           </li>
@@ -115,7 +117,7 @@ export const Leaderboard: SectionComponent = ({ data, bundle }) => {
       {variant === "panel" && ranked.length > PANEL_LIMIT ? (
         <button
           type="button"
-          className="leaderboard__toggle"
+          className={styles.leaderboardToggle}
           aria-expanded={expanded}
           onClick={() => setExpanded((v) => !v)}
         >

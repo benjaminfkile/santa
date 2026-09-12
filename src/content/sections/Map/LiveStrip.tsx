@@ -8,6 +8,7 @@ import { formatDistanceMetres } from "../../../map/userLocation";
 import { copy } from "../../../copy/copy";
 import { LiveIndicator } from "./LiveIndicator";
 import { LiftoffTimer } from "./LiftoffTimer";
+import * as styles from "./Map.module.css";
 
 export type LiveStripProps = {
   distanceMetres: number | null;
@@ -37,37 +38,37 @@ export function LiveStrip({ distanceMetres, showLiveIndicator, showLiftoffTimer 
       : formatDistanceMetres(distanceMetres);
 
   return (
-    <div className="live-strip" data-testid="live-strip">
-      <div className="live-strip__tags">
+    <div className={styles.liveStrip} data-testid="live-strip">
+      <div className={styles.liveStripTags}>
         {showLiveIndicator ? <LiveIndicator /> : null}
         {showLiftoffTimer ? <LiftoffTimer /> : null}
       </div>
-      <dl className="live-strip__instruments">
-        <div className="live-strip__inst">
+      <dl className={styles.liveStripInstruments}>
+        <div className={styles.liveStripInst}>
           <dt>Speed</dt>
           <dd>
-            <span className="live-strip__value">{speed.value}</span>
-            <span className="live-strip__unit">{speed.unit}</span>
+            <span className={styles.liveStripValue}>{speed.value}</span>
+            <span className={styles.liveStripUnit}>{speed.unit}</span>
           </dd>
         </div>
-        <div className="live-strip__inst">
+        <div className={styles.liveStripInst}>
           <dt>Heading</dt>
           <dd>
-            <span className="live-strip__value">{headingLabel.value}</span>
-            <span className="live-strip__unit">{headingLabel.unit}</span>
+            <span className={styles.liveStripValue}>{headingLabel.value}</span>
+            <span className={styles.liveStripUnit}>{headingLabel.unit}</span>
           </dd>
         </div>
-        <div className="live-strip__inst">
+        <div className={styles.liveStripInst}>
           <dt>Altitude</dt>
           <dd>
-            <span className="live-strip__value">{altitude.value}</span>
-            <span className="live-strip__unit">{altitude.unit}</span>
+            <span className={styles.liveStripValue}>{altitude.value}</span>
+            <span className={styles.liveStripUnit}>{altitude.unit}</span>
           </dd>
         </div>
-        <div className="live-strip__inst">
+        <div className={styles.liveStripInst}>
           <dt>Distance</dt>
           <dd>
-            <span className="live-strip__value">{distanceText}</span>
+            <span className={styles.liveStripValue}>{distanceText}</span>
           </dd>
         </div>
       </dl>

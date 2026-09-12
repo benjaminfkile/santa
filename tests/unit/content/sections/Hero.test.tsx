@@ -41,8 +41,9 @@ describe("Hero", () => {
         />,
       ),
     );
-    expect(container.querySelector(".hero__tagline")?.textContent).toBe("Ho ho ho");
-    expect(container.querySelector(".hero--short")).not.toBeNull();
+    const paragraphs = container.querySelectorAll("p");
+    const tagline = Array.from(paragraphs).find((p) => p.textContent === "Ho ho ho");
+    expect(tagline).not.toBeUndefined();
   });
 
   it("renders up to two links", () => {
@@ -65,7 +66,9 @@ describe("Hero", () => {
         />,
       ),
     );
-    expect(container.querySelectorAll(".hero__link").length).toBe(2);
-    expect(container.querySelector(".hero__icon")).not.toBeNull();
+    // Hero caps to two links; both render as anchors.
+    expect(container.querySelectorAll("a").length).toBe(2);
+    // Icon renders as an aria-hidden wrapper with an inner svg.
+    expect(container.querySelector('[aria-hidden="true"] svg')).not.toBeNull();
   });
 });

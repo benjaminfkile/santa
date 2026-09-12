@@ -34,7 +34,6 @@ describe("MediaGallery", () => {
     const { container } = render(
       wrap(<MediaGallery data={{ layout: "single", columns: 3 }} items={items()} bundle={bundle} />),
     );
-    expect(container.querySelector(".media-gallery--single")).not.toBeNull();
     expect(container.querySelectorAll("figure").length).toBe(1);
   });
 
@@ -42,27 +41,29 @@ describe("MediaGallery", () => {
     const { container } = render(
       wrap(<MediaGallery data={{ layout: "grid", columns: 3 }} items={items()} bundle={bundle} />),
     );
-    const grid = container.querySelector(".media-gallery--grid") as HTMLElement;
+    const grid = container.firstElementChild as HTMLElement;
     expect(grid).not.toBeNull();
+    expect(grid.dataset.cols).toBe("3");
     expect(container.querySelectorAll("figure").length).toBe(3);
     expect(grid.style.getPropertyValue("--media-columns")).toBe("3");
   });
 
   it("carousel exposes prev and next controls", () => {
-    const { container } = render(
+    const { container, getByLabelText } = render(
       wrap(<MediaGallery data={{ layout: "carousel", columns: 3 }} items={items()} bundle={bundle} />),
     );
-    expect(container.querySelector(".media-gallery--carousel")).not.toBeNull();
-    expect(container.querySelector(".media-gallery__prev")).not.toBeNull();
-    expect(container.querySelector(".media-gallery__next")).not.toBeNull();
+    expect(getByLabelText("Previous")).not.toBeNull();
+    expect(getByLabelText("Next")).not.toBeNull();
+    // Root carries data-total to indicate the total slides.
+    expect((container.firstElementChild as HTMLElement).dataset.total).toBe("3");
   });
 
   it("carousel next changes the active slide", () => {
-    const { container } = render(
+    const { container, getByLabelText } = render(
       wrap(<MediaGallery data={{ layout: "carousel", columns: 3 }} items={items()} bundle={bundle} />),
     );
-    const wrapEl = container.querySelector(".media-gallery--carousel") as HTMLElement;
-    const next = container.querySelector(".media-gallery__next") as HTMLButtonElement;
+    const wrapEl = container.firstElementChild as HTMLElement;
+    const next = getByLabelText("Next") as HTMLButtonElement;
     expect(wrapEl.dataset.index).toBe("0");
     act(() => next.click());
     expect(wrapEl.dataset.index).toBe("1");

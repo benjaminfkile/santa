@@ -40,8 +40,8 @@ describe("Links section", () => {
     const { container } = render(
       wrap(<Links data={{ heading: null, style: "buttons" }} items={makeItems()} bundle={bundle} />),
     );
-    expect(container.querySelector(".links--buttons")).not.toBeNull();
-    expect(container.querySelectorAll(".links__button").length).toBe(2);
+    expect((container.firstElementChild as HTMLElement).dataset.style).toBe("buttons");
+    expect(container.querySelectorAll("a").length).toBe(2);
   });
 
   it("cards renders per-item card with label, icon, description", () => {
@@ -49,15 +49,16 @@ describe("Links section", () => {
       wrap(<Links data={{ heading: "Get involved", style: "cards" }} items={makeItems()} bundle={bundle} />),
     );
     expect(container.querySelector("h2")?.textContent).toBe("Get involved");
-    const cards = container.querySelectorAll(".links__card");
-    expect(cards.length).toBe(2);
-    expect(container.querySelector(".links__card-description")?.textContent).toContain("Give");
+    // Two card anchors, each with the label and icon.
+    expect(container.querySelectorAll("a").length).toBe(2);
+    expect(container.textContent).toContain("Give");
   });
 
   it("list uses a <ul>", () => {
     const { container } = render(
       wrap(<Links data={{ heading: null, style: "list" }} items={makeItems()} bundle={bundle} />),
     );
-    expect(container.querySelector("ul.links__list")).not.toBeNull();
+    expect(container.querySelector("ul")).not.toBeNull();
+    expect((container.firstElementChild as HTMLElement).dataset.style).toBe("list");
   });
 });

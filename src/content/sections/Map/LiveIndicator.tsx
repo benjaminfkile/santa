@@ -7,6 +7,7 @@ import { useStore } from "../../../store/useStore";
 import { useNow } from "../../../lib/useNow";
 import { isHubQuiet } from "../../../store/cadence";
 import { copy } from "../../../copy/copy";
+import * as styles from "./Map.module.css";
 
 function usePerfTick(intervalMs = 1000): number {
   const [tick, setTick] = useState<number>(() => performance.now());
@@ -33,14 +34,14 @@ export function LiveIndicator() {
 
   return (
     <div
-      className={`live-indicator${hubLive ? " live-indicator--live" : " live-indicator--polling"}`}
+      className={`${styles.liveIndicator} ${hubLive ? styles.liveIndicatorLive : styles.liveIndicatorPolling}`}
       role="status"
       aria-live="polite"
     >
-      <span className="live-indicator__dot" aria-hidden />
-      <span className="live-indicator__label">{labelPrefix}</span>
+      <span className={styles.liveIndicatorDot} aria-hidden />
+      <span className={styles.liveIndicatorLabel}>{labelPrefix}</span>
       {secondsAgo !== null ? (
-        <span className="live-indicator__ago"> · {copy.live.updatedAgo(secondsAgo)}</span>
+        <span className={styles.liveIndicatorAgo}> · {copy.live.updatedAgo(secondsAgo)}</span>
       ) : null}
     </div>
   );

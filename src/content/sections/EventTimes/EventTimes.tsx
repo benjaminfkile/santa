@@ -10,7 +10,7 @@ import { useStore } from "../../../store/useStore";
 import { selectTimeReady } from "../../../store/liveState";
 import { formatElapsed, formatMountainTime } from "../../../lib/time";
 import { useNow } from "../../../lib/useNow";
-import "./EventTimes.module.css";
+import * as styles from "./EventTimes.module.css";
 
 type FieldKey = "scheduledAt" | "wentLiveAt" | "endedAt" | "airborneFor";
 
@@ -39,7 +39,7 @@ export const EventTimes: SectionComponent = ({ data, bundle }) => {
   const now = useNow(1000);
 
   if (!timeReady) {
-    return <div className="event-times event-times--blank" aria-hidden />;
+    return <div className={`${styles.eventTimes} ${styles.eventTimesBlank}`} aria-hidden />;
   }
 
   const rows: { key: FieldKey; label: string; value: string }[] = [];
@@ -58,22 +58,22 @@ export const EventTimes: SectionComponent = ({ data, bundle }) => {
     rows.push({ key, label: labels[key], value: formatMountainTime(value) });
   }
 
-  if (rows.length === 0) return <div className="event-times event-times--empty" />;
+  if (rows.length === 0) return <div className={`${styles.eventTimes} ${styles.eventTimesEmpty}`} />;
 
   const heading = d.heading ?? null;
 
   return (
-    <div className="event-times">
+    <div className={styles.eventTimes}>
       {heading ? (
-        <h2 className="event-times__heading">
+        <h2 className={styles.eventTimesHeading}>
           <Inline text={heading} bundle={bundle} event={event} />
         </h2>
       ) : null}
-      <dl className="event-times__list">
+      <dl className={styles.eventTimesList}>
         {rows.map((row) => (
-          <div key={row.key} className={`event-times__row event-times__row--${row.key}`}>
-            <dt className="event-times__label">{row.label}</dt>
-            <dd className="event-times__value">{row.value}</dd>
+          <div key={row.key} className={styles.eventTimesRow} data-row={row.key}>
+            <dt className={styles.eventTimesLabel}>{row.label}</dt>
+            <dd className={styles.eventTimesValue}>{row.value}</dd>
           </div>
         ))}
       </dl>

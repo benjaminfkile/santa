@@ -11,7 +11,7 @@ import { LinkView } from "../../primitives/LinkView";
 import { Inline } from "../../inline/Inline";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useReducedMotion } from "../../../lib/motion";
-import "./MediaGallery.module.css";
+import * as styles from "./MediaGallery.module.css";
 
 type MediaItem = {
   media: MediaRef;
@@ -43,7 +43,7 @@ export const MediaGallery: SectionComponent = ({ data, items, bundle, frame }) =
   if (parsedItems.length === 0) return null;
   if (layout === "single") {
     return (
-      <div className="media-gallery media-gallery--single">
+      <div className={`${styles.mediaGallery} ${styles.mediaGallerySingle}`}>
         <MediaFigure item={parsedItems[0]} bundle={bundle} frame={frame ?? "wide"} />
       </div>
     );
@@ -52,7 +52,8 @@ export const MediaGallery: SectionComponent = ({ data, items, bundle, frame }) =
     const style: CSSProperties = { ["--media-columns" as string]: columns };
     return (
       <div
-        className={`media-gallery media-gallery--grid media-gallery--cols-${columns}`}
+        className={`${styles.mediaGallery} ${styles.mediaGalleryGrid}`}
+        data-cols={columns}
         style={style}
       >
         {parsedItems.map((item, i) => (
@@ -78,20 +79,20 @@ function MediaFigure({
     <>
       <Media media={item.media} bundle={bundle} frame={frame} />
       {item.caption ? (
-        <figcaption className="media-gallery__caption">
+        <figcaption className={styles.mediaGalleryCaption}>
           <Inline text={item.caption} bundle={bundle} event={event} />
         </figcaption>
       ) : null}
     </>
   );
   return (
-    <figure className="media-gallery__figure">
+    <figure className={styles.mediaGalleryFigure}>
       {item.link ? (
         <LinkView
           href={item.link.href}
           bundle={bundle}
           newTab={item.link.newTab}
-          className="media-gallery__link"
+          className={styles.mediaGalleryLink}
         >
           {inner}
         </LinkView>
@@ -120,12 +121,12 @@ function MediaCarousel({
   const prev = useCallback(() => setIndex((i) => clamp(i - 1)), [clamp]);
   return (
     <div
-      className={`media-gallery media-gallery--carousel${reducedMotion ? " media-gallery--reduced-motion" : ""}`}
+      className={`${styles.mediaGallery} ${styles.mediaGalleryCarousel}${reducedMotion ? " " + styles.mediaGalleryReducedMotion : ""}`}
       data-index={index}
       data-total={total}
     >
       <div
-        className="media-gallery__viewport"
+        className={styles.mediaGalleryViewport}
         onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
         onTouchEnd={(e) => {
           if (touchStartX === null) return;
@@ -138,17 +139,17 @@ function MediaCarousel({
         {items.map((item, i) => (
           <div
             key={i}
-            className={`media-gallery__slide${i === index ? " media-gallery__slide--active" : ""}`}
+            className={`${styles.mediaGallerySlide}${i === index ? " " + styles.mediaGallerySlideActive : ""}`}
             aria-hidden={i === index ? undefined : true}
           >
             <MediaFigure item={item} bundle={bundle} frame={frame} />
           </div>
         ))}
       </div>
-      <div className="media-gallery__controls">
+      <div className={styles.mediaGalleryControls}>
         <button
           type="button"
-          className="media-gallery__prev"
+          className={styles.mediaGalleryPrev}
           onClick={prev}
           aria-label="Previous"
         >
@@ -156,7 +157,7 @@ function MediaCarousel({
         </button>
         <button
           type="button"
-          className="media-gallery__next"
+          className={styles.mediaGalleryNext}
           onClick={next}
           aria-label="Next"
         >
