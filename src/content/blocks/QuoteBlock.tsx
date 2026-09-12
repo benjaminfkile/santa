@@ -3,6 +3,7 @@
 import type { BlockComponent } from "../registry";
 import { Inline } from "../inline/Inline";
 import { useSnapshotEvent } from "./useSnapshotEvent";
+import * as styles from "../sections/RichText/RichText.module.css";
 
 type QuoteData = { text?: string; attribution?: string | null };
 
@@ -10,12 +11,12 @@ export const QuoteBlock: BlockComponent = ({ data, bundle }) => {
   const d = (data ?? {}) as QuoteData;
   const event = useSnapshotEvent();
   return (
-    <blockquote className="block-quote">
+    <blockquote className={styles.blockQuote}>
       <p>
         <Inline text={d.text ?? ""} bundle={bundle} event={event} />
       </p>
       {d.attribution ? (
-        <cite className="block-quote__cite">
+        <cite className={styles.blockQuoteCite}>
           <Inline text={d.attribution} bundle={bundle} event={event} />
         </cite>
       ) : null}

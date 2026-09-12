@@ -13,7 +13,7 @@ import { ContentLink } from "../../primitives/LinkView";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
 import { useReducedMotion } from "../../../lib/motion";
-import "./SponsorCarousel.module.css";
+import * as styles from "./SponsorCarousel.module.css";
 
 type SponsorCarouselData = {
   heading?: string | null;
@@ -95,14 +95,14 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
           media={media}
           bundle={bundle}
           sizeOverride={`${logoWidth}px`}
-          className="sponsor-carousel__logo"
+          className={styles.sponsorCarouselLogo}
           testId="sponsor-logo"
         />
       ) : (
-        <span className="sponsor-carousel__logo" aria-hidden />
+        <span className={styles.sponsorCarouselLogo} aria-hidden />
       )}
-      <span className="sponsor-carousel__name">{current.name}</span>
-      <span className="sponsor-carousel__linger" data-testid="sponsor-linger">
+      <span className={styles.sponsorCarouselName}>{current.name}</span>
+      <span className={styles.sponsorCarouselLinger} data-testid="sponsor-linger">
         {lingerLabel(linger)}
       </span>
     </>
@@ -110,33 +110,33 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
 
   return (
     <div
-      className={`sponsor-carousel${reduced ? " sponsor-carousel--reduced-motion" : ""}`}
+      className={`${styles.sponsorCarousel}${reduced ? " " + styles.sponsorCarouselReducedMotion : ""}`}
     >
       {d.heading ? (
-        <p className="sponsor-carousel__heading">
+        <p className={styles.sponsorCarouselHeading}>
           <Inline text={d.heading} bundle={bundle} event={event} />
         </p>
       ) : null}
-      <div className="sponsor-carousel__bar">
-        <div className="sponsor-carousel__viewport">
+      <div className={styles.sponsorCarouselBar}>
+        <div className={styles.sponsorCarouselViewport}>
           {href ? (
             <a
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="sponsor-carousel__slide"
+              className={styles.sponsorCarouselSlide}
             >
               {plate}
             </a>
           ) : (
-            <div className="sponsor-carousel__slide">{plate}</div>
+            <div className={styles.sponsorCarouselSlide}>{plate}</div>
           )}
         </div>
-        <ul className="sponsor-carousel__dots" aria-hidden>
+        <ul className={styles.sponsorCarouselDots} aria-hidden>
           {sponsors.map((_, i) => (
             <li
               key={i}
-              className={`sponsor-carousel__dot${i === index ? " sponsor-carousel__dot--on" : ""}`}
+              className={`${styles.sponsorCarouselDot}${i === index ? " " + styles.sponsorCarouselDotOn : ""}`}
             />
           ))}
         </ul>
@@ -149,7 +149,7 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
               newTab: false,
             }}
             bundle={bundle}
-            className="sponsor-carousel__link"
+            className={styles.sponsorCarouselLink}
           />
         ) : null}
       </div>

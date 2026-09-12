@@ -1,14 +1,14 @@
 /* docs/site.md section 7.4. Links section: buttons, cards, or a list. */
 
-:global(.links) { display: flex; flex-direction: column; gap: var(--space-4); }
-:global(.links__heading) {
+.links { display: flex; flex-direction: column; gap: var(--space-4); }
+.linksHeading {
   margin: 0;
   font-family: var(--font-display);
   font-size: var(--font-size-h2);
   color: var(--text-bright);
 }
-:global(.links__buttons) { display: flex; gap: var(--space-3); flex-wrap: wrap; }
-:global(.links__button) {
+.linksButtons { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+.linksButton {
   min-height: 44px;
   padding: 0.5rem 1rem;
   border: 1px solid var(--accent);
@@ -23,13 +23,13 @@
   font-weight: 500;
   transition: var(--hover-transition);
 }
-:global(.links__button:hover) { background: var(--accent-soft); }
-:global(.links__cards) {
+.linksButton:hover { background: var(--accent-soft); }
+.linksCards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: var(--space-4);
 }
-:global(.links__card) {
+.linksCard {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -42,16 +42,16 @@
   box-shadow: var(--shadow);
   transition: var(--hover-transition);
 }
-:global(.links__card:hover) { border-color: var(--accent); }
-:global(.links__card-icon) { color: var(--accent); display: inline-flex; }
-:global(.links__card-label) {
+.linksCard:hover { border-color: var(--accent); }
+.linksCardIcon { color: var(--accent); display: inline-flex; }
+.linksCardLabel {
   margin: 0;
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: 1.0625rem;
   color: var(--text-bright);
 }
-:global(.links__card-description) { margin: 0; color: var(--text-dim); font-size: 0.9375rem; }
-:global(.links__list) { padding: 0; margin: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
-:global(.links__list-item) { display: flex; gap: var(--space-3); align-items: baseline; }
-:global(.links__list-description) { color: var(--text-dim); }
+.linksCardDescription { margin: 0; color: var(--text-dim); font-size: 0.9375rem; }
+.linksList { padding: 0; margin: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+.linksListItem { display: flex; gap: var(--space-3); align-items: baseline; }
+.linksListDescription { color: var(--text-dim); }

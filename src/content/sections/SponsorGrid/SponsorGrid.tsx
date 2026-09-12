@@ -9,7 +9,7 @@ import { Inline } from "../../inline/Inline";
 import { Media } from "../../primitives/Media";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
-import "./SponsorGrid.module.css";
+import * as styles from "./SponsorGrid.module.css";
 
 type SponsorGridData = {
   heading?: string | null;
@@ -38,27 +38,27 @@ function SponsorCard({
     : null;
   const years = showYears ? yearsCopy(sponsor.yearsAsSponsor) : null;
   return (
-    <li className={`sponsor-grid__card${big ? " sponsor-grid__card--big" : ""}`}>
+    <li className={`${styles.sponsorGridCard}${big ? " " + styles.sponsorGridCardBig : ""}`}>
       {media ? (
         <Media
           media={media}
           bundle={bundle}
           sizeOverride={big ? "64px" : "48px"}
-          className="sponsor-grid__logo"
+          className={styles.sponsorGridLogo}
           testId="sponsor-logo"
         />
       ) : (
-        <span className="sponsor-grid__logo" aria-hidden />
+        <span className={styles.sponsorGridLogo} aria-hidden />
       )}
-      <div className="sponsor-grid__meta">
+      <div className={styles.sponsorGridMeta}>
         {media ? (
-          <span className="sponsor-grid__name">{sponsor.name}</span>
+          <span className={styles.sponsorGridName}>{sponsor.name}</span>
         ) : (
-          <span className="sponsor-grid__name-fallback">{sponsor.name}</span>
+          <span className={styles.sponsorGridNameFallback}>{sponsor.name}</span>
         )}
-        {years ? <span className="sponsor-grid__years">{years}</span> : null}
+        {years ? <span className={styles.sponsorGridYears}>{years}</span> : null}
         {sponsor.websiteUrl || sponsor.fbUrl || sponsor.igUrl ? (
-          <ul className="sponsor-grid__links">
+          <ul className={styles.sponsorGridLinks}>
             {sponsor.websiteUrl ? (
               <li>
                 <a href={sponsor.websiteUrl} target="_blank" rel="noopener noreferrer">
@@ -98,13 +98,13 @@ export const SponsorGrid: SectionComponent = ({ data, bundle }) => {
   if (list.length === 0) {
     if (emptyText) {
       return (
-        <div className="sponsor-grid sponsor-grid--empty">
+        <div className={`${styles.sponsorGrid} ${styles.sponsorGridEmpty}`}>
           {d.heading ? (
-            <h2 className="sponsor-grid__heading">
+            <h2 className={styles.sponsorGridHeading}>
               <Inline text={d.heading} bundle={bundle} event={event} />
             </h2>
           ) : null}
-          <p className="sponsor-grid__empty-text">
+          <p className={styles.sponsorGridEmptyText}>
             <Inline text={emptyText} bundle={bundle} event={event} />
           </p>
         </div>
@@ -116,13 +116,13 @@ export const SponsorGrid: SectionComponent = ({ data, bundle }) => {
   const top = list.slice(0, 3);
   const rest = list.slice(3);
   return (
-    <div className="sponsor-grid">
+    <div className={styles.sponsorGrid}>
       {d.heading ? (
-        <h2 className="sponsor-grid__heading">
+        <h2 className={styles.sponsorGridHeading}>
           <Inline text={d.heading} bundle={bundle} event={event} />
         </h2>
       ) : null}
-      <ul className="sponsor-grid__top" data-testid="sponsor-grid-top">
+      <ul className={styles.sponsorGridTop} data-testid="sponsor-grid-top">
         {top.map((sponsor) => (
           <SponsorCard
             key={sponsor.id ?? sponsor.name}
@@ -134,7 +134,7 @@ export const SponsorGrid: SectionComponent = ({ data, bundle }) => {
         ))}
       </ul>
       {rest.length > 0 ? (
-        <ul className="sponsor-grid__rest" data-testid="sponsor-grid-rest">
+        <ul className={styles.sponsorGridRest} data-testid="sponsor-grid-rest">
           {rest.map((sponsor) => (
             <SponsorCard
               key={sponsor.id ?? sponsor.name}

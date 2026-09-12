@@ -9,7 +9,7 @@ import { useStore } from "../../../store/useStore";
 import { selectTimeReady } from "../../../store/liveState";
 import { formatCountdown, formatMountainTime } from "../../../lib/time";
 import { useNow } from "../../../lib/useNow";
-import "./Countdown.module.css";
+import * as styles from "./Countdown.module.css";
 
 type CountdownData = {
   heading?: string | null;
@@ -35,19 +35,19 @@ export const Countdown: SectionComponent = ({ data, bundle }) => {
   const heading = d.heading ?? null;
 
   return (
-    <div className="countdown frost" data-testid="countdown">
+    <div className={styles.countdown} data-testid="countdown">
       {heading ? (
-        <p className="countdown__heading">
+        <p className={styles.countdownHeading}>
           <Inline text={heading} bundle={bundle} event={event} />
         </p>
       ) : null}
       {timeReady && remaining !== null ? (
         <CountdownDigits remaining={remaining} />
       ) : (
-        <div className="countdown__blank" aria-hidden />
+        <div className={styles.countdownBlank} aria-hidden />
       )}
       {timeReady && event?.scheduledAt ? (
-        <p className="countdown__scheduled">
+        <p className={styles.countdownScheduled}>
           {formatMountainTime(event.scheduledAt)}
         </p>
       ) : null}
@@ -60,13 +60,13 @@ function CountdownDigits({ remaining }: { remaining: number }) {
   const parts = text.split(" ");
   const labels = ["days", "hours", "min", "sec"];
   return (
-    <div className="countdown__digits" aria-label={text}>
+    <div className={styles.countdownDigits} aria-label={text}>
       {parts.map((part, i) => {
         const value = part.replace(/[a-z]+$/i, "");
         return (
-          <span key={i} className="countdown__cell">
-            <span className="countdown__value">{value}</span>
-            <span className="countdown__label">{labels[i]}</span>
+          <span key={i} className={styles.countdownCell}>
+            <span className={styles.countdownValue}>{value}</span>
+            <span className={styles.countdownLabel}>{labels[i]}</span>
           </span>
         );
       })}

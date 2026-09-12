@@ -7,7 +7,7 @@ import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useReducedMotion } from "../../../lib/motion";
 import { useStore } from "../../../store/useStore";
 import type { ContentDocument } from "../../../contracts";
-import "./FundsRing.module.css";
+import * as styles from "./FundsRing.module.css";
 
 type FundsRingData = {
   heading?: string | null;
@@ -55,10 +55,10 @@ export const FundsRing: SectionComponent = ({ data, bundle }) => {
     : null;
 
   return (
-    <div className={`funds-ring funds-ring--${size}`}>
-      <div className="funds-ring__ring" style={{ width: px, height: px }}>
+    <div className={styles.fundsRing} data-size={size}>
+      <div className={styles.fundsRingRing} style={{ width: px, height: px }}>
         <svg
-          className="funds-ring__svg"
+          className={styles.fundsRingSvg}
           width={px}
           height={px}
           viewBox={`0 0 ${px} ${px}`}
@@ -66,7 +66,7 @@ export const FundsRing: SectionComponent = ({ data, bundle }) => {
           aria-label={`${Math.round(percent)}%`}
         >
           <circle
-            className="funds-ring__track"
+            className={styles.fundsRingTrack}
             cx={px / 2}
             cy={px / 2}
             r={radius}
@@ -74,7 +74,7 @@ export const FundsRing: SectionComponent = ({ data, bundle }) => {
             strokeWidth={stroke}
           />
           <circle
-            className={`funds-ring__fill${reduced ? " funds-ring__fill--reduced" : ""}`}
+            className={`${styles.fundsRingFill}${reduced ? " " + styles.fundsRingFillReduced : ""}`}
             cx={px / 2}
             cy={px / 2}
             r={radius}
@@ -85,23 +85,23 @@ export const FundsRing: SectionComponent = ({ data, bundle }) => {
             transform={`rotate(-90 ${px / 2} ${px / 2})`}
           />
         </svg>
-        <div className="funds-ring__value">{Math.round(percent)}%</div>
+        <div className={styles.fundsRingValue}>{Math.round(percent)}%</div>
       </div>
       {heading || d.caption || donateUrl ? (
-        <div className="funds-ring__text">
+        <div className={styles.fundsRingText}>
           {heading ? (
-            <p className="funds-ring__heading">
+            <p className={styles.fundsRingHeading}>
               <Inline text={heading} bundle={bundle} event={event} />
             </p>
           ) : null}
           {d.caption ? (
-            <p className="funds-ring__caption">
+            <p className={styles.fundsRingCaption}>
               <Inline text={d.caption} bundle={bundle} event={event} />
             </p>
           ) : null}
           {donateUrl ? (
             <a
-              className="funds-ring__donate"
+              className={styles.fundsRingDonate}
               href={donateUrl}
               target="_blank"
               rel="noopener noreferrer"

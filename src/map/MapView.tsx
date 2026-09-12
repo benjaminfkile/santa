@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { loadMaps } from "./loadMaps";
 import { createMapController, type MapController, type MapControllerOptions } from "./mapController";
 import type { MapsLibs } from "./loadMaps";
+import * as styles from "./MapView.module.css";
 
 export type MapViewProps = {
   options: MapControllerOptions;
@@ -63,10 +64,10 @@ export function MapView({ options, onController, onLibs, className, children }: 
   }, [attempt]);
 
   return (
-    <div className={className ?? "map-view"} style={{ position: "relative", width: "100%", height: "100%" }}>
+    <div className={className ?? styles.mapView} style={{ position: "relative", width: "100%", height: "100%" }}>
       <div
         ref={containerRef}
-        className="map-view__canvas"
+        className={styles.mapViewCanvas}
         style={{ position: "absolute", inset: 0 }}
         aria-label="Santa tracker map"
         role="region"

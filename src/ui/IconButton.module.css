@@ -1,0 +1,33 @@
+/* docs/site.md section 7.6. Shared icon-button recipe: a 44 x 44
+   square, `--panel` background with translucent backdrop, hover and
+   pressed states in --accent. Used by the map controls, the tracker
+   menu button, and the poster viewer controls. */
+
+.ibtn {
+  appearance: none;
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  border: 1px solid var(--line);
+  color: var(--text);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  transition: var(--hover-transition);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.ibtn:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.ibtn svg {
+  width: 18px;
+  height: 18px;
+}
+.ibtn[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}

@@ -1,0 +1,110 @@
+/* docs/site.md sections 7.4, 8.5, 8.6. Route preview: image variant with
+   an optional link to the viewer page; viewer variant with the disclaimer
+   plus the pan-and-zoom poster. Also holds the shared `<dialog>` recipes
+   for the route disclaimer and location prompt on the live screen. */
+
+.routePreview { display: flex; flex-direction: column; gap: var(--space-3); }
+.routePreviewHeading { margin: 0; font-family: var(--font-display); font-size: var(--font-size-h2); color: var(--text-bright); }
+.routePreviewEmptyText { margin: 0; color: var(--text-dim); }
+.routePreviewLink {
+  display: block;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  transition: var(--hover-transition);
+}
+.routePreviewLink:hover { border-color: var(--accent); }
+.routePreviewImage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.routePreviewLink .routePreviewImage { border-radius: 0; }
+.routePreviewEmpty { color: var(--text-dim); }
+.routePreviewViewer { gap: var(--space-4); }
+.routePreviewImageWrap { gap: var(--space-3); }
+
+.routeDisclaimer,
+.locationPrompt {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  max-width: min(480px, 92vw);
+}
+.routeDisclaimer::backdrop,
+.locationPrompt::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+.locationPromptActions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.locationPromptInapp {
+  color: var(--warn);
+  margin-block: var(--space-3);
+}
+.locationPromptDenied {
+  margin-block: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+}
+
+.disclaimerRecipe {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--line));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--warn) 8%, var(--panel));
+  color: var(--text);
+}
+.disclaimerRecipe svg {
+  color: var(--warn);
+  flex: none;
+  margin-top: 2px;
+}
+.disclaimerRecipe p { margin: 0; font-size: 0.9375rem; }
+
+.routePoster {
+  position: relative;
+  width: 100%;
+  height: min(620px, 80vh);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  cursor: grab;
+  touch-action: none;
+  outline: none;
+}
+.routePoster:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+.routePosterDrag { cursor: grabbing; }
+.routePosterImg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  user-select: none;
+  -webkit-user-drag: none;
+  max-width: none;
+}
+.routePosterControls {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  z-index: 2;
+}
+
+@media (max-width: 760px) {
+  .routePoster { height: min(460px, 70vh); }
+}

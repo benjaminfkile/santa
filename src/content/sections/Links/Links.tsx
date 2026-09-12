@@ -6,7 +6,7 @@ import { Inline } from "../../inline/Inline";
 import { ContentLink, LinkView } from "../../primitives/LinkView";
 import { Icon } from "../../primitives/Icon";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
-import "./Links.module.css";
+import * as styles from "./Links.module.css";
 
 type LinksItem = { link: Link; description: string | null };
 
@@ -28,32 +28,32 @@ export const Links: SectionComponent = ({ data, items, bundle }) => {
   const parsed = readItems(items);
   const event = useSnapshotEvent();
   return (
-    <div className={`links links--${style}`}>
+    <div className={styles.links} data-style={style}>
       {d.heading ? (
-        <h2 className="links__heading">
+        <h2 className={styles.linksHeading}>
           <Inline text={d.heading} bundle={bundle} event={event} />
         </h2>
       ) : null}
       {style === "cards" ? (
-        <div className="links__cards">
+        <div className={styles.linksCards}>
           {parsed.map((item, i) => (
             <LinkView
               key={i}
               href={item.link.href}
               bundle={bundle}
               newTab={item.link.newTab}
-              className="links__card"
+              className={styles.linksCard}
             >
               {item.link.icon ? (
-                <span className="links__card-icon" aria-hidden>
+                <span className={styles.linksCardIcon} aria-hidden>
                   <Icon icon={item.link.icon} bundle={bundle} decorative size={36} />
                 </span>
               ) : null}
-              <h3 className="links__card-label">
+              <h3 className={styles.linksCardLabel}>
                 <Inline text={item.link.label} bundle={bundle} event={event} />
               </h3>
               {item.description ? (
-                <p className="links__card-description">
+                <p className={styles.linksCardDescription}>
                   <Inline text={item.description} bundle={bundle} event={event} />
                 </p>
               ) : null}
@@ -61,12 +61,12 @@ export const Links: SectionComponent = ({ data, items, bundle }) => {
           ))}
         </div>
       ) : style === "list" ? (
-        <ul className="links__list">
+        <ul className={styles.linksList}>
           {parsed.map((item, i) => (
-            <li key={i} className="links__list-item">
+            <li key={i} className={styles.linksListItem}>
               <ContentLink link={item.link} bundle={bundle} />
               {item.description ? (
-                <span className="links__list-description">
+                <span className={styles.linksListDescription}>
                   <Inline text={item.description} bundle={bundle} event={event} />
                 </span>
               ) : null}
@@ -74,13 +74,13 @@ export const Links: SectionComponent = ({ data, items, bundle }) => {
           ))}
         </ul>
       ) : (
-        <div className="links__buttons">
+        <div className={styles.linksButtons}>
           {parsed.map((item, i) => (
             <ContentLink
               key={i}
               link={item.link}
               bundle={bundle}
-              className="links__button"
+              className={styles.linksButton}
             />
           ))}
         </div>

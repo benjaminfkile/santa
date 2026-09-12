@@ -1,0 +1,79 @@
+/* docs/site.md section 7.2. Section frame: wraps every section, controls
+   width, alignment, spacing, and token/media backgrounds. */
+
+.sectionFrame {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-4);
+  padding-inline: var(--space-5);
+  padding-block: var(--space-6);
+  color: var(--text);
+  background: transparent;
+}
+.spacingTight { padding-block: var(--space-4); }
+.spacingNormal { padding-block: var(--space-6); }
+.spacingLoose { padding-block: var(--space-8); }
+.spacingNone { padding-block: 0; padding-inline: 0; }
+
+.alignStart { text-align: start; }
+.alignCenter { text-align: center; }
+
+.content { width: 100%; margin-inline: auto; box-sizing: border-box; position: relative; z-index: 1; }
+.widthFull > .content { max-width: 100%; }
+.widthWide > .content { max-width: var(--width-wide); }
+.widthNarrow > .content { max-width: var(--width-narrow); }
+.widthNarrow.alignStart > .content { margin-inline: 0; }
+
+.bgSurface { background: var(--panel); }
+.bgMuted { background: var(--panel-2); }
+.bgAccent { background: var(--accent); color: var(--on-accent); }
+.bgNight { background: var(--ground); color: var(--text); }
+
+.background {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+.backgroundMedia {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iconBefore,
+.iconAfter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Studio pairing: a hero followed by a countdown becomes a two-column row
+   at 760 px and up. The hero copy is left-aligned in this column with the
+   eyebrow, title, tagline capped at 56 ch, and the two links. */
+.heroCountdownPair {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding-inline: var(--space-5);
+  padding-block: var(--space-6);
+  color: var(--text);
+}
+.heroCountdownPair > .content {
+  width: 100%;
+  max-width: var(--width-wide);
+  margin-inline: auto;
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: 1fr;
+  align-items: center;
+}
+@media (min-width: 760px) {
+  .heroCountdownPair > .content {
+    grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.9fr);
+    gap: 40px;
+  }
+}
+.heroCountdownPairSlot { min-width: 0; }

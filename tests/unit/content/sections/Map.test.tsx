@@ -1,47 +1,20 @@
-// docs/site.md section 7.6. Every `map-section*`, `map-view*`, and
-// `tracker-menu*` class emitted by the map section and MapView must have a
-// rule in tokens.css so no live-screen element ships unstyled.
+// docs/site.md section 7.6 and S16f. After the module conversion every
+// map-section, map-view, and tracker-menu class lives in a typed CSS
+// module. tsc catches an unknown export at compile time. This test keeps
+// the render-smoke check and confirms the Map.module.css sidecar carries
+// the classes the map section references at runtime.
 
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, join, resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { describe, it, expect, vi } from "vitest";
 import { render, cleanup } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const srcRoot = resolve(here, "../../../../src");
-const tokensPath = resolve(srcRoot, "content/theme/tokens.css");
-const mapSectionDir = resolve(srcRoot, "content/sections/Map");
-const mapViewPath = resolve(srcRoot, "map/MapView.tsx");
-
-// BEM class: block, optionally __element and/or --modifier. Excludes bare
-// suffixes with a single hyphen (e.g. a `tracker-menu-data-row` test id).
-const CLASS_RE =
-  /(?:map-section|map-view|tracker-menu)(?:__[a-zA-Z0-9-]+(?:--[a-zA-Z0-9-]+)?|--[a-zA-Z0-9-]+)?(?![a-zA-Z0-9_-])/g;
-
-function findClassesInFile(text: string): Set<string> {
-  const hits = new Set<string>();
-  for (const m of text.matchAll(CLASS_RE)) hits.add(m[0]);
-  return hits;
-}
-
-function collectSources(): string[] {
-  const files: string[] = [];
-  for (const name of readdirSync(mapSectionDir)) {
-    const full = join(mapSectionDir, name);
-    if (statSync(full).isFile() && (full.endsWith(".tsx") || full.endsWith(".ts"))) {
-      files.push(full);
-    }
-  }
-  files.push(mapViewPath);
-  return files;
-}
-
-function cssHasRuleFor(css: string, cls: string): boolean {
-  const re = new RegExp(`\\.${cls}(?![A-Za-z0-9_-])`);
-  return re.test(css);
-}
+const mapModulePath = resolve(here, "../../../../src/content/sections/Map/Map.module.css");
+const mapViewModulePath = resolve(here, "../../../../src/map/MapView.module.css");
+const trackerModulePath = resolve(here, "../../../../src/content/sections/Map/TrackerMenu.module.css");
 
 // Rendering the Map section pulls in Google Maps through MapView; mock the
 // module so the test exercises the JSX without a network load.
@@ -136,19 +109,34 @@ describe("Map section class coverage", () => {
     cleanup();
   });
 
-  it("every map-section, map-view, and tracker-menu class in the source has a CSS rule", () => {
-    const css = readFileSync(tokensPath, "utf8");
-    const classes = new Set<string>();
-    for (const file of collectSources()) {
-      for (const cls of findClassesInFile(readFileSync(file, "utf8"))) {
-        classes.add(cls);
-      }
+  it("map and tracker-menu modules carry the recipes the section uses", () => {
+    const mapCss = readFileSync(mapModulePath, "utf8");
+    const mapViewCss = readFileSync(mapViewModulePath, "utf8");
+    const trackerCss = readFileSync(trackerModulePath, "utf8");
+    for (const name of [
+      ".mapSection",
+      ".topOverlays",
+      ".stripOverlay",
+      ".messageOverlay",
+      ".sideControls",
+      ".liveStrip",
+      ".liveIndicator",
+      ".liftoffTimer",
+      ".mapControls",
+      ".menuButton",
+    ]) {
+      expect(mapCss).toContain(name);
     }
-    // Guard: the extractor did find the well-known classes.
-    expect(classes.has("map-section")).toBe(true);
-    expect(classes.has("map-view__canvas")).toBe(true);
-    expect(classes.has("tracker-menu")).toBe(true);
-    const missing = [...classes].filter((cls) => !cssHasRuleFor(css, cls)).sort();
-    expect(missing).toEqual([]);
+    for (const name of [".mapView", ".mapViewCanvas"]) {
+      expect(mapViewCss).toContain(name);
+    }
+    for (const name of [
+      ".trackerMenu",
+      ".pill",
+      ".toggle",
+      ".dataRow",
+    ]) {
+      expect(trackerCss).toContain(name);
+    }
   });
 });

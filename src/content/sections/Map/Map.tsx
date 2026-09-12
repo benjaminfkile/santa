@@ -1,9 +1,10 @@
 // docs/site.md sections 7.6 and 8. The live screen: full-viewport map
-// with overlays on the `frost` class from S15. Live strip top-left with
-// four mono instruments, latest-message ticker under it, leaderboard
-// panel top-right (hidden at phone width), cookie control bottom-centre,
-// sponsor plate bottom-left, control column bottom-right with the `.ibtn`
-// recipe. The Santa marker is drawn inline in accent with an `--err` hat.
+// with overlays composed from the shared frost recipe. Live strip
+// top-left with four mono instruments, latest-message ticker under it,
+// leaderboard panel top-right (hidden at phone width), cookie control
+// bottom-centre, sponsor plate bottom-left, control column bottom-right
+// with the shared icon-button recipe. The Santa marker is drawn inline
+// in accent with an `--err` hat.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SectionComponent } from "../../registry";
@@ -29,6 +30,9 @@ import { MapControls } from "./MapControls";
 import { RouteDisclaimer } from "./RouteDisclaimer";
 import { TrackerMenu } from "./TrackerMenu";
 import { LocationPrompt } from "./LocationPrompt";
+import * as styles from "./Map.module.css";
+import * as frost from "../../theme/Frost.module.css";
+import * as ibtn from "../../../ui/IconButton.module.css";
 
 const THEME_STORAGE_KEY = "wmsfo.tracker.theme";
 
@@ -230,12 +234,11 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   }, [userState.error]);
 
   return (
-    <div className="map-section" data-testid="map">
+    <div className={styles.mapSection} data-testid="map">
       <MarkerSeqHost />
       <MapView
         options={mapOptions}
         onController={setController}
-        className="map-section__view"
       >
         {({ error, retry }) =>
           error !== null ? (
@@ -243,7 +246,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
           ) : (
             <>
               {overlays.liveStrip ? (
-                <div className="map-section__strip-overlay frost">
+                <div className={`${styles.stripOverlay} ${frost.frost}`}>
                   <LiveStrip
                     distanceMetres={userState.distanceMetres}
                     showLiveIndicator={overlays.liveIndicator}
@@ -251,7 +254,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                   />
                 </div>
               ) : (
-                <div className="map-section__top-overlays">
+                <div className={styles.topOverlays}>
                   <InfoOverlays
                     showLiveIndicator={overlays.liveIndicator}
                     showLiftoffTimer={overlays.liftoffTimer}
@@ -259,7 +262,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 </div>
               )}
               {overlays.latestMessage ? (
-                <div className="map-section__message-overlay frost">
+                <div className={`${styles.messageOverlay} ${frost.frost}`}>
                   <LatestMessage
                     data={{ style: "ticker" }}
                     items={[]}
@@ -268,11 +271,11 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 </div>
               ) : null}
               {overlays.distanceChip ? (
-                <div className="map-section__distance-overlay">
+                <div className={styles.distanceOverlay}>
                   <DistanceChip distanceMetres={userState.distanceMetres} />
                 </div>
               ) : null}
-              <div className="map-section__side-controls">
+              <div className={styles.sideControls}>
                 <MapControls
                   snowOn={snowVisible}
                   showSnow={controls.snow}
@@ -290,7 +293,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 />
               </div>
               {overlays.leaderboardPanel ? (
-                <div className="map-section__leaderboard-overlay frost">
+                <div className={`${styles.leaderboardOverlay} ${frost.frost}`}>
                   <Leaderboard
                     data={{ variant: "panel" }}
                     items={[]}
@@ -299,7 +302,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 </div>
               ) : null}
               {overlays.sponsorCarousel ? (
-                <div className="map-section__sponsor-overlay frost">
+                <div className={`${styles.sponsorOverlay} ${frost.frost}`}>
                   <SponsorCarousel
                     data={{ logoWidth: 480 }}
                     items={[]}
@@ -308,13 +311,13 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 </div>
               ) : null}
               {overlays.cookieControl ? (
-                <div className="map-section__cookie-overlay">
+                <div className={styles.cookieOverlay}>
                   <CookieControl data={{}} items={[]} bundle={bundle} />
                 </div>
               ) : null}
               <button
                 type="button"
-                className="map-section__menu-button ibtn"
+                className={`${styles.menuButton} ${ibtn.ibtn}`}
                 aria-label={copy.map.trackerMenu}
                 aria-expanded={menuOpen}
                 onClick={() => setMenuOpen(true)}
@@ -350,7 +353,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 onDisable={onDisableLocation}
               />
               <RouteDisclaimer />
-              {snowVisible ? <div className="map-section__snow" aria-hidden /> : null}
+              {snowVisible ? <div className={styles.snow} aria-hidden /> : null}
             </>
           )
         }
@@ -379,7 +382,7 @@ function MarkerSeqHost() {
 function MapUnavailable({ onRetry }: { onRetry: () => void }) {
   return (
     <div
-      className="map-section__unavailable"
+      className={styles.unavailable}
       role="alert"
       data-testid="map-unavailable"
     >

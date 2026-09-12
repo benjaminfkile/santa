@@ -1,11 +1,18 @@
 // docs/site.md section 7.4. Shared status pill primitive: ok, warn, err,
-// dim. Rendered as `.status-pill` with a modifier class so tests and the
+// dim. Rendered as a status pill with a modifier class so tests and the
 // design studio can address one element type across the whole site.
 
 import type { ReactNode } from "react";
-import "./StatusPill.module.css";
+import * as styles from "./StatusPill.module.css";
 
 export type StatusPillTone = "ok" | "warn" | "err" | "dim";
+
+const TONE_CLASS: Record<StatusPillTone, string> = {
+  ok: styles.statusPillOk,
+  warn: styles.statusPillWarn,
+  err: styles.statusPillErr,
+  dim: styles.statusPillDim,
+};
 
 export function StatusPill({
   tone,
@@ -18,10 +25,10 @@ export function StatusPill({
 }) {
   return (
     <span
-      className={`status-pill status-pill--${tone}`}
+      className={`${styles.statusPill} ${TONE_CLASS[tone]}`}
       data-testid={testId}
     >
-      <span className="status-pill__dot" aria-hidden />
+      <span className={styles.statusPillDot} aria-hidden />
       {children}
     </span>
   );

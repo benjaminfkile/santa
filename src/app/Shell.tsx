@@ -44,7 +44,7 @@ export function Shell({ children }: ShellProps) {
 
   return (
     <>
-      <a href="#main" className="skip-link">
+      <a href="#main" className={styles.skipLink}>
         Skip to content
       </a>
       <Header collapsed={isMapCollapsed} bundle={bundle} />
@@ -122,17 +122,18 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
 
   return (
     <header
-      className={collapsed ? "site-header site-header--collapsed" : "site-header"}
+      className={collapsed ? `${styles.siteHeader} ${styles.siteHeaderCollapsed}` : styles.siteHeader}
       data-testid="site-header"
+      data-collapsed={collapsed ? "true" : undefined}
     >
       {!collapsed && settings ? (
-        <Link to="/" className={`site-header__brand ${styles.brand}`}>
+        <Link to="/" className={styles.brand}>
           <BrandMark />
           <span>{settings.siteName}</span>
         </Link>
       ) : null}
       {!collapsed && entries.length > 0 ? (
-        <nav aria-label="Pages" className="site-header__inline-nav">
+        <nav aria-label="Pages" className={styles.inlineNav}>
           <ul>
             {entries
               .filter((entry) => entry.kind === "home" || entry.kind === "page" || entry.kind === "extra")
@@ -147,11 +148,11 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
           </ul>
         </nav>
       ) : null}
-      <div className="site-header__actions">
+      <div className={styles.actions}>
         {!collapsed && authState.status !== "signedIn" ? (
           <button
             type="button"
-            className="site-header__sign-in"
+            className={styles.signIn}
             onClick={onSignInClick}
           >
             {copy.signIn.button}
@@ -164,7 +165,7 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
           aria-expanded={open}
           aria-controls={panelId}
           aria-label="Menu"
-          className="site-header__menu-button"
+          className={styles.menuButton}
           onClick={() => setOpen((v) => !v)}
         >
           <MenuGlyph />
@@ -177,7 +178,7 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
         }}
         aria-label="Site"
         hidden={!open}
-        className="site-header__nav"
+        className={styles.nav}
       >
         <ul>
           {entries.map((entry, i) => (
@@ -250,7 +251,7 @@ function ThemeToggle() {
   return (
     <button
       type="button"
-      className={`site-header__theme-toggle ${styles.themeToggle}`}
+      className={styles.themeToggle}
       aria-label={label}
       data-testid="theme-toggle"
       onClick={onClick}
@@ -265,7 +266,7 @@ function FollowSystemButton() {
   return (
     <button
       type="button"
-      className={`site-header__system-button ${styles.systemButton} ${choice === "system" ? styles.systemButtonActive : ""}`}
+      className={`${styles.systemButton}${choice === "system" ? ` ${styles.systemButtonActive}` : ""}`}
       data-testid="follow-system"
       onClick={followSystem}
     >
@@ -331,7 +332,7 @@ function renderEntry(
   return (
     <button
       type="button"
-      className="site-header__auth-button"
+      className={styles.authButton}
       onClick={entry.kind === "signIn" ? actions.onSignIn : actions.onSignOut}
       data-testid={entry.kind === "signIn" ? "menu-sign-in" : undefined}
     >
@@ -349,14 +350,14 @@ function Banners({
 }) {
   if (!updatesPaused && !previewActive) return null;
   return (
-    <div className="site-banners" role="status">
+    <div className={styles.banners} role="status">
       {updatesPaused ? (
-        <div className="site-banner site-banner--updates-paused">
+        <div className={`${styles.banner} ${styles.bannerUpdatesPaused}`}>
           {copy.banners.updatesPaused}
         </div>
       ) : null}
       {previewActive ? (
-        <div className="site-banner site-banner--preview" data-testid="preview-banner">
+        <div className={`${styles.banner} ${styles.bannerPreview}`} data-testid="preview-banner">
           {copy.banners.preview}
         </div>
       ) : null}
@@ -368,9 +369,9 @@ function Footer({ bundle }: { bundle: ContentBundle | null }) {
   const settings = bundle?.content?.settings ?? null;
   if (settings === null || bundle === null) return null;
   return (
-    <footer className="site-footer" data-testid="site-footer">
+    <footer className={styles.footer} data-testid="site-footer">
       {settings.footerLinks.length > 0 ? (
-        <ul className="site-footer__links">
+        <ul className={styles.footerLinks}>
           {settings.footerLinks.map((link, i) => (
             <li key={i}>
               <ContentLink link={link} bundle={bundle} />
@@ -379,7 +380,7 @@ function Footer({ bundle }: { bundle: ContentBundle | null }) {
         </ul>
       ) : null}
       {settings.footerText !== null ? (
-        <p className="site-footer__text">{settings.footerText}</p>
+        <p className={styles.footerText}>{settings.footerText}</p>
       ) : null}
     </footer>
   );

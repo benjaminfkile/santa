@@ -56,8 +56,8 @@ describe("accessibility (axe)", () => {
 
   it("App shell renders the required landmarks and the skip link (section 20)", () => {
     const { container } = render(<App />);
-    expect(container.querySelector("a.skip-link")).not.toBeNull();
-    expect(container.querySelector("a.skip-link")?.getAttribute("href")).toBe("#main");
+    const skip = container.querySelector('a[href="#main"]');
+    expect(skip).not.toBeNull();
     expect(container.querySelector("header")).not.toBeNull();
     expect(container.querySelector('nav[aria-label="Site"]')).not.toBeNull();
     expect(container.querySelector("#main")).not.toBeNull();

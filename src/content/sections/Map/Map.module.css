@@ -1,0 +1,280 @@
+/* docs/site.md sections 7.6 and 8. Live-screen map recipes: the section
+   root, the map view canvas, overlays anchored to each corner, the live
+   strip with four mono instruments, the live indicator, liftoff timer,
+   info overlays and distance chip, and the vertical control column. */
+
+.mapSection {
+  position: relative;
+  width: 100%;
+  min-height: 480px;
+  overflow: hidden;
+  background: var(--ground);
+  color: var(--text);
+}
+:global(main[data-page-role="live"]) .mapSection {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.mapSectionLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.topOverlays,
+.stripOverlay,
+.messageOverlay,
+.distanceOverlay,
+.sideControls,
+.leaderboardOverlay,
+.sponsorOverlay,
+.cookieOverlay {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+}
+.topOverlays > *,
+.stripOverlay > *,
+.messageOverlay > *,
+.distanceOverlay > *,
+.sideControls > *,
+.leaderboardOverlay > *,
+.sponsorOverlay > *,
+.cookieOverlay > * {
+  pointer-events: auto;
+}
+.stripOverlay,
+.messageOverlay,
+.leaderboardOverlay,
+.sponsorOverlay {
+  pointer-events: auto;
+}
+.topOverlays {
+  top: var(--space-3);
+  right: var(--space-3);
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.stripOverlay {
+  top: var(--space-3);
+  left: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  max-width: min(560px, calc(100% - var(--space-8)));
+}
+.messageOverlay {
+  top: calc(var(--space-8) + var(--space-4));
+  left: var(--space-3);
+  right: calc(320px + var(--space-6));
+  padding: var(--space-3) var(--space-4);
+}
+.distanceOverlay {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.sideControls {
+  bottom: var(--space-3);
+  right: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.leaderboardOverlay {
+  right: var(--space-3);
+  top: var(--space-3);
+  width: min(300px, calc(100% - var(--space-8)));
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.sponsorOverlay {
+  left: var(--space-3);
+  bottom: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.cookieOverlay {
+  left: 50%;
+  bottom: var(--space-3);
+  transform: translateX(-50%);
+}
+.menuButton {
+  position: absolute;
+  z-index: 3;
+  top: var(--space-3);
+  right: var(--space-3);
+}
+.snow {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.unavailable {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background: var(--panel);
+  color: var(--text);
+  text-align: center;
+}
+
+.liveStrip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  color: var(--text);
+}
+.liveStripTags {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.liveStripInstruments {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+}
+.liveStripInst {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.liveStripInst dt {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.liveStripInst dd {
+  margin: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+}
+.liveStripValue {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-bright);
+  font-size: 1.0625rem;
+  font-weight: 500;
+}
+.liveStripUnit {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+}
+
+.liveIndicator,
+.liftoffTimer,
+.distanceChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.liveIndicatorDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ok);
+  display: inline-block;
+}
+.liveIndicatorLabel { color: var(--text-bright); }
+.liveIndicatorAgo { color: var(--text-dim); }
+.liveIndicatorLive .liveIndicatorDot { background: var(--ok); }
+.liveIndicatorPolling .liveIndicatorDot { background: var(--text-dim); }
+.liftoffTimerBlank { visibility: hidden; }
+.liftoffTimerLabel { color: var(--text-dim); }
+.liftoffTimerValue { color: var(--text-bright); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.infoOverlays {
+  display: inline-flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+}
+.infoOverlaysStatus {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+}
+.infoOverlaysStatusSignalLost { color: var(--err); }
+
+.mapControls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+@media (max-width: 760px) {
+  .topOverlays {
+    top: var(--space-6);
+    right: var(--space-3);
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .stripOverlay {
+    top: var(--space-3);
+    left: var(--space-3);
+    right: var(--space-3);
+    max-width: none;
+    padding: var(--space-3);
+  }
+  .liveStripInstruments {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .messageOverlay {
+    top: calc(var(--space-8) + var(--space-8));
+    left: var(--space-3);
+    right: var(--space-3);
+    padding: var(--space-3);
+  }
+  .sideControls {
+    bottom: var(--space-3);
+    right: var(--space-3);
+  }
+  .leaderboardOverlay { display: none; }
+  .sponsorOverlay {
+    left: var(--space-3);
+    right: auto;
+    bottom: calc(var(--space-3) + 60px);
+  }
+  .cookieOverlay {
+    left: var(--space-3);
+    right: var(--space-3);
+    bottom: var(--space-3);
+    transform: none;
+  }
+  .menuButton { top: var(--space-3); right: var(--space-3); }
+}

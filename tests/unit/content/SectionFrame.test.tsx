@@ -1,5 +1,7 @@
 // docs/site.md section 7.2. SectionFrame width, background, spacing,
-// decoration icons, anchor id.
+// decoration icons, anchor id. After S16f the section frame uses a typed
+// CSS module, so the tests address the rendered dom through data attributes
+// and testids rather than the (now module-hashed) class names.
 
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
@@ -71,7 +73,7 @@ describe("SectionFrame", () => {
     expect(container.querySelector("section")?.id).toBe("foo");
   });
 
-  it("classes for token background include the token name", () => {
+  it("exposes the token background via data-bg", () => {
     const { container } = render(
       <SectionFrame
         presentation={base({ background: { kind: "token", token: "muted" } })}
@@ -81,11 +83,11 @@ describe("SectionFrame", () => {
         <div>x</div>
       </SectionFrame>,
     );
-    expect(container.querySelector("section")!.className).toContain("bg-muted");
+    expect(container.querySelector("section")?.dataset.bg).toBe("muted");
   });
 
   it("renders a media background with an overlay", () => {
-    const { container } = render(
+    const { getByTestId, container } = render(
       <SectionFrame
         presentation={base({
           background: {
@@ -100,9 +102,9 @@ describe("SectionFrame", () => {
         <div>x</div>
       </SectionFrame>,
     );
-    const bg = container.querySelector(".section-frame__background");
+    const bg = getByTestId("section-frame-background");
     expect(bg).not.toBeNull();
-    expect(bg?.getAttribute("data-overlay")).toBe("0.5");
+    expect(bg.getAttribute("data-overlay")).toBe("0.5");
     expect(container.querySelector("img")).not.toBeNull();
   });
 
@@ -116,7 +118,7 @@ describe("SectionFrame", () => {
   });
 
   it("renders decoration icons before and after when set", () => {
-    const { container } = render(
+    const { getByTestId } = render(
       <SectionFrame
         presentation={base({
           iconBefore: { source: "library", id: "star" },
@@ -128,8 +130,8 @@ describe("SectionFrame", () => {
         <div>x</div>
       </SectionFrame>,
     );
-    expect(container.querySelector(".section-frame__icon-before")).not.toBeNull();
-    expect(container.querySelector(".section-frame__icon-after")).not.toBeNull();
+    expect(getByTestId("section-frame-icon-before")).not.toBeNull();
+    expect(getByTestId("section-frame-icon-after")).not.toBeNull();
   });
 
   it("exposes data-testid=section-<kind> on the root section", () => {

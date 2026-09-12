@@ -13,7 +13,7 @@ import { Inline } from "../../inline/Inline";
 import { Icon } from "../../primitives/Icon";
 import { getMyCookies, leaveCookie } from "../../../api/cookies";
 import { ApiRequestError, SignInRequired, surfaceFor } from "../../../api/errors";
-import "./CookieControl.module.css";
+import * as styles from "./CookieControl.module.css";
 
 export type CookieControlData = {
   heading?: string | null;
@@ -51,7 +51,7 @@ export const CookieControl: SectionComponent = ({ data, bundle }: CookieControlP
 
   if (eventStatusId !== 3) {
     return (
-      <div className="cookie-control cookie-control--closed">
+      <div className={`${styles.cookieControl} ${styles.cookieControlClosed}`}>
         {d.heading ? <h2>{d.heading}</h2> : null}
         <p><Inline text={d.closedCopy ?? ""} bundle={bundle} /></p>
       </div>
@@ -60,13 +60,13 @@ export const CookieControl: SectionComponent = ({ data, bundle }: CookieControlP
 
   if (auth.status === "unknown") {
     return (
-      <div className="cookie-control cookie-control--pending" data-testid="cookie-control-pending" />
+      <div className={`${styles.cookieControl} ${styles.cookieControlPending}`} data-testid="cookie-control-pending" />
     );
   }
 
   if (auth.status !== "signedIn") {
     return (
-      <div className="cookie-control cookie-control--signed-out">
+      <div className={`${styles.cookieControl} ${styles.cookieControlSignedOut}`}>
         {d.heading ? <h2>{d.heading}</h2> : null}
         <p><Inline text={d.signedOutCopy ?? ""} bundle={bundle} /></p>
         <button
@@ -82,7 +82,7 @@ export const CookieControl: SectionComponent = ({ data, bundle }: CookieControlP
   }
 
   return (
-    <div className="cookie-control">
+    <div className={styles.cookieControl}>
       {d.heading ? <h2>{d.heading}</h2> : null}
       {d.copy ? <p><Inline text={d.copy} bundle={bundle} /></p> : null}
       <button type="button" onClick={() => setOpen(true)} data-testid="cookie-control-open">
@@ -274,7 +274,7 @@ function CookieSheet({
 
   if (state.kind === "loading") {
     return (
-      <div className="cookie-control__sheet" role="dialog" data-testid="cookie-sheet">
+      <div className={styles.cookieControlSheet} role="dialog" data-testid="cookie-sheet">
         <p>Loading…</p>
         <button type="button" onClick={onClose}>Cancel</button>
       </div>
@@ -282,7 +282,7 @@ function CookieSheet({
   }
   if (state.kind === "error") {
     return (
-      <div className="cookie-control__sheet" role="dialog" data-testid="cookie-sheet">
+      <div className={styles.cookieControlSheet} role="dialog" data-testid="cookie-sheet">
         <p role="alert">{state.message}</p>
         <button type="button" onClick={() => void load()}>Retry</button>
         <button type="button" onClick={onClose}>Close</button>
@@ -302,11 +302,11 @@ function CookieSheet({
     cooldownSecs > 0;
 
   return (
-    <div className="cookie-control__sheet" role="dialog" data-testid="cookie-sheet">
+    <div className={styles.cookieControlSheet} role="dialog" data-testid="cookie-sheet">
       <p data-testid="cookie-remaining">
         {state.remaining} of {state.limit} left
       </p>
-      <ul className="cookie-control__types">
+      <ul className={styles.cookieControlTypes}>
         {types.map((t) => (
           <li key={num(t.id)}>
             <label data-testid="cookie-type">

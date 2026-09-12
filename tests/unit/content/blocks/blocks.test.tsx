@@ -58,7 +58,9 @@ describe("HeadingBlock", () => {
         />,
       ),
     );
-    expect(container.querySelector(".block-heading__icon")).not.toBeNull();
+    // Icon renders inside an aria-hidden span as the first child of the heading.
+    const heading = container.querySelector("h2");
+    expect(heading?.querySelector('span[aria-hidden="true"] svg')).not.toBeNull();
   });
 });
 
@@ -113,7 +115,12 @@ describe("ListBlock", () => {
         />,
       ),
     );
-    expect(container.querySelectorAll(".block-list__icon").length).toBe(2);
+    // Each list item begins with the icon marker span.
+    const items = container.querySelectorAll("li");
+    expect(items.length).toBe(2);
+    items.forEach((item) => {
+      expect(item.querySelector('span[aria-hidden="true"] svg')).not.toBeNull();
+    });
   });
 });
 
@@ -239,7 +246,6 @@ describe("IconBlock", () => {
     const inlineSvg = container.querySelector("svg[data-icon-source=\"library\"]");
     expect(inlineSvg).not.toBeNull();
     expect(inlineSvg?.getAttribute("width")).toBe("48");
-    expect(container.querySelector(".block-icon--center")).not.toBeNull();
   });
 });
 
@@ -249,6 +255,5 @@ describe("DividerBlock", () => {
       wrap(<DividerBlock data={{ kind: "divider", style: "line" }} bundle={bundle} />),
     );
     expect(container.querySelector('[role="separator"]')).not.toBeNull();
-    expect(container.querySelector(".block-divider--line")).not.toBeNull();
   });
 });

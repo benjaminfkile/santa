@@ -1,5 +1,5 @@
 /* docs/site.md section 7.4. Divider: line, snowflakes, or lights. */
 
-:global(.divider) { width: 100%; height: 1px; background: var(--line); }
-:global(.divider--snowflakes),
-:global(.divider--lights) { height: 24px; background: transparent; }
+.divider { width: 100%; height: 1px; background: var(--line); }
+.dividerSnowflakes,
+.dividerLights { height: 24px; background: transparent; }

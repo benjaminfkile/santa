@@ -5,6 +5,7 @@ import type { BlockComponent } from "../registry";
 import { Inline } from "../inline/Inline";
 import { Icon } from "../primitives/Icon";
 import { useSnapshotEvent } from "./useSnapshotEvent";
+import * as styles from "../sections/RichText/RichText.module.css";
 
 type ListData = {
   style?: "bullet" | "number" | "icon";
@@ -18,12 +19,13 @@ export const ListBlock: BlockComponent = ({ data, bundle }) => {
   const items = Array.isArray(d.items) ? d.items : [];
   const event = useSnapshotEvent();
   const Tag: "ol" | "ul" = style === "number" ? "ol" : "ul";
+  const styleClass = style === "icon" ? styles.blockListIcon : "";
   return (
-    <Tag className={`block-list block-list--${style}`}>
+    <Tag className={`${styles.blockList} ${styleClass}`.trim()}>
       {items.map((text, i) => (
-        <li key={i} className="block-list__item">
+        <li key={i} className={styles.blockListItem}>
           {style === "icon" && d.icon ? (
-            <span className="block-list__icon" aria-hidden>
+            <span className={styles.blockListIconMark} aria-hidden>
               <Icon icon={d.icon} bundle={bundle} decorative inline />
             </span>
           ) : null}

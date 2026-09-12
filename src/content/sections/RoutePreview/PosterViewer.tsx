@@ -7,6 +7,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { copy } from "../../../copy/copy";
 import { clampScale, fitTransform, zoomAbout } from "./posterMath";
+import * as styles from "./RoutePreview.module.css";
+import * as ibtn from "../../../ui/IconButton.module.css";
 
 export type PosterViewerProps = {
   src: string;
@@ -111,7 +113,7 @@ export function PosterViewer({ src, srcSet, sizes, alt, width, height }: PosterV
   const onPointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       const target = e.target as HTMLElement;
-      if (target.closest(".ibtn") !== null) return;
+      if (target.closest(`.${ibtn.ibtn}`) !== null) return;
       const frame = frameRef.current;
       if (frame === null) return;
       frame.setPointerCapture(e.pointerId);
@@ -140,7 +142,7 @@ export function PosterViewer({ src, srcSet, sizes, alt, width, height }: PosterV
       lastTapRef.current = now;
 
       dragRef.current = { x: e.clientX - transform.x, y: e.clientY - transform.y };
-      frame.classList.add("route-poster--drag");
+      frame.classList.add(styles.routePosterDrag);
     },
     [transform.x, transform.y, transform.scale, zoomAtScreen],
   );
@@ -175,7 +177,7 @@ export function PosterViewer({ src, srcSet, sizes, alt, width, height }: PosterV
       pinchRef.current = null;
     }
     dragRef.current = null;
-    frameRef.current?.classList.remove("route-poster--drag");
+    frameRef.current?.classList.remove(styles.routePosterDrag);
   }, []);
 
   const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -219,7 +221,7 @@ export function PosterViewer({ src, srcSet, sizes, alt, width, height }: PosterV
   return (
     <div
       ref={frameRef}
-      className="route-poster"
+      className={styles.routePoster}
       data-testid="poster-viewer"
       tabIndex={0}
       onKeyDown={onKeyDown}
@@ -230,7 +232,7 @@ export function PosterViewer({ src, srcSet, sizes, alt, width, height }: PosterV
     >
       <img
         ref={imgRef}
-        className="route-poster__img"
+        className={styles.routePosterImg}
         src={src}
         srcSet={srcSet}
         sizes={sizes}
@@ -241,10 +243,10 @@ export function PosterViewer({ src, srcSet, sizes, alt, width, height }: PosterV
         style={style}
         draggable={false}
       />
-      <div className="route-poster__controls">
+      <div className={styles.routePosterControls}>
         <button
           type="button"
-          className="ibtn"
+          className={ibtn.ibtn}
           aria-label={copy.map.poster.zoomIn}
           onClick={() => zoomAtCenter(BUTTON_ZOOM_FACTOR)}
           data-testid="poster-zoom-in"
@@ -253,7 +255,7 @@ export function PosterViewer({ src, srcSet, sizes, alt, width, height }: PosterV
         </button>
         <button
           type="button"
-          className="ibtn"
+          className={ibtn.ibtn}
           aria-label={copy.map.poster.zoomOut}
           onClick={() => zoomAtCenter(1 / BUTTON_ZOOM_FACTOR)}
           data-testid="poster-zoom-out"
@@ -262,7 +264,7 @@ export function PosterViewer({ src, srcSet, sizes, alt, width, height }: PosterV
         </button>
         <button
           type="button"
-          className="ibtn"
+          className={ibtn.ibtn}
           aria-label={copy.map.poster.fit}
           onClick={fit}
           data-testid="poster-fit"

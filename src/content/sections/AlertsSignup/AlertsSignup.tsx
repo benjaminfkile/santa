@@ -20,7 +20,7 @@ import {
 import { ApiRequestError, surfaceFor } from "../../../api/errors";
 import { SignInRequired } from "../../../auth/getIdToken";
 import { StatusPill } from "../../primitives/StatusPill";
-import "./AlertsSignup.module.css";
+import * as styles from "./AlertsSignup.module.css";
 
 export type AlertsSignupData = {
   heading?: string | null;
@@ -60,7 +60,7 @@ export const AlertsSignup: SectionComponent = ({ data, bundle }) => {
 
   if (auth.status === "unknown") {
     return (
-      <div className="alerts-signup alerts-signup--pending" data-testid="alerts-pending" />
+      <div className={`${styles.alertsSignup} ${styles.alertsSignupPending}`} data-testid="alerts-pending" />
     );
   }
   if (auth.status !== "signedIn") {
@@ -85,7 +85,7 @@ function SignedOut({
   onSignIn: () => void;
 }) {
   return (
-    <div className="alerts-signup alerts-signup--signed-out">
+    <div className={`${styles.alertsSignup} ${styles.alertsSignupSignedOut}`}>
       {data.heading ? <h2>{data.heading}</h2> : null}
       <p><Inline text={data.signedOutCopy ?? ""} bundle={bundle} /></p>
       <button type="button" onClick={onSignIn}>Sign in</button>
@@ -267,7 +267,7 @@ function SignedIn({
   );
 
   if (state.kind === "loading") {
-    return <div className="alerts-signup" data-testid="alerts-loading">Loading…</div>;
+    return <div className={styles.alertsSignup} data-testid="alerts-loading">Loading…</div>;
   }
   if (state.kind === "signedOut") {
     return (
@@ -280,7 +280,7 @@ function SignedIn({
   }
   if (state.kind === "error") {
     return (
-      <div className="alerts-signup" data-testid="alerts-error">
+      <div className={styles.alertsSignup} data-testid="alerts-error">
         <p role="alert">{state.message}</p>
         <button type="button" onClick={() => void load()}>Retry</button>
       </div>
@@ -291,7 +291,7 @@ function SignedIn({
     state.cooldownUntil !== null ? Math.max(0, Math.ceil((state.cooldownUntil - nowMs) / 1000)) : 0;
 
   return (
-    <div className="alerts-signup" data-testid="alerts-signed-in">
+    <div className={styles.alertsSignup} data-testid="alerts-signed-in">
       {data.heading ? <h2>{data.heading}</h2> : null}
       {data.copy ? <p><Inline text={data.copy} bundle={bundle} /></p> : null}
       <p data-testid="alerts-account">Account: {state.email}</p>
@@ -359,11 +359,11 @@ function SubscriptionRow({
   const tone = unsubscribed ? "dim" : pending ? "warn" : "ok";
   const label = unsubscribed ? "Unsubscribed" : pending ? "Pending" : "Verified";
   return (
-    <li className="alerts-signup__row" data-testid={`subscription-${num(row.id)}`}>
-      <div className="alerts-signup__row-who">
-        <span className="alerts-signup__row-address">{row.address}</span>
+    <li className={styles.alertsSignupRow} data-testid={`subscription-${num(row.id)}`}>
+      <div className={styles.alertsSignupRowWho}>
+        <span className={styles.alertsSignupRowAddress}>{row.address}</span>
         {pending ? (
-          <span className="alerts-signup__row-meta">Check your email</span>
+          <span className={styles.alertsSignupRowMeta}>Check your email</span>
         ) : null}
       </div>
       <StatusPill tone={tone} testId="subscription-state">
@@ -372,7 +372,7 @@ function SubscriptionRow({
       {pending ? (
         <button
           type="button"
-          className="alerts-signup__row-action"
+          className={styles.alertsSignupRowAction}
           onClick={onResend}
         >
           Resend confirmation
@@ -380,7 +380,7 @@ function SubscriptionRow({
       ) : !unsubscribed ? (
         <button
           type="button"
-          className="alerts-signup__row-action"
+          className={styles.alertsSignupRowAction}
           onClick={onUnsubscribe}
         >
           Unsubscribe
@@ -388,7 +388,7 @@ function SubscriptionRow({
       ) : (
         <button
           type="button"
-          className="alerts-signup__row-action"
+          className={styles.alertsSignupRowAction}
           onClick={onResubscribe}
         >
           Re-subscribe
