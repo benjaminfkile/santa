@@ -6,7 +6,7 @@
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { describe, it, expect } from "vitest";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -17,8 +17,8 @@ const generatedIconsDir = resolve(srcRoot, "content/icons/generated");
 
 function isExcludedFile(full: string): boolean {
   if (full === tokensPath) return true;
-  if (full.startsWith(themesDir + "/") || full === themesDir) return true;
-  if (full.startsWith(generatedIconsDir + "/") || full === generatedIconsDir) return true;
+  if (full.startsWith(themesDir + sep) || full === themesDir) return true;
+  if (full.startsWith(generatedIconsDir + sep) || full === generatedIconsDir) return true;
   if (full.endsWith(".d.css.ts")) return true;
   return false;
 }
