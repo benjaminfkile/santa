@@ -158,7 +158,7 @@
 }
 .themeOption:hover { background: var(--accent-soft); color: var(--accent); }
 .themeOption[aria-checked="true"] { color: var(--accent); }
-.themeOption[aria-checked="true"]::after { content: "\\2713"; font-size: 0.875rem; }
+.themeOption[aria-checked="true"]::after { content: "\2713"; font-size: 0.875rem; }
 .nav {
   position: absolute;
   top: calc(100% + var(--space-2));
