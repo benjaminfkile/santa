@@ -1,50 +1,104 @@
 // docs/site.md section 7.7. Two seasonal layers: a canvas of small, slow,
 // translucent flakes coloured by --snow, and a string of 7 px bulbs on a
 // 1 px wire under the header. Each has a settings default and a
-// per-visitor override in localStorage.
+// per-visitor override in localStorage. The live screen is detected
+// through `live.eventStatusId === 3` at `/` (docs 24), not by path:
+// snow is off by default there and the lights are not rendered over the
+// map.
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { useLocation } from "react-router-dom";
-import { storageGet } from "../../lib/storage";
+import { storageGet, storageSet } from "../../lib/storage";
 import type { ContentBundle } from "../../store/types";
+import { useStore } from "../../store/useStore";
+import { subscribeScheme } from "./colorScheme";
 import * as styles from "./SeasonalLayers.module.css";
 
-const SNOW_KEY = "wmsfo.snow";
-const LIGHTS_KEY = "wmsfo.lights";
+export const SNOW_KEY = "wmsfo.snow";
+export const LIGHTS_KEY = "wmsfo.lights";
 
-function readOverride(key: string, fallback: boolean): boolean {
-  const v = storageGet(key);
-  if (v === "on") return true;
-  if (v === "off") return false;
-  return fallback;
+const overrideListeners = new Set<() => void>();
+
+function notifyOverrides(): void {
+  for (const l of overrideListeners) l();
 }
 
-function useIsLivePage(): boolean {
+export function subscribeOverrides(l: () => void): () => void {
+  overrideListeners.add(l);
+  return () => {
+    overrideListeners.delete(l);
+  };
+}
+
+export function setSnowOverride(next: boolean): void {
+  storageSet(SNOW_KEY, next ? "on" : "off");
+  notifyOverrides();
+}
+
+export function setLightsOverride(next: boolean): void {
+  storageSet(LIGHTS_KEY, next ? "on" : "off");
+  notifyOverrides();
+}
+
+function getSnowSnapshot(): string {
+  return storageGet(SNOW_KEY) ?? "";
+}
+function getLightsSnapshot(): string {
+  return storageGet(LIGHTS_KEY) ?? "";
+}
+
+export function useSnowEnabled(defaultOn: boolean): boolean {
+  const stored = useSyncExternalStore(subscribeOverrides, getSnowSnapshot, () => "");
+  if (stored === "on") return true;
+  if (stored === "off") return false;
+  return defaultOn;
+}
+
+export function useLightsEnabled(defaultOn: boolean): boolean {
+  const stored = useSyncExternalStore(subscribeOverrides, getLightsSnapshot, () => "");
+  if (stored === "on") return true;
+  if (stored === "off") return false;
+  return defaultOn;
+}
+
+function useIsLiveScreen(): boolean {
+  const eventStatusId = useStore((s) => s.live?.eventStatusId ?? null);
   const location = useLocation();
-  return location.pathname === "/live" || location.pathname.startsWith("/live/");
+  return eventStatusId === 3 && location.pathname === "/";
 }
 
 export function SnowLayer({ bundle }: { bundle: ContentBundle | null }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const isLivePage = useIsLivePage();
-  const defaultOn = bundle?.content?.settings.theme.snowDefault ?? false;
-  const enabled = readOverride(SNOW_KEY, defaultOn) && !isLivePage;
+  const isLive = useIsLiveScreen();
+  const settingsDefault = bundle?.content?.settings.theme.snowDefault ?? false;
+  const defaultOn = isLive ? false : settingsDefault;
+  const chosen = useSnowEnabled(defaultOn);
+  const prefersReduced =
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const enabled = chosen && !prefersReduced;
 
   useEffect(() => {
     if (!enabled) return;
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (canvas === null) return;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (ctx === null) return;
 
     const flakes: { x: number; y: number; r: number; v: number; d: number }[] = [];
     let width = 0;
     let height = 0;
     let running = true;
     let raf = 0;
-    const prefersReduced =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let snowColor: string | null = null;
+
+    function readSnowColor(): void {
+      const v = getComputedStyle(document.documentElement).getPropertyValue("--snow").trim();
+      snowColor = v === "" ? null : v;
+    }
+    readSnowColor();
+    const unsubscribeScheme = subscribeScheme(readSnowColor);
 
     function resize() {
       const c = canvas!;
@@ -69,38 +123,35 @@ export function SnowLayer({ bundle }: { bundle: ContentBundle | null }) {
 
     function step() {
       if (!running) return;
-      const c = canvas!;
       ctx!.clearRect(0, 0, width, height);
-      const style = getComputedStyle(document.documentElement).getPropertyValue("--snow").trim() || "rgba(255,255,255,0.7)";
-      ctx!.fillStyle = style;
-      for (const f of flakes) {
-        f.y += f.v;
-        f.x += f.d;
-        if (f.y > height + 2) {
-          f.y = -2;
-          f.x = Math.random() * width;
+      if (snowColor !== null) {
+        ctx!.fillStyle = snowColor;
+        for (const f of flakes) {
+          f.y += f.v;
+          f.x += f.d;
+          if (f.y > height + 2) {
+            f.y = -2;
+            f.x = Math.random() * width;
+          }
+          if (f.x < -2) f.x = width;
+          if (f.x > width + 2) f.x = 0;
+          ctx!.beginPath();
+          ctx!.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+          ctx!.fill();
         }
-        if (f.x < -2) f.x = width;
-        if (f.x > width + 2) f.x = 0;
-        ctx!.beginPath();
-        ctx!.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-        ctx!.fill();
       }
-      if (!prefersReduced) raf = window.requestAnimationFrame(step);
-      // Keep a reference to c so the parameter is used and TS accepts the
-      // closure captures.
-      void c;
+      raf = window.requestAnimationFrame(step);
     }
 
     resize();
-    if (!prefersReduced) step();
-    else step();
+    step();
     const onResize = () => resize();
     window.addEventListener("resize", onResize);
     return () => {
       running = false;
-      if (raf) window.cancelAnimationFrame(raf);
+      if (raf !== 0) window.cancelAnimationFrame(raf);
       window.removeEventListener("resize", onResize);
+      unsubscribeScheme();
     };
   }, [enabled]);
 
@@ -111,9 +162,10 @@ export function SnowLayer({ bundle }: { bundle: ContentBundle | null }) {
 const LIGHT_COLORS = ["var(--accent)", "var(--gold)", "var(--ok)", "var(--err)"] as const;
 
 export function LightsLayer({ bundle }: { bundle: ContentBundle | null }) {
-  const isLivePage = useIsLivePage();
-  const defaultOn = bundle?.content?.settings.theme.lightsDefault ?? false;
-  const enabled = readOverride(LIGHTS_KEY, defaultOn) && !isLivePage;
+  const isLive = useIsLiveScreen();
+  const settingsDefault = bundle?.content?.settings.theme.lightsDefault ?? false;
+  const defaultOn = isLive ? false : settingsDefault;
+  const enabled = useLightsEnabled(defaultOn) && !isLive;
 
   const bulbs = useMemo(() => {
     const items = [];

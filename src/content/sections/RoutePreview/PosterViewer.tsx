@@ -12,8 +12,6 @@ import * as ibtn from "../../../ui/IconButton.module.css";
 
 export type PosterViewerProps = {
   src: string;
-  srcSet?: string;
-  sizes?: string;
   alt: string;
   width?: number;
   height?: number;
@@ -28,7 +26,7 @@ const WHEEL_ZOOM_IN = 1.15;
 const WHEEL_ZOOM_OUT = 1 / 1.15;
 const BUTTON_ZOOM_FACTOR = 1.5;
 
-export function PosterViewer({ src, srcSet, sizes, alt, width, height }: PosterViewerProps) {
+export function PosterViewer({ src, alt, width, height }: PosterViewerProps) {
   const frameRef = useRef<HTMLDivElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const dragRef = useRef<{ x: number; y: number } | null>(null);
@@ -234,8 +232,6 @@ export function PosterViewer({ src, srcSet, sizes, alt, width, height }: PosterV
         ref={imgRef}
         className={styles.routePosterImg}
         src={src}
-        srcSet={srcSet}
-        sizes={sizes}
         alt={alt}
         width={width}
         height={height}

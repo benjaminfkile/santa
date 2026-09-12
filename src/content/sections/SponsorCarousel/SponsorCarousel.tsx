@@ -4,7 +4,7 @@
 // an "N s on the tracker" line derived from `lingerMs`; a compact link
 // jumps to the sponsors page.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SectionComponent } from "../../registry";
 import type { ContentDocument, MediaRef, Sponsor } from "../../../contracts";
 import { Inline } from "../../inline/Inline";
@@ -53,10 +53,30 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
   const sponsorsHref = findSponsorsPage(content, d.sponsorsPageSlug ?? null);
 
   const [index, setIndex] = useState(0);
+  const prevIdAtIndexRef = useRef<number | null>(sponsors?.[0]?.id ?? null);
 
   useEffect(() => {
-    setIndex(0);
+    if (!sponsors || sponsors.length === 0) {
+      prevIdAtIndexRef.current = null;
+      setIndex(0);
+      return;
+    }
+    setIndex((cur) => {
+      const clamped = cur < sponsors.length ? cur : 0;
+      const idAtCur = sponsors[clamped]?.id ?? null;
+      if (idAtCur !== null && idAtCur === prevIdAtIndexRef.current) {
+        prevIdAtIndexRef.current = idAtCur;
+        return clamped;
+      }
+      prevIdAtIndexRef.current = sponsors[0]?.id ?? null;
+      return 0;
+    });
   }, [sponsors]);
+
+  useEffect(() => {
+    if (!sponsors || sponsors.length === 0) return;
+    prevIdAtIndexRef.current = sponsors[index]?.id ?? null;
+  }, [index, sponsors]);
 
   const [visible, setVisible] = useState(() =>
     typeof document !== "undefined" ? !document.hidden : true,

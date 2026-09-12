@@ -54,7 +54,10 @@
   "size-limit": [
     {
       "name": "index (React, router, store, shell, renderer, all sections and blocks except map)",
-      "path": "dist/assets/index-*.js",
+      "path": [
+        "dist/assets/index-*.js",
+        "dist/assets/theme-*.js"
+      ],
       "limit": "130 KB"
     },
     {

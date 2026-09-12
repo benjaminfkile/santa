@@ -11,6 +11,7 @@ import type { SectionComponent } from "../../registry";
 import { store, useStore } from "../../../store/useStore";
 import { selectLiveState } from "../../../store/liveState";
 import { storageGet, storageSet } from "../../../lib/storage";
+import { setSnowOverride, useSnowEnabled } from "../../theme/seasonalLayers";
 import { LatestMessage } from "../LatestMessage/LatestMessage";
 import { Leaderboard } from "../Leaderboard/Leaderboard";
 import { SponsorCarousel } from "../SponsorCarousel/SponsorCarousel";
@@ -121,7 +122,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
 
   const [theme, setTheme] = useState<MapTheme>(initialTheme);
   const [mapType, setMapType] = useState<"terrain" | "roadmap">("terrain");
-  const [snow, setSnow] = useState<boolean>(false);
+  const snow = useSnowEnabled(false);
   const [flightHistoryOn, setFlightHistoryOn] = useState<boolean>(flightHistoryDefault);
   const [timeLabels, setTimeLabels] = useState<boolean>(true);
   const [, setFollowing] = useState<boolean>(true);
@@ -289,7 +290,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                   }}
                   onZoomIn={() => controller?.zoomBy(1)}
                   onZoomOut={() => controller?.zoomBy(-1)}
-                  onSnowToggle={() => setSnow((s) => !s)}
+                  onSnowToggle={() => setSnowOverride(!snow)}
                 />
               </div>
               {overlays.leaderboardPanel ? (
@@ -334,7 +335,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 mapType={mapType}
                 onMapTypeChange={setMapType}
                 snow={snow}
-                onSnowChange={setSnow}
+                onSnowChange={setSnowOverride}
                 flightHistoryAvailable={flightHistoryAvailable}
                 flightHistory={flightHistoryOn}
                 onFlightHistoryChange={setFlightHistoryOn}

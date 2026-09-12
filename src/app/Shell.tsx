@@ -20,6 +20,13 @@ import { ReloadPrompt } from "../pages/ReloadPrompt";
 import { ContentLink } from "../content/primitives/LinkView";
 import { useAuth } from "../auth/AuthProvider";
 import { useThemeChoice } from "../content/theme/colorScheme";
+import {
+  LightsLayer,
+  useLightsEnabled,
+  useSnowEnabled,
+  setLightsOverride,
+  setSnowOverride,
+} from "../content/theme/seasonalLayers";
 import type { ContentBundle } from "../store/types";
 import * as styles from "./Shell.module.css";
 
@@ -190,10 +197,17 @@ function Header({ collapsed, bundle }: { collapsed: boolean; bundle: ContentBund
             </li>
           ))}
           <li>
+            <SnowSwitch bundle={bundle} />
+          </li>
+          <li>
+            <LightsSwitch bundle={bundle} />
+          </li>
+          <li>
             <FollowSystemButton />
           </li>
         </ul>
       </nav>
+      <LightsLayer bundle={bundle} />
     </header>
   );
 }
@@ -257,6 +271,38 @@ function ThemeToggle() {
       onClick={onClick}
     >
       {nextIsLight ? <SunGlyph /> : <MoonGlyph />}
+    </button>
+  );
+}
+
+function SnowSwitch({ bundle }: { bundle: ContentBundle | null }) {
+  const defaultOn = bundle?.content?.settings.theme.snowDefault ?? false;
+  const enabled = useSnowEnabled(defaultOn);
+  return (
+    <button
+      type="button"
+      className={styles.systemButton}
+      aria-pressed={enabled}
+      data-testid="menu-snow-toggle"
+      onClick={() => setSnowOverride(!enabled)}
+    >
+      Snow
+    </button>
+  );
+}
+
+function LightsSwitch({ bundle }: { bundle: ContentBundle | null }) {
+  const defaultOn = bundle?.content?.settings.theme.lightsDefault ?? false;
+  const enabled = useLightsEnabled(defaultOn);
+  return (
+    <button
+      type="button"
+      className={styles.systemButton}
+      aria-pressed={enabled}
+      data-testid="menu-lights-toggle"
+      onClick={() => setLightsOverride(!enabled)}
+    >
+      Lights
     </button>
   );
 }

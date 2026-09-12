@@ -13,6 +13,11 @@ export default defineConfig({
           groups: [
             { name: "signalr", test: /@microsoft[\\/]signalr/, priority: 20 },
             { name: "auth", test: /oidc-client-ts|[\\/]src[\\/]auth[\\/]userManager|[\\/]src[\\/]auth[\\/]AuthCallback/, priority: 20 },
+            // Pin the colour-scheme module (and its inputs) to a shared
+            // "theme" chunk so both the map chunk and the index chunk
+            // import from it rather than each other. Priority higher than
+            // the map rule.
+            { name: "theme", test: /[\\/]src[\\/]content[\\/]theme[\\/]colorScheme|[\\/]src[\\/]lib[\\/]storage/, priority: 30 },
             { name: "map", test: /@googlemaps[\\/]js-api-loader|[\\/]src[\\/]map[\\/]/, priority: 20 },
             { name: "alerts", test: /[\\/]src[\\/]pages[\\/]Alerts[\\/]/, priority: 20 },
           ],

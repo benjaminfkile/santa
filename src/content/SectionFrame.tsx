@@ -84,10 +84,9 @@ export function SectionFrame({ presentation, bundle, kind, children }: SectionFr
           />
           <div
             aria-hidden
+            className={styles.backgroundOverlay}
             style={{
-              position: "absolute",
-              inset: 0,
-              backgroundColor: `rgba(0, 0, 0, ${bg.overlay})`,
+              backgroundColor: `color-mix(in srgb, var(--ground) ${Math.round(bg.overlay * 100)}%, transparent)`,
             }}
           />
         </div>

@@ -126,6 +126,40 @@ describe("RoutePreview", () => {
     store.setState(() => ({ ...initialStore }));
   });
 
+  it("viewer style loads the asset's original url and carries no srcset", () => {
+    store.setState(() => ({ ...initialStore }));
+    setSnapshotEvent("poster-1");
+    const bundle = buildBundle();
+    const { container } = render(
+      <MemoryRouter>
+        <RoutePreview data={{ style: "viewer" }} items={[]} bundle={bundle} />
+      </MemoryRouter>,
+    );
+    const img = container.querySelector('[data-testid="poster-viewer"] img') as HTMLImageElement | null;
+    expect(img).not.toBeNull();
+    expect(img?.getAttribute("src")).toBe("https://cdn.example/poster.jpg");
+    expect(img?.getAttribute("srcset")).toBeNull();
+    cleanup();
+    store.setState(() => ({ ...initialStore }));
+  });
+
+  it("image style still uses the 960 variant and a srcset through Media", () => {
+    store.setState(() => ({ ...initialStore }));
+    setSnapshotEvent("poster-1");
+    const bundle = buildBundle();
+    const { container } = render(
+      <MemoryRouter>
+        <RoutePreview data={{ style: "image" }} items={[]} bundle={bundle} />
+      </MemoryRouter>,
+    );
+    const img = container.querySelector('[data-testid="route-preview-image"]') as HTMLImageElement | null;
+    expect(img).not.toBeNull();
+    const srcset = img?.getAttribute("srcset") ?? "";
+    expect(srcset).toContain("960");
+    cleanup();
+    store.setState(() => ({ ...initialStore }));
+  });
+
   it("renders emptyText when the route image id is null", () => {
     store.setState(() => ({ ...initialStore }));
     setSnapshotEvent(null);
