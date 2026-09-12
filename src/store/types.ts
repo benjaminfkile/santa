@@ -1,6 +1,6 @@
 // docs/site.md section 5.1.
 
-import type { LiveObject, Snapshot, Route, ContentDocument } from "../contracts";
+import type { LiveObject, Snapshot, ContentDocument } from "../contracts";
 
 export type ContentBundle = {
   content: ContentDocument;
@@ -14,8 +14,6 @@ export type Store = {
   live: LiveObject | null;
   snapshot: Snapshot | null;
   snapshotUrl: string | null;
-  route: Route | null;
-  routeUrl: string | null;
   hub: HubStatus;
   lastHubLocationAt: number | null;
   lastSeqChangeAt: number | null;
@@ -27,7 +25,6 @@ export type Diagnostics = {
   lastPollOkAt: number | null;
   consecutivePollFailures: number;
   snapshotFetchFailing: boolean;
-  routeFetchFailing: boolean;
   firstLoadStartedAt: number;
 };
 
@@ -40,8 +37,6 @@ export const initialStore: SiteStore = {
   live: null,
   snapshot: null,
   snapshotUrl: null,
-  route: null,
-  routeUrl: null,
   hub: "disconnected",
   lastHubLocationAt: null,
   lastSeqChangeAt: null,
@@ -52,7 +47,6 @@ export const initialStore: SiteStore = {
     lastPollOkAt: null,
     consecutivePollFailures: 0,
     snapshotFetchFailing: false,
-    routeFetchFailing: false,
     firstLoadStartedAt: 0,
   },
 };

@@ -4,7 +4,12 @@
 // persisted.
 
 import { metresToFeet, metresToMiles } from "../lib/units";
+import { readCssVar } from "./cssVars";
 import type { MapTheme } from "./themes";
+
+function userColor(): string {
+  return readCssVar("--link", "#0b6bb5");
+}
 
 function prefersReducedMotion(): boolean {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
@@ -84,7 +89,7 @@ export function createUserLocation(
       icon: {
         path: google.maps.SymbolPath.CIRCLE,
         scale: 8,
-        fillColor: theme.userColor,
+        fillColor: userColor(),
         fillOpacity: 1,
         strokeColor: "#ffffff",
         strokeWeight: 2,
@@ -240,7 +245,7 @@ export function createUserLocation(
       userMarker.setIcon({
         path: google.maps.SymbolPath.CIRCLE,
         scale: 8,
-        fillColor: theme.userColor,
+        fillColor: userColor(),
         fillOpacity: 1,
         strokeColor: "#ffffff",
         strokeWeight: 2,

@@ -1,12 +1,14 @@
 // docs/site.md sections 7.6 and 8. The live screen: full-viewport map
-// with overlays, each switched by `data.overlays` and each control by
-// `data.controls`.
+// with overlays on the `frost` class from S15. Live strip top-left with
+// four mono instruments, latest-message ticker under it, leaderboard
+// panel top-right (hidden at phone width), cookie control bottom-centre,
+// sponsor plate bottom-left, control column bottom-right with the `.ibtn`
+// recipe. The Santa marker is drawn inline in accent with an `--err` hat.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SectionComponent } from "../../registry";
 import { store, useStore } from "../../../store/useStore";
 import { selectLiveState } from "../../../store/liveState";
-import { copy } from "../../../copy/copy";
 import { storageGet, storageSet } from "../../../lib/storage";
 import { LatestMessage } from "../LatestMessage/LatestMessage";
 import { Leaderboard } from "../Leaderboard/Leaderboard";
@@ -18,7 +20,10 @@ import type { UserLocationState } from "../../../map/userLocation";
 import type { MapTheme } from "../../../map/themes";
 import { resolveOfferedThemes, resolveDefaultTheme } from "../../../map/themes";
 import { acquire as acquireWakeLock, release as releaseWakeLock } from "../../../map/wakeLock";
+import type { Snapshot } from "../../../contracts";
+import { copy } from "../../../copy/copy";
 import { InfoOverlays } from "./InfoOverlays";
+import { LiveStrip } from "./LiveStrip";
 import { DistanceChip } from "./DistanceChip";
 import { MapControls } from "./MapControls";
 import { RouteDisclaimer } from "./RouteDisclaimer";
@@ -32,11 +37,12 @@ type MapSectionData = {
   defaultTheme?: string;
   defaultCenter?: { lat: number; lng: number };
   defaultZoom?: number;
+  flightHistoryDefault?: boolean;
   controls?: {
     themePicker?: boolean;
     terrain?: boolean;
     snow?: boolean;
-    routeLines?: boolean;
+    flightHistory?: boolean;
     timeLabels?: boolean;
     location?: boolean;
     dataRow?: boolean;
@@ -49,8 +55,28 @@ type MapSectionData = {
     sponsorCarousel?: boolean;
     cookieControl?: boolean;
     distanceChip?: boolean;
+    liveStrip?: boolean;
   };
 };
+
+type FlightHistory = NonNullable<NonNullable<Snapshot["event"]>["flightHistory"]>;
+type FlightHistoryPoint = NonNullable<FlightHistory["points"]>[number];
+
+function normalizePoints(fh: FlightHistory | null): { lat: number; lng: number; recordedAt: string | null }[] | null {
+  if (fh === null) return null;
+  const raw = fh.points ?? [];
+  const filtered: { lat: number; lng: number; recordedAt: string | null }[] = [];
+  for (const p of raw as FlightHistoryPoint[]) {
+    if (typeof p.lat === "number" && typeof p.lng === "number") {
+      filtered.push({
+        lat: p.lat,
+        lng: p.lng,
+        recordedAt: p.recordedAt ?? null,
+      });
+    }
+  }
+  return filtered;
+}
 
 export const Map: SectionComponent = ({ data, bundle }) => {
   const d = (data ?? {}) as MapSectionData;
@@ -70,7 +96,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     themePicker: d.controls?.themePicker ?? false,
     terrain: d.controls?.terrain ?? false,
     snow: d.controls?.snow ?? false,
-    routeLines: d.controls?.routeLines ?? true,
+    flightHistory: d.controls?.flightHistory ?? true,
     timeLabels: d.controls?.timeLabels ?? true,
     location: d.controls?.location ?? false,
     dataRow: d.controls?.dataRow ?? false,
@@ -84,14 +110,17 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     sponsorCarousel: d.overlays?.sponsorCarousel ?? false,
     cookieControl: d.overlays?.cookieControl ?? false,
     distanceChip: d.overlays?.distanceChip ?? false,
+    liveStrip: d.overlays?.liveStrip ?? true,
   };
+
+  const flightHistoryDefault = d.flightHistoryDefault === true;
 
   const [theme, setTheme] = useState<MapTheme>(initialTheme);
   const [mapType, setMapType] = useState<"terrain" | "roadmap">("terrain");
   const [snow, setSnow] = useState<boolean>(false);
-  const [routeLines, setRouteLines] = useState<boolean>(true);
+  const [flightHistoryOn, setFlightHistoryOn] = useState<boolean>(flightHistoryDefault);
   const [timeLabels, setTimeLabels] = useState<boolean>(true);
-  const [following, setFollowing] = useState<boolean>(true);
+  const [, setFollowing] = useState<boolean>(true);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [locationOpen, setLocationOpen] = useState<boolean>(false);
   const [controller, setController] = useState<MapController | null>(null);
@@ -102,7 +131,9 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     distanceMetres: null,
   });
 
-  const route = useStore((s) => s.route);
+  const flightHistory = useStore((s) => s.snapshot?.event?.flightHistory ?? null);
+  const flightPoints = useMemo(() => normalizePoints(flightHistory as FlightHistory | null), [flightHistory]);
+  const flightHistoryAvailable = flightPoints !== null;
   const snowVisible = controls.snow && snow;
 
   const defaultCenter = d.defaultCenter ?? { lat: 39.7392, lng: -104.9903 };
@@ -146,15 +177,16 @@ export const Map: SectionComponent = ({ data, bundle }) => {
 
   useEffect(() => {
     if (controller === null) return;
-    controller.setToggles({ routeLines, timeLabels });
-  }, [controller, routeLines, timeLabels]);
+    controller.setToggles({
+      flightHistory: flightHistoryOn && flightHistoryAvailable,
+      timeLabels,
+    });
+  }, [controller, flightHistoryOn, flightHistoryAvailable, timeLabels]);
 
   useEffect(() => {
     if (controller === null) return;
-    controller.setRoute(route);
-    // No santa marker until a fix: fit the route on load.
-    controller.fitRoute();
-  }, [controller, route]);
+    controller.setFlightHistory(flightPoints);
+  }, [controller, flightPoints]);
 
   const prevSeqRef = useRef<number | null | undefined>(undefined);
   useEffect(() => {
@@ -210,14 +242,24 @@ export const Map: SectionComponent = ({ data, bundle }) => {
             <MapUnavailable onRetry={retry} />
           ) : (
             <>
-              <div className="map-section__top-overlays">
-                <InfoOverlays
-                  showLiveIndicator={overlays.liveIndicator}
-                  showLiftoffTimer={overlays.liftoffTimer}
-                />
-              </div>
+              {overlays.liveStrip ? (
+                <div className="map-section__strip-overlay frost">
+                  <LiveStrip
+                    distanceMetres={userState.distanceMetres}
+                    showLiveIndicator={overlays.liveIndicator}
+                    showLiftoffTimer={overlays.liftoffTimer}
+                  />
+                </div>
+              ) : (
+                <div className="map-section__top-overlays">
+                  <InfoOverlays
+                    showLiveIndicator={overlays.liveIndicator}
+                    showLiftoffTimer={overlays.liftoffTimer}
+                  />
+                </div>
+              )}
               {overlays.latestMessage ? (
-                <div className="map-section__message-overlay">
+                <div className="map-section__message-overlay frost">
                   <LatestMessage
                     data={{ style: "ticker" }}
                     items={[]}
@@ -232,7 +274,8 @@ export const Map: SectionComponent = ({ data, bundle }) => {
               ) : null}
               <div className="map-section__side-controls">
                 <MapControls
-                  following={following}
+                  snowOn={snowVisible}
+                  showSnow={controls.snow}
                   onRecenter={() => {
                     const live = store.getState().live;
                     const pos =
@@ -243,10 +286,11 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                   }}
                   onZoomIn={() => controller?.zoomBy(1)}
                   onZoomOut={() => controller?.zoomBy(-1)}
+                  onSnowToggle={() => setSnow((s) => !s)}
                 />
               </div>
               {overlays.leaderboardPanel ? (
-                <div className="map-section__leaderboard-overlay">
+                <div className="map-section__leaderboard-overlay frost">
                   <Leaderboard
                     data={{ variant: "panel" }}
                     items={[]}
@@ -255,7 +299,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 </div>
               ) : null}
               {overlays.sponsorCarousel ? (
-                <div className="map-section__sponsor-overlay">
+                <div className="map-section__sponsor-overlay frost">
                   <SponsorCarousel
                     data={{ logoWidth: 480 }}
                     items={[]}
@@ -270,12 +314,12 @@ export const Map: SectionComponent = ({ data, bundle }) => {
               ) : null}
               <button
                 type="button"
-                className="map-section__menu-button"
-                aria-label="Tracker menu"
+                className="map-section__menu-button ibtn"
+                aria-label={copy.map.trackerMenu}
                 aria-expanded={menuOpen}
                 onClick={() => setMenuOpen(true)}
               >
-                Tracker
+                <TrackerMenuIcon />
               </button>
               <TrackerMenu
                 open={menuOpen}
@@ -288,10 +332,12 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 onMapTypeChange={setMapType}
                 snow={snow}
                 onSnowChange={setSnow}
-                routeLines={routeLines}
-                onRouteLinesChange={setRouteLines}
+                flightHistoryAvailable={flightHistoryAvailable}
+                flightHistory={flightHistoryOn}
+                onFlightHistoryChange={setFlightHistoryOn}
                 timeLabels={timeLabels}
                 onTimeLabelsChange={setTimeLabels}
+                onFitHistory={() => controller?.fitHistory()}
                 onOpenLocation={() => setLocationOpen(true)}
                 distanceMetres={userState.distanceMetres}
               />
@@ -312,6 +358,14 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     </div>
   );
 };
+
+function TrackerMenuIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  );
+}
 
 function MarkerSeqHost() {
   const seq = useStore((s) => s.live?.seq ?? null);

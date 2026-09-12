@@ -1,20 +1,31 @@
-// docs/site.md sections 8.2 and 8.7. Santa marker: hidden while waiting
-// for a fix, anchored bottom-centre at `live.lat/lng` while tracking,
-// swapped to the signal-lost icon variant when a fix has gone stale.
+// docs/site.md sections 7.6, 8.2, and 8.7. Santa marker: the studio's pin
+// with a Santa hat drawn inline. The body takes the site's accent, the
+// hat the `--err` token, and the brim white. Hidden while waiting for a
+// fix; swapped to the signal-lost variant when a fix has gone stale.
 
 import type { LiveState } from "../store/liveState";
+import { readCssVar } from "./cssVars";
 
 export type MarkerVariant = "tracking" | "signalLost";
 
+function pinSvg(variant: MarkerVariant): string {
+  const accent = readCssVar("--accent", "#0b6bb5");
+  const hat = variant === "signalLost" ? readCssVar("--text-dim", "#5a6885") : readCssVar("--err", "#c2362c");
+  const body = variant === "signalLost" ? readCssVar("--text-dim", "#5a6885") : accent;
+  const ground = readCssVar("--ground", "#eef3fa");
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">` +
+    `<path d="M18 43s14-13 14-25A14 14 0 0 0 4 18c0 12 14 25 14 25z" fill="${body}" stroke="${ground}" stroke-width="1.5"/>` +
+    `<circle cx="18" cy="18" r="5.5" fill="${ground}"/>` +
+    `<path d="M6 10c3-8 14-11 22-6l-2 3H8z" fill="${hat}" stroke="${ground}" stroke-width="1"/>` +
+    `<circle cx="27.5" cy="4" r="2.5" fill="#ffffff"/>` +
+    `<rect x="5" y="8" width="24" height="3.5" rx="1.75" fill="#ffffff"/>` +
+    `</svg>`
+  );
+}
+
 function svgDataUri(variant: MarkerVariant): string {
-  const fill = variant === "signalLost" ? "#9ca3af" : "#c9452e";
-  const stroke = variant === "signalLost" ? "#4b5563" : "#7a2317";
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">` +
-    `<path d="M20 4c9 0 15 6 15 15 0 10-9 18-15 30-6-12-15-20-15-30 0-9 6-15 15-15z" fill="${fill}" stroke="${stroke}" stroke-width="2"/>` +
-    `<circle cx="20" cy="19" r="6" fill="#fff"/>` +
-    `</svg>`;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(pinSvg(variant))}`;
 }
 
 export type SantaMarker = {
@@ -36,7 +47,7 @@ export function createSantaMarker(
     position: null as unknown as google.maps.LatLngLiteral,
     icon: {
       url: svgDataUri(variant),
-      anchor: new google.maps.Point(20, 52),
+      anchor: new google.maps.Point(18, 44),
     },
     optimized: false,
     clickable: false,
@@ -47,7 +58,7 @@ export function createSantaMarker(
       marker.setMap(null);
       return;
     }
-    marker.setIcon({ url: svgDataUri(variant), anchor: new google.maps.Point(20, 52) });
+    marker.setIcon({ url: svgDataUri(variant), anchor: new google.maps.Point(18, 44) });
     marker.setPosition(position);
     if (marker.getMap() === null) marker.setMap(map);
   }

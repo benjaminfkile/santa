@@ -38,18 +38,21 @@ test("published pages render their first section", async ({ page }) => {
   }
 });
 
-test("a page with a route_preview in map style loads the map and draws a polyline", async ({ page }) => {
+test("a page with a route_preview in viewer style renders the poster and zooms on a wheel event", async ({ page }) => {
   const adminSnap = await getAdminSnapshot();
   const snap = (await fetchCdnSnapshot(adminSnap.url)) as { content?: { pages?: PublishedPage[] } };
   const pages = snap.content?.pages ?? [];
   const target = pages.find((p) =>
-    p.sections.some((s) => s.kind === "route_preview" && s.data?.style === "map"),
+    p.sections.some((s) => s.kind === "route_preview" && s.data?.style === "viewer"),
   );
-  test.skip(target === undefined, "no route_preview in map style in the published document");
+  test.skip(target === undefined, "no route_preview in viewer style in the published document");
   if (!target) return;
   await goto(page, `/${target.slug}`);
-  await expect(page.locator('[data-testid="route-preview-map"]')).toBeVisible({ timeout: 20_000 });
-  await expect(page.locator('[data-testid="route-polyline"]')).toBeAttached({ timeout: 20_000 });
+  await expect(page.locator('[data-testid="poster-viewer"]')).toBeVisible({ timeout: 20_000 });
+  const before = await page.locator('[data-testid="poster-viewer"] img').getAttribute("style");
+  await page.locator('[data-testid="poster-viewer"]').dispatchEvent("wheel", { deltaY: -100, clientX: 100, clientY: 100 });
+  const after = await page.locator('[data-testid="poster-viewer"] img').getAttribute("style");
+  expect(after).not.toBe(before);
 });
 
 test("/preview renders the ended page with the preview banner while the walk is planned", async ({ page }) => {

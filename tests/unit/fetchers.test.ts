@@ -24,7 +24,6 @@ vi.mock("../../src/config/env", () => ({
 import {
   fetchLive,
   fetchSnapshot,
-  fetchRoute,
   CdnError,
   SchemaVersionError,
   fetchJson,
@@ -90,15 +89,6 @@ describe("fetchers", () => {
         headers: { "content-type": "application/json" },
       });
     await expect(fetchSnapshot("https://cdn.example/s.json")).rejects.toBeInstanceOf(SchemaVersionError);
-  });
-
-  it("throws SchemaVersionError when route schemaVersion is not 1", async () => {
-    responder = () =>
-      new Response(JSON.stringify({ schemaVersion: 7, points: [] }), {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      });
-    await expect(fetchRoute("https://cdn.example/r.json")).rejects.toBeInstanceOf(SchemaVersionError);
   });
 
   it("returns the parsed object when schemaVersion is 1", async () => {

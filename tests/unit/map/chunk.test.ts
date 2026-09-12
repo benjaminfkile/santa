@@ -1,7 +1,7 @@
-// docs/site.md sections 4 and 18. Acceptance criterion 831: the `map`
-// chunk is loaded only when a `map` section or map-style route preview
-// mounts. This test inspects the built `dist/` folder. It is skipped
-// when there is no build output.
+// docs/site.md sections 4 and 18. The `map` chunk is loaded only when a
+// `map` section mounts — the `route_preview` styles (`image`, `viewer`)
+// never import it. This test inspects the built `dist/` folder. It is
+// skipped when there is no build output.
 
 import { describe, it, expect } from "vitest";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -31,15 +31,28 @@ describe("map chunk", () => {
     expect(indexJs).not.toMatch(staticImport);
   });
 
-  it("is only reachable through the Map section chunk or the RoutePreviewMap chunk", () => {
+  it("is only reachable through the Map section chunk", () => {
     const mapPath = findChunk("map");
     const MapPath = findChunk("Map");
-    const rpMapPath = findChunk("RoutePreviewMap");
-    if (mapPath === null || MapPath === null || rpMapPath === null) return;
+    if (mapPath === null || MapPath === null) return;
     const mapChunkName = basename(mapPath);
     const importSuffix = `./${mapChunkName}`;
     const inMap = readFileSync(MapPath, "utf8").includes(importSuffix);
-    const inRp = readFileSync(rpMapPath, "utf8").includes(importSuffix);
-    expect(inMap || inRp).toBe(true);
+    expect(inMap).toBe(true);
+  });
+
+  it("is not referenced by any chunk that carries RoutePreview code", () => {
+    const mapPath = findChunk("map");
+    if (mapPath === null) return;
+    const mapChunkName = basename(mapPath);
+    if (!existsSync(DIST_ASSETS)) return;
+    const files = readdirSync(DIST_ASSETS).filter((f) => f.endsWith(".js"));
+    for (const f of files) {
+      const contents = readFileSync(resolve(DIST_ASSETS, f), "utf8");
+      if (!contents.includes("route_preview")) continue;
+      // The Map section chunk lists it as a supported kind too; skip that one.
+      if (f.startsWith("Map-")) continue;
+      expect(contents.includes(`./${mapChunkName}`)).toBe(false);
+    }
   });
 });

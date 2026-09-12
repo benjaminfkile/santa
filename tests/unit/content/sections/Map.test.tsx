@@ -79,7 +79,7 @@ describe("Map section class coverage", () => {
               themePicker: true,
               terrain: true,
               snow: true,
-              routeLines: true,
+              flightHistory: true,
               timeLabels: true,
               location: true,
               dataRow: true,
@@ -92,6 +92,7 @@ describe("Map section class coverage", () => {
               sponsorCarousel: true,
               cookieControl: true,
               distanceChip: true,
+              liveStrip: true,
             },
           }}
           items={[]}
@@ -99,6 +100,39 @@ describe("Map section class coverage", () => {
         />
       </MemoryRouter>,
     );
+    cleanup();
+  });
+
+  it("hides the flight history toggle when snapshot.event.flightHistory is null", async () => {
+    const { Map } = await import("../../../../src/content/sections/Map/Map");
+    const bundle = {
+      content: null as unknown,
+      media: {},
+      icons: {},
+    } as import("../../../../src/store/types").ContentBundle;
+    const utils = render(
+      <MemoryRouter>
+        <Map
+          data={{
+            controls: {
+              themePicker: true,
+              terrain: true,
+              snow: true,
+              flightHistory: true,
+              timeLabels: true,
+              location: true,
+              dataRow: true,
+            },
+            overlays: { liveStrip: true },
+          }}
+          items={[]}
+          bundle={bundle}
+        />
+      </MemoryRouter>,
+    );
+    const trackerButton = utils.container.querySelector('button[aria-label="Tracker menu"]') as HTMLButtonElement | null;
+    trackerButton?.click();
+    expect(utils.queryByTestId("tracker-menu-flight-history")).toBeNull();
     cleanup();
   });
 

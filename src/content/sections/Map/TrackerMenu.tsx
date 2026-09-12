@@ -1,6 +1,6 @@
-// docs/site.md section 7.6. Tracker menu: theme picker, terrain or road,
-// snow, route lines, time labels, location button, data row, close. Each
-// entry is present only when its control is on.
+// docs/site.md section 7.6. Tracker menu: the studio recipe with the six
+// map-style thumbnails and a 3 px accent underline on the active one,
+// then terrain/road pills, then toggles, then the data row.
 
 import { useEffect, useRef } from "react";
 import { useStore } from "../../../store/useStore";
@@ -12,7 +12,7 @@ type Toggles = {
   themePicker: boolean;
   terrain: boolean;
   snow: boolean;
-  routeLines: boolean;
+  flightHistory: boolean;
   timeLabels: boolean;
   location: boolean;
   dataRow: boolean;
@@ -29,10 +29,12 @@ export type TrackerMenuProps = {
   onMapTypeChange: (t: "terrain" | "roadmap") => void;
   snow: boolean;
   onSnowChange: (v: boolean) => void;
-  routeLines: boolean;
-  onRouteLinesChange: (v: boolean) => void;
+  flightHistoryAvailable: boolean;
+  flightHistory: boolean;
+  onFlightHistoryChange: (v: boolean) => void;
   timeLabels: boolean;
   onTimeLabelsChange: (v: boolean) => void;
+  onFitHistory: () => void;
   onOpenLocation: () => void;
   distanceMetres: number | null;
 };
@@ -68,6 +70,7 @@ export function TrackerMenu(props: TrackerMenuProps) {
   const altitudeFt = altitudeM !== null ? metresToFeet(altitudeM) : null;
   const accuracyFt = accuracyM !== null ? metresToFeet(accuracyM) : null;
   const cardinal = headingDeg !== null ? headingToCardinal(headingDeg) : null;
+  const showFlightHistoryToggle = props.controls.flightHistory && props.flightHistoryAvailable;
 
   return (
     <div
@@ -86,75 +89,123 @@ export function TrackerMenu(props: TrackerMenuProps) {
         <div
           className="tracker-menu__section tracker-menu__section--theme"
           role="radiogroup"
-          aria-label="Map theme"
+          aria-label="Map style"
         >
-          {props.themes.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              role="radio"
-              aria-checked={props.themeKey === t.key}
-              onClick={() => props.onThemeChange(t.key)}
-              className={
-                props.themeKey === t.key
-                  ? "tracker-menu__theme tracker-menu__theme--selected"
-                  : "tracker-menu__theme"
-              }
-            >
-              {t.label}
-            </button>
-          ))}
+          {props.themes.map((t) => {
+            const selected = props.themeKey === t.key;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => props.onThemeChange(t.key)}
+                className={
+                  selected
+                    ? "tracker-menu__theme tracker-menu__theme--selected"
+                    : "tracker-menu__theme"
+                }
+                data-testid={`tracker-menu-theme-${t.key}`}
+              >
+                <span
+                  className="tracker-menu__theme-thumb"
+                  aria-hidden
+                  style={{
+                    background: `radial-gradient(circle at 30% 30%, ${t.timeLabelBg}, ${t.routeColor} 70%, ${t.arrowColor})`,
+                  }}
+                />
+                <span className="tracker-menu__theme-label">{t.label}</span>
+              </button>
+            );
+          })}
         </div>
       ) : null}
 
       {props.controls.terrain ? (
-        <button
-          type="button"
-          aria-pressed={props.mapType === "terrain"}
-          onClick={() =>
-            props.onMapTypeChange(props.mapType === "terrain" ? "roadmap" : "terrain")
-          }
-        >
-          Terrain
-        </button>
+        <div className="tracker-menu__section tracker-menu__section--pills" role="radiogroup" aria-label="Map type">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={props.mapType === "terrain"}
+            onClick={() => props.onMapTypeChange("terrain")}
+            className={
+              props.mapType === "terrain"
+                ? "tracker-menu__pill tracker-menu__pill--selected"
+                : "tracker-menu__pill"
+            }
+          >
+            Terrain
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={props.mapType === "roadmap"}
+            onClick={() => props.onMapTypeChange("roadmap")}
+            className={
+              props.mapType === "roadmap"
+                ? "tracker-menu__pill tracker-menu__pill--selected"
+                : "tracker-menu__pill"
+            }
+          >
+            Road
+          </button>
+        </div>
       ) : null}
 
-      {props.controls.snow ? (
-        <button
-          type="button"
-          aria-pressed={props.snow}
-          onClick={() => props.onSnowChange(!props.snow)}
-          data-testid="snow-toggle"
-        >
-          Snow
-        </button>
-      ) : null}
+      <div className="tracker-menu__section tracker-menu__section--toggles">
+        {props.controls.snow ? (
+          <button
+            type="button"
+            className="tracker-menu__toggle"
+            aria-pressed={props.snow}
+            onClick={() => props.onSnowChange(!props.snow)}
+            data-testid="tracker-menu-snow"
+          >
+            Snow
+          </button>
+        ) : null}
 
-      {props.controls.routeLines ? (
-        <button
-          type="button"
-          aria-pressed={props.routeLines}
-          onClick={() => props.onRouteLinesChange(!props.routeLines)}
-        >
-          Route lines
-        </button>
-      ) : null}
+        {showFlightHistoryToggle ? (
+          <>
+            <button
+              type="button"
+              className="tracker-menu__toggle"
+              aria-pressed={props.flightHistory}
+              onClick={() => props.onFlightHistoryChange(!props.flightHistory)}
+              data-testid="tracker-menu-flight-history"
+            >
+              Flight history
+            </button>
+            {props.flightHistory ? (
+              <button
+                type="button"
+                className="tracker-menu__toggle"
+                aria-pressed={props.timeLabels}
+                onClick={() => props.onTimeLabelsChange(!props.timeLabels)}
+                data-testid="tracker-menu-time-labels"
+              >
+                Time labels
+              </button>
+            ) : null}
+            {props.flightHistory ? (
+              <button
+                type="button"
+                className="tracker-menu__toggle"
+                onClick={props.onFitHistory}
+                data-testid="tracker-menu-fit-history"
+              >
+                Fit history
+              </button>
+            ) : null}
+          </>
+        ) : null}
 
-      {props.controls.timeLabels ? (
-        <button
-          type="button"
-          aria-pressed={props.timeLabels}
-          onClick={() => props.onTimeLabelsChange(!props.timeLabels)}
-        >
-          Time labels
-        </button>
-      ) : null}
-
-      {props.controls.location ? (
-        <button type="button" onClick={props.onOpenLocation}>
-          Location
-        </button>
-      ) : null}
+        {props.controls.location ? (
+          <button type="button" className="tracker-menu__toggle" onClick={props.onOpenLocation}>
+            Location
+          </button>
+        ) : null}
+      </div>
 
       {props.controls.dataRow ? (
         <dl className="tracker-menu__data-row" data-testid="tracker-menu-data-row">
