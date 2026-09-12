@@ -15,7 +15,8 @@ Visual design is a separate track. This document covers structure and behaviour 
 | Store | One framework-free module (`src/store`), exposed to React through `useSyncExternalStore` |
 | Realtime | `@microsoft/signalr`, WebSockets only, negotiation skipped, dynamic import |
 | Map | Google Maps JavaScript API through `@googlemaps/js-api-loader`, dynamic import |
-| Auth | `oidc-client-ts` against the Cognito hosted UI, authorization code with PKCE, dynamic import |
+| Poster | `openseadragon` over the asset's Deep Zoom pyramid (or its original image), dynamic import |
+| Auth | The site's own pages over the Cognito Identity Provider API through `amazon-cognito-identity-js` (SRP sign-in, sign-up, confirmation, password reset, refresh), dynamic import; no hosted UI, no redirect |
 | Types | Generated from the vendored `contracts/` folder: `openapi-typescript` for REST, `json-schema-to-typescript` for the CDN objects |
 | Tests | Vitest + Testing Library for units and the status switch; Playwright for the preview site |
 | Hosting | One Vercel project, git-integrated: `main` is Production at `https://<site-domain>`, `dev` is the Preview branch at `https://<preview-site-domain>` |
@@ -62,9 +63,11 @@ santa/
       backoff.ts                  1 s, 2 s, 3 s, then 5 s forever
       useStore.ts                 React binding and selectors
     auth/
-      userManager.ts              oidc-client-ts UserManager factory (lazy)
+      cognito.ts                  amazon-cognito-identity-js wrapper (lazy): signUp, confirm, resend, signIn (SRP), forgot, reset, refresh, revoke, current session
+      session.ts                  token storage (localStorage), expiry, getIdToken with refresh
       AuthProvider.tsx            auth state for React
-      AuthCallback.tsx            /auth/callback page
+      pages/                      SignInPage, SignUpPage, ConfirmPage, ForgotPasswordPage, ResetPasswordPage (section 11), each a themed form on the site's own shell
+      AuthForm.module.css         the shared form recipe (field, error, submit) composed from src/ui
       signOut.ts
     api/
       client.ts                   fetch wrapper: bearer, error shape, timeouts
@@ -100,7 +103,7 @@ santa/
       Banner/                     UpdatesPaused, Offline, Preview
       Dialog/                     <dialog> wrapper with focus handling
 
-    map/                          imported only by sections/Map and sections/RoutePreview (style map)
+    map/                          imported only by sections/Map (the poster viewer never touches Maps)
       loadMaps.ts                 Loader singleton, importLibrary("maps" | "marker" | "geometry")
       MapView.tsx                 React host for the map element
       mapController.ts            imperative controller: follow, recenter, zoom, mapType, theme
@@ -148,8 +151,7 @@ All configuration is Vercel environment variables with the `VITE_` prefix, valid
 | `VITE_HUB_URL` | `wss://<gateway-domain>/hub` | same |
 | `VITE_HUB_CHANNEL_PREFIX` | `wmsfo-api` | `wmsfo-api-dev` |
 | `VITE_API_BASE_URL` | `https://<api-domain>` (prod) | dev API host |
-| `VITE_COGNITO_AUTHORITY` | `https://cognito-idp.<region>.amazonaws.com/<pool-id>` (prod pool) | dev pool |
-| `VITE_COGNITO_DOMAIN` | `https://<cognito-domain>` (prod pool hosted UI) | dev pool hosted UI |
+| `VITE_COGNITO_USER_POOL_ID` | `<pool-id>` (the prod people pool; its `<region>_` prefix is the region) | dev people pool |
 | `VITE_COGNITO_CLIENT_ID` | `<site-client-id>` (prod) | dev |
 | `VITE_GOOGLE_MAPS_KEY` | referrer-restricted browser key | same key, referrers include the preview origin and `localhost:5173` |
 | `VITE_ANALYTICS_ID` | GA4 measurement id | empty |
@@ -163,8 +165,7 @@ export const env = {
   HUB_URL: readUrl("VITE_HUB_URL", "wss:"),
   HUB_CHANNEL_PREFIX: read("VITE_HUB_CHANNEL_PREFIX", /^[a-z0-9-]+$/),
   API_BASE_URL: readUrl("VITE_API_BASE_URL", "https:"),
-  COGNITO_AUTHORITY: readUrl("VITE_COGNITO_AUTHORITY", "https:"),
-  COGNITO_DOMAIN: readUrl("VITE_COGNITO_DOMAIN", "https:"),
+  COGNITO_USER_POOL_ID: read("VITE_COGNITO_USER_POOL_ID", /^[a-z]{2}-[a-z]+-\d_[A-Za-z0-9]+$/),
   COGNITO_CLIENT_ID: read("VITE_COGNITO_CLIENT_ID", /^[a-z0-9]+$/),
   GOOGLE_MAPS_KEY: read("VITE_GOOGLE_MAPS_KEY", /^\S+$/),
   ANALYTICS_ID: readOptional("VITE_ANALYTICS_ID"),
@@ -173,10 +174,11 @@ export const env = {
 
 export const LIVE_URL = `${env.CDN_BASE_URL}/live/location.json`;
 export const LOCATION_CHANNEL = `${env.HUB_CHANNEL_PREFIX}:location`;
+export const COGNITO_IDP_URL = `https://cognito-idp.${env.COGNITO_USER_POOL_ID.split("_")[0]}.amazonaws.com`;   // the only Cognito host the site talks to
 export const IS_PRODUCTION = env.ENV === "production";
 ```
 
-Local development uses `.env.local` with the preview set and runs on `http://localhost:5173`, which is a registered Cognito callback origin, and a hub allowed origin for dev; the CDN answers CORS for every origin. `VITE_API_BASE_URL` is used only as the base for the writes in section 12; the site fetches `LIVE_URL` and otherwise only absolute URLs found inside CDN objects. No secrets exist in the bundle; the Maps key is referrer-restricted.
+Local development uses `.env.local` with the preview set and runs on `http://localhost:5173`, a hub allowed origin for dev; the CDN answers CORS for every origin and the Cognito API answers CORS for any origin, so no origin registration is needed for auth. `VITE_API_BASE_URL` is used only as the base for the writes in section 12; the site fetches `LIVE_URL` and otherwise only absolute URLs found inside CDN objects. No secrets exist in the bundle; the Maps key is referrer-restricted.
 
 ---
 
@@ -190,11 +192,15 @@ Local development uses `.env.local` with the preview set and runs on `http://loc
 | `/preview` | `PreviewPage` | main | `token` and `page` from the query string (section 7.8) |
 | `/alerts/verify` | `VerifyPage` | alerts | `token` from the query string |
 | `/alerts/unsubscribe` | `UnsubscribePage` | alerts | `token` from the query string |
-| `/auth/callback` | `AuthCallback` | auth | Registered Cognito callback path |
+| `/auth/sign-in` | `SignInPage` | auth | `returnTo` from the query string (a site path, else `/`) |
+| `/auth/sign-up` | `SignUpPage` | auth | `returnTo` carried through to the confirmation and sign-in |
+| `/auth/confirm` | `ConfirmPage` | auth | `email` and `returnTo` from the query string; the six-digit code from the email |
+| `/auth/forgot` | `ForgotPasswordPage` | auth | |
+| `/auth/reset` | `ResetPasswordPage` | auth | `email` from the query string; the code from the email plus the new password |
 | `/:slug` | `SlugPage` | main | The `none` page with that slug; a role page's slug redirects to `/`; unknown renders `NotFound` |
 | `*` | `NotFound` | main | Links back to `/` |
 
-While `live.eventStatusId === 3` the router renders the `live` role page for every path; the table above applies in every other status. The only exceptions are the four site-coded paths, which must keep working during the event: `/auth/callback` completes sign-in and then navigates to `/`, `/alerts/verify` and `/alerts/unsubscribe` render their own pages because email links land there, and `/preview` renders whatever page the panel asks for.
+While `live.eventStatusId === 3` the router renders the `live` role page for every path; the table above applies in every other status. The only exceptions are the site-coded paths, which must keep working during the event: the five `/auth/*` pages (a visitor signs in to leave a cookie mid-flight), `/alerts/verify` and `/alerts/unsubscribe` because email links land there, and `/preview`, which renders whatever page the panel asks for. During the takeover the auth pages render inside the takeover's dialog surface (section 11.5) so the tracker stays underneath.
 
 Route-level `lazy()` with a `Suspense` fallback for the `alerts` and `auth` chunks. The shell (nav menu, banners, footer) wraps every route; on a page whose first section is `map` the shell renders only its menu button and banners over the map and no footer.
 
@@ -610,7 +616,7 @@ Content kinds read `data`, `items`, and the bundle only. Live kinds read the sto
 | `leaderboard` | `live.cookieTally`, `snapshot.cookieTypes` | Section 9 |
 | `sponsor_carousel` | `snapshot.sponsors`, `bundle.media` | Section 15; logo through `Media` with `sizes` fixed at `data.logoWidth` |
 | `sponsor_grid` | `snapshot.sponsors`, `bundle.media` | Every sponsor in snapshot order (pinned first, then largest gift first; the site never re-sorts): the first three as large cards, the rest in a four-column grid; logo (name text when `logoMediaId` is null), name, links for `websiteUrl`, `fbUrl`, `igUrl` when non-null, `yearsAsSponsor` as "Sponsor for N years" when `showYears`; no tiers, no amounts; `emptyText` when none |
-| `route_preview` | `snapshot.event.routeImageMediaId`, `bundle.media` | `image`: the poster through `Media` (960 variant, `srcset`) wrapped in a link to the page holding the `viewer` style, or unlinked when no such page is published; `viewer`: the pan-and-zoom viewer of 8.5 over the asset's original `url`, with `data.disclaimer` rendered above it; `emptyText` when the id is null or unresolvable |
+| `route_preview` | `snapshot.event.routeImageMediaId`, `bundle.media` | `image`: the poster through `Media` (960 variant, `srcset`) wrapped in a link to the page holding the `viewer` style, or unlinked when no such page is published; `viewer`: the deep-zoom viewer of 8.5 (OpenSeadragon over the asset's `dzi` pyramid, or its original `url` when `dzi` is null) with pan, zoom, and fullscreen, and `data.disclaimer` rendered above it; `emptyText` when the id is null or unresolvable |
 | `cookie_control` | auth, `live.eventStatusId`, `snapshot.cookieTypes` | Section 10; `closedCopy` outside status 3; `signedOutCopy` with a sign-in link when signed out |
 | `alerts_signup` | auth, `GET /me`, `GET /me/subscriptions` | Section 13; `signedOutCopy` with a sign-in link (`returnTo` the current path) when signed out |
 | `contact_form` | `settings.contactEmail` | Section 14 |
@@ -768,7 +774,7 @@ The chosen key persists in `localStorage["wmsfo.tracker.theme"]` through `lib/st
 - **Time labels**: markers with an SVG data-URI icon (rounded box, label text, a dot in `routeColor`), one label each time the elapsed time from the first point with a non-null `recordedAt` crosses the next interval; interval 5 minutes above zoom 12, else 20 minutes. Label text `35 min`, `1 hr`, `1 hr 20 min`. Points with `recordedAt` null are skipped for labels; no labels when no point has a time.
 - Redraw on zoom, theme change, toggle change, and when a new snapshot carries a different `flightHistory.routeId`. All previous overlays are removed first. `fitHistory()` is offered as a menu action when the overlay is on.
 
-**Route poster viewer** (`src/content/sections/RoutePreview/PosterViewer.tsx`, the `viewer` style; no Maps script). One `<img>` of the asset's original `url` inside a clipped, `touch-action: none` frame, positioned by a CSS transform `translate(x, y) scale(s)`. Fit on load (`s = min(frameW / imgW, frameH / imgH)`, centred); `s` clamps between fit and six times fit. Drag with pointer capture, wheel zoom about the cursor, pinch zoom about the midpoint, double-tap zooms in one step, and three buttons: zoom in, zoom out, fit (the same `.ibtn` recipe as the map controls). Arrow keys pan and plus and minus zoom when the frame has focus. The `image` style is a plain linked `Media` picture and loads nothing else. Neither style loads the map chunk.
+**Route poster viewer** (`src/content/sections/RoutePreview/PosterViewer.tsx`, the `viewer` style; no Maps script). OpenSeadragon, imported with `import()` into its own `osd` chunk when the section mounts, hosted in a frame that is 70 vh tall (min 320 px) at the section's width. Tile source: the asset's `dzi` URL when the media entry has one (the API's Deep Zoom pyramid, 254 px JPEG tiles, read straight from the CDN with no CORS needs because they are plain images), else `{ type: "image", url }` over the original picture. Options: `showNavigationControl: false` (the site draws its own controls), `gestureSettingsMouse.clickToZoom: false`, `gestureSettingsTouch.pinchToZoom: true`, `minZoomImageRatio: 0.8`, `maxZoomPixelRatio: 2`, `visibilityRatio: 1`, `constrainDuringPan: true`, `animationTime` 0 under reduced motion, `prefixUrl` unset (no OpenSeadragon button images are shipped). Controls in the frame's corner, the `.ibtn` recipe: zoom in, zoom out, fit (`viewport.goHome`), and fullscreen; fullscreen uses the Fullscreen API on the frame (`requestFullscreen` on the section's viewer element, `exitFullscreen` on the same button, the frame fills the screen and OpenSeadragon resizes on the `fullscreenchange` event; where the API is missing, iOS Safari, the frame becomes `position: fixed; inset: 0` with the same button to leave). Keyboard: arrow keys pan, plus and minus zoom, `0` fits, `F` toggles fullscreen when the frame has focus; the frame is `tabindex="0"` with `role="region"` and an `aria-label` from the section heading. The disclaimer renders above the frame, not over it. The `image` style is a plain linked `Media` picture and loads nothing else. Neither style loads the map chunk. The viewer is destroyed on unmount and rebuilt when `routeImageMediaId` changes (a new poster is a new asset, so there is never a stale tile).
 
 ### 8.6 User location and distance
 
@@ -859,52 +865,44 @@ Flow:
 
 ## 11. Accounts
 
-### 11.1 UserManager
+The site never shows a Cognito page. Sign-up, confirmation, sign-in, and password reset are the site's own pages, themed like everything else, and talk to the people pool through the Cognito Identity Provider API with `amazon-cognito-identity-js` (SRP, so the password never leaves the browser in clear). No hosted UI, no redirect, no callback route.
+
+### 11.1 The Cognito wrapper
 
 ```ts
-// src/auth/userManager.ts (import()ed on demand)
-import { UserManager, WebStorageStateStore } from "oidc-client-ts";
-export const userManager = new UserManager({
-  authority: env.COGNITO_AUTHORITY,
-  client_id: env.COGNITO_CLIENT_ID,
-  redirect_uri: `${window.location.origin}/auth/callback`,
-  response_type: "code",
-  scope: "openid email profile",
-  automaticSilentRenew: true,
-  userStore: new WebStorageStateStore({ store: window.localStorage }),
-  loadUserInfo: false,
-  monitorSession: false,
-});
+// src/auth/cognito.ts (import()ed on demand; the auth chunk)
+import { CognitoUserPool, CognitoUser, AuthenticationDetails, CognitoUserAttribute, CognitoRefreshToken } from "amazon-cognito-identity-js";
+const pool = new CognitoUserPool({ UserPoolId: env.COGNITO_USER_POOL_ID, ClientId: env.COGNITO_CLIENT_ID, Storage: sessionStore });
+export const cognito = {
+  signUp(email, password): Promise<void>,                 // pool.signUp with the email attribute; UsernameExistsException maps to "already registered"
+  confirm(email, code): Promise<void>,                    // CognitoUser.confirmRegistration
+  resendCode(email): Promise<void>,                       // CognitoUser.resendConfirmationCode
+  signIn(email, password): Promise<Tokens>,               // authenticateUser (USER_SRP_AUTH); UserNotConfirmedException routes to /auth/confirm
+  forgot(email): Promise<void>,                           // CognitoUser.forgotPassword
+  reset(email, code, password): Promise<void>,            // CognitoUser.confirmPassword
+  refresh(): Promise<Tokens>,                             // CognitoUser.refreshSession with the stored refresh token
+  revoke(): Promise<void>,                                // RevokeToken on the refresh token, best effort
+};
+type Tokens = { idToken: string; accessToken: string; refreshToken: string; email: string; sub: string; idExpiresAt: number };
 ```
 
-- Discovery comes from `${authority}/.well-known/openid-configuration`; the authorize and token endpoints it names are on `<cognito-domain>`. There is no `end_session_endpoint`.
-- PKCE is the library default for `response_type: "code"`.
-- Token storage: `localStorage` under the library's `oidc.user:<authority>:<client_id>` key so a person who signs in before the event is still signed in on event night (refresh token lifetime 30 days on `wmsfo-site`). Only the ID token is ever sent anywhere, and only to `VITE_API_BASE_URL`.
-- Silent renew: with a refresh token present the library renews through the token endpoint's refresh grant; no iframe is used. `events.addAccessTokenExpiring` triggers it automatically; `events.addSilentRenewError` marks the session as needing sign-in.
-- The auth chunk loads when: the `/auth/callback` route mounts, the sign-in action runs, or `localStorage` holds the library's user key at boot (a synchronous key-existence check in `main.tsx`; the chunk then hydrates the signed-in state).
+`sessionStore` is the library's storage interface over `localStorage` (through `lib/storage.ts`, guarded), so a person who signs in before the event is still signed in on event night (refresh token 30 days on `wmsfo-site`). `session.ts` holds `Tokens`, exposes `getIdToken()` (below), `current()`, `clear()`. Only the ID token is ever sent anywhere, and only to `VITE_API_BASE_URL`. The only Cognito host the site contacts is `COGNITO_IDP_URL` (section 3); it is in the CSP `connect-src`.
 
-### 11.2 Sign in, callback, sign out
+Error mapping (never the SDK's message): `UserNotFoundException` and `NotAuthorizedException` on sign-in both read "Wrong email or password" (no account enumeration); `UserNotConfirmedException` sends the visitor to `/auth/confirm?email=` with a line that the account needs confirming; `UsernameExistsException` on sign-up reads "That email already has an account" with a sign-in link; `CodeMismatchException` and `ExpiredCodeException` name the code; `InvalidPasswordException` shows the pool's password rule (12 characters minimum); `LimitExceededException` and `TooManyRequestsException` read "Too many attempts, wait a minute"; anything else is the generic line with a retry.
 
-```ts
-export async function signIn(returnTo: string) {
-  const um = await getUserManager();
-  await um.signinRedirect({ state: { returnTo } });
-}
+### 11.2 The pages
 
-// AuthCallback.tsx
-const user = await userManager.signinRedirectCallback();
-navigate((user.state as { returnTo?: string } | undefined)?.returnTo ?? "/", { replace: true });
-// on error: render "Sign-in did not complete" with a Try again link (signIn("/")) and a Home link
+Five routes (section 4), every one a single centred form card on the site's shell (the frost recipe, the shared `src/ui` button and field recipes, labels in mono uppercase, errors in `--err`, a 44 px submit), each with the site name above and a line of links below (sign in, create account, forgot password, home) so a visitor never dead-ends:
 
-export async function signOut() {
-  const um = await getUserManager();
-  await um.removeUser();
-  const logoutUri = encodeURIComponent(`${window.location.origin}/`);
-  window.location.assign(`${env.COGNITO_DOMAIN}/logout?client_id=${env.COGNITO_CLIENT_ID}&logout_uri=${logoutUri}`);
-}
-```
+| Page | Fields | On success |
+|---|---|---|
+| `/auth/sign-up` | email, password, confirm password (client checks: valid address shape, 12 characters minimum, both passwords equal) | `cognito.signUp`, then navigate to `/auth/confirm?email=<email>&returnTo=` with the line "We emailed you a code" |
+| `/auth/confirm` | the six-digit code (`inputmode="numeric"`, `autocomplete="one-time-code"`), a Resend link (`resendCode`, disabled 30 s after each send) | `confirm`, then `signIn` is not possible without the password, so the page shows "Account confirmed" and a Sign in button that keeps `returnTo`; when the visitor arrived here straight from sign-up in the same tab the page still holds the password in memory and signs in directly, landing on `returnTo` |
+| `/auth/sign-in` | email, password, a "Keep me signed in" note (always on; the refresh token is stored regardless) | `signIn`, store tokens, `AuthProvider` becomes `signedIn`, navigate to `returnTo` |
+| `/auth/forgot` | email | `forgot`, navigate to `/auth/reset?email=` with "We emailed you a code" (the same copy whether or not the account exists) |
+| `/auth/reset` | code, new password, confirm | `reset`, then "Password changed" with a Sign in button |
 
-`${window.location.origin}/` is the registered sign-out URL for every origin the site runs on (production, preview, `localhost:5173`).
+Every form disables its submit while a request is in flight, announces errors with `aria-describedby`, trims the email and lowercases it, and never echoes the password. The pages are route-level `lazy()` in the `auth` chunk; the chunk also loads at boot when `localStorage` holds a session (a synchronous key check in `main.tsx`) so the signed-in state hydrates without a click.
 
 ### 11.3 Auth state for React
 
@@ -915,21 +913,24 @@ type AuthState =
   | { status: "signedIn"; email: string; expired: boolean };
 ```
 
-`AuthProvider` subscribes to `events.addUserLoaded`, `addUserUnloaded`, `addUserSignedOut`, `addSilentRenewError`. It attaches those subscriptions through `onUserManagerReady` in `userManager.ts`, which fires when the manager is constructed by whichever caller loads it first: the provider itself when a session is stored at boot, or `AuthCallback` when a sign-in is completing. The provider never imports the chunk for a signed-out visitor, and a sign-in completed on the callback page reaches it without a reload. `useAuth()` returns the state plus `signIn(returnTo)` and `signOut()`. Every public page works in `signedOut`; nothing blocks on `unknown` except the alerts page content and the cookie control, which render their signed-out variants until `signedIn` arrives.
+`AuthProvider` reads `session.current()` at mount (loading the chunk only when a session is stored), subscribes to `session` changes (sign-in, refresh, sign-out, refresh failure), and exposes `useAuth()` with the state plus `signIn(returnTo)` (navigates to `/auth/sign-in?returnTo=`) and `signOut()`. Every public page works in `signedOut`; nothing blocks on `unknown` except the alerts page content and the cookie control, which render their signed-out variants until `signedIn` arrives. Sign-out: `cognito.revoke()` best effort, `session.clear()`, state `signedOut`, stay on the current page.
 
 ### 11.4 Bearer for API calls
 
 ```ts
 export async function getIdToken(): Promise<string> {
-  const um = await getUserManager();
-  let user = await um.getUser();
-  if (user?.expired) { try { user = await um.signinSilent(); } catch { user = null; } }
-  if (!user?.id_token) throw new SignInRequired();
-  return user.id_token;
+  const s = session.current();
+  if (!s) throw new SignInRequired();
+  if (s.idExpiresAt - Date.now() < 60_000) { try { await cognito.refresh(); } catch { session.clear(); throw new SignInRequired(); } }
+  return session.current()!.idToken;
 }
 ```
 
-Re-read before every call; never cached by the API client.
+Re-read before every call; never cached by the API client. A `401` from the API triggers one refresh and one retry, then `SignInRequired`.
+
+### 11.5 Auth on the live screen
+
+While the takeover is on (7.6) the five auth routes render their form card inside a centred `<dialog>` over the tracker (the same dialog recipe as the cookie control), so the person who taps "Sign in to leave a cookie" signs in without leaving the map and lands back on it with the cookie control ready. Off the takeover they are ordinary pages.
 
 ---
 
@@ -1107,7 +1108,8 @@ Chunks (`build.rollupOptions.output.manualChunks`):
 | `index` | React, router, store, shell, the page renderer, every section and block component except the map | First paint | 130 KB |
 | `signalr` | `@microsoft/signalr` | After the first live object is applied (startup step 3) | 45 KB |
 | `map` | `src/map/**`, `@googlemaps/js-api-loader`, themes | A `map` section mounts | 50 KB (Google's own script excluded) |
-| `auth` | `oidc-client-ts`, `AuthProvider` internals, `AuthCallback` | Callback route, sign-in click, or a stored session at boot | 40 KB |
+| `osd` | `openseadragon` and `PosterViewer` | A `route_preview` section in `viewer` style mounts | 80 KB |
+| `auth` | `amazon-cognito-identity-js`, `cognito.ts`, the five auth pages | An `/auth/*` route, a sign-in click, or a stored session at boot | 60 KB |
 | `alerts` | The two token landing pages | Route mounts | 15 KB |
 | CSS | all | First paint | 25 KB |
 
@@ -1177,21 +1179,22 @@ export default defineConfig({
     sourcemap: "hidden",
     rollupOptions: { output: { manualChunks: {
       signalr: ["@microsoft/signalr"],
-      auth: ["oidc-client-ts"],
+      auth: ["amazon-cognito-identity-js"],
       maps: ["@googlemaps/js-api-loader"],
+      osd: ["openseadragon"],
     } } },
   },
   server: { port: 5173, strictPort: true },
 });
 ```
 
-The three families (IBM Plex Sans 400, 500, 600; IBM Plex Mono 400, 500; Bricolage Grotesque 600, 700) are self-hosted in the bundle through `@fontsource` (no third-party font host), so the site loads on networks that cannot reach Google. `index.html` uses Vite's `%VITE_*%` replacement for the CSP meta and preconnect, so no environment value is written into the repository. The authority source ends in `/` because `VITE_COGNITO_AUTHORITY` carries the pool path and a CSP path source without a trailing slash matches that path alone; the slash lets the discovery document under it through:
+The three families (IBM Plex Sans 400, 500, 600; IBM Plex Mono 400, 500; Bricolage Grotesque 600, 700) are self-hosted in the bundle through `@fontsource` (no third-party font host), so the site loads on networks that cannot reach Google. `index.html` uses Vite's `%VITE_*%` replacement for the CSP meta and preconnect, so no environment value is written into the repository. The Cognito host is `https://cognito-idp.<region>.amazonaws.com` with the region taken from the pool id at build time (a small Vite plugin exposes it as `%COGNITO_IDP_URL%`):
 
 ```html
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
   script-src 'self' https://maps.googleapis.com https://www.googletagmanager.com;
-  connect-src 'self' %VITE_CDN_BASE_URL% %VITE_API_BASE_URL% %VITE_HUB_URL% %VITE_COGNITO_AUTHORITY%/ %VITE_COGNITO_DOMAIN%
+  connect-src 'self' %VITE_CDN_BASE_URL% %VITE_API_BASE_URL% %VITE_HUB_URL% %COGNITO_IDP_URL%
               https://maps.googleapis.com https://www.googletagmanager.com https://*.google-analytics.com;
   img-src 'self' data: blob: %VITE_CDN_BASE_URL% https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.gstatic.com https://*.ggpht.com;
   style-src 'self' 'unsafe-inline';
@@ -1267,6 +1270,9 @@ Fixtures come from the vendored `contracts/fixtures/*.json`; schema validation o
 | `time`, `units` | `formatElapsed`, `formatCountdown`, `mpsToMph`, feet under a mile and miles over, heading to cardinal |
 | `CookieControl` | each response row in section 10 |
 | `AlertsSignup`, `VerifyPage`, `UnsubscribePage` | each response row in section 13; token regex gate; post on mount |
+| `auth/cognito` (mocked SDK) | each wrapper call maps to the SDK method; every error name in 11.1 maps to its copy; sign-in stores tokens; `getIdToken` refreshes inside the last minute and throws `SignInRequired` when the refresh fails |
+| Auth pages | client checks (address shape, 12 characters, matching passwords); submit disabled in flight; `UserNotConfirmedException` routes to confirm with the email; confirm straight from sign-up signs in and lands on `returnTo`; forgot shows the same copy for unknown addresses |
+| `PosterViewer` | `dzi` present builds a Deep Zoom tile source, absent an image source; the viewer is destroyed on unmount and rebuilt on a new media id; the fullscreen button calls `requestFullscreen` and falls back to the fixed frame when absent; the osd chunk is imported only when the section mounts |
 | `ContactForm` | limits, trimming, each response row in section 14 |
 | `PreviewPage` | fetches with the token, stores the bundle, renders the named page, shows the banner, clears on navigation, handles `404` |
 | `api/client` | bearer added only when `auth`; `Retry-After` and `details.retryAfterSeconds`; `204`; `SignInRequired` when no token |
@@ -1285,7 +1291,7 @@ Harness (`tests/e2e/harness/`):
 - `adminToken.ts`: obtains an ID token for the E2E admin: `E2E_ADMIN_ID_TOKEN` when set, otherwise `InitiateAuth` (`USER_PASSWORD_AUTH`) on `E2E_ADMIN_CLIENT_ID` with the `SOFTWARE_TOKEN_MFA` challenge answered by a TOTP computed from `E2E_ADMIN_TOTP_SECRET`; minted once per process.
 - `adminApi.ts`: typed wrappers for `GET /admin/events`, `POST /admin/events/{id}/current`, `POST /admin/events/{id}/status`, `PATCH /admin/events/{id}`, `POST /admin/events/{id}/messages`, `GET /admin/contact-messages`, `DELETE /admin/contact-messages/{id}`, `GET /admin/snapshot`.
 - `beacon.ts`: `replay(points, ratePerSecond)` posting fixes over `POST /locations` with `X-Beacon-Key`, `recordedAt = now`.
-- `personSignIn.ts`: drives the hosted UI sign-in form for the E2E person (no MFA) through the site's own sign-in link.
+- `personSignIn.ts`: opens the site's own `/auth/sign-in` page from the menu link, fills the E2E person's email and password, submits, and waits for the signed-in menu entry; a second helper `personSignUp.ts` drives sign-up and confirmation for a throwaway `+tag` address whose code the harness reads through `AdminGetUser`-free means: the dev pool's test person is pre-confirmed, so the sign-up spec asserts only the "We emailed you a code" step and then deletes the unconfirmed user with `AdminDeleteUser` through the harness's AWS credentials.
 - `site.ts`: helpers reading `data-testid` attributes and, on preview builds, `window.__wmsfo.getState()` (exposed only when `VITE_ENV !== "production"`).
 
 Dedicated walk event: year `2100`, name `E2E walk`, created once by an admin in dev with `inheritRoute: true`; the harness locates it by year and aborts when missing. Locations accumulate on it; that is accepted in dev.
@@ -1304,7 +1310,7 @@ Dedicated walk event: year `2100`, name `E2E walk`, created once by an admin in 
 10. Status 5 with `notify: false`. Assert the cancelled page shows the message from step 7 and no countdown.
 11. Restore: status 4 on the walk event; `POST /admin/events/{previous}/current` when a previous current event existed.
 
-`pages.spec.ts` (parallel): each ordinary page in the published document (read from the CDN snapshot by the harness) renders its first section; the page holding a `route_preview` in `viewer` style shows the poster and zooms on a wheel event without loading the map chunk; the header toggle flips `data-theme` and survives a reload; screenshots of every page and every home state in both schemes are compared against checked-in baselines; `/preview?token=<minted by the harness through POST /admin/content/preview-token>&page=ended` renders the ended page with the preview banner while the walk event is planned; `/alerts/verify?token=wsv_<43 invalid chars>` and `/alerts/unsubscribe?token=wsu_<43 invalid chars>` render the invalid copy after one POST; `/alerts` signed in subscribes a unique address, asserts a Pending row, resends once, then deletes it; the contact form posts a message tagged with the run id and the harness finds and deletes it through the admin endpoints; the 404 page for `/nope`; reduced-motion emulation hides the snow toggle; the CSP meta is present and the hub WebSocket to `<gateway-domain>` opens (network log).
+`pages.spec.ts` (parallel): each ordinary page in the published document (read from the CDN snapshot by the harness) renders its first section; the page holding a `route_preview` in `viewer` style loads the `osd` chunk and not the map chunk, shows tiles from the asset's `dzi` (a request to `poster_files/` is seen), zooms on a wheel event, and enters and leaves fullscreen through its button; the auth pages render at their five paths with the site's shell and no Cognito host in the document; the header toggle flips `data-theme` and survives a reload; screenshots of every page and every home state in both schemes are compared against checked-in baselines; `/preview?token=<minted by the harness through POST /admin/content/preview-token>&page=ended` renders the ended page with the preview banner while the walk event is planned; `/alerts/verify?token=wsv_<43 invalid chars>` and `/alerts/unsubscribe?token=wsu_<43 invalid chars>` render the invalid copy after one POST; `/alerts` signed in subscribes a unique address, asserts a Pending row, resends once, then deletes it; the contact form posts a message tagged with the run id and the harness finds and deletes it through the admin endpoints; the 404 page for `/nope`; reduced-motion emulation hides the snow toggle; the CSP meta is present and the hub WebSocket to `<gateway-domain>` opens (network log).
 
 The manual pre-event rehearsal repeats the walk with Red-Nose's replay mode on the real phone in place of `beacon.ts`.
 
@@ -1355,7 +1361,8 @@ Site-specific steps within the overall cut-over:
 - Preview is a route that swaps the content bundle in the store and leaves the live data alone.
 - Cookie control state is whatever the last `GET /me/cookies` or `POST /cookies` response said; the tally is never bumped locally.
 - Both alert landing pages POST on load after a token regex check.
-- oidc-client-ts stores the user in `localStorage`; silent renew uses the refresh grant; `loadUserInfo` and `monitorSession` are off.
+- Accounts are the site's own pages over the Cognito API with `amazon-cognito-identity-js` (SRP); tokens live in `localStorage`, renewal uses the refresh token, sign-out revokes it and stays on the page; the hosted UI is never shown and there is no callback route.
+- The route poster viewer is OpenSeadragon in its own chunk over the asset's Deep Zoom pyramid (the original image when there is none), with the site's own zoom, fit, and fullscreen buttons.
 - API `message` text is never rendered; every code maps to copy in `copy/copy.ts`.
 - Analytics is GA4 through gtag, gated by `VITE_ANALYTICS_ID` and an exact-origin list in `VITE_ANALYTICS_ORIGINS`, page views only.
 - CSP is a build-time `<meta>` in `index.html` from `VITE_` values; `vercel.json` carries only environment-free headers.
@@ -1363,7 +1370,7 @@ Site-specific steps within the overall cut-over:
 - No links, copy, or images are constants in the repository beyond the loading, error, and sign-in strings in `copy/copy.ts`.
 - Playwright drives fixes over `POST /locations` with a dedicated dev beacon key in CI; the phone's replay mode is used in the manual rehearsal. A fixed dev event, year 2100, is the walk target and keeps its locations.
 - Contact form limits follow the API (name 100, email 254, message 2000).
-- Bundle budgets enforced with `size-limit`: 130 KB index, 45 KB signalr, 50 KB map, 40 KB auth, 15 KB alerts, 25 KB CSS, gzipped.
+- Bundle budgets enforced with `size-limit`: 130 KB index, 45 KB signalr, 50 KB map, 80 KB osd, 60 KB auth, 15 KB alerts, 40 KB CSS, gzipped.
 
 ## 25. Needs a decision
 
