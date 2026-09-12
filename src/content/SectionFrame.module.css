@@ -41,6 +41,10 @@
   height: 100%;
   object-fit: cover;
 }
+.backgroundOverlay {
+  position: absolute;
+  inset: 0;
+}
 
 .iconBefore,
 .iconAfter {

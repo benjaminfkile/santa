@@ -167,6 +167,15 @@ export function checkPaletteContrast(
       );
     }
   }
+  const accent = resolve("--accent");
+  const onAccent = resolve("--on-accent");
+  const onAccentComposited = onAccent.a < 1 ? overOpaque(onAccent, accent) : onAccent;
+  const onAccentRatio = contrastRatio(onAccentComposited, accent);
+  if (onAccentRatio < TEXT_THRESHOLD) {
+    problems.push(
+      `${palette.name}: --on-accent on --accent = ${onAccentRatio.toFixed(2)} (< ${TEXT_THRESHOLD})`,
+    );
+  }
   return problems;
 }
 
@@ -194,5 +203,16 @@ describe("tokens.css contrast", () => {
     const problems = checkPaletteContrast(light, { "--ok": "#a7bcd0" });
     expect(problems.length).toBeGreaterThan(0);
     expect(problems.some((p) => p.includes("--ok"))).toBe(true);
+  });
+
+  it("fails when --on-accent on --accent drops below 4.5:1", () => {
+    // Choose a near-white on-accent while --accent is also near-white:
+    // the ratio collapses well below 4.5.
+    const problems = checkPaletteContrast(light, {
+      "--on-accent": "#eaf3fa",
+      "--accent": "#e5eef7",
+    });
+    expect(problems.length).toBeGreaterThan(0);
+    expect(problems.some((p) => p.includes("--on-accent"))).toBe(true);
   });
 });

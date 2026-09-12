@@ -9,7 +9,7 @@ import { AppRoutes } from "./routes";
 import { useStore } from "../store/useStore";
 import { selectBundle } from "../content/selectPage";
 import { AuthProvider } from "../auth/AuthProvider";
-import { SnowLayer, LightsLayer } from "../content/theme/seasonalLayers";
+import { SnowLayer } from "../content/theme/seasonalLayers";
 import { applyFavicon } from "../content/theme/favicon";
 
 export function App() {
@@ -24,7 +24,6 @@ export function App() {
     <BrowserRouter>
       <AuthProvider>
         <SnowLayer bundle={bundle} />
-        <LightsLayer bundle={bundle} />
         <Shell>
           <AppRoutes />
         </Shell>

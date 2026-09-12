@@ -31,7 +31,8 @@
           }
           document.documentElement.setAttribute("data-theme", t);
         } catch (err) {
-          document.documentElement.setAttribute("data-theme", "dark");
+          // Stamp nothing: no data-theme attribute means system (the CSS
+          // fallback), never forced dark.
         }
       })();
     </script>

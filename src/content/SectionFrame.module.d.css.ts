@@ -3,6 +3,7 @@ export const alignCenter: string;
 export const alignStart: string;
 export const background: string;
 export const backgroundMedia: string;
+export const backgroundOverlay: string;
 export const bgAccent: string;
 export const bgMuted: string;
 export const bgNight: string;

@@ -1,5 +1,7 @@
-// docs/site.md section 8.6. `formatDistanceMetres`: feet under one mile,
-// miles to two decimals with commas otherwise.
+// docs/site.md section 8.6 and S17f. `formatDistanceMetres`: feet under
+// one mile, miles to two decimals with commas otherwise. The user dot
+// rebuilds its icon from the tokens on every colour-scheme change and
+// renders nothing until the tokens resolve.
 
 import { describe, it, expect } from "vitest";
 import { formatDistanceMetres } from "../../../src/map/userLocation";

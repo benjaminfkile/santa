@@ -87,15 +87,6 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   const media: MediaRef = { mediaId, alt: entry.alt ?? "Route poster" };
 
   if (style === "viewer") {
-    const variants = entry.variants ?? {};
-    const parts: string[] = [];
-    for (const [key, value] of Object.entries(variants)) {
-      if (value === undefined) continue;
-      const w = Number(key);
-      if (!Number.isFinite(w)) continue;
-      parts.push(`${value} ${w}w`);
-    }
-    const srcSet = parts.length > 0 ? parts.join(", ") : undefined;
     const alt = entry.alt ?? "Route poster";
     return (
       <div className={`${styles.routePreview} ${styles.routePreviewViewer}`} data-testid="route-preview-viewer">
@@ -114,8 +105,6 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
         ) : null}
         <PosterViewer
           src={entry.url ?? ""}
-          srcSet={srcSet}
-          sizes="100vw"
           alt={alt}
           width={entry.width ?? undefined}
           height={entry.height ?? undefined}

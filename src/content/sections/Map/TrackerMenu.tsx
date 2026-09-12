@@ -5,6 +5,8 @@
 import { useEffect, useRef } from "react";
 import { useStore } from "../../../store/useStore";
 import { mpsToMph, metresToFeet, headingToCardinal } from "../../../lib/units";
+import { formatMountainTime } from "../../../lib/time";
+import { formatDistanceMetres } from "../../../map/userLocation";
 import { copy } from "../../../copy/copy";
 import type { MapTheme } from "../../../map/themes";
 import * as styles from "./TrackerMenu.module.css";
@@ -52,6 +54,8 @@ export function TrackerMenu(props: TrackerMenuProps) {
   const altitudeM = useStore((s) => s.live?.altitudeM ?? null);
   const accuracyM = useStore((s) => s.live?.accuracyM ?? null);
   const wentLiveAt = useStore((s) => s.snapshot?.event?.wentLiveAt ?? null);
+  const recordedAt = useStore((s) => s.live?.recordedAt ?? null);
+  const receivedAt = useStore((s) => s.live?.receivedAt ?? null);
 
   useEffect(() => {
     if (!props.open) return;
@@ -232,18 +236,30 @@ export function TrackerMenu(props: TrackerMenuProps) {
           </div>
           <div>
             <dt>Distance</dt>
-            <dd>
+            <dd data-testid="data-row-distance">
               {props.distanceMetres === null
                 ? copy.live.unavailablePlaceholder
-                : `${Math.round(props.distanceMetres)} m`}
+                : formatDistanceMetres(props.distanceMetres)}
             </dd>
           </div>
-          {wentLiveAt !== null && wentLiveAt !== undefined && wentLiveAt !== "" ? (
-            <div>
-              <dt>Liftoff</dt>
-              <dd>{new Date(wentLiveAt).toLocaleTimeString()}</dd>
-            </div>
-          ) : null}
+          <div>
+            <dt>Liftoff</dt>
+            <dd data-testid="data-row-liftoff">
+              {formatMountainTime(wentLiveAt) || copy.live.unavailablePlaceholder}
+            </dd>
+          </div>
+          <div>
+            <dt>Recorded</dt>
+            <dd data-testid="data-row-recorded">
+              {formatMountainTime(recordedAt) || copy.live.unavailablePlaceholder}
+            </dd>
+          </div>
+          <div>
+            <dt>Received</dt>
+            <dd data-testid="data-row-received">
+              {formatMountainTime(receivedAt) || copy.live.unavailablePlaceholder}
+            </dd>
+          </div>
         </dl>
       ) : null}
     </div>

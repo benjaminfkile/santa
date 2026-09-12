@@ -1,7 +1,9 @@
 // docs/site.md section 7.7. Colour scheme handling. The inline head script
 // in index.html stamps data-theme before first paint; this module owns the
-// media-query listener, the store/clear functions, and the hook that lets
-// the ThemeToggle read the resolved value.
+// media-query listener, the store/clear functions, the hook that lets
+// the ThemeToggle read the resolved value, and one MutationObserver on
+// <html> that non-CSS consumers (the map's overlay palette, canvas snow)
+// subscribe to.
 
 import { useSyncExternalStore, useCallback } from "react";
 import { storageGet, storageSet, storageRemove } from "../../lib/storage";
@@ -14,6 +16,9 @@ export const THEME_KEY = "wmsfo.theme";
 const listeners = new Set<() => void>();
 let mediaQuery: MediaQueryList | null = null;
 let mediaListener: ((e: MediaQueryListEvent) => void) | null = null;
+
+const schemeListeners = new Set<() => void>();
+let schemeObserver: MutationObserver | null = null;
 
 function readStoredChoice(): ThemeChoice {
   const v = storageGet(THEME_KEY);
@@ -68,6 +73,14 @@ export function getResolved(): ResolvedTheme {
 export function startSystemListener(): void {
   if (typeof window === "undefined") return;
   if (mediaQuery !== null) return;
+  // If the head script's catch branch stamped nothing, apply the system
+  // resolution now so the tokens resolve.
+  if (
+    typeof document !== "undefined" &&
+    !document.documentElement.hasAttribute("data-theme")
+  ) {
+    apply(resolveTheme(readStoredChoice()));
+  }
   mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
   mediaListener = (e) => {
     if (readStoredChoice() !== "system") return;
@@ -83,6 +96,31 @@ export function stopSystemListener(): void {
   }
   mediaQuery = null;
   mediaListener = null;
+}
+
+function ensureSchemeObserver(): void {
+  if (typeof document === "undefined") return;
+  if (typeof MutationObserver === "undefined") return;
+  if (schemeObserver !== null) return;
+  schemeObserver = new MutationObserver(() => {
+    for (const l of schemeListeners) l();
+  });
+  schemeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
+}
+
+export function subscribeScheme(listener: () => void): () => void {
+  ensureSchemeObserver();
+  schemeListeners.add(listener);
+  return () => {
+    schemeListeners.delete(listener);
+    if (schemeListeners.size === 0 && schemeObserver !== null) {
+      schemeObserver.disconnect();
+      schemeObserver = null;
+    }
+  };
 }
 
 function subscribe(l: () => void): () => void {

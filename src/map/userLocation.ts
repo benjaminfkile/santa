@@ -1,14 +1,24 @@
 // docs/site.md section 8.6. User location: `watchPosition`, a pulsing
 // marker, a dotted line to Santa, and distance in feet under a mile,
 // miles above. State is per page load; nothing about location is
-// persisted.
+// persisted. The dot rebuilds its icon from the tokens on every
+// colour-scheme change and renders nothing until the tokens resolve.
 
 import { metresToFeet, metresToMiles } from "../lib/units";
 import { readCssVar } from "./cssVars";
+import { subscribeScheme } from "../content/theme/colorScheme";
 import type { MapTheme } from "./themes";
 
-function userColor(): string {
-  return readCssVar("--link", "#0b6bb5");
+type UserPalette = {
+  fill: string;
+  stroke: string;
+};
+
+function readUserPalette(): UserPalette | null {
+  const fill = readCssVar("--link");
+  const stroke = readCssVar("--text-bright");
+  if (fill === null || stroke === null) return null;
+  return { fill, stroke };
 }
 
 function prefersReducedMotion(): boolean {
@@ -82,19 +92,34 @@ export function createUserLocation(
     }
   }
 
+  function markerIcon(): google.maps.Symbol | null {
+    const palette = readUserPalette();
+    if (palette === null) return null;
+    return {
+      path: google.maps.SymbolPath.CIRCLE,
+      scale: 8,
+      fillColor: palette.fill,
+      fillOpacity: 1,
+      strokeColor: palette.stroke,
+      strokeWeight: 2,
+    };
+  }
+
   function ensureMarker() {
-    if (userMarker !== null) return;
-    userMarker = new libs.marker.Marker({
-      map,
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 8,
-        fillColor: userColor(),
-        fillOpacity: 1,
-        strokeColor: "#ffffff",
-        strokeWeight: 2,
-      },
-    });
+    if (state.position === null) return;
+    const icon = markerIcon();
+    if (icon === null) return;
+    if (userMarker === null) {
+      userMarker = new libs.marker.Marker({
+        map,
+        icon,
+        position: state.position,
+      });
+    } else {
+      userMarker.setIcon(icon);
+      userMarker.setPosition(state.position);
+      if (userMarker.getMap() === null) userMarker.setMap(map);
+    }
     if (!prefersReducedMotion() && pulseTimer === null && typeof window !== "undefined") {
       pulseTimer = window.setInterval(() => {
         if (userMarker === null) return;
@@ -102,6 +127,17 @@ export function createUserLocation(
         userMarker.setVisible(visible);
       }, 600);
     }
+  }
+
+  function refreshMarkerIcon() {
+    if (userMarker === null) return;
+    const icon = markerIcon();
+    if (icon === null) {
+      userMarker.setMap(null);
+      return;
+    }
+    userMarker.setIcon(icon);
+    if (userMarker.getMap() === null) userMarker.setMap(map);
   }
 
   function redrawLine() {
@@ -149,6 +185,8 @@ export function createUserLocation(
     });
   }
 
+  const unsubscribeScheme = subscribeScheme(refreshMarkerIcon);
+
   function publish() {
     state = { ...state, distanceMetres: computeDistance() };
     onChange(state);
@@ -181,7 +219,6 @@ export function createUserLocation(
       distanceMetres: null,
     };
     ensureMarker();
-    if (userMarker !== null && state.position !== null) userMarker.setPosition(state.position);
     redrawLine();
     publish();
   }
@@ -241,16 +278,7 @@ export function createUserLocation(
 
   function setTheme(t: MapTheme) {
     theme = t;
-    if (userMarker !== null) {
-      userMarker.setIcon({
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 8,
-        fillColor: userColor(),
-        fillOpacity: 1,
-        strokeColor: "#ffffff",
-        strokeWeight: 2,
-      });
-    }
+    refreshMarkerIcon();
     redrawLine();
   }
 
@@ -261,6 +289,7 @@ export function createUserLocation(
   }
 
   function destroy() {
+    unsubscribeScheme();
     clearWatch();
     removeMarker();
   }

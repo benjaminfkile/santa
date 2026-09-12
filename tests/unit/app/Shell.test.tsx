@@ -180,6 +180,47 @@ describe("Shell structure", () => {
     expect(container.querySelector('[data-testid="theme-controls"]')).toBeNull();
   });
 
+  it("shows the Snow and Lights switches in the menu drawer with aria-pressed", () => {
+    seed(makeContent());
+    const { getByTestId } = render(
+      <MemoryRouter>
+        <AuthProvider>
+          <Shell>
+            <div />
+          </Shell>
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+    const snow = getByTestId("menu-snow-toggle");
+    expect(snow.tagName).toBe("BUTTON");
+    expect(snow.getAttribute("aria-pressed")).toBe("false");
+    expect(snow.textContent).toBe("Snow");
+    const lights = getByTestId("menu-lights-toggle");
+    expect(lights.tagName).toBe("BUTTON");
+    expect(lights.getAttribute("aria-pressed")).toBe("false");
+    expect(lights.textContent).toBe("Lights");
+  });
+
+  it("renders the LightsLayer inside the <header> element", () => {
+    // Turn lights on by default so the string of bulbs mounts.
+    const content = makeContent();
+    content.settings.theme = { snowDefault: false, lightsDefault: true };
+    seed(content);
+    const { getByTestId, queryByTestId } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <AuthProvider>
+          <Shell>
+            <div />
+          </Shell>
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+    const header = getByTestId("site-header");
+    const lights = queryByTestId("site-lights");
+    expect(lights).not.toBeNull();
+    expect(header.contains(lights)).toBe(true);
+  });
+
   it("collapses the header and omits the footer on the live map page", () => {
     seed(makeContent(), true);
     const { getByTestId, queryByTestId, queryByText } = render(
