@@ -6,6 +6,8 @@ import type { components } from "../contracts";
 export type Me = components["schemas"]["MeResponse"];
 export type Subscription = components["schemas"]["SubscriptionDto"];
 export type Subscriptions = components["schemas"]["ItemsResponseOfSubscriptionDto"];
+export type AlertItem = components["schemas"]["AlertItemDto"];
+export type Alerts = components["schemas"]["ItemsResponseOfAlertItemDto"];
 
 export function getMe(): Promise<Me> {
   return api<Me>("/me", { method: "GET", auth: true });
@@ -13,6 +15,10 @@ export function getMe(): Promise<Me> {
 
 export function listMySubscriptions(): Promise<Subscriptions> {
   return api<Subscriptions>("/me/subscriptions", { method: "GET", auth: true });
+}
+
+export function listAlerts(): Promise<Alerts> {
+  return api<Alerts>("/me/alerts", { method: "GET", auth: true });
 }
 
 export function createSubscription(address: string): Promise<Subscription> {

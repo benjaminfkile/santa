@@ -1,6 +1,7 @@
 export const __esModule: true;
 export const alertsSignup: string;
 export const alertsSignupAccount: string;
+export const alertsSignupAddAnother: string;
 export const alertsSignupField: string;
 export const alertsSignupFieldErr: string;
 export const alertsSignupForm: string;
@@ -13,6 +14,19 @@ export const alertsSignupRowAddress: string;
 export const alertsSignupRowMeta: string;
 export const alertsSignupRowWho: string;
 export const alertsSignupRows: string;
+export const alertsSignupSent: string;
+export const alertsSignupSentAddress: string;
+export const alertsSignupSentEmpty: string;
+export const alertsSignupSentEvent: string;
+export const alertsSignupSentHead: string;
+export const alertsSignupSentHeading: string;
+export const alertsSignupSentKind: string;
+export const alertsSignupSentKindStatus: string;
+export const alertsSignupSentKindUpdate: string;
+export const alertsSignupSentRow: string;
+export const alertsSignupSentRows: string;
+export const alertsSignupSentSubject: string;
+export const alertsSignupSentWhen: string;
 export const alertsSignupSignedOut: string;
 export const alertsSignupSubmit: string;
 

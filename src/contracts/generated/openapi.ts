@@ -545,6 +545,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ItemsResponseOfAlertItemDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/cookies": {
         parameters: {
             query?: never;
@@ -811,6 +846,84 @@ export interface paths {
             responses: {
                 /** @description OK */
                 200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EventDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/{id}/notify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["NotifyStatusRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EventDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/{id}/clone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CloneEventRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1669,6 +1782,80 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/sponsors/{id}/years/{eventYear}/copy-from/{sourceYear}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SponsorDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/sponsors/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SponsorImportRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SponsorImportResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3605,6 +3792,24 @@ export interface components {
             lastWriteNode?: null | string;
             node?: components["schemas"]["AdminLiveNode"];
         };
+        AlertItemDto: {
+            /** Format: int64 */
+            id?: number | string;
+            /** Format: int64 */
+            subscriptionId?: number | string;
+            address?: string;
+            kind?: string;
+            /** Format: int64 */
+            eventId?: number | string;
+            eventName?: string;
+            /** Format: int32 */
+            statusId?: null | number | string;
+            /** Format: int64 */
+            messageId?: null | number | string;
+            subject?: string;
+            /** Format: date-time */
+            sentAt?: string;
+        };
         ApiKeyDto: {
             /** Format: int64 */
             id?: number | string;
@@ -3712,6 +3917,18 @@ export interface components {
             /** Format: int32 */
             statusId?: number | string;
             notify?: boolean;
+            message?: null | string;
+        };
+        CloneEventCopy: {
+            sponsors?: boolean;
+            route?: boolean;
+            poster?: boolean;
+        };
+        CloneEventRequest: {
+            /** Format: int32 */
+            year?: number | string;
+            name?: string;
+            copy?: null | components["schemas"]["CloneEventCopy"];
         };
         ContactMessageDto: {
             /** Format: int64 */
@@ -3926,6 +4143,8 @@ export interface components {
             wentLiveAt?: null | string;
             /** Format: date-time */
             endedAt?: null | string;
+            /** Format: date-time */
+            statusNotifiedAt?: null | string;
             /** Format: int32 */
             fundsPercent?: number | string;
             /** Format: int64 */
@@ -3990,6 +4209,9 @@ export interface components {
         };
         ItemOrderRequest: {
             ids?: (number | string)[];
+        };
+        ItemsResponseOfAlertItemDto: {
+            items?: components["schemas"]["AlertItemDto"][];
         };
         ItemsResponseOfApiKeyDto: {
             items?: components["schemas"]["ApiKeyDto"][];
@@ -4269,6 +4491,9 @@ export interface components {
             messageForbidden?: number | string;
             /** Format: int64 */
             messageValidationFailed?: number | string;
+        };
+        NotifyStatusRequest: {
+            message?: null | string;
         };
         PageAdminDto: {
             /** Format: int64 */
@@ -4569,6 +4794,19 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        SponsorImportRequest: {
+            /** Format: int32 */
+            fromYear?: number | string;
+            /** Format: int32 */
+            toYear?: number | string;
+            sponsorIds?: (number | string)[];
+        };
+        SponsorImportResponse: {
+            /** Format: int32 */
+            created?: number | string;
+            /** Format: int32 */
+            skipped?: number | string;
+        };
         SponsorOrderRequest: {
             pinnedSponsorIds?: (number | string)[];
         };
@@ -4615,6 +4853,10 @@ export interface components {
             changedBy?: string;
             /** Format: date-time */
             changedAt?: string;
+            notify?: boolean;
+            message?: null | string;
+            /** Format: int32 */
+            sentCount?: number | string;
         };
         SubscriberAdminDto: {
             /** Format: int64 */
