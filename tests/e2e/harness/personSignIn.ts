@@ -21,21 +21,38 @@ type PageLike = {
   getByTestId: (id: string) => LocatorLike;
 };
 
-// The panel entry carries the same testid as the actions button, so pick the
-// visible one; when neither is visible (the map page, narrow viewports) open
-// the panel through the Menu button first.
-async function visibleControl(page: PageLike, testId: string): Promise<LocatorLike> {
-  const direct = page.getByTestId(testId).locator("visible=true").first();
-  if (await direct.isVisible()) return direct;
-  await page.locator('button[aria-label="Menu"]').first().click();
-  const inPanel = page.getByTestId(testId).locator("visible=true").first();
-  await inPanel.waitFor({ state: "visible", timeout: 10_000 });
-  return inPanel;
+// Where sign-in is offered depends on the page: the header action on wide
+// viewports (menu-sign-in), the panel entry behind the Menu button on narrow
+// ones, and the cookie control's own button on the live page, which renders
+// no shell at all. Pick the first visible one.
+async function firstVisible(page: PageLike, selectors: string[]): Promise<LocatorLike | null> {
+  for (const selector of selectors) {
+    const candidate = page.locator(selector).locator("visible=true").first();
+    if (await candidate.isVisible()) return candidate;
+  }
+  return null;
 }
 
+async function waitForVisible(page: PageLike, selectors: string[], timeoutMs: number): Promise<LocatorLike> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const found = await firstVisible(page, selectors);
+    if (found) return found;
+    if (Date.now() > deadline) throw new Error(`none of ${selectors.join(", ")} became visible within ${timeoutMs} ms`);
+    await new Promise((r) => setTimeout(r, 250));
+  }
+}
+
+const SIGN_IN = ['[data-testid="menu-sign-in"]', '[data-testid="cookie-control-sign-in"]'];
+const SIGNED_IN = ['[data-testid="menu-sign-out"]', '[data-testid="cookie-control-open"]'];
+
 export async function personSignIn(page: PageLike): Promise<void> {
-  const menuSignIn = await visibleControl(page, "menu-sign-in");
-  await menuSignIn.click();
+  let signIn = await firstVisible(page, SIGN_IN);
+  if (!signIn) {
+    await page.locator('button[aria-label="Menu"]').first().click();
+    signIn = await waitForVisible(page, SIGN_IN, 10_000);
+  }
+  await signIn.click();
 
   // The site's own /auth/sign-in page: email, password, submit.
   const email = page.locator('input[name="email"]').first();
@@ -44,9 +61,8 @@ export async function personSignIn(page: PageLike): Promise<void> {
   await page.locator('input[name="password"]').first().fill(e2eEnv.PERSON_PASSWORD);
   await page.locator('[data-testid="auth-submit"]').first().click();
 
-  // Back on the page that opened sign-in: wait for the signed-in control,
-  // opening the panel when the shell shows no actions area there.
-  await page.locator("main").first().waitFor({ state: "visible", timeout: 30_000 });
-  const signedOut = await visibleControl(page, "menu-sign-out");
-  await signedOut.waitFor({ state: "visible", timeout: 30_000 });
+  // Back on the page that opened sign-in: the signed-in control is the
+  // header's Sign out, the panel entry, or the cookie control's open button.
+  const signedIn = await waitForVisible(page, SIGNED_IN, 30_000);
+  if (!signedIn) throw new Error("signed-in control not found");
 }
