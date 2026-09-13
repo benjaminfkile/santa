@@ -1,6 +1,12 @@
-// docs/site.md sections 6d and 7.4. SponsorGrid: every sponsor in snapshot
-// order. The first three render as large cards, the rest in a four-column
-// grid that collapses to one at phone width. No tiers, no amounts.
+// docs/site.md section 7.4. SponsorGrid: every sponsor in snapshot order
+// as equal cards in one responsive grid (repeat(auto-fill, minmax(280px,
+// 1fr)), 16 px gap, rows stretch to the tallest card). A card is the
+// name heading, the logo in a fixed 3:2 box (object-fit: contain, the
+// name as large text when there is no logo), then a bottom row with the
+// years line at the left and the icon links (globe, Facebook, Instagram)
+// at the right. The whole card is a link to the first non-null of
+// websiteUrl, fbUrl, igUrl (new tab); the icon links are separate <a>s
+// above the whole-card link in the tab order. Frost card recipe.
 
 import type { SectionComponent } from "../../registry";
 import type { MediaRef, Sponsor } from "../../../contracts";
@@ -9,6 +15,9 @@ import { Inline } from "../../inline/Inline";
 import { Media } from "../../primitives/Media";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
+import { GlobeIcon } from "../../icons/generated/globe";
+import { FacebookIcon } from "../../icons/generated/facebook";
+import { InstagramIcon } from "../../icons/generated/instagram";
 import * as styles from "./SponsorGrid.module.css";
 
 type SponsorGridData = {
@@ -22,65 +31,86 @@ function yearsCopy(years: number | undefined): string | null {
   return years === 1 ? "Sponsor for 1 year" : `Sponsor for ${years} years`;
 }
 
+function cardHref(s: Sponsor): string | null {
+  return s.websiteUrl ?? s.fbUrl ?? s.igUrl ?? null;
+}
+
 function SponsorCard({
   sponsor,
   bundle,
   showYears,
-  big,
 }: {
   sponsor: Sponsor;
   bundle: ContentBundle;
   showYears: boolean;
-  big: boolean;
 }) {
   const media: MediaRef | null = sponsor.logoMediaId
     ? { mediaId: sponsor.logoMediaId, alt: sponsor.name ?? null }
     : null;
   const years = showYears ? yearsCopy(sponsor.yearsAsSponsor) : null;
+  const href = cardHref(sponsor);
+  const iconLinks: {
+    key: string;
+    href: string;
+    label: string;
+    Icon: typeof GlobeIcon;
+  }[] = [];
+  if (sponsor.websiteUrl) {
+    iconLinks.push({ key: "web", href: sponsor.websiteUrl, label: "Website", Icon: GlobeIcon });
+  }
+  if (sponsor.fbUrl) {
+    iconLinks.push({ key: "fb", href: sponsor.fbUrl, label: "Facebook", Icon: FacebookIcon });
+  }
+  if (sponsor.igUrl) {
+    iconLinks.push({ key: "ig", href: sponsor.igUrl, label: "Instagram", Icon: InstagramIcon });
+  }
+
   return (
-    <li className={`${styles.sponsorGridCard}${big ? " " + styles.sponsorGridCardBig : ""}`}>
-      {media ? (
-        <Media
-          media={media}
-          bundle={bundle}
-          sizeOverride={big ? "64px" : "48px"}
-          className={styles.sponsorGridLogo}
-          testId="sponsor-logo"
-        />
-      ) : (
-        <span className={styles.sponsorGridLogo} aria-hidden />
-      )}
-      <div className={styles.sponsorGridMeta}>
-        {media ? (
-          <span className={styles.sponsorGridName}>{sponsor.name}</span>
-        ) : (
-          <span className={styles.sponsorGridNameFallback}>{sponsor.name}</span>
-        )}
-        {years ? <span className={styles.sponsorGridYears}>{years}</span> : null}
-        {sponsor.websiteUrl || sponsor.fbUrl || sponsor.igUrl ? (
-          <ul className={styles.sponsorGridLinks}>
-            {sponsor.websiteUrl ? (
-              <li>
-                <a href={sponsor.websiteUrl} target="_blank" rel="noopener noreferrer">
-                  Website
-                </a>
-              </li>
-            ) : null}
-            {sponsor.fbUrl ? (
-              <li>
-                <a href={sponsor.fbUrl} target="_blank" rel="noopener noreferrer">
-                  Facebook
-                </a>
-              </li>
-            ) : null}
-            {sponsor.igUrl ? (
-              <li>
-                <a href={sponsor.igUrl} target="_blank" rel="noopener noreferrer">
-                  Instagram
-                </a>
-              </li>
-            ) : null}
-          </ul>
+    <li className={styles.sponsorGridItem} data-testid="sponsor-card">
+      <div className={styles.sponsorGridCard}>
+        <h3 className={styles.sponsorGridName}>{sponsor.name}</h3>
+        <div className={styles.sponsorGridLogoBox}>
+          {media ? (
+            <Media
+              media={media}
+              bundle={bundle}
+              sizeOverride="480px"
+              className={styles.sponsorGridLogo}
+              testId="sponsor-logo"
+            />
+          ) : (
+            <span className={styles.sponsorGridNameLarge}>{sponsor.name}</span>
+          )}
+        </div>
+        <div className={styles.sponsorGridBottom}>
+          <span className={styles.sponsorGridYears}>{years ?? ""}</span>
+          {iconLinks.length > 0 ? (
+            <ul className={styles.sponsorGridLinks}>
+              {iconLinks.map(({ key, href: linkHref, label, Icon }) => (
+                <li key={key}>
+                  <a
+                    href={linkHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className={styles.sponsorGridIconLink}
+                  >
+                    <Icon />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+        {href ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={sponsor.name ?? "Sponsor"}
+            className={styles.sponsorGridCardLink}
+            data-testid="sponsor-card-link"
+          />
         ) : null}
       </div>
     </li>
@@ -113,8 +143,6 @@ export const SponsorGrid: SectionComponent = ({ data, bundle }) => {
     return null;
   }
 
-  const top = list.slice(0, 3);
-  const rest = list.slice(3);
   return (
     <div className={styles.sponsorGrid}>
       {d.heading ? (
@@ -122,30 +150,16 @@ export const SponsorGrid: SectionComponent = ({ data, bundle }) => {
           <Inline text={d.heading} bundle={bundle} event={event} />
         </h2>
       ) : null}
-      <ul className={styles.sponsorGridTop} data-testid="sponsor-grid-top">
-        {top.map((sponsor) => (
+      <ul className={styles.sponsorGridList} data-testid="sponsor-grid">
+        {list.map((sponsor) => (
           <SponsorCard
             key={sponsor.id ?? sponsor.name}
             sponsor={sponsor}
             bundle={bundle}
             showYears={showYears}
-            big
           />
         ))}
       </ul>
-      {rest.length > 0 ? (
-        <ul className={styles.sponsorGridRest} data-testid="sponsor-grid-rest">
-          {rest.map((sponsor) => (
-            <SponsorCard
-              key={sponsor.id ?? sponsor.name}
-              sponsor={sponsor}
-              bundle={bundle}
-              showYears={showYears}
-              big={false}
-            />
-          ))}
-        </ul>
-      ) : null}
     </div>
   );
 };
