@@ -49,6 +49,8 @@ export const copy = {
       zoomIn: "Zoom in",
       zoomOut: "Zoom out",
       fit: "Fit",
+      fullscreen: "Fullscreen",
+      exitFullscreen: "Exit fullscreen",
     },
   },
   sponsors: {

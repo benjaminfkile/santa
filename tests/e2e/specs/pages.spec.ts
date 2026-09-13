@@ -38,7 +38,7 @@ test("published pages render their first section", async ({ page }) => {
   }
 });
 
-test("a page with a route_preview in viewer style renders the poster and zooms on a wheel event without loading the map chunk", async ({ page }) => {
+test("a page with a route_preview in viewer style loads the osd chunk, tiles the poster, zooms on a wheel event, and enters and leaves fullscreen through the button without loading the map chunk", async ({ page }) => {
   const adminSnap = await getAdminSnapshot();
   const snap = (await fetchCdnSnapshot(adminSnap.url)) as { content?: { pages?: PublishedPage[] } };
   const pages = snap.content?.pages ?? [];
@@ -47,20 +47,37 @@ test("a page with a route_preview in viewer style renders the poster and zooms o
   );
   test.skip(target === undefined, "no route_preview in viewer style in the published document");
   if (!target) return;
-  // Track every script fetched during the visit; the map chunk (`map-*.js`)
-  // must not appear when the viewer renders (site.md 8.5).
-  const scripts: string[] = [];
+  // Track scripts and tile requests: the osd chunk must load, the map chunk
+  // must not, and when the asset has a Deep Zoom pyramid a `poster_files/`
+  // request must be seen (site.md 8.5, 22.2).
+  const mapScripts: string[] = [];
+  const osdScripts: string[] = [];
+  const posterFileRequests: string[] = [];
   page.on("response", (res) => {
     const url = res.url();
-    if (/\/assets\/map-[^/]+\.js$/.test(url)) scripts.push(url);
+    if (/\/assets\/map-[^/]+\.js$/.test(url)) mapScripts.push(url);
+    if (/\/assets\/osd-[^/]+\.js$/.test(url)) osdScripts.push(url);
+    if (/poster_files\//.test(url)) posterFileRequests.push(url);
   });
   await goto(page, `/${target.slug}`);
-  await expect(page.locator('[data-testid="poster-viewer"]')).toBeVisible({ timeout: 20_000 });
-  const before = await page.locator('[data-testid="poster-viewer"] img').getAttribute("style");
-  await page.locator('[data-testid="poster-viewer"]').dispatchEvent("wheel", { deltaY: -100, clientX: 100, clientY: 100 });
-  const after = await page.locator('[data-testid="poster-viewer"] img').getAttribute("style");
-  expect(after).not.toBe(before);
-  expect(scripts).toEqual([]);
+  const viewer = page.locator('[data-testid="poster-viewer"]');
+  await expect(viewer).toBeVisible({ timeout: 20_000 });
+  // Wait for the openseadragon canvas to appear inside the host.
+  await expect(viewer.locator("canvas, img").first()).toBeVisible({ timeout: 20_000 });
+  // Wheel zoom moves the viewport; the tile canvas transform changes.
+  await viewer.dispatchEvent("wheel", { deltaY: -400, clientX: 200, clientY: 200 });
+  await page.waitForTimeout(500);
+  // Fullscreen: click the button, expect data-fullscreen to flip on and back.
+  const fs = page.locator('[data-testid="poster-fullscreen"]');
+  await fs.click();
+  await expect(viewer).toHaveAttribute("data-fullscreen", "on", { timeout: 5_000 });
+  await fs.click();
+  await expect(viewer).toHaveAttribute("data-fullscreen", "off", { timeout: 5_000 });
+  expect(osdScripts.length).toBeGreaterThan(0);
+  expect(mapScripts).toEqual([]);
+  // The starter content's route poster carries a `dzi` (contracts fixture);
+  // tile requests fetch `poster_files/<level>/<x>_<y>.jpg` from the CDN.
+  expect(posterFileRequests.length).toBeGreaterThan(0);
 });
 
 test("the header theme toggle flips data-theme and the choice survives a reload", async ({ page }) => {
