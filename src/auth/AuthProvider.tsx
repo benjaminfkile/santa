@@ -1,6 +1,8 @@
-// docs/site.md section 11.3. AuthProvider subscribes to userManager
-// events and exposes `useAuth()` with the current auth state plus the
-// sign-in / sign-out actions.
+// docs/site.md section 11.3. AuthProvider reads session.current() at mount,
+// subscribes to session changes (sign-in, refresh, sign-out, refresh
+// failure), and exposes useAuth() with the state plus signIn(returnTo)
+// (navigates to /auth/sign-in?returnTo=...) and signOut() (best-effort
+// revoke, session.clear(), stay on the current page).
 
 import {
   createContext,
@@ -10,9 +12,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { User, UserManager } from "oidc-client-ts";
-import { getUserManager, hasStoredSession, onUserManagerReady } from "./userManager";
-import { signIn as signInAction, signOut as signOutAction } from "./signOut";
+import { useNavigate } from "react-router-dom";
+import { session } from "./session";
 
 export type AuthState =
   | { status: "unknown" }
@@ -27,14 +28,13 @@ export type AuthValue = {
 
 const AuthContext = createContext<AuthValue | null>(null);
 
-function fromUser(user: User | null | undefined): AuthState {
-  if (user === null || user === undefined) return { status: "signedOut" };
-  const email =
-    (user.profile as { email?: unknown } | undefined)?.email;
+function readState(): AuthState {
+  const s = session.current();
+  if (s === null) return { status: "signedOut" };
   return {
     status: "signedIn",
-    email: typeof email === "string" ? email : "",
-    expired: user.expired ?? false,
+    email: s.email,
+    expired: s.idExpiresAt - Date.now() <= 0,
   };
 }
 
@@ -45,60 +45,35 @@ export type AuthProviderProps = {
 
 export function AuthProvider({ children, initialState }: AuthProviderProps) {
   const [state, setState] = useState<AuthState>(
-    initialState ?? (hasStoredSession() ? { status: "unknown" } : { status: "signedOut" }),
+    initialState ?? (session.hasStored() ? { status: "unknown" } : { status: "signedOut" }),
+  );
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // When a caller passes initialState (unit tests, storybook), respect it
+    // and only reconcile with the session on subsequent changes. Without
+    // an initialState the mount hydrates from storage.
+    if (initialState === undefined) setState(readState());
+    const off = session.subscribe(() => setState(readState()));
+    return off;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const signIn = useCallback(
+    async (returnTo: string) => {
+      const target = `/auth/sign-in${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`;
+      navigate(target);
+    },
+    [navigate],
   );
 
-  // Attach to the user manager as soon as it exists, whoever loads it:
-  // this provider (when a session is stored at boot) or AuthCallback
-  // (when a sign-in is completing). The subscriptions are what move the
-  // state to signedIn without a reload.
-  useEffect(() => {
-    let alive = true;
-    const unsubs: Array<() => void> = [];
-    const attach = (um: UserManager) => {
-      if (!alive) return;
-      void um.getUser().then((user) => {
-        if (alive) setState(fromUser(user));
-      });
-      const onLoaded = (user: User) => setState(fromUser(user));
-      const onUnloaded = () => setState({ status: "signedOut" });
-      const onSignedOut = () => setState({ status: "signedOut" });
-      const onSilentError = () => {
-        void um.getUser().then((u) => {
-          if (!alive) return;
-          if (u === null || u === undefined) {
-            setState({ status: "signedOut" });
-            return;
-          }
-          const base = fromUser(u);
-          setState(base.status === "signedIn" ? { ...base, expired: true } : base);
-        });
-      };
-      um.events.addUserLoaded(onLoaded);
-      um.events.addUserUnloaded(onUnloaded);
-      um.events.addUserSignedOut(onSignedOut);
-      um.events.addSilentRenewError(onSilentError);
-      unsubs.push(
-        () => um.events.removeUserLoaded(onLoaded),
-        () => um.events.removeUserUnloaded(onUnloaded),
-        () => um.events.removeUserSignedOut(onSignedOut),
-        () => um.events.removeSilentRenewError(onSilentError),
-      );
-    };
-    const stop = onUserManagerReady(attach);
-    if (hasStoredSession()) void getUserManager();
-    return () => {
-      alive = false;
-      stop();
-      for (const fn of unsubs) fn();
-    };
-  }, []);
-
-  const signIn = useCallback(async (returnTo: string) => {
-    await signInAction(returnTo);
-  }, []);
   const signOut = useCallback(async () => {
-    await signOutAction();
+    const s = session.current();
+    if (s !== null) {
+      const mod = await import("./cognito");
+      void mod.cognito.revoke(s.refreshToken);
+    }
+    session.clear();
   }, []);
 
   return (

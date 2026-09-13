@@ -63,6 +63,7 @@ export interface Snapshot {
           variants?: {
             [k: string]: string | undefined;
           };
+          dzi?: string | null;
         }
       | undefined;
   };

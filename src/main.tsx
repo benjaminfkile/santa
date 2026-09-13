@@ -17,6 +17,7 @@ import App from "./App";
 import { copy } from "./copy/copy";
 import { store } from "./store/useStore";
 import { startSystemListener } from "./content/theme/colorScheme";
+import { session } from "./auth/session";
 
 function renderMisconfigured(root: HTMLElement, variable: string): void {
   root.replaceChildren();
@@ -46,6 +47,12 @@ async function boot(): Promise<void> {
   }
 
   startSystemListener();
+
+  // docs/site.md 11.2: the auth chunk also loads at boot when localStorage
+  // holds a session, so the signed-in state hydrates without a click.
+  if (session.hasStored()) {
+    void import("./auth/cognito");
+  }
 
   createRoot(rootEl).render(
     <StrictMode>

@@ -46,8 +46,7 @@ export const env = {
   HUB_URL: readUrl("VITE_HUB_URL", "wss:"),
   HUB_CHANNEL_PREFIX: read("VITE_HUB_CHANNEL_PREFIX", /^[a-z0-9-]+$/),
   API_BASE_URL: readUrl("VITE_API_BASE_URL", "https:"),
-  COGNITO_AUTHORITY: readUrl("VITE_COGNITO_AUTHORITY", "https:"),
-  COGNITO_DOMAIN: readUrl("VITE_COGNITO_DOMAIN", "https:"),
+  COGNITO_USER_POOL_ID: read("VITE_COGNITO_USER_POOL_ID", /^[a-z]{2}-[a-z]+-\d_[A-Za-z0-9]+$/),
   COGNITO_CLIENT_ID: read("VITE_COGNITO_CLIENT_ID", /^[a-z0-9]+$/),
   GOOGLE_MAPS_KEY: read("VITE_GOOGLE_MAPS_KEY", /^\S+$/),
   ANALYTICS_ID: readOptional("VITE_ANALYTICS_ID"),
@@ -59,4 +58,5 @@ export const env = {
 
 export const LIVE_URL = `${env.CDN_BASE_URL}/live/location.json`;
 export const LOCATION_CHANNEL = `${env.HUB_CHANNEL_PREFIX}:location`;
+export const COGNITO_IDP_URL = `https://cognito-idp.${env.COGNITO_USER_POOL_ID.split("_")[0]}.amazonaws.com`;
 export const IS_PRODUCTION = env.ENV === "production";

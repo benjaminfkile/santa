@@ -10,7 +10,7 @@ vi.mock("../../../src/config/env", () => ({
   },
 }));
 
-vi.mock("../../../src/auth/getIdToken", () => {
+vi.mock("../../../src/auth/session", () => {
   const cls = class SignInRequired extends Error {
     constructor() {
       super("sign_in_required");
@@ -20,11 +20,13 @@ vi.mock("../../../src/auth/getIdToken", () => {
   return {
     SignInRequired: cls,
     getIdToken: vi.fn(),
+    refreshNow: vi.fn(),
+    session: { current: () => null, set: () => {}, clear: () => {}, subscribe: () => () => {}, hasStored: () => false },
   };
 });
 
 import { api, ApiRequestError } from "../../../src/api/client";
-import { getIdToken, SignInRequired } from "../../../src/auth/getIdToken";
+import { getIdToken, SignInRequired, refreshNow } from "../../../src/auth/session";
 
 const mockedGetIdToken = getIdToken as unknown as ReturnType<typeof vi.fn>;
 
@@ -127,5 +129,30 @@ describe("api client", () => {
     await expect(api("/me", { method: "GET", auth: true })).rejects.toBeInstanceOf(SignInRequired);
     // fetch was never called since the token throw came first.
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("retries once on a 401 after a refresh (docs 11.4)", async () => {
+    mockedGetIdToken.mockResolvedValueOnce("stale");
+    (refreshNow as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce("fresh");
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ code: "unauthenticated", message: "x", details: null, requestId: "r" }, { status: 401 }),
+    );
+    fetchMock.mockResolvedValueOnce(jsonResponse({ ok: true }));
+
+    const res = await api<{ ok: boolean }>("/me", { method: "GET", auth: true });
+    expect(res.ok).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const second = fetchMock.mock.calls[1][1].headers as Record<string, string>;
+    expect(second.Authorization).toBe("Bearer fresh");
+  });
+
+  it("throws SignInRequired when the refresh on a 401 also fails", async () => {
+    mockedGetIdToken.mockResolvedValueOnce("stale");
+    (refreshNow as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new SignInRequired());
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ code: "unauthenticated", message: "x", details: null, requestId: "r" }, { status: 401 }),
+    );
+    await expect(api("/me", { method: "GET", auth: true })).rejects.toBeInstanceOf(SignInRequired);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

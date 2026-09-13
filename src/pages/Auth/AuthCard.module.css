@@ -1,0 +1,100 @@
+/* docs/site.md section 11.2. The centred form card shared by every auth
+   page: the frost recipe from theme/Frost.module.css, the site name above,
+   the fields, a 44 px submit, and a line of cross-links below. */
+
+.wrap {
+  min-height: calc(100vh - 12rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) var(--space-4);
+}
+.card {
+  composes: frost from "../../content/theme/Frost.module.css";
+  width: min(420px, 100%);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  box-sizing: border-box;
+}
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--text-bright);
+  text-align: center;
+  margin: 0;
+}
+.title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.125rem;
+  margin: 0;
+  color: var(--text);
+}
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.submit {
+  min-height: 44px;
+}
+.notice {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--text);
+}
+.confirmation {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--ok);
+}
+.error {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--err);
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.links a {
+  color: var(--link);
+  text-decoration: none;
+}
+.links a:hover {
+  text-decoration: underline;
+}
+.resend {
+  align-self: flex-start;
+  background: transparent;
+  border: none;
+  color: var(--link);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.resend:disabled { color: var(--text-dim); cursor: not-allowed; }
+
+.takeoverWrap {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+}
