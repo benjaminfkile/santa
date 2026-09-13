@@ -156,15 +156,25 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
         </nav>
       ) : null}
       <div className={styles.actions}>
-        {authState.status !== "signedIn" ? (
+        {authState.status === "signedIn" ? (
           <button
             type="button"
             className={styles.signIn}
+            data-testid="menu-sign-out"
+            onClick={() => void signOut()}
+          >
+            {copy.signIn.signOut}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className={styles.signIn}
+            data-testid="menu-sign-in"
             onClick={onSignInClick}
           >
             {copy.signIn.button}
           </button>
-        ) : null}
+        )}
         <ThemePicker />
         <button
           ref={buttonRef}

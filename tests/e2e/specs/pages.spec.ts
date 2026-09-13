@@ -80,22 +80,25 @@ test("a page with a route_preview in viewer style loads the osd chunk, tiles the
   expect(posterFileRequests.length).toBeGreaterThan(0);
 });
 
-test("the header theme toggle flips data-theme and the choice survives a reload", async ({ page }) => {
+test("the header theme menu sets data-theme dark, survives a reload, and can be switched back to light", async ({ page }) => {
+  // Shell.tsx: theme-toggle opens theme-menu holding the theme-light,
+  // theme-dark, theme-system radio items.
   await goto(page, "/");
   await expect(page.locator('[data-testid="theme-toggle"]')).toBeVisible({ timeout: 15_000 });
-  const before = await page.evaluate(
-    "document.documentElement.getAttribute('data-theme')",
-  );
   await page.locator('[data-testid="theme-toggle"]').click();
-  const flipped = await page.evaluate(
-    "document.documentElement.getAttribute('data-theme')",
-  );
-  expect(flipped).not.toBe(before);
+  await page.locator('[data-testid="theme-dark"]').click();
+  await expect
+    .poll(() => page.evaluate("document.documentElement.getAttribute('data-theme')"))
+    .toBe("dark");
   await page.reload({ waitUntil: "domcontentloaded" });
-  const afterReload = await page.evaluate(
-    "document.documentElement.getAttribute('data-theme')",
-  );
-  expect(afterReload).toBe(flipped);
+  await expect
+    .poll(() => page.evaluate("document.documentElement.getAttribute('data-theme')"))
+    .toBe("dark");
+  await page.locator('[data-testid="theme-toggle"]').click();
+  await page.locator('[data-testid="theme-light"]').click();
+  await expect
+    .poll(() => page.evaluate("document.documentElement.getAttribute('data-theme')"))
+    .toBe("light");
 });
 
 test("/preview renders the ended page with the preview banner while the walk is planned", async ({ page }) => {

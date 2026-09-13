@@ -5,12 +5,16 @@
 
 import { test, expect } from "@playwright/test";
 import {
+  activateBeacon,
   assertDevApi,
+  e2eEnv,
   fetchCdnSnapshot,
   getAdminSnapshot,
   getMe,
   getState,
   goto,
+  heartbeat,
+  listBeacons,
   listEvents,
   patchEvent,
   personSignIn,
@@ -49,6 +53,21 @@ test("status walk", async ({ page }) => {
   if (!walk) throw new Error("Dedicated E2E walk event (year 2100) is missing");
   const previousCurrent = events.find((e) => e.isCurrent && e.id !== walk.id) ?? null;
 
+  // 1. Record the currently active beacon so it can be restored at the end.
+  // The harness beacon is the row whose keyPrefix is a prefix of the E2E key
+  // (contracts: beacon.keyPrefix); status 3 refuses without a healthy active
+  // beacon (contracts 4.5 Events, 409 no_healthy_beacon).
+  const beacons = await listBeacons();
+  const previousActiveBeacon = beacons.find((b) => b.isActive) ?? null;
+  const harnessBeacon = beacons.find(
+    (b) => b.keyPrefix !== "" && e2eEnv.BEACON_KEY.startsWith(b.keyPrefix),
+  );
+  if (!harnessBeacon) {
+    throw new Error(
+      "No dev beacon matches E2E_BEACON_KEY by keyPrefix; create one and set the secret",
+    );
+  }
+
   await setCurrentEvent(walk.id);
 
   try {
@@ -78,6 +97,11 @@ test("status walk", async ({ page }) => {
     expect(later).not.toBe(first);
 
     // 4. status 3, live page with waiting-for-fix chip, live indicator.
+    // The API refuses status 3 without a healthy active beacon (contracts
+    // 4.5 Events, 409 no_healthy_beacon); activate the harness beacon and
+    // send one heartbeat so its lastSeenAt is fresh (contracts 4.2).
+    await activateBeacon(harnessBeacon.id);
+    await heartbeat();
     await setEventStatus(walk.id, 3);
     await page.waitForFunction(
       "!!document.querySelector('[data-testid=\"map\"]')",
@@ -207,6 +231,13 @@ test("status walk", async ({ page }) => {
     if (previousCurrent) {
       try {
         await setCurrentEvent(previousCurrent.id);
+      } catch {
+        // ignore
+      }
+    }
+    if (previousActiveBeacon && previousActiveBeacon.id !== harnessBeacon.id) {
+      try {
+        await activateBeacon(previousActiveBeacon.id);
       } catch {
         // ignore
       }
