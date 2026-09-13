@@ -1,0 +1,70 @@
+/* docs/site.md section 7.7. Ornaments layer: fixed viewport, pointer-less,
+   aria-hidden, below main (z-index 0 with main at 1). Colours only through
+   the five --orn-* tokens. Each ornament sways about its string on a
+   transform: rotate keyframe of 7-11 s, staggered per ornament; below
+   640 px the whole layer shrinks by 0.7 so the ornaments never crowd the
+   header. Reduced motion is handled by the global rule in tokens.css:
+   the sway class stays on the element but its animation duration is
+   zeroed. */
+
+.layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.ornament {
+  position: absolute;
+  top: 0;
+  transform-origin: 50% 0;
+  display: block;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.sway {
+  animation-name: ornaments-sway;
+}
+
+.ornament svg { display: block; }
+
+.string {
+  stroke: var(--line);
+  stroke-width: 1;
+  fill: none;
+}
+
+.cap {
+  fill: var(--text-dim);
+}
+
+.sphere {
+  stroke: none;
+}
+
+.highlight {
+  fill: var(--snow);
+  opacity: 0.7;
+}
+
+.ornRed { fill: var(--orn-red); }
+.ornGreen { fill: var(--orn-green); }
+.ornBlue { fill: var(--orn-blue); }
+.ornGold { fill: var(--orn-gold); }
+.ornFrost { fill: var(--orn-frost); }
+
+@media (max-width: 640px) {
+  .ornament { transform: scale(0.7); }
+  .ornament.sway { animation-name: ornaments-sway-small; }
+}
+
+@keyframes ornaments-sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+@keyframes ornaments-sway-small {
+  0%, 100% { transform: scale(0.7) rotate(-3deg); }
+  50% { transform: scale(0.7) rotate(3deg); }
+}
