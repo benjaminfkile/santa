@@ -21,6 +21,11 @@
   --snow: rgba(255, 255, 255, 0.5);
   --frost-a: rgba(111, 211, 255, 0.4);
   --frost-b: rgba(255, 122, 112, 0.28);
+  --orn-red: #ff7a70;
+  --orn-green: #56d29a;
+  --orn-blue: #6fd3ff;
+  --orn-gold: #f0c05a;
+  --orn-frost: #9cc7ff;
 }
 
 :root[data-theme="light"] {
@@ -43,6 +48,11 @@
   --snow: rgba(140, 165, 205, 0.35);
   --frost-a: rgba(11, 107, 181, 0.2);
   --frost-b: rgba(194, 54, 44, 0.14);
+  --orn-red: #e66e65;
+  --orn-green: #4dbd8b;
+  --orn-blue: #64bee6;
+  --orn-gold: #d8ad51;
+  --orn-frost: #8cb3e6;
 }
 
 :root {
@@ -98,7 +108,7 @@ html, body {
   display: flex;
   flex-direction: column;
 }
-#root > main { flex: 1 0 auto; }
+#root > main { flex: 1 0 auto; position: relative; z-index: 1; }
 /* The live screen owns the viewport: nothing scrolls behind the map. */
 html[data-takeover="live"],
 html[data-takeover="live"] body { overflow: hidden; height: 100%; }
