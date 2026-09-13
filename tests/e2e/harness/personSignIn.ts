@@ -1,8 +1,9 @@
 // docs/site.md section 22.2. Signs in as the E2E person by clicking the
-// visible menu-sign-in control (in the header actions on wide viewports,
-// in the panel on narrow ones), filling the site's own /auth/sign-in page,
-// and waiting for the visible menu-sign-out control. No hosted UI, no MFA
-// on this account.
+// visible menu-sign-in control (in the header actions on wide viewports;
+// in the panel, opened through the Menu button, on narrow viewports and on
+// the map page, where the shell renders only the menu button), filling the
+// site's own /auth/sign-in page, and waiting for the signed-in control the
+// same way. No hosted UI, no MFA on this account.
 
 import { e2eEnv } from "./env";
 
@@ -12,6 +13,7 @@ type LocatorLike = {
   click: (options?: { timeout?: number }) => Promise<void>;
   fill: (value: string) => Promise<void>;
   waitFor: (options?: { state?: "visible" | "attached"; timeout?: number }) => Promise<void>;
+  isVisible: () => Promise<boolean>;
 };
 
 type PageLike = {
@@ -19,12 +21,20 @@ type PageLike = {
   getByTestId: (id: string) => LocatorLike;
 };
 
+// The panel entry carries the same testid as the actions button, so pick the
+// visible one; when neither is visible (the map page, narrow viewports) open
+// the panel through the Menu button first.
+async function visibleControl(page: PageLike, testId: string): Promise<LocatorLike> {
+  const direct = page.getByTestId(testId).locator("visible=true").first();
+  if (await direct.isVisible()) return direct;
+  await page.locator('button[aria-label="Menu"]').first().click();
+  const inPanel = page.getByTestId(testId).locator("visible=true").first();
+  await inPanel.waitFor({ state: "visible", timeout: 10_000 });
+  return inPanel;
+}
+
 export async function personSignIn(page: PageLike): Promise<void> {
-  // The panel entry carries the same testid as the actions button, so pick
-  // the visible one (Shell.tsx: data-testid="menu-sign-in" in the actions
-  // area on wide viewports, in the drawer entry on narrow ones).
-  const menuSignIn = page.getByTestId("menu-sign-in").locator("visible=true").first();
-  await menuSignIn.waitFor({ state: "visible", timeout: 10_000 });
+  const menuSignIn = await visibleControl(page, "menu-sign-in");
   await menuSignIn.click();
 
   // The site's own /auth/sign-in page: email, password, submit.
@@ -34,11 +44,9 @@ export async function personSignIn(page: PageLike): Promise<void> {
   await page.locator('input[name="password"]').first().fill(e2eEnv.PERSON_PASSWORD);
   await page.locator('[data-testid="auth-submit"]').first().click();
 
-  // Wait for the visible signed-in control (Shell.tsx: menu-sign-out in
-  // the actions area on wide viewports).
-  await page
-    .getByTestId("menu-sign-out")
-    .locator("visible=true")
-    .first()
-    .waitFor({ state: "visible", timeout: 30_000 });
+  // Back on the page that opened sign-in: wait for the signed-in control,
+  // opening the panel when the shell shows no actions area there.
+  await page.locator("main").first().waitFor({ state: "visible", timeout: 30_000 });
+  const signedOut = await visibleControl(page, "menu-sign-out");
+  await signedOut.waitFor({ state: "visible", timeout: 30_000 });
 }
