@@ -267,7 +267,7 @@ describe("PosterViewer", () => {
     expect(osdImports[0].gestureSettingsMouse?.clickToZoom).toBe(false);
     expect(osdImports[0].gestureSettingsTouch?.pinchToZoom).toBe(true);
     expect(osdImports[0].minZoomImageRatio).toBe(0.8);
-    expect(osdImports[0].maxZoomPixelRatio).toBe(2);
+    expect(osdImports[0].maxZoomPixelRatio).toBe(1);
     expect(osdImports[0].visibilityRatio).toBe(1);
     expect(osdImports[0].constrainDuringPan).toBe(true);
   });
@@ -284,6 +284,7 @@ describe("PosterViewer", () => {
     await flushMicrotasks();
     expect(osdImports).toHaveLength(1);
     expect(osdImports[0].tileSources).toEqual({ type: "image", url: "https://cdn.example/plain.jpg" });
+    expect(osdImports[0].maxZoomPixelRatio).toBe(1);
   });
 
   it("destroys the viewer on unmount and rebuilds when the media id changes", async () => {

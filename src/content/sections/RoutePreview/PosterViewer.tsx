@@ -92,7 +92,7 @@ export function PosterViewer({ mediaId, url, dzi, alt, ariaLabel }: PosterViewer
         gestureSettingsMouse: { clickToZoom: false },
         gestureSettingsTouch: { pinchToZoom: true },
         minZoomImageRatio: 0.8,
-        maxZoomPixelRatio: 2,
+        maxZoomPixelRatio: 1,
         visibilityRatio: 1,
         constrainDuringPan: true,
         animationTime: reducedMotion ? 0 : undefined,
