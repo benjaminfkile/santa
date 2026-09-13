@@ -1,6 +1,9 @@
 // docs/site.md section 22.2. Beacon replay: POST /locations with the
 // X-Beacon-Key header. recordedAt is set to now for every fix; the
 // caller controls the rate and can stop replay at any point.
+// heartbeat() posts one POST /beacons/heartbeat so the beacon's
+// lastSeenAt is fresh, which the go-live rule requires (contracts 4.2,
+// 4.5 Events).
 
 import { e2eEnv } from "./env";
 
@@ -57,4 +60,21 @@ export function replay(points: BeaconPoint[], ratePerSecond: number): Replay {
     },
     done,
   };
+}
+
+export async function heartbeat(): Promise<void> {
+  const body = {
+    sentAt: new Date().toISOString(),
+    health: { batteryPercent: 100 },
+  };
+  const res = await fetch(`${e2eEnv.API_BASE_URL}/beacons/heartbeat`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Beacon-Key": e2eEnv.BEACON_KEY,
+    },
+    credentials: "omit",
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`beacon POST /beacons/heartbeat → ${res.status}`);
 }

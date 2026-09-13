@@ -34,6 +34,14 @@ export type ContactMessage = {
   createdAt: string;
 };
 
+export type AdminBeacon = {
+  id: number;
+  name: string;
+  keyPrefix: string;
+  isActive: boolean;
+  healthy: boolean;
+};
+
 async function request<T>(
   method: "GET" | "POST" | "DELETE" | "PATCH",
   path: string,
@@ -131,4 +139,13 @@ export async function getAdminSnapshot(): Promise<{ url: string }> {
 
 export async function mintPreviewToken(page: string): Promise<{ token: string }> {
   return request<{ token: string }>("POST", "/admin/content/preview-token", { page });
+}
+
+export async function listBeacons(): Promise<AdminBeacon[]> {
+  const res = await request<{ items: AdminBeacon[] }>("GET", "/admin/beacons");
+  return res.items;
+}
+
+export async function activateBeacon(id: number): Promise<void> {
+  await request<void>("POST", `/admin/beacons/${id}/activate`);
 }
