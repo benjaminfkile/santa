@@ -10,8 +10,10 @@ import {
   deleteContactMessage,
   fetchCdnSnapshot,
   getAdminSnapshot,
+  getQrCodeDetail,
   goto,
   listContactMessages,
+  listQrCodes,
   mintPreviewToken,
   readCspMeta,
 } from "../harness";
@@ -202,6 +204,35 @@ test("the contact form posts a message that the admin endpoints then delete", as
 test("/nope renders the 404 page", async ({ page }) => {
   await goto(page, "/nope");
   await expect(page.locator("body")).toContainText(/not found|404/i);
+});
+
+test("/q/qr-001 lands on the sponsors page and the code's people count rises by one", async ({ page }) => {
+  // docs/site.md section 4 and contracts 4.5a. A33 seeded qr-001 in dev
+  // pointing at the sponsors page; scanning it fires POST /qr-codes/qr-001/scans
+  // and the panel's people count for that code rises by one.
+  const codes = await listQrCodes();
+  const qr001 = codes.find((c) => c.tag === "qr-001");
+  test.skip(qr001 === undefined, "qr-001 not seeded on dev; complete A33 first");
+  if (!qr001) return;
+  const before = await getQrCodeDetail(qr001.id);
+  const beforePeople = Number(before.scans?.people ?? 0);
+
+  const scanRequest = page.waitForRequest((r) => /\/qr-codes\/qr-001\/scans$/.test(r.url()) && r.method() === "POST");
+  await goto(page, "/q/qr-001");
+  const req = await scanRequest;
+  const body = req.postData();
+  expect(body).toBeTruthy();
+  if (body) expect(() => JSON.parse(body)).not.toThrow();
+
+  await expect(page).toHaveURL(/\/sponsors$/, { timeout: 15_000 });
+  await expect(page.locator('main[data-page-role="none"]')).toBeVisible({ timeout: 15_000 });
+
+  await expect
+    .poll(async () => {
+      const detail = await getQrCodeDetail(qr001.id);
+      return Number(detail.scans?.people ?? 0);
+    }, { timeout: 10_000 })
+    .toBeGreaterThanOrEqual(beforePeople + 1);
 });
 
 test.describe("reduced motion", () => {

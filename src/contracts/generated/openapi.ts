@@ -3697,6 +3697,457 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/qr-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ItemsResponseOfQrCodeDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["MintQrCodesRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ItemsResponseOfQrCodeDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/qr-codes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QrCodeDetailDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PatchQrCodeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QrCodeDto"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/admin/qr-codes/{id}/attach": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AttachQrCodeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QrCodeDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/qr-codes/{id}/detach": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["QrCodeDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/places": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ItemsResponseOfPlaceDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreatePlaceRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PlaceDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/places/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PatchPlaceRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PlaceDto"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/admin/places/{id}/location": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PutPlaceLocationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PlaceDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PlaceDto"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/places/map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PlacePinsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/qr-codes/{tag}/scans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["QrScanRequest"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/snapshot": {
         parameters: {
             query?: never;
@@ -3896,6 +4347,7 @@ export interface components {
             lastUsedAt?: null | string;
             /** Format: date-time */
             revokedAt?: null | string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         ApiKeyMintedDto: {
             /** Format: int64 */
@@ -3913,7 +4365,12 @@ export interface components {
             lastUsedAt?: null | string;
             /** Format: date-time */
             revokedAt?: null | string;
+            audit?: null | components["schemas"]["AuditStampDto"];
             key?: string;
+        };
+        AttachQrCodeRequest: {
+            /** Format: int64 */
+            placeId?: number | string;
         };
         AuditEntryDto: {
             /** Format: int64 */
@@ -3959,6 +4416,7 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         BeaconLogDto: {
             /** Format: int64 */
@@ -4028,6 +4486,7 @@ export interface components {
             clientIp?: string;
             /** Format: date-time */
             createdAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         ContactRequest: {
             name?: string;
@@ -4083,6 +4542,7 @@ export interface components {
             pageCount?: number | string;
             /** Format: int32 */
             sectionCount?: number | string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         CookieLeft: {
             /** Format: int64 */
@@ -4112,6 +4572,7 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         CreateApiKeyRequest: {
             name?: null | string;
@@ -4169,6 +4630,15 @@ export interface components {
             /** Format: int32 */
             navPosition?: number | string;
             isHidden?: boolean;
+        };
+        CreatePlaceRequest: {
+            /** Format: int64 */
+            parentId?: null | number | string;
+            name?: string;
+            description?: string;
+            /** Format: int64 */
+            opensPageId?: null | number | string;
+            forwardUrl?: null | string;
         };
         CreateSectionItemRequest: {
             data?: null | components["schemas"]["JsonElement"];
@@ -4246,6 +4716,7 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         EventMessageDto: {
             /** Format: int64 */
@@ -4260,6 +4731,7 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         HealthResponse: {
             status?: string;
@@ -4328,6 +4800,12 @@ export interface components {
         };
         ItemsResponseOfPageAdminDto: {
             items?: components["schemas"]["PageAdminDto"][];
+        };
+        ItemsResponseOfPlaceDto: {
+            items?: components["schemas"]["PlaceDto"][];
+        };
+        ItemsResponseOfQrCodeDto: {
+            items?: components["schemas"]["QrCodeDto"][];
         };
         ItemsResponseOfRouteDto: {
             items?: components["schemas"]["RouteDto"][];
@@ -4474,6 +4952,7 @@ export interface components {
             unreferencedSince?: null | string;
             /** Format: date-time */
             orphanedAt?: null | string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         MediaEntry: {
             url?: string;
@@ -4527,6 +5006,10 @@ export interface components {
         MeResponse: {
             person?: components["schemas"]["PersonDto"];
             isAdmin?: boolean;
+        };
+        MintQrCodesRequest: {
+            /** Format: int32 */
+            count?: number | string;
         };
         MoveSectionRequest: {
             /** Format: int64 */
@@ -4587,6 +5070,13 @@ export interface components {
         NotifyStatusRequest: {
             message?: null | string;
         };
+        OpensDto: {
+            kind?: string;
+            /** Format: int64 */
+            pageId?: null | number | string;
+            slug?: null | string;
+            url?: null | string;
+        };
         PageAdminDto: {
             /** Format: int64 */
             id?: number | string;
@@ -4607,6 +5097,7 @@ export interface components {
             updatedBy?: string;
             /** Format: date-time */
             updatedAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         PageDetailDto: {
             /** Format: int64 */
@@ -4697,6 +5188,27 @@ export interface components {
             navPosition?: null | number | string;
             isHidden?: null | boolean;
         };
+        PatchPlaceRequest: {
+            /** Format: int64 */
+            parentId?: null | number | string;
+            hasParentId?: boolean;
+            name?: null | string;
+            description?: null | string;
+            /** Format: int64 */
+            opensPageId?: null | number | string;
+            hasOpensPageId?: boolean;
+            forwardUrl?: null | string;
+            hasForwardUrl?: boolean;
+        };
+        PatchQrCodeRequest: {
+            /** Format: int64 */
+            opensPageId?: null | number | string;
+            hasOpensPageId?: boolean;
+            forwardUrl?: null | string;
+            hasForwardUrl?: boolean;
+            note?: null | string;
+            active?: null | boolean;
+        };
         PatchSectionItemRequest: {
             data?: null | components["schemas"]["JsonElement"];
             isHidden?: null | boolean;
@@ -4725,6 +5237,7 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             lastSeenAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         PersonWithCookieCountDto: {
             /** Format: int64 */
@@ -4736,6 +5249,86 @@ export interface components {
             lastSeenAt?: string;
             /** Format: int32 */
             cookieCount?: number | string;
+            audit?: null | components["schemas"]["AuditStampDto"];
+        };
+        PlaceCodeRefDto: {
+            /** Format: int64 */
+            id?: number | string;
+            tag?: string;
+        };
+        PlaceDto: {
+            /** Format: int64 */
+            id?: number | string;
+            /** Format: int64 */
+            parentId?: null | number | string;
+            name?: string;
+            description?: string;
+            path?: string[];
+            /** Format: int64 */
+            opensPageId?: null | number | string;
+            forwardUrl?: null | string;
+            opens?: components["schemas"]["OpensDto"];
+            opensSource?: string;
+            location?: null | components["schemas"]["PlaceLocationDto"];
+            pin?: null | components["schemas"]["PlacePinResolvedDto"];
+            codes?: components["schemas"]["PlaceCodeRefDto"][];
+            scans?: components["schemas"]["PlaceScansDto"];
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
+        };
+        PlaceLocationDto: {
+            /** Format: double */
+            lat?: number | string;
+            /** Format: double */
+            lng?: number | string;
+            /** Format: double */
+            accuracyM?: null | number | string;
+            source?: string;
+            pinnedBy?: string;
+            /** Format: date-time */
+            pinnedAt?: string;
+        };
+        PlacePinCodeRefDto: {
+            tag?: string;
+            placeName?: string;
+            /** Format: int32 */
+            people?: number | string;
+        };
+        PlacePinDto: {
+            /** Format: int64 */
+            placeId?: number | string;
+            name?: string;
+            path?: string[];
+            /** Format: double */
+            lat?: number | string;
+            /** Format: double */
+            lng?: number | string;
+            /** Format: int32 */
+            people?: number | string;
+            codes?: components["schemas"]["PlacePinCodeRefDto"][];
+        };
+        PlacePinResolvedDto: {
+            /** Format: double */
+            lat?: number | string;
+            /** Format: double */
+            lng?: number | string;
+            /** Format: int64 */
+            fromPlaceId?: number | string;
+        };
+        PlacePinsResponse: {
+            items?: components["schemas"]["PlacePinDto"][];
+            /** Format: int32 */
+            unpinned?: number | string;
+            /** Format: int32 */
+            unattached?: number | string;
+        };
+        PlaceScansDto: {
+            /** Format: int32 */
+            people?: number | string;
         };
         PresentationDto: {
             width?: string;
@@ -4751,6 +5344,7 @@ export interface components {
             url?: string;
             /** Format: date-time */
             expiresAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         ProblemDto: {
             path?: string;
@@ -4768,6 +5362,105 @@ export interface components {
         };
         PublishContentRequest: {
             label?: null | string;
+        };
+        PutPlaceLocationRequest: {
+            /** Format: double */
+            lat?: number | string;
+            /** Format: double */
+            lng?: number | string;
+            /** Format: double */
+            accuracyM?: null | number | string;
+            source?: string;
+        };
+        QrAttachmentSummaryDto: {
+            /** Format: int64 */
+            id?: number | string;
+            /** Format: int64 */
+            placeId?: number | string;
+            placePath?: string[];
+            /** Format: date-time */
+            since?: string;
+        };
+        QrCodeDetailDto: {
+            history?: components["schemas"]["QrHistoryEntryDto"][];
+            daily?: components["schemas"]["QrDailyDto"][];
+            /** Format: int64 */
+            id?: number | string;
+            tag?: string;
+            /** Format: int32 */
+            batchNo?: number | string;
+            /** Format: date-time */
+            printedAt?: string;
+            active?: boolean;
+            note?: string;
+            /** Format: int64 */
+            opensPageId?: null | number | string;
+            forwardUrl?: null | string;
+            opens?: components["schemas"]["OpensDto"];
+            opensSource?: string;
+            attachment?: null | components["schemas"]["QrAttachmentSummaryDto"];
+            scans?: components["schemas"]["QrScanSummaryDto"];
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
+        };
+        QrCodeDto: {
+            /** Format: int64 */
+            id?: number | string;
+            tag?: string;
+            /** Format: int32 */
+            batchNo?: number | string;
+            /** Format: date-time */
+            printedAt?: string;
+            active?: boolean;
+            note?: string;
+            /** Format: int64 */
+            opensPageId?: null | number | string;
+            forwardUrl?: null | string;
+            opens?: components["schemas"]["OpensDto"];
+            opensSource?: string;
+            attachment?: null | components["schemas"]["QrAttachmentSummaryDto"];
+            scans?: components["schemas"]["QrScanSummaryDto"];
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
+        };
+        QrDailyDto: {
+            day?: string;
+            /** Format: int32 */
+            people?: number | string;
+        };
+        QrHistoryEntryDto: {
+            /** Format: int64 */
+            attachmentId?: number | string;
+            /** Format: int64 */
+            placeId?: number | string;
+            placePath?: string[];
+            /** Format: date-time */
+            fromAt?: string;
+            /** Format: date-time */
+            toAt?: null | string;
+            /** Format: int32 */
+            people?: number | string;
+            /** Format: int32 */
+            earlyScans?: number | string;
+        };
+        QrScanRequest: {
+            referrer?: null | string;
+        };
+        QrScanSummaryDto: {
+            /** Format: int32 */
+            people?: number | string;
+            /** Format: int32 */
+            flagged?: number | string;
+            /** Format: date-time */
+            lastScanAt?: null | string;
         };
         RealtimeAuthorizeRequest: {
             channel?: string;
@@ -4797,6 +5490,7 @@ export interface components {
             uploadedBy?: string;
             /** Format: date-time */
             createdAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         RouteFromEventRequest: {
             name?: string;
@@ -4825,6 +5519,7 @@ export interface components {
             updatedBy?: string;
             /** Format: date-time */
             updatedAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         SectionItemAdminDto: {
             /** Format: int64 */
@@ -4839,6 +5534,7 @@ export interface components {
             updatedBy?: string;
             /** Format: date-time */
             updatedAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         SectionOrderRequest: {
             ids?: (number | string)[];
@@ -4849,6 +5545,7 @@ export interface components {
             updatedBy?: null | string;
             /** Format: date-time */
             updatedAt?: null | string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         SettingUpdateRequest: {
             value?: components["schemas"]["JsonElement"];
@@ -4969,6 +5666,7 @@ export interface components {
             /** Format: int64 */
             personId?: number | string;
             personEmail?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         SubscribersSummaryResponse: {
             /** Format: int32 */

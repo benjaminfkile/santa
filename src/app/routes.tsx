@@ -11,6 +11,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { HomePage } from "../pages/HomePage";
 import { SlugPage } from "../pages/SlugPage";
 import { PreviewPage } from "../pages/PreviewPage";
+import { QrPage } from "../pages/QrPage";
 import { NotFound } from "../pages/NotFound";
 import { Loading } from "../pages/Loading";
 import { useStore } from "../store/useStore";
@@ -79,6 +80,7 @@ export function AppRoutes() {
         <Route path="/auth/reset" element={<Lazy><ResetPasswordPage /></Lazy>} />
         <Route path="/alerts/verify" element={<Lazy><VerifyPage /></Lazy>} />
         <Route path="/alerts/unsubscribe" element={<Lazy><UnsubscribePage /></Lazy>} />
+        <Route path="/q/:tag" element={<QrPage />} />
         <Route path="*" element={<HomePage />} />
       </Routes>
     );
@@ -97,6 +99,7 @@ export function AppRoutes() {
       <Route path="/alerts/unsubscribe" element={<Lazy><UnsubscribePage /></Lazy>} />
       <Route path="/santa" element={<Navigate to="/" replace />} />
       <Route path="/funding" element={<Navigate to="/donate" replace />} />
+      <Route path="/q/:tag" element={<QrPage />} />
       <Route path="/:slug" element={<SlugPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
