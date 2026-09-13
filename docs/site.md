@@ -198,9 +198,12 @@ Local development uses `.env.local` with the preview set and runs on `http://loc
 | `/auth/forgot` | `ForgotPasswordPage` | auth | |
 | `/auth/reset` | `ResetPasswordPage` | auth | `email` from the query string; the code from the email plus the new password |
 | `/:slug` | `SlugPage` | main | The `none` page with that slug; a role page's slug redirects to `/`; unknown renders `NotFound` |
+| `/q/:tag` | `QrPage` | main | A printed code (contracts 4.5a): sends the scan beacon, then opens what the snapshot says |
 | `*` | `NotFound` | main | Links back to `/` |
 
 While `live.eventStatusId === 3` the router renders the `live` role page for every path; the table above applies in every other status. The only exceptions are the site-coded paths, which must keep working during the event: the five `/auth/*` pages (a visitor signs in to leave a cookie mid-flight), `/alerts/verify` and `/alerts/unsubscribe` because email links land there, and `/preview`, which renders whatever page the panel asks for. During the takeover the auth pages render inside the takeover's dialog surface (section 11.5) so the tracker stays underneath.
+
+**`/q/:tag`** renders nothing of its own. On mount it reads `snapshot.qrCodes[tag]` (waiting for the first snapshot when the store has none yet), sends one scan beacon `navigator.sendBeacon(`${API}/qr-codes/${tag}/scans`, JSON { referrer: document.referrer })` (falling back to `fetch` with `keepalive: true` where `sendBeacon` is missing), then navigates with `replace`: to `/<pageSlug>` (`/` for the home page), to `forwardUrl` through `window.location.replace` (the one-second hop is accepted), or to `/` when the tag is absent. The beacon is sent before the navigation so a forward never cancels it. While live, the live page takes over like every other path after the beacon. A tag is `qr-` and digits; anything else is `NotFound` without a beacon.
 
 Route-level `lazy()` with a `Suspense` fallback for the `alerts` and `auth` chunks. The shell (nav menu, banners, footer) wraps every route; on a page whose first section is `map` the shell renders only its menu button and banners over the map and no footer.
 
@@ -1291,6 +1294,7 @@ Fixtures come from the vendored `contracts/fixtures/*.json`; schema validation o
 | `SponsorGrid` | equal cards in one grid, name heading, logo box or name text, the bottom row's years line and icon links, the whole-card link rule |
 | `OrnamentsLayer` | five ornaments with the setting on and the page not live, none otherwise; token classes; the sway class absent under reduced motion |
 | `themes` | every theme's chrome text and tile text contrast at 4.5:1 or better |
+| `QrPage` | the beacon is sent once with the tag and referrer; page, home, and forward resolutions; an absent tag goes home; a malformed tag renders NotFound and sends nothing |
 | `auth/cognito` (mocked SDK) | each wrapper call maps to the SDK method; every error name in 11.1 maps to its copy; sign-in stores tokens; `getIdToken` refreshes inside the last minute and throws `SignInRequired` when the refresh fails |
 | Auth pages | client checks (address shape, 12 characters, matching passwords); submit disabled in flight; `UserNotConfirmedException` routes to confirm with the email; confirm straight from sign-up signs in and lands on `returnTo`; forgot shows the same copy for unknown addresses |
 | `PosterViewer` | `dzi` present builds a Deep Zoom tile source, absent an image source; the viewer is destroyed on unmount and rebuilt on a new media id; the fullscreen button calls `requestFullscreen` and falls back to the fixed frame when absent; the osd chunk is imported only when the section mounts |
@@ -1397,6 +1401,7 @@ Site-specific steps within the overall cut-over:
 - The map overlay palettes are chosen per theme for contrast; the Google style arrays stay the legacy tracker's.
 - The poster viewer never zooms past the poster's own pixels.
 - The alerts page hides the form while a subscription is active and lists the alerts actually sent to the person.
+- Printed codes resolve from the snapshot alone; the site's only call for them is the scan beacon.
 
 ## 25. Needs a decision
 
