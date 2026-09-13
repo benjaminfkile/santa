@@ -75,26 +75,20 @@
 .routePoster {
   position: relative;
   width: 100%;
-  height: min(620px, 80vh);
+  height: max(70vh, 320px);
   border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid var(--line);
   background: var(--panel-2);
-  cursor: grab;
   touch-action: none;
   outline: none;
 }
 .routePoster:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
-.routePosterDrag { cursor: grabbing; }
-.routePosterImg {
+.routePosterHost {
   position: absolute;
-  left: 0;
-  top: 0;
-  transform-origin: 0 0;
-  user-select: none;
-  -webkit-user-drag: none;
-  max-width: none;
+  inset: 0;
 }
+.routePosterHost > * { max-width: none; }
 .routePosterControls {
   position: absolute;
   right: var(--space-3);
@@ -104,7 +98,16 @@
   gap: var(--space-2);
   z-index: 2;
 }
-
-@media (max-width: 760px) {
-  .routePoster { height: min(460px, 70vh); }
+.routePosterFullscreen {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  width: 100vw;
+  border-radius: 0;
+  z-index: 1000;
+}
+.routePoster:fullscreen {
+  height: 100vh;
+  width: 100vw;
+  border-radius: 0;
 }

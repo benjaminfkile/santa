@@ -2,8 +2,9 @@
 //  - `image`: the poster through `Media` (960 variant, srcset) wrapped in a
 //     link to the page whose `route_preview` has style `viewer`, or
 //     unlinked when no such page is published.
-//  - `viewer`: `data.disclaimer` in the disclaimer recipe plus the pan-and
-//     -zoom `PosterViewer` over the asset's original url. No map chunk.
+//  - `viewer`: `data.disclaimer` in the disclaimer recipe plus the
+//     OpenSeadragon `PosterViewer` over the media entry's Deep Zoom
+//     pyramid (or its original url when there is none). No map chunk.
 
 import { useMemo } from "react";
 import type { SectionComponent } from "../../registry";
@@ -104,10 +105,11 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
           </div>
         ) : null}
         <PosterViewer
-          src={entry.url ?? ""}
+          mediaId={mediaId}
+          url={entry.url ?? ""}
+          dzi={entry.dzi ?? null}
           alt={alt}
-          width={entry.width ?? undefined}
-          height={entry.height ?? undefined}
+          ariaLabel={d.heading ?? undefined}
         />
       </div>
     );

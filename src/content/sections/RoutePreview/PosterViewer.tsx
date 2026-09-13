@@ -1,250 +1,242 @@
-// docs/site.md section 8.5. Route poster viewer: one <img> in a clipped
-// touch-action:none frame positioned by CSS transform. Fit on load,
-// clamp between fit and 6x fit, drag with pointer capture, wheel zoom
-// about the cursor, pinch zoom about the midpoint, double-tap zoom, three
-// buttons (zoom in, zoom out, fit), arrow keys pan, +/- zoom. Loads no map.
+// docs/site.md section 8.5. Route poster viewer: OpenSeadragon in its own
+// `osd` chunk, imported when the section mounts. Tile source is the asset's
+// Deep Zoom pyramid when present, otherwise an image source over the
+// original url. Site's own controls in the .ibtn recipe: zoom in, zoom out,
+// fit (viewport.goHome), and fullscreen (Fullscreen API on the frame, with
+// a fixed-frame fallback where the API is missing). Keyboard: arrows pan,
+// +/- zoom, 0 fits, F toggles fullscreen. Destroyed on unmount, rebuilt on
+// a new media id. animationTime 0 under reduced motion.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type OpenSeadragon from "openseadragon";
 import { copy } from "../../../copy/copy";
-import { clampScale, fitTransform, zoomAbout } from "./posterMath";
+import { useReducedMotion } from "../../../lib/motion";
 import * as styles from "./RoutePreview.module.css";
 import * as ibtn from "../../../ui/IconButton.module.css";
 
 export type PosterViewerProps = {
-  src: string;
+  mediaId: string;
+  url: string;
+  dzi: string | null;
   alt: string;
-  width?: number;
-  height?: number;
+  ariaLabel?: string;
 };
 
-type Transform = { x: number; y: number; scale: number };
+type Viewer = OpenSeadragon.Viewer;
+type OSDFactory = (options: OpenSeadragon.Options) => OpenSeadragon.Viewer;
+type OSDModule = {
+  default: OSDFactory & { Point: new (x: number, y: number) => OpenSeadragon.Point };
+};
 
-const DOUBLE_TAP_ZOOM = 2;
-const KEY_PAN = 40;
-const KEY_ZOOM_FACTOR = 1.2;
-const WHEEL_ZOOM_IN = 1.15;
-const WHEEL_ZOOM_OUT = 1 / 1.15;
-const BUTTON_ZOOM_FACTOR = 1.5;
+function fullscreenSupported(): boolean {
+  if (typeof document === "undefined") return false;
+  const d = document as unknown as { fullscreenEnabled?: boolean; webkitFullscreenEnabled?: boolean };
+  return d.fullscreenEnabled === true || d.webkitFullscreenEnabled === true;
+}
 
-export function PosterViewer({ src, alt, width, height }: PosterViewerProps) {
+function currentFullscreenElement(): Element | null {
+  if (typeof document === "undefined") return null;
+  const d = document as unknown as { fullscreenElement?: Element | null; webkitFullscreenElement?: Element | null };
+  return d.fullscreenElement ?? d.webkitFullscreenElement ?? null;
+}
+
+function requestFullscreenOn(element: HTMLElement): void {
+  const el = element as HTMLElement & {
+    requestFullscreen?: () => Promise<void>;
+    webkitRequestFullscreen?: () => Promise<void>;
+  };
+  if (typeof el.requestFullscreen === "function") {
+    void el.requestFullscreen();
+  } else if (typeof el.webkitRequestFullscreen === "function") {
+    void el.webkitRequestFullscreen();
+  }
+}
+
+function exitFullscreenNow(): void {
+  const d = document as unknown as {
+    exitFullscreen?: () => Promise<void>;
+    webkitExitFullscreen?: () => Promise<void>;
+  };
+  if (typeof d.exitFullscreen === "function") {
+    void d.exitFullscreen();
+  } else if (typeof d.webkitExitFullscreen === "function") {
+    void d.webkitExitFullscreen();
+  }
+}
+
+export function PosterViewer({ mediaId, url, dzi, alt, ariaLabel }: PosterViewerProps) {
   const frameRef = useRef<HTMLDivElement | null>(null);
-  const imgRef = useRef<HTMLImageElement | null>(null);
-  const dragRef = useRef<{ x: number; y: number } | null>(null);
-  const pinchRef = useRef<{ distance: number; midX: number; midY: number; scale: number } | null>(null);
-  const lastTapRef = useRef<number>(0);
-  const activePointers = useRef<Map<number, { x: number; y: number }>>(new Map());
-  const [imgSize, setImgSize] = useState<{ width: number; height: number } | null>(
-    width !== undefined && height !== undefined && width > 0 && height > 0
-      ? { width, height }
-      : null,
-  );
-  const [frameSize, setFrameSize] = useState<{ width: number; height: number } | null>(null);
-  const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1 });
-  const [minScale, setMinScale] = useState<number>(1);
-
-  const refit = useCallback(() => {
-    if (frameSize === null || imgSize === null) return;
-    if (frameSize.width <= 0 || frameSize.height <= 0) return;
-    const fit = fitTransform(frameSize, imgSize);
-    setMinScale(fit.scale);
-    setTransform(fit);
-  }, [frameSize, imgSize]);
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const viewerRef = useRef<Viewer | null>(null);
+  const osdRef = useRef<OSDModule | null>(null);
+  const reducedMotion = useReducedMotion();
+  const [fullscreen, setFullscreen] = useState<boolean>(false);
+  const [fallbackFullscreen, setFallbackFullscreen] = useState<boolean>(false);
 
   useEffect(() => {
-    refit();
-  }, [refit]);
-
-  useEffect(() => {
-    const frame = frameRef.current;
-    if (frame === null || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => {
-      const rect = frame.getBoundingClientRect();
-      setFrameSize({ width: rect.width, height: rect.height });
+    let cancelled = false;
+    const host = hostRef.current;
+    if (host === null) return;
+    void import("openseadragon").then((mod) => {
+      if (cancelled) return;
+      const osd = mod as unknown as OSDModule;
+      osdRef.current = osd;
+      const OSD = osd.default;
+      const tileSource = dzi !== null && dzi.length > 0
+        ? dzi
+        : { type: "image", url };
+      const viewer = OSD({
+        element: host,
+        tileSources: tileSource,
+        showNavigationControl: false,
+        gestureSettingsMouse: { clickToZoom: false },
+        gestureSettingsTouch: { pinchToZoom: true },
+        minZoomImageRatio: 0.8,
+        maxZoomPixelRatio: 2,
+        visibilityRatio: 1,
+        constrainDuringPan: true,
+        animationTime: reducedMotion ? 0 : undefined,
+      });
+      viewerRef.current = viewer;
     });
-    ro.observe(frame);
-    const rect = frame.getBoundingClientRect();
-    setFrameSize({ width: rect.width, height: rect.height });
-    return () => ro.disconnect();
-  }, []);
-
-  const onImgLoad = useCallback(() => {
-    const img = imgRef.current;
-    if (img !== null && img.naturalWidth > 0 && img.naturalHeight > 0) {
-      setImgSize({ width: img.naturalWidth, height: img.naturalHeight });
-    }
-  }, []);
-
-  const zoomAtScreen = useCallback(
-    (factor: number, sx: number, sy: number) => {
-      const frame = frameRef.current;
-      if (frame === null) return;
-      const rect = frame.getBoundingClientRect();
-      const anchor = { x: sx - rect.left, y: sy - rect.top };
-      setTransform((cur) => zoomAbout(cur, factor, anchor, minScale));
-    },
-    [minScale],
-  );
-
-  const zoomAtCenter = useCallback(
-    (factor: number) => {
-      if (frameSize === null) return;
-      setTransform((cur) =>
-        zoomAbout(cur, factor, { x: frameSize.width / 2, y: frameSize.height / 2 }, minScale),
-      );
-    },
-    [frameSize, minScale],
-  );
+    return () => {
+      cancelled = true;
+      if (viewerRef.current !== null) {
+        viewerRef.current.destroy();
+        viewerRef.current = null;
+      }
+    };
+  }, [mediaId, url, dzi, reducedMotion]);
 
   useEffect(() => {
     const frame = frameRef.current;
     if (frame === null) return;
-    // React attaches wheel with `passive: true` by default; add our own so
-    // we can preventDefault and stop the page from scrolling while zooming.
-    function onWheel(e: WheelEvent) {
-      e.preventDefault();
-      zoomAtScreen(e.deltaY < 0 ? WHEEL_ZOOM_IN : WHEEL_ZOOM_OUT, e.clientX, e.clientY);
+    function onChange() {
+      const el = currentFullscreenElement();
+      const inFullscreen = el === frame;
+      setFullscreen(inFullscreen);
+      viewerRef.current?.forceResize();
     }
-    frame.addEventListener("wheel", onWheel, { passive: false });
-    return () => frame.removeEventListener("wheel", onWheel);
-  }, [zoomAtScreen]);
-
-  const onPointerDown = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      const target = e.target as HTMLElement;
-      if (target.closest(`.${ibtn.ibtn}`) !== null) return;
-      const frame = frameRef.current;
-      if (frame === null) return;
-      frame.setPointerCapture(e.pointerId);
-      activePointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-      if (activePointers.current.size === 2) {
-        const pts = [...activePointers.current.values()];
-        const dx = pts[0].x - pts[1].x;
-        const dy = pts[0].y - pts[1].y;
-        pinchRef.current = {
-          distance: Math.hypot(dx, dy),
-          midX: (pts[0].x + pts[1].x) / 2,
-          midY: (pts[0].y + pts[1].y) / 2,
-          scale: transform.scale,
-        };
-        dragRef.current = null;
-        return;
-      }
-
-      const now = performance.now();
-      if (now - lastTapRef.current < 300) {
-        zoomAtScreen(DOUBLE_TAP_ZOOM, e.clientX, e.clientY);
-        lastTapRef.current = 0;
-        return;
-      }
-      lastTapRef.current = now;
-
-      dragRef.current = { x: e.clientX - transform.x, y: e.clientY - transform.y };
-      frame.classList.add(styles.routePosterDrag);
-    },
-    [transform.x, transform.y, transform.scale, zoomAtScreen],
-  );
-
-  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (activePointers.current.has(e.pointerId)) {
-      activePointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    }
-    if (pinchRef.current !== null && activePointers.current.size >= 2) {
-      const pts = [...activePointers.current.values()];
-      const dx = pts[0].x - pts[1].x;
-      const dy = pts[0].y - pts[1].y;
-      const dist = Math.hypot(dx, dy);
-      const midX = (pts[0].x + pts[1].x) / 2;
-      const midY = (pts[0].y + pts[1].y) / 2;
-      const factor = dist / pinchRef.current.distance;
-      pinchRef.current = { distance: dist, midX, midY, scale: pinchRef.current.scale };
-      const frame = frameRef.current;
-      if (frame === null) return;
-      const rect = frame.getBoundingClientRect();
-      setTransform((cur) => zoomAbout(cur, factor, { x: midX - rect.left, y: midY - rect.top }, minScale));
-      return;
-    }
-    if (dragRef.current === null) return;
-    const drag = dragRef.current;
-    setTransform((cur) => ({ ...cur, x: e.clientX - drag.x, y: e.clientY - drag.y }));
-  }, [minScale]);
-
-  const onPointerEnd = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    activePointers.current.delete(e.pointerId);
-    if (activePointers.current.size < 2) {
-      pinchRef.current = null;
-    }
-    dragRef.current = null;
-    frameRef.current?.classList.remove(styles.routePosterDrag);
+    document.addEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange);
+    };
   }, []);
 
-  const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+  useEffect(() => {
+    if (!fallbackFullscreen) return;
+    const id = window.setTimeout(() => {
+      viewerRef.current?.forceResize();
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [fallbackFullscreen]);
+
+  function makePoint(x: number, y: number): OpenSeadragon.Point {
+    const mod = osdRef.current;
+    if (mod !== null) {
+      return new mod.default.Point(x, y);
+    }
+    return { x, y } as OpenSeadragon.Point;
+  }
+
+  function zoomIn() {
+    const v = viewerRef.current;
+    if (v === null) return;
+    v.viewport.zoomBy(1.4);
+    v.viewport.applyConstraints();
+  }
+  function zoomOut() {
+    const v = viewerRef.current;
+    if (v === null) return;
+    v.viewport.zoomBy(1 / 1.4);
+    v.viewport.applyConstraints();
+  }
+  function fit() {
+    viewerRef.current?.viewport.goHome();
+  }
+  function toggleFullscreen() {
+    const frame = frameRef.current;
+    if (frame === null) return;
+    if (fullscreenSupported()) {
+      if (currentFullscreenElement() === frame) {
+        exitFullscreenNow();
+      } else {
+        requestFullscreenOn(frame);
+      }
+    } else {
+      setFallbackFullscreen((v) => !v);
+    }
+  }
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    const v = viewerRef.current;
     switch (e.key) {
       case "ArrowLeft":
         e.preventDefault();
-        setTransform((cur) => ({ ...cur, x: cur.x + KEY_PAN }));
+        v?.viewport.panBy(makePoint(-0.05, 0));
         break;
       case "ArrowRight":
         e.preventDefault();
-        setTransform((cur) => ({ ...cur, x: cur.x - KEY_PAN }));
+        v?.viewport.panBy(makePoint(0.05, 0));
         break;
       case "ArrowUp":
         e.preventDefault();
-        setTransform((cur) => ({ ...cur, y: cur.y + KEY_PAN }));
+        v?.viewport.panBy(makePoint(0, -0.05));
         break;
       case "ArrowDown":
         e.preventDefault();
-        setTransform((cur) => ({ ...cur, y: cur.y - KEY_PAN }));
+        v?.viewport.panBy(makePoint(0, 0.05));
         break;
       case "+":
       case "=":
         e.preventDefault();
-        zoomAtCenter(KEY_ZOOM_FACTOR);
+        zoomIn();
         break;
       case "-":
       case "_":
         e.preventDefault();
-        zoomAtCenter(1 / KEY_ZOOM_FACTOR);
+        zoomOut();
+        break;
+      case "0":
+        e.preventDefault();
+        fit();
+        break;
+      case "f":
+      case "F":
+        e.preventDefault();
+        toggleFullscreen();
         break;
     }
-  }, [zoomAtCenter]);
+  }
 
-  const fit = useCallback(() => refit(), [refit]);
-  const clampedScale = clampScale(transform.scale, minScale);
-  const style = {
-    transform: `translate(${transform.x}px, ${transform.y}px) scale(${clampedScale})`,
-    transformOrigin: "0 0",
-  };
+  const inFullscreen = fullscreen || fallbackFullscreen;
+  const frameClass = fallbackFullscreen
+    ? `${styles.routePoster} ${styles.routePosterFullscreen}`
+    : styles.routePoster;
+
+  const label = ariaLabel ?? alt;
 
   return (
     <div
       ref={frameRef}
-      className={styles.routePoster}
+      key={mediaId}
+      className={frameClass}
       data-testid="poster-viewer"
+      data-fullscreen={inFullscreen ? "on" : "off"}
       tabIndex={0}
+      role="region"
+      aria-label={label}
       onKeyDown={onKeyDown}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerEnd}
-      onPointerCancel={onPointerEnd}
     >
-      <img
-        ref={imgRef}
-        className={styles.routePosterImg}
-        src={src}
-        alt={alt}
-        width={width}
-        height={height}
-        onLoad={onImgLoad}
-        style={style}
-        draggable={false}
-      />
+      <div ref={hostRef} className={styles.routePosterHost} data-testid="poster-viewer-host" />
       <div className={styles.routePosterControls}>
         <button
           type="button"
           className={ibtn.ibtn}
           aria-label={copy.map.poster.zoomIn}
-          onClick={() => zoomAtCenter(BUTTON_ZOOM_FACTOR)}
+          onClick={zoomIn}
           data-testid="poster-zoom-in"
         >
           <PlusIcon />
@@ -253,7 +245,7 @@ export function PosterViewer({ src, alt, width, height }: PosterViewerProps) {
           type="button"
           className={ibtn.ibtn}
           aria-label={copy.map.poster.zoomOut}
-          onClick={() => zoomAtCenter(1 / BUTTON_ZOOM_FACTOR)}
+          onClick={zoomOut}
           data-testid="poster-zoom-out"
         >
           <MinusIcon />
@@ -266,6 +258,16 @@ export function PosterViewer({ src, alt, width, height }: PosterViewerProps) {
           data-testid="poster-fit"
         >
           <TargetIcon />
+        </button>
+        <button
+          type="button"
+          className={ibtn.ibtn}
+          aria-label={inFullscreen ? copy.map.poster.exitFullscreen : copy.map.poster.fullscreen}
+          aria-pressed={inFullscreen}
+          onClick={toggleFullscreen}
+          data-testid="poster-fullscreen"
+        >
+          {inFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
         </button>
       </div>
     </div>
@@ -300,6 +302,26 @@ function TargetIcon() {
       <circle cx="12" cy="12" r="8" />
       <circle cx="12" cy="12" r="3" />
       <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+    </svg>
+  );
+}
+function FullscreenIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" {...strokeProps} aria-hidden>
+      <path d="M4 9V4h5" />
+      <path d="M20 9V4h-5" />
+      <path d="M4 15v5h5" />
+      <path d="M20 15v5h-5" />
+    </svg>
+  );
+}
+function ExitFullscreenIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" {...strokeProps} aria-hidden>
+      <path d="M9 4v5H4" />
+      <path d="M15 4v5h5" />
+      <path d="M9 20v-5H4" />
+      <path d="M15 20v-5h5" />
     </svg>
   );
 }
