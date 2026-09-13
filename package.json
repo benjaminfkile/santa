@@ -22,7 +22,7 @@
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.1.1",
     "@microsoft/signalr": "^10.0.11",
-    "oidc-client-ts": "^3.5.0",
+    "amazon-cognito-identity-js": "^6.3.20",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.3"
@@ -74,9 +74,9 @@
       "limit": "50 KB"
     },
     {
-      "name": "auth (oidc-client-ts + AuthProvider + AuthCallback)",
+      "name": "auth (amazon-cognito-identity-js + AuthProvider + auth pages)",
       "path": "dist/assets/auth-*.js",
-      "limit": "40 KB"
+      "limit": "60 KB"
     },
     {
       "name": "alerts (VerifyPage + UnsubscribePage)",

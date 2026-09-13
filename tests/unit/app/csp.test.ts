@@ -15,8 +15,9 @@ describe("index.html", () => {
     expect(INDEX_HTML).toContain("%VITE_CDN_BASE_URL%");
     expect(INDEX_HTML).toContain("%VITE_API_BASE_URL%");
     expect(INDEX_HTML).toContain("%VITE_HUB_URL%");
-    expect(INDEX_HTML).toContain("%VITE_COGNITO_AUTHORITY%");
-    expect(INDEX_HTML).toContain("%VITE_COGNITO_DOMAIN%");
+    expect(INDEX_HTML).toContain("%COGNITO_IDP_URL%");
+    expect(INDEX_HTML).not.toContain("%VITE_COGNITO_AUTHORITY%");
+    expect(INDEX_HTML).not.toContain("%VITE_COGNITO_DOMAIN%");
     expect(INDEX_HTML).toContain("https://maps.googleapis.com");
     expect(INDEX_HTML).toContain("https://www.googletagmanager.com");
     expect(INDEX_HTML).toContain("frame-src 'none'");

@@ -6,4 +6,5 @@ export * from "./adminToken";
 export * from "./beacon";
 export * from "./env";
 export * from "./personSignIn";
+export * from "./personSignUp";
 export * from "./site";

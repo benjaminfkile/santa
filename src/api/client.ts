@@ -1,9 +1,11 @@
 // docs/site.md section 12. Fetch wrapper: bearer, error shape, timeouts.
 // Callers switch on `body.code`; `body.message` is never rendered.
+// docs/site.md 11.4: a 401 from the API triggers one refresh and one retry,
+// then SignInRequired.
 
 import { env } from "../config/env";
 import type { ApiError } from "../contracts";
-import { getIdToken, SignInRequired } from "../auth/getIdToken";
+import { getIdToken, refreshNow, SignInRequired } from "../auth/session";
 
 export type { ApiError };
 export { SignInRequired };
@@ -34,9 +36,27 @@ export type ApiOpts = {
 };
 
 export async function api<T>(path: string, opts: ApiOpts): Promise<T> {
+  const bearer = opts.auth ? await getIdToken() : null;
+  try {
+    return await doFetch<T>(path, opts, bearer);
+  } catch (e) {
+    if (
+      opts.auth &&
+      e instanceof ApiRequestError &&
+      e.status === 401 &&
+      bearer !== null
+    ) {
+      const next = await refreshNow();
+      return await doFetch<T>(path, opts, next);
+    }
+    throw e;
+  }
+}
+
+async function doFetch<T>(path: string, opts: ApiOpts, bearer: string | null): Promise<T> {
   const headers: Record<string, string> = {};
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
-  if (opts.auth) headers["Authorization"] = `Bearer ${await getIdToken()}`;
+  if (bearer !== null) headers["Authorization"] = `Bearer ${bearer}`;
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), opts.timeoutMs ?? 15000);
   try {

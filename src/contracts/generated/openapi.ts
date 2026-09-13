@@ -1010,41 +1010,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/events/{id}/cookies": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["PageResponseOfCookieAdminDto"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/routes": {
         parameters: {
             query?: never;
@@ -1835,7 +1800,24 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch: {
@@ -2974,109 +2956,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/cookies/{id}/hide": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["CookieAdminDto"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/cookies/{id}/unhide": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["CookieAdminDto"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/cookies/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description No Content */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/settings": {
         parameters: {
             query?: never;
@@ -3766,7 +3645,6 @@ export interface components {
             id?: number | string;
             name?: string;
             notes?: string;
-            role?: string;
             keyPrefix?: string;
             isActive?: boolean;
             /** Format: date-time */
@@ -3779,8 +3657,9 @@ export interface components {
             lastHeartbeatAt?: null | string;
             /** Format: date-time */
             staleSince?: null | string;
-            telemetry?: null | components["schemas"]["HeartbeatBody"];
+            telemetry?: null | components["schemas"]["JsonElement"];
             hubConnected?: null | boolean;
+            healthy?: boolean;
             createdBy?: string;
             /** Format: date-time */
             createdAt?: string;
@@ -3810,7 +3689,6 @@ export interface components {
             /** Format: int64 */
             beaconId?: number | string;
             name?: string;
-            role?: string;
             isActive?: boolean;
             apiBaseUrl?: string;
             hubUrl?: string;
@@ -3900,23 +3778,6 @@ export interface components {
             /** Format: int32 */
             sectionCount?: number | string;
         };
-        CookieAdminDto: {
-            /** Format: int64 */
-            id?: number | string;
-            /** Format: int64 */
-            eventId?: number | string;
-            /** Format: int64 */
-            personId?: number | string;
-            personEmail?: string;
-            /** Format: int64 */
-            cookieTypeId?: number | string;
-            note?: null | string;
-            /** Format: date-time */
-            leftAt?: string;
-            /** Format: date-time */
-            hiddenAt?: null | string;
-            hiddenBy?: null | string;
-        };
         CookieLeft: {
             /** Format: int64 */
             id?: number | string;
@@ -3939,6 +3800,8 @@ export interface components {
             /** Format: int32 */
             sort?: number | string;
             active?: boolean;
+            /** Format: int32 */
+            cookieCount?: number | string;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
@@ -3954,7 +3817,6 @@ export interface components {
         CreateBeaconRequest: {
             name?: string;
             notes?: string;
-            role?: string;
         };
         CreateCookieRequest: {
             items?: components["schemas"]["CookiePick"][];
@@ -4042,7 +3904,6 @@ export interface components {
             /** Format: int64 */
             beaconId?: number | string;
             name?: string;
-            role?: string;
             key?: string;
             apiBaseUrl?: string;
             hubUrl?: string;
@@ -4098,68 +3959,15 @@ export interface components {
         HeartbeatBody: {
             /** Format: date-time */
             sentAt?: string;
-            power?: null | components["schemas"]["HeartbeatPower"];
-            radio?: null | components["schemas"]["HeartbeatRadio"];
-            gps?: null | components["schemas"]["HeartbeatGps"];
-            transport?: null | components["schemas"]["HeartbeatTransport"];
-            process?: null | components["schemas"]["HeartbeatProcess"];
-            identity?: null | components["schemas"]["HeartbeatIdentity"];
+            health?: null | components["schemas"]["HeartbeatHealth"];
+            debug?: null | components["schemas"]["JsonElement"];
         };
-        HeartbeatGps: {
-            provider?: null | string;
-            /** Format: int32 */
-            satellitesUsed?: null | number | string;
-            /** Format: int32 */
-            satellitesInView?: null | number | string;
-            /** Format: double */
-            lastFixAccuracyM?: null | number | string;
-            /** Format: int32 */
-            lastFixAgeS?: null | number | string;
-            /** Format: int32 */
-            fixesLastMinute?: null | number | string;
-            permission?: null | components["schemas"]["HeartbeatGpsPermission"];
-        };
-        HeartbeatGpsPermission: {
-            foreground?: null | boolean;
-            background?: null | boolean;
-            precise?: null | boolean;
-        };
-        HeartbeatIdentity: {
-            deviceModel?: null | string;
-            androidVersion?: null | string;
-            appVersion?: null | string;
-            /** Format: int64 */
-            clockSkewMs?: null | number | string;
-        };
-        HeartbeatPower: {
+        HeartbeatHealth: {
             /** Format: int32 */
             batteryPercent?: null | number | string;
-            charging?: null | boolean;
             /** Format: double */
-            batteryTempC?: null | number | string;
-            thermalStatus?: null | string;
-        };
-        HeartbeatProcess: {
-            /** Format: int64 */
-            deviceUptimeS?: null | number | string;
-            /** Format: int64 */
-            serviceUptimeS?: null | number | string;
-            /** Format: int32 */
-            serviceRestartCount?: null | number | string;
-            memoryPressure?: null | string;
-            batteryOptimizationExempt?: null | boolean;
-            notificationPermission?: null | boolean;
-            systemApp?: null | boolean;
-            rootAvailable?: null | boolean;
-        };
-        HeartbeatRadio: {
-            networkType?: null | string;
-            /** Format: int32 */
-            signalDbm?: null | number | string;
-            /** Format: int32 */
-            signalLevel?: null | number | string;
-            airplaneMode?: null | boolean;
-            connected?: null | boolean;
+            lastFixAgeS?: null | number | string;
+            socketState?: null | string;
         };
         HeartbeatResponse: {
             /** Format: date-time */
@@ -4169,17 +3977,6 @@ export interface components {
             isActive?: boolean;
             /** Format: date-time */
             serverTime?: string;
-        };
-        HeartbeatTransport: {
-            socketState?: null | string;
-            /** Format: int32 */
-            reconnectCount?: null | number | string;
-            /** Format: int32 */
-            httpFallbackSeconds?: null | number | string;
-            /** Format: int32 */
-            lastReceiptLatencyMs?: null | number | string;
-            /** Format: int32 */
-            sendsFailedSinceBoot?: null | number | string;
         };
         IconInfoDto: {
             id?: string;
@@ -4353,6 +4150,7 @@ export interface components {
             variants?: {
                 [key: string]: string;
             };
+            dziUrl?: null | string;
             uploadedBy?: string;
             /** Format: date-time */
             createdAt?: string;
@@ -4374,6 +4172,7 @@ export interface components {
             variants?: {
                 [key: string]: string;
             };
+            dzi?: null | string;
         };
         MediaPatchRequest: {
             alt?: null | string;
@@ -4429,8 +4228,6 @@ export interface components {
             note?: null | string;
             /** Format: date-time */
             leftAt?: string;
-            /** Format: date-time */
-            hiddenAt?: null | string;
         };
         MyCookiesResponse: {
             /** Format: int64 */
@@ -4521,10 +4318,6 @@ export interface components {
         };
         PageResponseOfContactMessageDto: {
             items?: components["schemas"]["ContactMessageDto"][];
-            nextCursor?: null | string;
-        };
-        PageResponseOfCookieAdminDto: {
-            items?: components["schemas"]["CookieAdminDto"][];
             nextCursor?: null | string;
         };
         PageResponseOfLocationRowDto: {
