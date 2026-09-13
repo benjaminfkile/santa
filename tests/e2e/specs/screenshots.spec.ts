@@ -59,10 +59,18 @@ async function primeScheme(context: import("@playwright/test").BrowserContext, s
 async function snapMain(page: import("@playwright/test").Page, name: string): Promise<void> {
   const main = page.locator("main#main");
   await expect(main).toBeVisible({ timeout: 15_000 });
+  // The shell renders main with a loading status first; capture the page once
+  // its first section (or the map, or a page heading) is on screen.
+  await expect(
+    main.locator("section, h1, h2, [data-testid=\"map\"]").first(),
+  ).toBeVisible({ timeout: 15_000 });
+  // The Google Maps canvas never settles (tiles, marker, attribution), so the
+  // live state masks it; everything around the map is still compared.
   await expect(main).toHaveScreenshot(name, {
     animations: "disabled",
     caret: "hide",
     maxDiffPixelRatio: 0.02,
+    mask: [main.locator('[data-testid="map"]')],
   });
 }
 
