@@ -31,6 +31,14 @@ export interface Snapshot {
       createdAt?: string;
     } | null;
   } | null;
+  qrCodes?: {
+    [k: string]:
+      | {
+          pageSlug?: string | null;
+          forwardUrl?: string | null;
+        }
+      | undefined;
+  };
   sponsors?: {
     id?: number;
     name?: string;

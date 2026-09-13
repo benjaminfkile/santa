@@ -149,3 +149,18 @@ export async function listBeacons(): Promise<AdminBeacon[]> {
 export async function activateBeacon(id: number): Promise<void> {
   await request<void>("POST", `/admin/beacons/${id}/activate`);
 }
+
+export type AdminQrCode = {
+  id: number;
+  tag: string;
+  scans?: { people?: number };
+};
+
+export async function listQrCodes(): Promise<AdminQrCode[]> {
+  const res = await request<{ items: AdminQrCode[] }>("GET", "/admin/qr-codes");
+  return res.items;
+}
+
+export async function getQrCodeDetail(id: number): Promise<AdminQrCode & { scans: { people: number } }> {
+  return request<AdminQrCode & { scans: { people: number } }>("GET", `/admin/qr-codes/${id}`);
+}
