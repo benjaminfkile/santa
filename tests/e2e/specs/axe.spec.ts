@@ -70,6 +70,9 @@ for (const scheme of ["light", "dark"] as const) {
       for (const p of pages) {
         await goto(page, `/${p.slug}`);
         await expect(page.locator("main#main")).toBeVisible({ timeout: 15_000 });
+        // The shell renders main with a loading status first; audit the page
+        // once its first section (and so its heading) is on screen.
+        await expect(page.locator("main#main section, main#main h1, main#main h2").first()).toBeVisible({ timeout: 15_000 });
         const results = await runAxe(page);
         expect(results.violations, `${p.slug}: ${report(results)}`).toEqual([]);
       }

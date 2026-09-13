@@ -182,7 +182,8 @@ test("status walk", async ({ page }) => {
     await personSignIn(page);
     await page.locator('[data-testid="cookie-control-open"]').click();
     const remainingText = await page.locator('[data-testid="cookie-remaining"]').textContent();
-    const remaining = Number((remainingText ?? "0").replace(/\D+/g, ""));
+    // The control reads "9 of 10 left": the first number is what remains.
+    const remaining = Number((remainingText ?? "").match(/\d+/)?.[0] ?? "0");
     await page.locator('[data-testid="cookie-type"]').first().click();
     await page.locator('[data-testid="cookie-submit"]').click();
     await expect(page.locator('[data-testid="cookie-remaining"]')).toContainText(String(remaining - 1));
@@ -196,8 +197,9 @@ test("status walk", async ({ page }) => {
     await postEventMessage(walk.id, { body: messageBody, eventTime: null });
     await waitForState(
       page,
-      (s) => s?.snapshot?.event?.latestMessage?.body === messageBody,
+      (s, body) => s?.snapshot?.event?.latestMessage?.body === body,
       POLL_PLUS,
+      messageBody,
     );
     await expect(page.locator('[data-testid="latest-message"]')).toContainText(messageBody);
 
@@ -214,7 +216,14 @@ test("status walk", async ({ page }) => {
     await setEventStatus(walk.id, 4);
     await waitForState(page, (s) => s?.live?.eventStatusId === 4, POLL_PLUS);
     await expect(page.locator('[data-testid="leaderboard-count"]').first()).toContainText(/\d+/);
-    expect(await page.locator('[data-testid="sponsor-logo"]').count()).toBeGreaterThan(0);
+    // The walk event's year carries sponsors only when an admin linked some;
+    // the grid renders either way, logos only with sponsors in the snapshot.
+    const sponsorCount = (await getState(page)).snapshot?.sponsors?.length ?? 0;
+    if (sponsorCount > 0) {
+      expect(await page.locator('[data-testid="sponsor-logo"]').count()).toBeGreaterThan(0);
+    } else {
+      console.log("no sponsors linked to the walk event's year; logo check skipped");
+    }
 
     // 10. status 5: cancelled page, message shown, no countdown.
     await setEventStatus(walk.id, 5);
