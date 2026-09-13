@@ -80,6 +80,46 @@ test("a page with a route_preview in viewer style loads the osd chunk, tiles the
   expect(posterFileRequests.length).toBeGreaterThan(0);
 });
 
+test("the sponsors page renders one card per snapshot sponsor with equal per-row heights at 1280 px", async ({ page }) => {
+  const adminSnap = await getAdminSnapshot();
+  const snap = (await fetchCdnSnapshot(adminSnap.url)) as {
+    content?: { pages?: PublishedPage[] };
+    sponsors?: unknown[];
+  };
+  const pages = snap.content?.pages ?? [];
+  const target = pages.find((p) => p.sections.some((s) => s.kind === "sponsor_grid"));
+  test.skip(target === undefined, "no sponsor_grid section in the published document");
+  if (!target) return;
+  const sponsorCount = (snap.sponsors ?? []).length;
+  test.skip(sponsorCount === 0, "no sponsors in the snapshot");
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await goto(page, `/${target.slug}`);
+  await expect(page.locator('[data-testid="sponsor-grid"]').first()).toBeVisible({ timeout: 15_000 });
+  const cards = page.locator('[data-testid="sponsor-card"]');
+  await expect(cards).toHaveCount(sponsorCount);
+
+  const rects = await cards.evaluateAll((els) =>
+    els.map((el) => {
+      const r = el.getBoundingClientRect();
+      return { top: Math.round(r.top), height: Math.round(r.height) };
+    }),
+  );
+  const rows = new Map<number, number[]>();
+  for (const { top, height } of rects) {
+    const key = Math.round(top / 2) * 2;
+    const list = rows.get(key) ?? [];
+    list.push(height);
+    rows.set(key, list);
+  }
+  for (const heights of rows.values()) {
+    if (heights.length < 2) continue;
+    const min = Math.min(...heights);
+    const max = Math.max(...heights);
+    expect(max - min).toBeLessThanOrEqual(1);
+  }
+});
+
 test("the header theme menu sets data-theme dark, survives a reload, and can be switched back to light", async ({ page }) => {
   // Shell.tsx: theme-toggle opens theme-menu holding the theme-light,
   // theme-dark, theme-system radio items.
