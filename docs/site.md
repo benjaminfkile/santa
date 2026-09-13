@@ -1284,7 +1284,7 @@ Fixtures come from the vendored `contracts/fixtures/*.json`; schema validation o
 
 Configuration: `baseURL = https://<preview-site-domain>`, Chromium desktop and Pixel 7 emulation, `E2E_API_BASE_URL` (the dev API), `E2E_CDN_BASE_URL`, and the secrets below from the `dev` GitHub environment. The harness refuses to run when `E2E_API_BASE_URL` does not contain `dev`, when `GET /me` for the admin token reports `isAdmin: false`, or when any event in `GET /admin/events` has `statusId` 3 at start.
 
-Secrets: `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`, `E2E_ADMIN_TOTP_SECRET`, `E2E_PERSON_EMAIL`, `E2E_PERSON_PASSWORD`, `E2E_BEACON_KEY` (a dev beacon marked active, role `beacon`, named `e2e`). Variables: `E2E_ADMIN_CLIENT_ID` (the dev admin pool client that allows `USER_PASSWORD_AUTH`, contracts 3.1) and optionally `E2E_COGNITO_REGION` (default `us-east-1`).
+Secrets: `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`, `E2E_ADMIN_TOTP_SECRET`, `E2E_PERSON_EMAIL`, `E2E_PERSON_PASSWORD`, `E2E_BEACON_KEY` (a dev beacon marked active, named `e2e`). Variables: `E2E_ADMIN_CLIENT_ID` (the dev admin pool client that allows `USER_PASSWORD_AUTH`, contracts 3.1) and optionally `E2E_COGNITO_REGION` (default `us-east-1`).
 
 Harness (`tests/e2e/harness/`):
 

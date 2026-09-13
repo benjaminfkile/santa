@@ -1,4 +1,5 @@
 import { defineConfig, type Plugin } from "vitest/config";
+import { loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
 // docs/site.md section 21.1 (build) and section 22.1 (tests).
@@ -7,14 +8,17 @@ import react from "@vitejs/plugin-react";
 // id at build time. A small plugin exposes it to index.html as
 // %COGNITO_IDP_URL% so no environment value is written into the repo.
 function cognitoIdpPlugin(): Plugin {
+  let poolId = "";
   return {
     name: "wmsfo-cognito-idp",
+    configResolved(config) {
+      poolId = loadEnv(config.mode, config.root, "VITE_").VITE_COGNITO_USER_POOL_ID
+        ?? process.env.VITE_COGNITO_USER_POOL_ID
+        ?? "";
+    },
     transformIndexHtml: {
       order: "pre",
-      handler(html, ctx) {
-        const poolId = ctx.server?.config.env?.VITE_COGNITO_USER_POOL_ID
-          ?? process.env.VITE_COGNITO_USER_POOL_ID
-          ?? "";
+      handler(html) {
         const region = poolId.split("_")[0] ?? "";
         const url = region === "" ? "" : `https://cognito-idp.${region}.amazonaws.com`;
         return html.replaceAll("%COGNITO_IDP_URL%", url);
@@ -25,6 +29,9 @@ function cognitoIdpPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [react(), cognitoIdpPlugin()],
+  // amazon-cognito-identity-js pulls in the Node buffer shim, which reads
+  // `global` at module load; the browser has only globalThis.
+  define: { global: "globalThis" },
   build: {
     target: "es2020",
     sourcemap: "hidden",
