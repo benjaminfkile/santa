@@ -19,7 +19,9 @@ export function MoonIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M20 15 Q13 17 9 12 Q7 8 10 3 Q4 5 4 12 Q4 20 12 20 Q17 20 20 15 Z" />
+      <path d="M20 15 Q13 17 9 12 Q7 8 10 3 Q4 5 4 12 Q4 20 12 20 Q17 20 20 15 Z" fill="var(--icon-gold, #f0b32e)" stroke="var(--icon-gold, #f0b32e)" />
+  <circle cx="18" cy="5" r="0.8" fill="var(--icon-gold, #f0b32e)" stroke="none" />
+  <circle cx="21" cy="9" r="0.6" fill="var(--icon-gold, #f0b32e)" stroke="none" />
     </svg>
   );
 }

@@ -19,10 +19,9 @@ export function ScarfIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M6 4 Q12 8 18 4" />
-  <path d="M6 4 L6 15 L10 15 L10 21 L13 21 L13 15 L18 15 Z" />
-  <path d="M6 8 L18 8" />
-  <path d="M10 15 L10 17 L13 17" />
+      <path d="M6 4 L6 15 L10 15 L10 21 L13 21 L13 15 L18 15 L18 4 Q12 8 6 4 Z" fill="var(--icon-red, #e0524b)" />
+  <path d="M6 8.5 L18 8.5" stroke="var(--icon-gold, #f0b32e)" strokeWidth="1.8" />
+  <path d="M10 18 L13 18" stroke="var(--icon-gold, #f0b32e)" strokeWidth="1.8" />
     </svg>
   );
 }

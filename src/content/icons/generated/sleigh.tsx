@@ -19,12 +19,13 @@ export function SleighIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M4 14 Q4 10 8 10 L18 10 Q20 10 20 12 L20 15 L6 15 Q4 15 4 14 Z" />
-  <path d="M3 18 L21 18" />
+      <path d="M4 14 Q4 10 8 10 L18 10 Q20 10 20 12 L20 15 L6 15 Q4 15 4 14 Z" fill="var(--icon-red, #e0524b)" />
+  <path d="M8 10 Q8 6 12 6" stroke="var(--icon-red, #e0524b)" />
+  <path d="M3 18 L21 18" stroke="var(--icon-gold, #f0b32e)" strokeWidth="1.8" />
   <path d="M5 15 L5 17.5" />
   <path d="M19 15 L19 17.5" />
-  <path d="M4 18 Q3 20 5 20" />
-  <path d="M20 18 Q21 20 19 20" />
+  <path d="M4 18 Q3 20 5 20" stroke="var(--icon-gold, #f0b32e)" strokeWidth="1.8" />
+  <path d="M20 18 Q21 20 19 20" stroke="var(--icon-gold, #f0b32e)" strokeWidth="1.8" />
     </svg>
   );
 }

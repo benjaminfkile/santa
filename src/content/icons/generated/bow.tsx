@@ -19,11 +19,11 @@ export function BowIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M12 12 Q3 6 3 12 Q3 18 12 12 Z" />
-  <path d="M12 12 Q21 6 21 12 Q21 18 12 12 Z" />
-  <circle cx="12" cy="12" r="1.2" />
-  <path d="M10 13 Q9 20 6 21" />
-  <path d="M14 13 Q15 20 18 21" />
+      <path d="M12 12 Q3 6 3 12 Q3 18 12 12 Z" fill="var(--icon-red, #e0524b)" />
+  <path d="M12 12 Q21 6 21 12 Q21 18 12 12 Z" fill="var(--icon-red, #e0524b)" />
+  <path d="M10 13 Q9 20 6 21" stroke="var(--icon-red, #e0524b)" />
+  <path d="M14 13 Q15 20 18 21" stroke="var(--icon-red, #e0524b)" />
+  <circle cx="12" cy="12" r="1.5" fill="var(--icon-gold, #f0b32e)" stroke="var(--icon-gold, #f0b32e)" />
     </svg>
   );
 }

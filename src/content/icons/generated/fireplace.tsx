@@ -19,12 +19,11 @@ export function FireplaceIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <rect x="3" y="4" width="18" height="16" rx="0.5" />
+      <rect x="3" y="4" width="18" height="16" rx="0.5" fill="var(--icon-cocoa, #9a5b2f)" fillOpacity="0.55" />
+  <path d="M6 20 L6 12 L18 12 L18 20 Z" fill="currentColor" fillOpacity="0.3" />
   <path d="M3 8 L21 8" />
-  <path d="M6 20 L6 12 L18 12 L18 20" />
-  <path d="M12 19 Q9 17 11 14 Q12 16 14 14 Q13 17 12 19 Z" />
-  <path d="M8 20 L8 17" />
-  <path d="M16 20 L16 17" />
+  <path d="M12 19.5 Q8.5 17 11 13.5 Q12 15.5 14 13.5 Q15.5 17 12 19.5 Z" fill="var(--icon-gold, #f0b32e)" stroke="var(--icon-gold, #f0b32e)" />
+  <path d="M12 18.5 Q11 17 12 15.5 Q13 17 12 18.5 Z" fill="var(--icon-red, #e0524b)" stroke="none" />
     </svg>
   );
 }

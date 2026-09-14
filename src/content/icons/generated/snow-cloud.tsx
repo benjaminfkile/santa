@@ -19,7 +19,7 @@ export function SnowCloudIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M6 13 Q2 13 2 9 Q2 5 6 5 Q7 2 11 2 Q15 2 16 5 Q21 5 21 9 Q21 13 17 13 Z" />
+      <path d="M6 13 Q2 13 2 9 Q2 5 6 5 Q7 2 11 2 Q15 2 16 5 Q21 5 21 9 Q21 13 17 13 Z" fill="currentColor" fillOpacity="0.2" />
   <path d="M7 17 L7 22" />
   <path d="M5 19 L9 19" />
   <path d="M12 15 L12 22" />

@@ -19,8 +19,8 @@ export function RibbonIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M8 3 L16 3 L16 15 L12 12 L8 15 Z" />
-  <path d="M8 6 L16 6" />
+      <path d="M8 3 L16 3 L16 15 L12 12 L8 15 Z" fill="var(--icon-red, #e0524b)" />
+  <path d="M8 6.2 L16 6.2" stroke="var(--icon-gold, #f0b32e)" strokeWidth="1.8" />
     </svg>
   );
 }

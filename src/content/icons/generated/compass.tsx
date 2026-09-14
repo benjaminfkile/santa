@@ -19,11 +19,12 @@ export function CompassIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <circle cx="12" cy="12" r="9" />
-  <path d="M12 6 L14 12 L12 18 L10 12 Z" />
-  <circle cx="12" cy="12" r="0.6" />
-  <path d="M12 3 L12 4.5" />
-  <path d="M12 19.5 L12 21" />
+      <circle cx="12" cy="12" r="9" fill="currentColor" fillOpacity="0.14" />
+  <path d="M12 6 L14 12 L10 12 Z" fill="var(--icon-red, #e0524b)" stroke="var(--icon-red, #e0524b)" />
+  <path d="M12 18 L10 12 L14 12 Z" fill="var(--icon-snow, #ffffff)" fillOpacity="0.9" />
+  <circle cx="12" cy="12" r="0.8" fill="var(--icon-gold, #f0b32e)" stroke="var(--icon-gold, #f0b32e)" />
+  <path d="M12 2.5 L12 4" />
+  <path d="M12 20 L12 21.5" />
     </svg>
   );
 }

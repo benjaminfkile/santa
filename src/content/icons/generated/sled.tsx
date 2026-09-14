@@ -19,12 +19,12 @@ export function SledIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M3 10 L21 6" />
-  <path d="M5 11 L5 15" />
-  <path d="M11 9 L11 14" />
-  <path d="M17 8 L17 12" />
-  <path d="M4 17 L20 13" />
-  <path d="M4 17 Q3 19 4 20 L20 16 Q21 15 20 14" />
+      <path d="M3 10 L21 6 L21 8.5 L3 12.5 Z" fill="var(--icon-cocoa, #9a5b2f)" fillOpacity="0.85" />
+  <path d="M5 12 L5 15" stroke="var(--icon-cocoa, #9a5b2f)" />
+  <path d="M11 10.6 L11 14" stroke="var(--icon-cocoa, #9a5b2f)" />
+  <path d="M17 9.4 L17 12" stroke="var(--icon-cocoa, #9a5b2f)" />
+  <path d="M4 17 L20 13" stroke="var(--icon-red, #e0524b)" strokeWidth="1.8" />
+  <path d="M4 17 Q3 19 4 20 L20 16 Q21 15 20 14" stroke="var(--icon-red, #e0524b)" strokeWidth="1.8" />
     </svg>
   );
 }

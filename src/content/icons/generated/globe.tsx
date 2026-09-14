@@ -19,7 +19,7 @@ export function GlobeIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="9" fill="currentColor" fillOpacity="0.14" />
   <path d="M3 12 L21 12" />
   <path d="M12 3 Q7 7 7 12 Q7 17 12 21" />
   <path d="M12 3 Q17 7 17 12 Q17 17 12 21" />

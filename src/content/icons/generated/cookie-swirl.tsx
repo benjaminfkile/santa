@@ -19,9 +19,9 @@ export function CookieSwirlIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <circle cx="12" cy="12" r="9" />
-  <path d="M12 4 Q4 12 12 20 Q20 12 12 4" />
-  <path d="M12 8 Q9 12 12 16 Q15 12 12 8" />
+      <circle cx="12" cy="12" r="9" fill="var(--icon-gold, #f0b32e)" fillOpacity="0.85" />
+  <path d="M12 4 Q4 12 12 20 Q20 12 12 4" stroke="var(--icon-cocoa, #9a5b2f)" strokeWidth="1.8" />
+  <path d="M12 8 Q9 12 12 16 Q15 12 12 8" stroke="var(--icon-cocoa, #9a5b2f)" strokeWidth="1.8" />
     </svg>
   );
 }

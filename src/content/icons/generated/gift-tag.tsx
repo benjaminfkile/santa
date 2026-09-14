@@ -19,9 +19,10 @@ export function GiftTagIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M4 13 L11 4 L20 4 L20 13 L11 22 Z" />
-  <circle cx="16" cy="8" r="1.2" />
-  <path d="M8 14 L13 19" />
+      <path d="M4 13 L11 4 L20 4 L20 13 L11 22 Z" fill="var(--icon-snow, #ffffff)" fillOpacity="0.9" />
+  <circle cx="16" cy="8" r="1.3" fill="currentColor" fillOpacity="0.4" />
+  <path d="M8 14 L13 19" stroke="var(--icon-red, #e0524b)" strokeWidth="1.8" />
+  <path d="M16 8 Q19 4 21 2" stroke="var(--icon-red, #e0524b)" />
     </svg>
   );
 }

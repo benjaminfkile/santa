@@ -34,6 +34,7 @@ export function SnowflakeIcon(props: SVGProps<SVGSVGElement>) {
   <path d="M6 16 L6 18.5" />
   <path d="M18 8 L20 7.5" />
   <path d="M18 8 L18 5.5" />
+  <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
     </svg>
   );
 }

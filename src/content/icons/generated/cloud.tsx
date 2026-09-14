@@ -19,7 +19,7 @@ export function CloudIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M6 18 Q2 18 2 14 Q2 10 6 10 Q7 6 11 6 Q15 6 16 10 Q21 10 21 14 Q21 18 17 18 Z" />
+      <path d="M6 18 Q2 18 2 14 Q2 10 6 10 Q7 6 11 6 Q15 6 16 10 Q21 10 21 14 Q21 18 17 18 Z" fill="currentColor" fillOpacity="0.2" />
     </svg>
   );
 }

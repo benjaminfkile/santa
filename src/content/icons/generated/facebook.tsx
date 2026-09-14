@@ -19,7 +19,7 @@ export function FacebookIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <rect x="3" y="3" width="18" height="18" rx="3" fill="currentColor" fillOpacity="0.18" />
   <path d="M15 8 L13 8 Q11 8 11 10 L11 12 L9 12 L9 14 L11 14 L11 21" />
   <path d="M11 14 L14 14" />
     </svg>

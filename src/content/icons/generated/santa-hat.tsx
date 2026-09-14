@@ -19,12 +19,9 @@ export function SantaHatIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M4 17 L20 17" />
-  <path d="M4.5 17 L4.5 15" />
-  <path d="M19.5 17 L19.5 15" />
-  <path d="M6 15 L18 15" />
-  <path d="M6 15 Q10 5 20.5 5" />
-  <circle cx="20.5" cy="5" r="1.4" />
+      <path d="M6 15 Q10 5 20.5 5 Q12 7 18 15 Z" fill="var(--icon-red, #e0524b)" />
+  <rect x="4" y="14.5" width="16" height="3.5" rx="1.5" fill="var(--icon-snow, #ffffff)" fillOpacity="0.92" />
+  <circle cx="20.5" cy="5" r="1.7" fill="var(--icon-snow, #ffffff)" fillOpacity="0.95" />
     </svg>
   );
 }

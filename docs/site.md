@@ -698,7 +698,7 @@ Data row units: speed as mph from `speedMps`, heading as degrees plus cardinal f
 
 **Motion.** Hover is a 120 ms ease-out change of border or colour and nothing moves more than 2 px; focus is a 2 px accent outline with a 2 px offset; the hero rises 12 px on load with a 60 ms stagger; the funds ring and leaderboard reorder animate as section 17 says. Every tap target is at least 44 px.
 
-**Icons.** Library icons are inline SVG components generated at build time from the vendored `contracts/icons/<id>.svg` files (the API repository publishes its icon library there beside the schemas, so the contracts check covers them) (24 px grid, 1.75 px stroke, round caps and joins, `stroke="currentColor"`), so they take the accent; the `Icon` primitive renders a library id inline and a media id through `<img>`. A library id missing from the generated set falls back to `<img>` from `bundle.icons`.
+**Icons.** Library icons are inline SVG components generated at build time from the vendored `contracts/icons/<id>.svg` files (the API repository publishes its icon library there beside the schemas, so the contracts check covers them) (24 px grid, 1.5 px stroke and soft tints in `currentColor`, round caps and joins, plus fixed red, gold, green, snow, and cocoa fills through `--icon-*` CSS variables with fallbacks), so the strokes take the accent and the fills read the same inline or through `<img>`; the `Icon` primitive renders a library id inline and a media id through `<img>`. A library id missing from the generated set falls back to `<img>` from `bundle.icons`.
 
 ### 7.8 Preview
 

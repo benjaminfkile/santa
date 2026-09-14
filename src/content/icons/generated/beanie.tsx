@@ -19,12 +19,9 @@ export function BeanieIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M4 15 Q4 6 12 6 Q20 6 20 15 Z" />
-  <path d="M3 15 L21 15" />
-  <path d="M3 18 L21 18" />
-  <path d="M3 15 L3 18" />
-  <path d="M21 15 L21 18" />
-  <circle cx="12" cy="5" r="1.2" />
+      <path d="M4 15 Q4 6 12 6 Q20 6 20 15 Z" fill="var(--icon-red, #e0524b)" />
+  <rect x="3" y="15" width="18" height="3.5" rx="1" fill="var(--icon-snow, #ffffff)" fillOpacity="0.92" />
+  <circle cx="12" cy="5" r="1.6" fill="var(--icon-snow, #ffffff)" fillOpacity="0.95" />
     </svg>
   );
 }

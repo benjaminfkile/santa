@@ -20,10 +20,8 @@ export function EarmuffsIcon(props: SVGProps<SVGSVGElement>) {
       {...props}
     >
       <path d="M5 15 Q5 4 12 4 Q19 4 19 15" />
-  <circle cx="5" cy="16" r="3" />
-  <circle cx="19" cy="16" r="3" />
-  <path d="M4 15 L4 18" />
-  <path d="M20 15 L20 18" />
+  <circle cx="5" cy="16" r="3.2" fill="var(--icon-red, #e0524b)" />
+  <circle cx="19" cy="16" r="3.2" fill="var(--icon-red, #e0524b)" />
     </svg>
   );
 }

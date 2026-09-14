@@ -19,9 +19,9 @@ export function SnowboardIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M4 4 Q10 3 12 12 Q14 21 20 20 Q19 15 12 12 Q5 9 4 4 Z" />
-  <path d="M10 9 L14 11" />
-  <path d="M12 14 L16 16" />
+      <path d="M4 4 Q10 3 12 12 Q14 21 20 20 Q19 15 12 12 Q5 9 4 4 Z" fill="var(--icon-green, #3fae7a)" />
+  <path d="M10 9 L14 11" stroke="var(--icon-snow, #ffffff)" />
+  <path d="M12 14 L16 16" stroke="var(--icon-snow, #ffffff)" />
     </svg>
   );
 }

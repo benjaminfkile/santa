@@ -19,8 +19,8 @@ export function MapPinIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M12 22 Q4 12 4 9 Q4 3 12 3 Q20 3 20 9 Q20 12 12 22 Z" />
-  <circle cx="12" cy="9" r="2.5" />
+      <path d="M12 22 Q4 12 4 9 Q4 3 12 3 Q20 3 20 9 Q20 12 12 22 Z" fill="var(--icon-red, #e0524b)" />
+  <circle cx="12" cy="9" r="2.6" fill="var(--icon-snow, #ffffff)" fillOpacity="0.95" />
     </svg>
   );
 }

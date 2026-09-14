@@ -19,11 +19,11 @@ export function SkateIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M6 4 L6 12 Q6 14 8 14 L18 14 Q20 14 20 12 Q20 10 18 10 L14 10 L14 4 Z" />
-  <path d="M6 8 L14 8" />
-  <path d="M4 17 L21 17" />
-  <path d="M6 14 L6 17" />
-  <path d="M20 14 L20 17" />
+      <path d="M6 4 L6 12 Q6 14 8 14 L18 14 Q20 14 20 12 Q20 10 18 10 L14 10 L14 4 Z" fill="var(--icon-snow, #ffffff)" fillOpacity="0.92" />
+  <path d="M6 8 L14 8" stroke="var(--icon-red, #e0524b)" />
+  <path d="M4 17.5 L21 17.5" strokeWidth="1.8" />
+  <path d="M6 14 L6 17.5" />
+  <path d="M20 14 L20 17.5" />
     </svg>
   );
 }

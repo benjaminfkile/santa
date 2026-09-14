@@ -19,13 +19,13 @@ export function PineconeIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M12 3 Q7 5 7 12 Q7 19 12 21 Q17 19 17 12 Q17 5 12 3 Z" />
-  <path d="M9 7 L12 9 L15 7" />
-  <path d="M8 10 L12 12 L16 10" />
-  <path d="M8 14 L12 16 L16 14" />
-  <path d="M9 18 L12 20 L15 18" />
-  <path d="M12 3 L11 1" />
-  <path d="M12 3 L13 1" />
+      <path d="M12 3 Q7 5 7 12 Q7 19 12 21 Q17 19 17 12 Q17 5 12 3 Z" fill="var(--icon-cocoa, #9a5b2f)" fillOpacity="0.85" />
+  <path d="M9 7 L12 9 L15 7" stroke="var(--icon-snow, #ffffff)" strokeOpacity="0.8" />
+  <path d="M8 10 L12 12 L16 10" stroke="var(--icon-snow, #ffffff)" strokeOpacity="0.8" />
+  <path d="M8 14 L12 16 L16 14" stroke="var(--icon-snow, #ffffff)" strokeOpacity="0.8" />
+  <path d="M9 18 L12 20 L15 18" stroke="var(--icon-snow, #ffffff)" strokeOpacity="0.8" />
+  <path d="M12 3 L11 1" stroke="var(--icon-green, #3fae7a)" />
+  <path d="M12 3 L13 1" stroke="var(--icon-green, #3fae7a)" />
     </svg>
   );
 }

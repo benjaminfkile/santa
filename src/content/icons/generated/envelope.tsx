@@ -19,8 +19,9 @@ export function EnvelopeIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <rect x="3" y="6" width="18" height="13" rx="1" />
+      <rect x="3" y="6" width="18" height="13" rx="1.5" fill="currentColor" fillOpacity="0.18" />
   <path d="M3 8 L12 14 L21 8" />
+  <circle cx="12" cy="14.2" r="1.7" fill="var(--icon-red, #e0524b)" stroke="var(--icon-red, #e0524b)" />
     </svg>
   );
 }

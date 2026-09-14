@@ -19,8 +19,8 @@ export function CookieStarIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <circle cx="12" cy="12" r="9" />
-  <path d="M12 6 L13.6 10.2 L18 10.5 L14.7 13.5 L15.7 17.8 L12 15.4 L8.3 17.8 L9.3 13.5 L6 10.5 L10.4 10.2 Z" />
+      <circle cx="12" cy="12" r="9" fill="var(--icon-gold, #f0b32e)" fillOpacity="0.85" />
+  <path d="M12 6 L13.6 10.2 L18 10.5 L14.7 13.5 L15.7 17.8 L12 15.4 L8.3 17.8 L9.3 13.5 L6 10.5 L10.4 10.2 Z" fill="var(--icon-snow, #ffffff)" fillOpacity="0.92" />
     </svg>
   );
 }

@@ -19,11 +19,11 @@ export function AngelIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <ellipse cx="12" cy="4" rx="2.5" ry="1" />
-  <circle cx="12" cy="8" r="2.5" />
-  <path d="M8 21 L12 11 L16 21 Z" />
-  <path d="M8 13 Q3 12 3 8" />
-  <path d="M16 13 Q21 12 21 8" />
+      <path d="M8 21 L12 11 L16 21 Z" fill="currentColor" fillOpacity="0.22" />
+  <path d="M8 13 Q3 12 3 8 Q6 9 9 11 Z" fill="var(--icon-snow, #ffffff)" fillOpacity="0.9" />
+  <path d="M16 13 Q21 12 21 8 Q18 9 15 11 Z" fill="var(--icon-snow, #ffffff)" fillOpacity="0.9" />
+  <circle cx="12" cy="8" r="2.5" fill="var(--icon-snow, #ffffff)" fillOpacity="0.9" />
+  <ellipse cx="12" cy="4" rx="2.6" ry="1" fill="var(--icon-gold, #f0b32e)" stroke="var(--icon-gold, #f0b32e)" />
     </svg>
   );
 }

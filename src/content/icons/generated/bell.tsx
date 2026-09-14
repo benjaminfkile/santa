@@ -19,11 +19,11 @@ export function BellIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M6 17 Q6 9 12 9 Q18 9 18 17 Z" />
+      <path d="M6 17 Q6 9 12 9 Q18 9 18 17 Z" fill="var(--icon-gold, #f0b32e)" />
   <path d="M5 17 L19 17" />
   <path d="M10 20 Q12 22 14 20" />
   <path d="M12 6 L12 9" />
-  <circle cx="12" cy="5" r="1.2" />
+  <circle cx="12" cy="5" r="1.4" fill="var(--icon-red, #e0524b)" stroke="var(--icon-red, #e0524b)" />
     </svg>
   );
 }

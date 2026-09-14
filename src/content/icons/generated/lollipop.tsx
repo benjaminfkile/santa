@@ -19,9 +19,9 @@ export function LollipopIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <circle cx="10" cy="9" r="6" />
-  <path d="M10 9 Q9 5 12 5 Q14 5 14 8 Q14 10 11 10 Q7 10 7 7" />
-  <path d="M14 13 L21 20" />
+      <circle cx="10" cy="9" r="6.5" fill="var(--icon-red, #e0524b)" />
+  <path d="M10 9 Q9 5 12 5 Q14 5 14 8 Q14 10 11 10 Q7 10 7 7" stroke="var(--icon-snow, #ffffff)" strokeWidth="1.3" />
+  <path d="M14.5 13.5 L21 20" strokeWidth="1.8" />
   <path d="M19 22 L22 19" />
     </svg>
   );

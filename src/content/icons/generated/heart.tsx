@@ -19,7 +19,8 @@ export function HeartIcon(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M12 20 Q3 13 3 8 Q3 4 7 4 Q10 4 12 7 Q14 4 17 4 Q21 4 21 8 Q21 13 12 20 Z" />
+      <path d="M12 20 Q3 13 3 8 Q3 4 7 4 Q10 4 12 7 Q14 4 17 4 Q21 4 21 8 Q21 13 12 20 Z" fill="var(--icon-red, #e0524b)" stroke="var(--icon-red, #e0524b)" />
+  <path d="M6 7.5 Q6.5 6 8 6" stroke="var(--icon-snow, #ffffff)" strokeOpacity="0.8" />
     </svg>
   );
 }
