@@ -12,9 +12,11 @@ export const routePosterHost: string;
 export const routePreview: string;
 export const routePreviewEmpty: string;
 export const routePreviewEmptyText: string;
+export const routePreviewFrame: string;
 export const routePreviewHeading: string;
 export const routePreviewImage: string;
 export const routePreviewImageWrap: string;
 export const routePreviewLink: string;
+export const routePreviewOverlay: string;
 export const routePreviewViewer: string;
 

@@ -6,20 +6,39 @@
 .routePreview { display: flex; flex-direction: column; gap: var(--space-3); }
 .routePreviewHeading { margin: 0; font-family: var(--font-display); font-size: var(--font-size-h2); color: var(--text-bright); }
 .routePreviewEmptyText { margin: 0; color: var(--text-dim); }
-.routePreviewLink {
+.routePreviewFrame {
+  position: relative;
   display: block;
+  width: 100%;
+  height: var(--route-preview-max-h);
   border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid var(--line);
   transition: var(--hover-transition);
+  background: var(--panel-2);
 }
-.routePreviewLink:hover { border-color: var(--accent); }
+.routePreviewLink { text-decoration: none; color: inherit; }
+.routePreviewLink:hover .routePreviewFrame,
+.routePreviewLink:focus-visible .routePreviewFrame { border-color: var(--accent); }
 .routePreviewImage {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
-.routePreviewLink .routePreviewImage { border-radius: 0; }
+.routePreviewOverlay {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  font-size: var(--font-size-label);
+  pointer-events: none;
+}
 .routePreviewEmpty { color: var(--text-dim); }
 .routePreviewViewer { gap: var(--space-4); }
 .routePreviewImageWrap { gap: var(--space-3); }
@@ -75,7 +94,7 @@
 .routePoster {
   position: relative;
   width: 100%;
-  height: max(70vh, 320px);
+  height: var(--route-viewer-max-h);
   border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid var(--line);

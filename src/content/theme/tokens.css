@@ -83,6 +83,9 @@
   --hero-tall: 200px;
   --hero-short: 120px;
 
+  --route-preview-max-h: min(70vh, 720px);
+  --route-viewer-max-h: min(80vh, 900px);
+
   --radius-sm: 6px;
   --radius-md: 10px;
 

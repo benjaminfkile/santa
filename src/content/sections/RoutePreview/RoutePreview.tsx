@@ -1,7 +1,10 @@
 // docs/site.md section 7.4 and 8.5. `route_preview`:
-//  - `image`: the poster through `Media` (960 variant, srcset) wrapped in a
-//     link to the page whose `route_preview` has style `viewer`, or
-//     unlinked when no such page is published.
+//  - `image`: the poster through `Media` (960 variant, srcset) inside a
+//     bounded frame at the content column width, `--route-preview-max-h`
+//     tall, filled with `object-fit: cover`. The frame is wrapped in a
+//     link to the page whose `route_preview` has style `viewer` when one
+//     is published, unlinked otherwise; the linked frame carries an
+//     "Open the full route" overlay at the bottom right.
 //  - `viewer`: `data.disclaimer` in the disclaimer recipe plus the
 //     OpenSeadragon `PosterViewer` over the media entry's Deep Zoom
 //     pyramid (or its original url when there is none). No map chunk.
@@ -16,6 +19,7 @@ import { Link } from "react-router-dom";
 import { Media } from "../../primitives/Media";
 import { resolveMedia } from "../../primitives/resolve";
 import { PosterViewer } from "./PosterViewer";
+import { copy } from "../../../copy/copy";
 import * as styles from "./RoutePreview.module.css";
 
 type RoutePreviewData = {
@@ -134,10 +138,17 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
       ) : null}
       {viewerSlug !== null ? (
         <Link to={`/${viewerSlug}`} className={styles.routePreviewLink} data-testid="route-preview-link">
-          {picture}
+          <div className={styles.routePreviewFrame} data-testid="route-preview-frame">
+            {picture}
+            <span className={styles.routePreviewOverlay} data-testid="route-preview-overlay">
+              {copy.map.poster.openFullRoute}
+            </span>
+          </div>
         </Link>
       ) : (
-        picture
+        <div className={styles.routePreviewFrame} data-testid="route-preview-frame">
+          {picture}
+        </div>
       )}
     </div>
   );

@@ -1,12 +1,17 @@
 // docs/site.md sections 7.4, 8.5, 22.1. RoutePreview:
-//  - `image` renders the poster picture wrapped in a link to the page
-//    holding the `viewer` route_preview when one is published; unlinked
-//    otherwise.
+//  - `image` renders the poster picture inside a bounded frame at
+//    `--route-preview-max-h`, cropped with `object-fit: cover`; wrapped
+//    in a link to the page holding the `viewer` route_preview when one
+//    is published, unlinked otherwise.
+//  - The link carries a quiet "Open the full route" overlay; the
+//    unlinked frame does not.
 //  - `viewer` renders the disclaimer and the OpenSeadragon PosterViewer.
 //  - Neither style loads the map chunk.
 //
 // PosterViewer:
 //  - `dzi` present builds a Deep Zoom tile source, absent an image source.
+//  - `homeFillsViewer: true` is passed so the home position fills the
+//    frame horizontally.
 //  - Destroyed on unmount, rebuilt on a new media id.
 //  - The fullscreen button calls `requestFullscreen` and falls back to a
 //    fixed frame when the API is missing.
@@ -15,6 +20,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, cleanup, act, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 import { store } from "../../../../src/store/useStore";
 import { initialStore, type ContentBundle } from "../../../../src/store/types";
@@ -32,6 +39,7 @@ type OSDCall = {
   maxZoomPixelRatio?: number;
   visibilityRatio?: number;
   constrainDuringPan?: boolean;
+  homeFillsViewer?: boolean;
   animationTime?: number;
 };
 
@@ -158,7 +166,7 @@ afterEach(() => {
 });
 
 describe("RoutePreview", () => {
-  it("image style renders an unlinked <img> when no viewer page is published", () => {
+  it("image style renders an unlinked <img> inside the bounded frame when no viewer page is published, without the overlay label", () => {
     setSnapshotEvent("poster-1");
     const bundle = buildBundle();
     const { container } = render(
@@ -168,12 +176,17 @@ describe("RoutePreview", () => {
     );
     const link = container.querySelector('[data-testid="route-preview-link"]');
     expect(link).toBeNull();
+    const frame = container.querySelector('[data-testid="route-preview-frame"]') as HTMLElement | null;
+    expect(frame).not.toBeNull();
     const img = container.querySelector('[data-testid="route-preview-image"]') as HTMLImageElement | null;
     expect(img).not.toBeNull();
     expect(img?.getAttribute("src")).toContain("poster.jpg");
+    expect(frame?.contains(img)).toBe(true);
+    const overlay = container.querySelector('[data-testid="route-preview-overlay"]');
+    expect(overlay).toBeNull();
   });
 
-  it("image style wraps the picture in a link to the viewer page when one is published", () => {
+  it("image style wraps the frame in a link to the viewer page with the 'Open the full route' overlay when one is published", () => {
     setSnapshotEvent("poster-1");
     const bundle = buildBundle({
       content: {
@@ -197,6 +210,70 @@ describe("RoutePreview", () => {
     const link = container.querySelector('[data-testid="route-preview-link"]') as HTMLAnchorElement | null;
     expect(link).not.toBeNull();
     expect(link?.getAttribute("href")).toBe("/route");
+    const frame = container.querySelector('[data-testid="route-preview-frame"]') as HTMLElement | null;
+    expect(frame).not.toBeNull();
+    expect(link?.contains(frame)).toBe(true);
+    const overlay = container.querySelector('[data-testid="route-preview-overlay"]') as HTMLElement | null;
+    expect(overlay).not.toBeNull();
+    expect(overlay?.textContent).toBe("Open the full route");
+    expect(frame?.contains(overlay)).toBe(true);
+  });
+
+  it("image style bounds the frame with a height token and covers the image", () => {
+    // css: false in vitest means module.css classes are stripped at
+    // import time, so the height and object-fit values must be verified
+    // on the source stylesheet directly. The DOM structure is checked
+    // in the sibling tests above.
+    const cssPath = resolve(
+      __dirname,
+      "..",
+      "..",
+      "..",
+      "..",
+      "src",
+      "content",
+      "sections",
+      "RoutePreview",
+      "RoutePreview.module.css",
+    );
+    const css = readFileSync(cssPath, "utf8");
+    expect(css).toMatch(/\.routePreviewFrame\s*\{[^}]*height:\s*var\(--route-preview-max-h\)/);
+    expect(css).toMatch(/\.routePreviewImage\s*\{[^}]*object-fit:\s*cover/);
+    expect(css).toMatch(/\.routePreviewImage\s*\{[^}]*object-position:\s*center/);
+  });
+
+  it("viewer frame uses the viewer height token", () => {
+    const cssPath = resolve(
+      __dirname,
+      "..",
+      "..",
+      "..",
+      "..",
+      "src",
+      "content",
+      "sections",
+      "RoutePreview",
+      "RoutePreview.module.css",
+    );
+    const css = readFileSync(cssPath, "utf8");
+    expect(css).toMatch(/\.routePoster\s*\{[^}]*height:\s*var\(--route-viewer-max-h\)/);
+  });
+
+  it("token pairs for the preview and viewer heights come from tokens.css", () => {
+    const tokensPath = resolve(
+      __dirname,
+      "..",
+      "..",
+      "..",
+      "..",
+      "src",
+      "content",
+      "theme",
+      "tokens.css",
+    );
+    const tokens = readFileSync(tokensPath, "utf8");
+    expect(tokens).toMatch(/--route-preview-max-h:\s*min\(70vh,\s*720px\)/);
+    expect(tokens).toMatch(/--route-viewer-max-h:\s*min\(80vh,\s*900px\)/);
   });
 
   it("viewer style renders the disclaimer above the frame and the poster viewer without a map", async () => {
@@ -270,6 +347,7 @@ describe("PosterViewer", () => {
     expect(osdImports[0].maxZoomPixelRatio).toBe(1);
     expect(osdImports[0].visibilityRatio).toBe(1);
     expect(osdImports[0].constrainDuringPan).toBe(true);
+    expect(osdImports[0].homeFillsViewer).toBe(true);
   });
 
   it("builds an image tile source when the media entry has no dzi", async () => {
