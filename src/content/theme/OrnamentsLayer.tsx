@@ -1,9 +1,11 @@
 // docs/site.md section 7.7. Fixed layer of five inline SVG Christmas
-// ornaments hanging from the top of the viewport behind every page except
-// the live screen when `settings.theme.ornaments` is true. Colours come
-// from the `--orn-*` tokens; the sway keyframe is on by default and the
-// reduced-motion query in tokens.css zeroes it, leaving the sway class
-// present but silent so tests can assert its presence.
+// ornaments hanging below the header band behind every page except the
+// live screen when `settings.theme.ornaments` is true. Colours come from
+// the `--orn-*` tokens, the whole layer is dimmed by `--orn-opacity`
+// (0.55 light, 0.4 dark, 0.3 below 640 px), and the top offset follows
+// the shell's `--header-height`. The sway keyframe is on by default and
+// the reduced-motion query in tokens.css zeroes it, leaving the sway
+// class present but silent so tests can assert its presence.
 
 import { useSyncExternalStore } from "react";
 import { useStore } from "../../store/useStore";
@@ -11,7 +13,7 @@ import type { ContentBundle } from "../../store/types";
 import * as styles from "./OrnamentsLayer.module.css";
 
 type Ornament = {
-  leftPercent: number;
+  leftCss: string;
   stringLengthPx: number;
   spherePx: number;
   color: "red" | "green" | "blue" | "gold" | "frost";
@@ -19,12 +21,52 @@ type Ornament = {
   swayDelaySeconds: number;
 };
 
+// The two outermost ornaments (red, frost) keep their fixed percentages.
+// The three inner ones (green, blue, gold) push toward the gutters
+// through `clamp()` expressions so that on a 1200 px viewport their
+// spheres sit at the edge of `--width-wide`, and on narrower viewports
+// they fall back to their original percentages.
 const ORNAMENTS: readonly Ornament[] = [
-  { leftPercent: 6, stringLengthPx: 96, spherePx: 68, color: "red", swaySeconds: 7, swayDelaySeconds: 0 },
-  { leftPercent: 22, stringLengthPx: 64, spherePx: 72, color: "green", swaySeconds: 9, swayDelaySeconds: 0.6 },
-  { leftPercent: 58, stringLengthPx: 140, spherePx: 84, color: "blue", swaySeconds: 11, swayDelaySeconds: 1.2 },
-  { leftPercent: 78, stringLengthPx: 72, spherePx: 64, color: "gold", swaySeconds: 8, swayDelaySeconds: 0.3 },
-  { leftPercent: 93, stringLengthPx: 110, spherePx: 76, color: "frost", swaySeconds: 10, swayDelaySeconds: 0.9 },
+  {
+    leftCss: "6%",
+    stringLengthPx: 96,
+    spherePx: 68,
+    color: "red",
+    swaySeconds: 7,
+    swayDelaySeconds: 0,
+  },
+  {
+    leftCss: "clamp(0%, calc(50% - var(--width-wide) / 2 - 36px), 22%)",
+    stringLengthPx: 64,
+    spherePx: 72,
+    color: "green",
+    swaySeconds: 9,
+    swayDelaySeconds: 0.6,
+  },
+  {
+    leftCss: "clamp(58%, calc(50% + var(--width-wide) / 2 - 42px), calc(100% - 84px))",
+    stringLengthPx: 140,
+    spherePx: 84,
+    color: "blue",
+    swaySeconds: 11,
+    swayDelaySeconds: 1.2,
+  },
+  {
+    leftCss: "clamp(78%, calc(50% + var(--width-wide) / 2 - 32px), calc(100% - 64px))",
+    stringLengthPx: 72,
+    spherePx: 64,
+    color: "gold",
+    swaySeconds: 8,
+    swayDelaySeconds: 0.3,
+  },
+  {
+    leftCss: "93%",
+    stringLengthPx: 110,
+    spherePx: 76,
+    color: "frost",
+    swaySeconds: 10,
+    swayDelaySeconds: 0.9,
+  },
 ];
 
 const COLOR_CLASS: Record<Ornament["color"], string> = {
@@ -63,6 +105,10 @@ export function OrnamentsLayer({ bundle }: { bundle: ContentBundle | null }) {
       className={styles.layer}
       aria-hidden
       data-testid="ornaments-layer"
+      style={{
+        top: "var(--header-height, 0px)",
+        opacity: "var(--orn-opacity)",
+      }}
     >
       {ORNAMENTS.map((o, i) => {
         const capWidth = Math.round(o.spherePx * 0.28);
@@ -77,7 +123,7 @@ export function OrnamentsLayer({ bundle }: { bundle: ContentBundle | null }) {
             key={i}
             className={`${styles.ornament}${swayClass}`}
             style={{
-              left: `${o.leftPercent}%`,
+              left: o.leftCss,
               width: `${totalWidth}px`,
               height: `${totalHeight}px`,
               animationDuration: `${o.swaySeconds}s`,

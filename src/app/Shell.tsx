@@ -7,6 +7,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
@@ -71,6 +72,26 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
   const panelId = useId();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLElement | null>(null);
+  const headerRef = useRef<HTMLElement | null>(null);
+
+  useLayoutEffect(() => {
+    const el = headerRef.current;
+    if (el === null) return;
+    const root = document.documentElement;
+    const write = (height: number): void => {
+      root.style.setProperty("--header-height", `${Math.round(height)}px`);
+    };
+    write(el.getBoundingClientRect().height);
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) write(entry.contentRect.height);
+    });
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      root.style.removeProperty("--header-height");
+    };
+  }, []);
   const settings = bundle?.content?.settings ?? null;
   const { state: authState, signIn, signOut } = useAuth();
   const location = useLocation();
@@ -132,7 +153,11 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
   const onSignInClick = useCallback(() => void signIn(returnTo), [signIn, returnTo]);
 
   return (
-    <header className={styles.siteHeader} data-testid="site-header">
+    <header
+      ref={headerRef}
+      className={styles.siteHeader}
+      data-testid="site-header"
+    >
       {settings ? (
         <Link to="/" className={styles.brand}>
           <BrandMark />
