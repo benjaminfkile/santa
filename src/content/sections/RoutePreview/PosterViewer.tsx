@@ -1,7 +1,10 @@
 // docs/site.md section 8.5. Route poster viewer: OpenSeadragon in its own
 // `osd` chunk, imported when the section mounts. Tile source is the asset's
 // Deep Zoom pyramid when present, otherwise an image source over the
-// original url. Site's own controls in the .ibtn recipe: zoom in, zoom out,
+// original url. `homeFillsViewer: true` so the home position fills the
+// frame horizontally and a portrait poster is pannable up and down from
+// the start (`viewport.goHome`, called by the `fit` control, fills the
+// viewer). Site's own controls in the .ibtn recipe: zoom in, zoom out,
 // fit (viewport.goHome), and fullscreen (Fullscreen API on the frame, with
 // a fixed-frame fallback where the API is missing). Keyboard: arrows pan,
 // +/- zoom, 0 fits, F toggles fullscreen. Destroyed on unmount, rebuilt on
@@ -95,6 +98,7 @@ export function PosterViewer({ mediaId, url, dzi, alt, ariaLabel }: PosterViewer
         maxZoomPixelRatio: 1,
         visibilityRatio: 1,
         constrainDuringPan: true,
+        homeFillsViewer: true,
         animationTime: reducedMotion ? 0 : undefined,
       });
       viewerRef.current = viewer;

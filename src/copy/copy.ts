@@ -51,6 +51,7 @@ export const copy = {
       fit: "Fit",
       fullscreen: "Fullscreen",
       exitFullscreen: "Exit fullscreen",
+      openFullRoute: "Open the full route",
     },
   },
   sponsors: {
