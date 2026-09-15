@@ -1,7 +1,9 @@
 // docs/site.md section 7.2. SectionFrame width, background, spacing,
-// decoration icons, anchor id. After S16f the section frame uses a typed
-// CSS module, so the tests address the rendered dom through data attributes
-// and testids rather than the (now module-hashed) class names.
+// decoration icons, anchor id, and the card default (every content kind
+// except hero, map, divider, and countdown renders inside a card built
+// from tokens; the card takes a token fill when set and clips a media
+// background inside its rounded corners; `data-card` exposes the
+// decision).
 
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
@@ -158,5 +160,99 @@ describe("SectionFrame", () => {
     const section = container.querySelector("section")!;
     expect(section.dataset.width).toBe("full");
     expect(section.dataset.spacing).toBe("none");
+  });
+
+  it("renders the card for a rich_text section with no background", () => {
+    const { container } = render(
+      <SectionFrame presentation={base()} bundle={emptyBundle} kind="rich_text">
+        <div data-testid="body">x</div>
+      </SectionFrame>,
+    );
+    const section = container.querySelector("section")!;
+    expect(section.dataset.card).toBe("true");
+    // The card wraps every child of the section: the body is the section's
+    // grandchild, not its direct child.
+    expect(section.querySelector(':scope > [data-testid="body"]')).toBeNull();
+    const cardChild = section.firstElementChild as HTMLElement;
+    expect(cardChild.querySelector('[data-testid="body"]')).not.toBeNull();
+  });
+
+  it.each(["hero", "map", "divider", "countdown"] as const)(
+    "does not render the card for %s",
+    (kind) => {
+      const { container } = render(
+        <SectionFrame presentation={base()} bundle={emptyBundle} kind={kind}>
+          <div data-testid="body">x</div>
+        </SectionFrame>,
+      );
+      const section = container.querySelector("section")!;
+      expect(section.dataset.card).toBe("false");
+      // The children render directly under the section, not inside a card.
+      expect(section.querySelector(':scope > [data-testid="body"]')).toBeNull();
+      const content = section.querySelector(':scope > div');
+      expect(content).not.toBeNull();
+      expect(content?.querySelector('[data-testid="body"]')).not.toBeNull();
+    },
+  );
+
+  it("uses the token fill on the card when a token background is set", () => {
+    const { container, getByTestId } = render(
+      <SectionFrame
+        presentation={base({ background: { kind: "token", token: "muted" } })}
+        bundle={emptyBundle}
+        kind="rich_text"
+      >
+        <div data-testid="body">x</div>
+      </SectionFrame>,
+    );
+    const section = container.querySelector("section")!;
+    expect(section.dataset.card).toBe("true");
+    expect(section.dataset.bg).toBe("muted");
+    // The body renders inside the card wrapper, not directly under the
+    // section: the card is the section's only child in the card default,
+    // and it fills that section's width so the token becomes the card's
+    // fill rather than a stripe under the frame.
+    const card = getByTestId("body").parentElement!.parentElement!;
+    expect(card.parentElement).toBe(section);
+  });
+
+  it("clips a media background inside the card", () => {
+    const { getByTestId } = render(
+      <SectionFrame
+        presentation={base({
+          background: {
+            kind: "media",
+            media: { mediaId: "abc", alt: "hangar" },
+            overlay: 0.3,
+          },
+        })}
+        bundle={emptyBundle}
+        kind="rich_text"
+      >
+        <div data-testid="body">x</div>
+      </SectionFrame>,
+    );
+    const bg = getByTestId("section-frame-background");
+    // The background sits inside the card, not directly under the section,
+    // so the card's rounded corners and overflow: hidden clip it.
+    const parent = bg.parentElement!;
+    expect(parent.tagName).toBe("DIV");
+    expect(parent.parentElement?.tagName).toBe("SECTION");
+  });
+
+  it("sets data-card on the section element", () => {
+    const { container } = render(
+      <>
+        <SectionFrame presentation={base()} bundle={emptyBundle} kind="hero">
+          <div>x</div>
+        </SectionFrame>
+        <SectionFrame presentation={base()} bundle={emptyBundle} kind="rich_text">
+          <div>y</div>
+        </SectionFrame>
+      </>,
+    );
+    const sections = container.querySelectorAll("section");
+    expect(sections[0].dataset.card).toBe("false");
+    expect(sections[1].dataset.card).toBe("true");
   });
 });

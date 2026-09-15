@@ -11,8 +11,8 @@
   margin: 0;
 }
 .latestMessageCard {
-  composes: frost from "../../theme/Frost.module.css";
-  padding: var(--space-4) var(--space-5);
+  /* The section frame supplies the card; this variant is just a body
+     stack of heading, meta, and text. */
 }
 .latestMessageMeta {
   color: var(--text-dim);

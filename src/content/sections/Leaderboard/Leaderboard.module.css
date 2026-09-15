@@ -25,15 +25,12 @@
   padding: var(--space-2) 0;
 }
 .leaderboardFull {
-  composes: frost from "../../theme/Frost.module.css";
-  padding: var(--space-4) var(--space-5);
+  /* The section frame supplies the card; the full variant is the stack
+     of heading and the ordered list only. */
 }
 .leaderboardPanel {
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--panel);
-  box-shadow: var(--shadow);
+  /* The section frame supplies the card; the compact overlay use below
+     paints its own bare recipe inside the map's chrome. */
 }
 .leaderboardIcon { display: flex; align-items: center; justify-content: center; color: var(--accent); }
 .leaderboardIconPlaceholder { width: 24px; height: 24px; background: var(--panel-2); border-radius: 50%; }
@@ -84,7 +81,6 @@
 /* The live screen's panel: no border or padding of its own (the map's
    cookie panel supplies them), 24 px rows, small type. */
 .leaderboardCompact { gap: 0; }
-.leaderboardCompact.leaderboardPanel { padding: 0; border: 0; background: transparent; box-shadow: none; }
 .leaderboardCompact .leaderboardList { gap: 0; }
 .leaderboardCompact .leaderboardRow {
   grid-template-columns: 20px minmax(0, 1fr) auto;
