@@ -43,7 +43,7 @@ const ORNAMENTS: readonly Ornament[] = [
   },
   {
     leftCss: "58%",
-    stringLengthPx: 140,
+    stringLengthPx: 36,
     spherePx: 84,
     color: "blue",
     swaySeconds: 11,
