@@ -17,10 +17,6 @@
 .cookieControlPending { min-height: 60px; }
 .cookieControlClosed,
 .cookieControlSignedOut {
-  padding: var(--space-4) var(--space-5);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--panel-2);
   color: var(--text);
 }
 .cookieControlClosed h2,

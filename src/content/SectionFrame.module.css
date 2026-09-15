@@ -1,5 +1,9 @@
 /* docs/site.md section 7.2. Section frame: wraps every section, controls
-   width, alignment, spacing, and token/media backgrounds. */
+   width, alignment, spacing, and token/media backgrounds. Every content
+   kind except hero, map, divider, and countdown renders inside a card
+   (panel fill, line border, radius-md, shadow, space-5 padding on
+   desktop, space-4 below 640 px). A token background replaces the panel
+   fill, a media background is clipped inside the card's rounded corners. */
 
 .sectionFrame {
   display: flex;
@@ -20,15 +24,52 @@
 .alignCenter { text-align: center; }
 
 .content { width: 100%; margin-inline: auto; box-sizing: border-box; position: relative; z-index: 1; }
-.widthFull > .content { max-width: 100%; }
-.widthWide > .content { max-width: var(--width-wide); }
-.widthNarrow > .content { max-width: var(--width-narrow); }
-.widthNarrow.alignStart > .content { margin-inline: 0; }
+.widthFull > .content,
+.widthFull > .card > .content { max-width: 100%; }
+.widthWide > .content,
+.widthWide > .card > .content { max-width: var(--width-wide); }
+.widthNarrow > .content,
+.widthNarrow > .card > .content { max-width: var(--width-narrow); }
+.widthNarrow.alignStart > .content,
+.widthNarrow.alignStart > .card > .content { margin-inline: 0; }
 
+/* The card. One per section, never nested; the frame keeps its width
+   rule and the card fills that width. Consecutive card frames are
+   separated by var(--space-4) via halved padding-block. */
+.card {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: var(--space-5);
+  color: inherit;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+@media (max-width: 640px) {
+  .card { padding: var(--space-4); }
+}
+.hasCard {
+  padding-block: calc(var(--space-4) / 2);
+}
+
+/* Token backgrounds. Without a card the frame paints them; with a card
+   they become the card fill instead (surface = panel, muted = panel-2,
+   accent and night as before with their text colours). */
 .bgSurface { background: var(--panel); }
 .bgMuted { background: var(--panel-2); }
 .bgAccent { background: var(--accent); color: var(--on-accent); }
 .bgNight { background: var(--ground); color: var(--text); }
+.card.bgSurface { background: var(--panel); }
+.card.bgMuted { background: var(--panel-2); }
+.card.bgAccent { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.card.bgNight { background: var(--ground); color: var(--text); }
 
 .background {
   position: absolute;
@@ -36,6 +77,7 @@
   overflow: hidden;
   z-index: 0;
 }
+.card > .background { border-radius: inherit; }
 .backgroundMedia {
   width: 100%;
   height: 100%;

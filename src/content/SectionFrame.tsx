@@ -1,5 +1,9 @@
 // docs/site.md section 7.2. Turns a section's presentation into layout.
-// The `map` section ignores width and spacing.
+// The `map` section ignores width and spacing. Every content kind except
+// `hero`, `map`, `divider`, and `countdown` renders inside a card built
+// only from tokens (panel fill, line border, radius-md, shadow, space-5
+// padding on desktop, space-4 below 640 px). A token background becomes
+// the card fill; a media background is clipped inside its rounded corners.
 
 import type { CSSProperties, ReactNode } from "react";
 import type { Presentation } from "../contracts";
@@ -40,68 +44,90 @@ const BG_TOKEN_CLASS: Record<string, string | undefined> = {
   night: styles.bgNight,
 };
 
+const CARDLESS_KINDS = new Set(["hero", "map", "divider", "countdown"]);
+
 export function SectionFrame({ presentation, bundle, kind, children }: SectionFrameProps) {
   const isMap = kind === "map";
   const width = isMap ? "full" : presentation.width;
   const spacing = isMap ? "none" : presentation.spacing;
   const bg = presentation.background;
+  const hasCard = !CARDLESS_KINDS.has(kind);
 
   const style: CSSProperties = {};
-  const classes = [
+  const frameClasses = [
     styles.sectionFrame,
     WIDTH_CLASS[width],
     ALIGN_CLASS[presentation.align],
     SPACING_CLASS[spacing],
+    hasCard ? styles.hasCard : "",
   ];
 
-  if (bg.kind === "token") {
-    const c = BG_TOKEN_CLASS[bg.token];
-    if (c) classes.push(c);
-  } else if (bg.kind === "media") {
-    style.position = "relative";
+  const cardClasses = [styles.card];
+  const bgClass = bg.kind === "token" ? BG_TOKEN_CLASS[bg.token] : undefined;
+  if (hasCard) {
+    if (bgClass) cardClasses.push(bgClass);
+  } else {
+    if (bgClass) frameClasses.push(bgClass);
+    if (bg.kind === "media") style.position = "relative";
   }
+
+  const background =
+    bg.kind === "media" ? (
+      <div className={styles.background} aria-hidden data-overlay={bg.overlay} data-testid="section-frame-background">
+        <Media
+          media={bg.media}
+          bundle={bundle}
+          frame={width}
+          loading="eager"
+          className={styles.backgroundMedia}
+        />
+        <div
+          aria-hidden
+          className={styles.backgroundOverlay}
+          style={{
+            backgroundColor: `color-mix(in srgb, var(--ground) ${Math.round(bg.overlay * 100)}%, transparent)`,
+          }}
+        />
+      </div>
+    ) : null;
+
+  const iconBefore =
+    presentation.iconBefore !== null ? (
+      <div className={styles.iconBefore} aria-hidden data-testid="section-frame-icon-before">
+        <Icon icon={presentation.iconBefore} bundle={bundle} alt="" decorative />
+      </div>
+    ) : null;
+
+  const iconAfter =
+    presentation.iconAfter !== null ? (
+      <div className={styles.iconAfter} aria-hidden data-testid="section-frame-icon-after">
+        <Icon icon={presentation.iconAfter} bundle={bundle} alt="" decorative />
+      </div>
+    ) : null;
+
+  const inner = (
+    <>
+      {background}
+      {iconBefore}
+      <div className={styles.content}>{children}</div>
+      {iconAfter}
+    </>
+  );
 
   return (
     <section
       id={presentation.anchor ?? undefined}
-      className={classes.filter(Boolean).join(" ")}
+      className={frameClasses.filter(Boolean).join(" ")}
       style={style}
       data-section-kind={kind}
       data-width={width}
       data-spacing={spacing}
       data-align={presentation.align}
       data-bg={bg.kind === "token" ? bg.token : bg.kind}
+      data-card={hasCard ? "true" : "false"}
       data-testid={`section-${kind}`}
     >
-      {bg.kind === "media" ? (
-        <div className={styles.background} aria-hidden data-overlay={bg.overlay} data-testid="section-frame-background">
-          <Media
-            media={bg.media}
-            bundle={bundle}
-            frame={width}
-            loading="eager"
-            className={styles.backgroundMedia}
-          />
-          <div
-            aria-hidden
-            className={styles.backgroundOverlay}
-            style={{
-              backgroundColor: `color-mix(in srgb, var(--ground) ${Math.round(bg.overlay * 100)}%, transparent)`,
-            }}
-          />
-        </div>
-      ) : null}
-      {presentation.iconBefore !== null ? (
-        <div className={styles.iconBefore} aria-hidden data-testid="section-frame-icon-before">
-          <Icon icon={presentation.iconBefore} bundle={bundle} alt="" decorative />
-        </div>
-      ) : null}
-      <div className={styles.content}>{children}</div>
-      {presentation.iconAfter !== null ? (
-        <div className={styles.iconAfter} aria-hidden data-testid="section-frame-icon-after">
-          <Icon icon={presentation.iconAfter} bundle={bundle} alt="" decorative />
-        </div>
-      ) : null}
+      {hasCard ? <div className={cardClasses.filter(Boolean).join(" ")}>{inner}</div> : inner}
     </section>
   );
 }
