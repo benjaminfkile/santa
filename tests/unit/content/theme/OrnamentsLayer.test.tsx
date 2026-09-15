@@ -1,8 +1,14 @@
 // docs/site.md section 7.7 and 22.1. The ornaments layer renders five
 // SVG ornaments when the setting is on and the page is not live, none
 // otherwise; each sphere carries one of the five --orn-* token colours;
-// the sway class is absent under reduced motion.
+// the layer is dimmed through `--orn-opacity` and its top offset follows
+// the shell's `--header-height`; below 640 px the whole layer scales to
+// 0.5 through the module's media query; the sway class is absent under
+// reduced motion.
 
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { act, cleanup, render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
@@ -10,6 +16,16 @@ import { OrnamentsLayer } from "../../../../src/content/theme/OrnamentsLayer";
 import { store } from "../../../../src/store/useStore";
 import { initialStore } from "../../../../src/store/types";
 import type { ContentBundle } from "../../../../src/store/types";
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const MODULE_CSS = readFileSync(
+  resolve(HERE, "../../../../src/content/theme/OrnamentsLayer.module.css"),
+  "utf8",
+);
+const TOKENS_CSS = readFileSync(
+  resolve(HERE, "../../../../src/content/theme/tokens.css"),
+  "utf8",
+);
 
 function seedLive(eventStatusId: number | null): void {
   act(() => {
@@ -190,6 +206,33 @@ describe("OrnamentsLayer", () => {
     for (const o of ornaments) {
       expect(o.getAttribute("data-sway")).toBe("on");
     }
+  });
+
+  it("the layer carries the --orn-opacity token and its top offset follows --header-height", () => {
+    seedLive(1);
+    const bundle = bundleWith(true);
+    const { container } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <OrnamentsLayer bundle={bundle} />
+      </MemoryRouter>,
+    );
+    const layer = container.querySelector<HTMLElement>('[data-testid="ornaments-layer"]');
+    expect(layer).not.toBeNull();
+    expect(layer!.style.opacity).toBe("var(--orn-opacity)");
+    expect(layer!.style.top).toBe("var(--header-height, 0px)");
+  });
+
+  it("the opacity token is 0.55 in light, 0.4 in dark, and 0.3 below 640 px", () => {
+    expect(TOKENS_CSS).toMatch(/:root\[data-theme="light"\][^}]*--orn-opacity:\s*0\.55/s);
+    expect(TOKENS_CSS).toMatch(/:root\[data-theme="dark"\][^}]*--orn-opacity:\s*0\.4/s);
+    expect(TOKENS_CSS).toMatch(/@media \(max-width:\s*640px\)[^{]*\{[^}]*\{[^}]*--orn-opacity:\s*0\.3/s);
+  });
+
+  it("scales the whole layer to 0.5 below 640 px", () => {
+    const phoneBlock = MODULE_CSS.match(/@media\s*\(max-width:\s*640px\)\s*\{[^}]*\.ornament\s*\{[^}]*transform:\s*scale\(([^)]+)\)/);
+    expect(phoneBlock).not.toBeNull();
+    expect(phoneBlock![1]).toBe("0.5");
+    expect(MODULE_CSS).toMatch(/@keyframes ornaments-sway-small[^}]*scale\(0\.5\)/s);
   });
 
 });

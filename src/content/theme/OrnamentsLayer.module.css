@@ -1,15 +1,21 @@
-/* docs/site.md section 7.7. Ornaments layer: fixed viewport, pointer-less,
-   aria-hidden, below main (z-index 0 with main at 1). Colours only through
-   the five --orn-* tokens. Each ornament sways about its string on a
-   transform: rotate keyframe of 7-11 s, staggered per ornament; below
-   640 px the whole layer shrinks by 0.7 so the ornaments never crowd the
-   header. Reduced motion is handled by the global rule in tokens.css:
-   the sway class stays on the element but its animation duration is
-   zeroed. */
+/* docs/site.md section 7.7. Ornaments layer: fixed backdrop starting
+   below the header band (top offset follows the shell's
+   `--header-height`), pointer-less, aria-hidden, below main
+   (z-index 0 with main at 1). Colours only through the five --orn-*
+   tokens; the whole layer is dimmed by `--orn-opacity` (0.55 light,
+   0.4 dark, 0.3 below 640 px). Each ornament sways about its string on
+   a transform: rotate keyframe of 7 to 11 s, staggered per ornament;
+   below 640 px the whole layer shrinks by 0.5 so the header and the
+   first card stay clear. Reduced motion is handled by the global rule
+   in tokens.css: the sway class stays on the element but its animation
+   duration is zeroed. */
 
 .layer {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
@@ -56,7 +62,7 @@
 .ornFrost { fill: var(--orn-frost); }
 
 @media (max-width: 640px) {
-  .ornament { transform: scale(0.7); }
+  .ornament { transform: scale(0.5); }
   .ornament.sway { animation-name: ornaments-sway-small; }
 }
 
@@ -65,6 +71,6 @@
   50% { transform: rotate(3deg); }
 }
 @keyframes ornaments-sway-small {
-  0%, 100% { transform: scale(0.7) rotate(-3deg); }
-  50% { transform: scale(0.7) rotate(3deg); }
+  0%, 100% { transform: scale(0.5) rotate(-3deg); }
+  50% { transform: scale(0.5) rotate(3deg); }
 }

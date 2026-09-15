@@ -26,6 +26,7 @@
   --orn-blue: #6fd3ff;
   --orn-gold: #f0c05a;
   --orn-frost: #9cc7ff;
+  --orn-opacity: 0.4;
 }
 
 :root[data-theme="light"] {
@@ -53,6 +54,14 @@
   --orn-blue: #64bee6;
   --orn-gold: #d8ad51;
   --orn-frost: #8cb3e6;
+  --orn-opacity: 0.55;
+}
+
+@media (max-width: 640px) {
+  :root[data-theme="dark"],
+  :root[data-theme="light"] {
+    --orn-opacity: 0.3;
+  }
 }
 
 :root {
@@ -79,6 +88,8 @@
   --width-full: 100%;
   --width-wide: 1120px;
   --width-narrow: 720px;
+
+  --header-height: 61px;
 
   --hero-tall: 200px;
   --hero-short: 120px;
