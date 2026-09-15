@@ -21,11 +21,9 @@ type Ornament = {
   swayDelaySeconds: number;
 };
 
-// The two outermost ornaments (red, frost) keep their fixed percentages.
-// The three inner ones (green, blue, gold) push toward the gutters
-// through `clamp()` expressions so that on a 1200 px viewport their
-// spheres sit at the edge of `--width-wide`, and on narrower viewports
-// they fall back to their original percentages.
+// Positions are fixed viewport percentages spread across the width; the
+// cards in front of the layer are opaque, so the ornaments show in the
+// hero band and the gaps between cards.
 const ORNAMENTS: readonly Ornament[] = [
   {
     leftCss: "6%",
@@ -36,7 +34,7 @@ const ORNAMENTS: readonly Ornament[] = [
     swayDelaySeconds: 0,
   },
   {
-    leftCss: "clamp(0%, calc(50% - var(--width-wide) / 2 - 36px), 22%)",
+    leftCss: "22%",
     stringLengthPx: 64,
     spherePx: 72,
     color: "green",
@@ -44,7 +42,7 @@ const ORNAMENTS: readonly Ornament[] = [
     swayDelaySeconds: 0.6,
   },
   {
-    leftCss: "clamp(58%, calc(50% + var(--width-wide) / 2 - 42px), calc(100% - 84px))",
+    leftCss: "58%",
     stringLengthPx: 140,
     spherePx: 84,
     color: "blue",
@@ -52,7 +50,7 @@ const ORNAMENTS: readonly Ornament[] = [
     swayDelaySeconds: 1.2,
   },
   {
-    leftCss: "clamp(78%, calc(50% + var(--width-wide) / 2 - 32px), calc(100% - 64px))",
+    leftCss: "78%",
     stringLengthPx: 72,
     spherePx: 64,
     color: "gold",
