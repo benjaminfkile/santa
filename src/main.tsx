@@ -61,7 +61,7 @@ async function boot(): Promise<void> {
   );
 
   const { startDataLoop, pollNow } = await import("./store/loop");
-  const { startHub } = await import("./store/hub");
+  const { syncHubWithStore } = await import("./store/hub");
   const { env } = await import("./config/env");
 
   if (env.ENV !== "production") {
@@ -71,7 +71,9 @@ async function boot(): Promise<void> {
   }
 
   void startDataLoop({
-    onFirstApplied: () => startHub({ pollNow }),
+    onFirstApplied: () => {
+      syncHubWithStore({ pollNow });
+    },
   });
 }
 

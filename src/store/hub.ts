@@ -38,6 +38,7 @@ export type HubDeps = {
 
 let started = false;
 let stopping = false;
+let current: HubConnectionLike | null = null;
 
 async function defaultBuild(): Promise<HubConnectionLike> {
   const signalR = await import("@microsoft/signalr");
@@ -70,16 +71,21 @@ function sleep(ms: number): Promise<void> {
  */
 export async function startHub(deps: HubDeps): Promise<void> {
   if (started) return;
+  const store = deps.store ?? defaultStore;
+  // The operator's switch (contracts 1.2 hubEnabled): while the live object
+  // says false the hub is never started; syncHubWithStore starts it when the
+  // flag comes back.
+  if (store.getState().live?.hubEnabled === false) return;
   started = true;
   stopping = false;
 
-  const store = deps.store ?? defaultStore;
   const now = deps.now ?? (() => performance.now());
   const channel = deps.channel ?? LOCATION_CHANNEL;
   const build = deps.build ?? defaultBuild;
   const pollNow = deps.pollNow;
 
   const connection = await build();
+  current = connection;
 
   connection.on("ChannelEvent", (envelope) => {
     if (!envelope || envelope.channel !== channel) return;
@@ -182,7 +188,43 @@ export async function startHub(deps: HubDeps): Promise<void> {
   }
 }
 
+/**
+ * Stops a started hub and leaves it stopped until startHub is called again.
+ * The onclose handler sees `stopping` and does not reconnect.
+ */
+export async function stopHub(): Promise<void> {
+  if (!started) return;
+  stopping = true;
+  started = false;
+  const c = current;
+  current = null;
+  if (c) {
+    try {
+      await c.stop();
+    } catch {
+      // A connection that never opened has nothing to stop.
+    }
+  }
+}
+
+/**
+ * Keeps the hub in step with the live object's hubEnabled flag: starts it
+ * while the flag is true (or absent) and stops it while it is false. Returns
+ * the unsubscribe function.
+ */
+export function syncHubWithStore(deps: HubDeps): () => void {
+  const store = deps.store ?? defaultStore;
+  const apply = (): void => {
+    const enabled = store.getState().live?.hubEnabled !== false;
+    if (enabled && !started) void startHub(deps);
+    else if (!enabled && started) void stopHub();
+  };
+  apply();
+  return store.subscribe(apply);
+}
+
 export function _resetHubForTests(): void {
   started = false;
   stopping = false;
+  current = null;
 }

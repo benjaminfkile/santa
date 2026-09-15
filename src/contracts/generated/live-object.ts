@@ -8,6 +8,7 @@ export interface LiveObject {
   eventId?: number | null;
   eventStatusId?: number | null;
   pollIntervalMs?: number;
+  hubEnabled?: boolean;
   snapshotUrl?: string;
   cookieTally?: {
     [k: string]: number | undefined;

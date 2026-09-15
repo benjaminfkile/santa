@@ -301,6 +301,7 @@ Orthogonal indicator states, rendered as banners or chips, never as pages:
 
 | Indicator | Condition | Where |
 |---|---|---|
+| `hubEnabled` | `live.hubEnabled === false` (1.2): the hub is never started and a started one is stopped (`syncHubWithStore` in `store/hub.ts` follows the flag on every applied live object); the transport then reads `polling`. The operator's switch for every visitor at once | Data loop |
 | `transport` | `live` while `hub === "connected"`; `polling` while it is not and a poll succeeded within `2 * pollIntervalMs`; `offline` otherwise. Transport only: the beacon's cadence never moves it (the quiet rule of 5.5 drives the poll cadence, not this label) | Live indicator on the live screen |
 | `updatesPaused` | `!diag.online` or `diag.consecutivePollFailures >= 3` | Banner in the shell on every page |
 | `waitingForFix` | live screen and `live.seq === null` | Marker state and chip |

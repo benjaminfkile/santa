@@ -4920,6 +4920,7 @@ export interface components {
             healthy?: boolean;
             /** Format: int32 */
             minIntervalMs?: null | number | string;
+            hubAllowed?: boolean;
             /** Format: int64 */
             fixesStored?: number | string;
             /** Format: int64 */
@@ -5377,6 +5378,7 @@ export interface components {
             eventStatusId?: null | number | string;
             /** Format: int32 */
             pollIntervalMs?: number | string;
+            hubEnabled?: boolean;
             snapshotUrl?: string;
             cookieTally?: {
                 [key: string]: number | string;
@@ -5685,6 +5687,7 @@ export interface components {
             name?: null | string;
             notes?: null | string;
             minIntervalMs?: components["schemas"]["JsonElement"];
+            hubAllowed?: null | boolean;
         };
         PatchCookieTypeRequest: {
             name?: null | string;

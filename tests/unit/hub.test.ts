@@ -23,7 +23,7 @@ vi.mock("../../src/config/env", () => ({
 import { createStore } from "../../src/store/store";
 import { initialStore } from "../../src/store/types";
 import type { HubConnectionLike, HubEnvelope } from "../../src/store/hub";
-import { startHub, _resetHubForTests } from "../../src/store/hub";
+import { startHub, stopHub, syncHubWithStore, _resetHubForTests } from "../../src/store/hub";
 
 class FakeHubConnection implements HubConnectionLike {
   handlers: Record<string, (e: HubEnvelope) => void> = {};
@@ -110,6 +110,34 @@ describe("hub", () => {
     void startHub({ store, pollNow: () => {}, build: () => Promise.resolve(conn) });
     await flush();
     expect(startResolved).toBe(true);
+  });
+
+  it("does not start while the live object says hubEnabled is false; stopHub tears a started hub down", async () => {
+    const conn = new FakeHubConnection();
+    const store = createStore({ ...initialStore, live: { hubEnabled: false } as never });
+    conn.nextInvoke = () => Promise.resolve();
+    void startHub({ store, pollNow: () => {}, build: () => Promise.resolve(conn) });
+    await flush();
+    expect(conn.startCalls).toBe(0);
+    store.setState({ live: { hubEnabled: true } as never });
+    void startHub({ store, pollNow: () => {}, build: () => Promise.resolve(conn) });
+    await flush();
+    expect(conn.startCalls).toBe(1);
+    await stopHub();
+    expect(conn.stopped).toBe(true);
+  });
+
+  it("syncHubWithStore starts on true and stops when the live object flips to false", async () => {
+    const conn = new FakeHubConnection();
+    const store = createStore({ ...initialStore, live: { hubEnabled: true } as never });
+    conn.nextInvoke = () => Promise.resolve();
+    const unsubscribe = syncHubWithStore({ store, pollNow: () => {}, build: () => Promise.resolve(conn) });
+    await flush();
+    expect(conn.startCalls).toBe(1);
+    store.setState({ live: { hubEnabled: false } as never });
+    await flush();
+    expect(conn.stopped).toBe(true);
+    unsubscribe();
   });
 
   it("sets connected only on the joined ack, not when start() resolves", async () => {
