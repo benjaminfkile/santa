@@ -75,5 +75,47 @@
 .blockIconCenter { justify-content: center; }
 
 .blockDivider { border: 0; height: 0; border-top: 1px solid var(--line); margin-block: var(--space-4); }
-.blockDividerSnowflakes,
-.blockDividerLights { height: 24px; background: transparent; border: 0; }
+.blockDividerSnowflakes {
+  height: 24px;
+  border: 0;
+  background: transparent;
+  overflow: hidden;
+  text-align: center;
+  white-space: nowrap;
+  line-height: 24px;
+  color: var(--accent);
+  opacity: 0.55;
+  letter-spacing: 0.9em;
+  font-size: 0.875rem;
+}
+.blockDividerSnowflakes::before {
+  content: "\2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E \2744\FE0E";
+}
+
+.blockDividerLights {
+  position: relative;
+  height: 24px;
+  border: 0;
+  background: transparent;
+}
+.blockDividerLights::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 11px;
+  height: 1px;
+  background: var(--line);
+}
+.blockDividerLights::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, var(--orn-red) 3px, transparent 3.6px),
+    radial-gradient(circle, var(--orn-gold) 3px, transparent 3.6px),
+    radial-gradient(circle, var(--orn-green) 3px, transparent 3.6px),
+    radial-gradient(circle, var(--orn-blue) 3px, transparent 3.6px);
+  background-size: 96px 24px;
+  background-position: 12px 0, 36px 0, 60px 0, 84px 0;
+  background-repeat: repeat-x;
+}
