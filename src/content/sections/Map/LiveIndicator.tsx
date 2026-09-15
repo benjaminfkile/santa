@@ -69,7 +69,7 @@ export function LiveIndicator() {
     >
       <span className={styles.liveIndicatorDot} aria-hidden />
       <span className={styles.liveIndicatorLabel}>{label}</span>
-      {secondsAgo !== null ? (
+      {secondsAgo !== null && secondsAgo >= 1 ? (
         <span className={`${styles.liveIndicatorAgo} ${stale ? styles.liveIndicatorAgoStale : ""}`}>
           {copy.live.updatedAgo(secondsAgo)}
         </span>
