@@ -301,8 +301,7 @@ Orthogonal indicator states, rendered as banners or chips, never as pages:
 
 | Indicator | Condition | Where |
 |---|---|---|
-| `hubLive` | `hub === "connected"` and not quiet (5.5) | Live indicator on the live screen |
-| `pollingOnly` | not `hubLive` | Live indicator on the live screen |
+| `transport` | `live` while `hub === "connected"`; `polling` while it is not and a poll succeeded within `2 * pollIntervalMs`; `offline` otherwise. Transport only: the beacon's cadence never moves it (the quiet rule of 5.5 drives the poll cadence, not this label) | Live indicator on the live screen |
 | `updatesPaused` | `!diag.online` or `diag.consecutivePollFailures >= 3` | Banner in the shell on every page |
 | `waitingForFix` | live screen and `live.seq === null` | Marker state and chip |
 | `signalLost` | live screen, `live.seq !== null`, `performance.now() - lastSeqChangeAt > 30000` | Marker state and chip |
@@ -412,6 +411,9 @@ export function isHubQuiet(s: SiteStore, now: number): boolean {
     || now - s.lastHubLocationAt > 2 * live.pollIntervalMs;
 }
 
+// isHubQuiet drives the poll cadence only; the live indicator reads the
+// transport (5.2), never this, so a beacon that fixes slower than the poll
+// window does not flip the label.
 export function pollCadenceMs(s: SiteStore, now: number): number {
   const base = s.live?.pollIntervalMs ?? 5000;
   return isHubQuiet(s, now) ? Math.max(1000, base / 2) : base;
@@ -642,7 +644,7 @@ Full-viewport map with overlays, each switched by `data.overlays` and each contr
 |---|---|---|
 | `MapView` + `mapController` (`Map.tsx`) | `live.lat`, `live.lng`, `snapshot.event.flightHistory`, theme, map type, `data.defaultCenter`, `data.defaultZoom`, `data.themes`, `data.defaultTheme`, `data.flightHistoryDefault` | Section 8. The map shows one marker at Santa's current position and nothing about where he has been |
 | `santaMarker` | `live.lat/lng`, `selectLiveState` | Position on each applied object; `waitingForFix` shows no marker at the default view; `signalLost` swaps to the signal-lost icon variant and the marker stays put. The marker is the legacy idea kept: a map pin wearing a Santa hat, drawn inline in the accent |
-| `LiveIndicator` | `hub`, quiet state, `live.publishedAt` | A pill: the dot, "Live" when `hubLive` or "Updating" when `pollingOnly`, then "Updated N s ago" from `publishedAt` on the device clock |
+| `LiveIndicator` | `hub`, `lastPollOkAt`, `live.pollIntervalMs`, `live.publishedAt` | A pill: the dot and label by `transport` (5.2): "Live" in `--ok`, "Polling" in `--warn`, "Offline" in `--err`; then "Updated N s ago" from `publishedAt` on the device clock, in `--warn` once past the 30 s signal-lost threshold, so a stalled beacon shows here as well as on the marker |
 | `FixStatus` | `selectLiveState`, `lastSeqChangeAt` | A pill under the live indicator only while waiting for the first fix or after the signal is lost (in `--err`) |
 | `LiftoffTimer` | `snapshot.event.wentLiveAt` | A pill with the takeoff glyph: "Airborne 1h 12m" via `formatElapsed`; absent when `!timeReady` or `wentLiveAt` null |
 | `DistanceChip` | user location, `live.lat/lng` | A pill with the person-pin glyph: feet under one mile, miles with two decimals otherwise; only when location is enabled and a fix exists |
@@ -1163,7 +1165,7 @@ Other rules:
 | `schemaVersion !== 1` on any object | `ReloadPrompt` covers the app: one line of copy and a Reload button calling `location.reload()`; the loop stops applying objects |
 | Poll failures | Store unchanged; after three consecutive failures the `updatesPaused` banner shows "Updates paused, retrying"; it clears on the next success |
 | `navigator.onLine === false` | Same banner immediately |
-| Hub never connects or keeps dropping | Live indicator shows "Updating" (polling only); polling tightens while live; no banner |
+| Hub never connects or keeps dropping | Live indicator shows "Polling" (and "Offline" once polls stop landing too); polling tightens while live; no banner |
 | Snapshot fetch failing | Old snapshot keeps rendering; the page still switches on the live object; small "refreshing details" note |
 | Maps script fails | "Map unavailable" panel with Retry; everything else on the live screen works |
 | Geolocation error | Prompt reopens on the instructions section; distance chip hidden |

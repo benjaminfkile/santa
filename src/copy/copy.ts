@@ -31,7 +31,9 @@ export const copy = {
   },
   live: {
     live: "Live",
-    updating: "Updating",
+    updating: "Polling",
+
+    offline: "Offline",
     updatedAgo: (seconds: number) => `Updated ${seconds}s ago`,
     waitingForFix: "Waiting for the first fix",
     signalLostAgo: (seconds: number) => `No update for ${seconds}s`,

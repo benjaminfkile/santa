@@ -2,7 +2,7 @@
 
 import type { SiteStore } from "./types";
 
-const DEFAULT_POLL_INTERVAL_MS = 5000;
+export const DEFAULT_POLL_INTERVAL_MS = 5000;
 const MIN_QUIET_POLL_INTERVAL_MS = 1000;
 
 export function isHubQuiet(s: SiteStore, now: number): boolean {

@@ -91,9 +91,14 @@
   background: var(--ok);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 35%, transparent);
 }
-.liveIndicatorPolling .liveIndicatorDot { background: var(--text-dim); }
+.liveIndicatorPolling .liveIndicatorDot { background: var(--warn); }
+.liveIndicatorOffline .liveIndicatorDot {
+  background: var(--err);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--err) 35%, transparent);
+}
 .liveIndicatorLabel { color: var(--text-bright); }
 .liveIndicatorAgo { color: var(--text-dim); }
+.liveIndicatorAgoStale { color: var(--warn); }
 .liftoffTimer { composes: pill; }
 .liftoffTimerBlank { display: none; }
 .liftoffTimerLabel { color: var(--text-dim); }
