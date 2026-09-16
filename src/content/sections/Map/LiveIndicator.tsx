@@ -58,7 +58,10 @@ export function LiveIndicator() {
   const secondsAgo = Number.isFinite(publishedMs)
     ? Math.max(0, Math.floor((now - publishedMs) / 1000))
     : null;
-  const stale = secondsAgo !== null && secondsAgo * 1000 > STALE_AFTER_MS;
+  // The counter is noise while updates are flowing: it appears only once the
+  // feed has gone quiet for the marker's signal-lost threshold, and then it is
+  // the warning (site.md 7.6). A normal cadence never churns the pill text.
+  const stale = secondsAgo !== null && secondsAgo * 1000 >= STALE_AFTER_MS;
 
   return (
     <div
@@ -69,8 +72,8 @@ export function LiveIndicator() {
     >
       <span className={styles.liveIndicatorDot} aria-hidden />
       <span className={styles.liveIndicatorLabel}>{label}</span>
-      {secondsAgo !== null && secondsAgo >= 1 ? (
-        <span className={`${styles.liveIndicatorAgo} ${stale ? styles.liveIndicatorAgoStale : ""}`}>
+      {stale ? (
+        <span className={`${styles.liveIndicatorAgo} ${styles.liveIndicatorAgoStale}`}>
           {copy.live.updatedAgo(secondsAgo)}
         </span>
       ) : null}
