@@ -45,7 +45,7 @@ santa/
     app/
       App.tsx                     router, error boundary, shell
       routes.tsx                  route table (section 4)
-      Shell.tsx                   nav menu, sign-in link, banners
+      Shell.tsx                   nav menu, sign-in link, banners (updates paused, offline, preview), footer
     config/
       env.ts                      typed, validated import.meta.env
     contracts/
@@ -65,16 +65,17 @@ santa/
     auth/
       cognito.ts                  amazon-cognito-identity-js wrapper (lazy): signUp, confirm, resend, signIn (SRP), forgot, reset, refresh, revoke, current session
       session.ts                  token storage (localStorage), expiry, getIdToken with refresh
-      AuthProvider.tsx            auth state for React
-      pages/                      SignInPage, SignUpPage, ConfirmPage, ForgotPasswordPage, ResetPasswordPage (section 11), each a themed form on the site's own shell
-      AuthForm.module.css         the shared form recipe (field, error, submit) composed from src/ui
-      signOut.ts
+      getIdToken.ts               re-exports the bearer for API calls (section 11.4)
+      errors.ts                   Cognito error names to site copy
+      AuthProvider.tsx            auth state for React, sign-out
     api/
       client.ts                   fetch wrapper: bearer, error shape, timeouts
       errors.ts                   ApiRequestError, code to copy mapping
       cookies.ts                  GET /me/cookies, POST /cookies
       subscriptions.ts            /me/subscriptions family, verify, unsubscribe
       contact.ts                  POST /contact
+      preview.ts                  GET /preview/document
+      qr.ts                       the scan beacon (section 4)
     content/
       registry.ts                 kind to component map (sections) and block kind to component map; the only wiring point
       PageRenderer.tsx            page = section stack; SectionFrame applies presentation
@@ -83,40 +84,41 @@ santa/
       nav.ts                      nav entries from pages and settings (pure)
       inline/                     parse.ts (the inline grammar), Inline.tsx (React renderer), placeholders.ts
       blocks/                     Heading, Paragraph, List, Quote, Media, Links, Icon, Divider
-      primitives/                 Icon.tsx (library or media, <img>), Media.tsx (srcset), LinkView.tsx, resolve.ts
+      primitives/                 Icon.tsx (library or media, <img>), Media.tsx (srcset), LinkView.tsx, StatusPill.tsx, resolve.ts
+      icons/generated/            the icon library as components, written by scripts/gen-icons.mjs from contracts/icons
       sections/
         RichText/  Hero/  MediaGallery/  Links/  IconRow/  Divider/
         FundsRing/  Countdown/  EventTimes/  LatestMessage/  Leaderboard/
         SponsorCarousel/  SponsorGrid/  RoutePreview/  CookieControl/  AlertsSignup/  ContactForm/
         Map/                      Map.tsx (the live screen: full-viewport map plus overlays), TrackerMenu.tsx, InfoOverlays.tsx,
-                                  LiveIndicator.tsx, LiftoffTimer.tsx, DistanceChip.tsx, MapControls.tsx, RouteDisclaimer.tsx, LocationPrompt.tsx
+                                  LiveIndicator.tsx, LiveStrip.tsx, LiftoffTimer.tsx, DistanceChip.tsx, MapControls.tsx, RouteDisclaimer.tsx, LocationPrompt.tsx, glyphs.tsx
         Unknown.tsx               renders nothing, logs once per kind
-      theme/                      tokens.css (the only file with a colour literal), colorScheme.ts (light/dark/system), tokens.contrast.test.ts
+      theme/                      tokens.css (the only file with a colour literal), colorScheme.ts (light/dark/system), favicon.ts, Frost.module.css,
+                                  seasonalLayers.tsx (snow and lights), OrnamentsLayer.tsx
     pages/
       HomePage.tsx                the role page for live.eventStatusId
       SlugPage.tsx                the none page for /:slug, or NotFound
       PreviewPage.tsx             /preview: fetches the bundle, renders the named page
+      QrPage.tsx                  /q/:tag (section 4)
       Loading.tsx  ReloadPrompt.tsx  NotFound.tsx
       Alerts/                     VerifyPage.tsx, UnsubscribePage.tsx (token landing pages)
-    components/
-      Snow/
-      Banner/                     UpdatesPaused, Offline, Preview
-      Dialog/                     <dialog> wrapper with focus handling
+      Auth/                       SignInPage, SignUpPage, ConfirmPage, ForgotPasswordPage, ResetPasswordPage (section 11), each a themed form in AuthCard on the site's own shell; returnTo.ts, pendingSignUp.ts
+    ui/                           the shared recipes as CSS modules: Button, IconButton, Field, Dialog
 
     map/                          imported only by sections/Map (the poster viewer never touches Maps)
       loadMaps.ts                 Loader singleton, importLibrary("maps" | "marker" | "geometry")
       MapView.tsx                 React host for the map element
       mapController.ts            imperative controller: follow, recenter, zoom, mapType, theme
-      santaMarker.ts
+      santaMarker.ts              the marker artwork as an inline SVG in the theme's colours, with the signal-lost variant
       flightHistoryOverlay.ts     polyline, arrows, time labels (the previous flight from the snapshot)
       userLocation.ts             watchPosition, user marker, dotted line, distance
       themes/                     index.ts plus one file per theme
       wakeLock.ts
     copy/
       copy.ts                     the few site-coded strings (loading, errors, sign-in hint, not found); everything else is content
-      assets/                     marker artwork, the signal-lost variant
     lib/
       time.ts                     formatCountdown, formatElapsed, formatMountainTime
+      useNow.ts                   a ticking clock for React
       units.ts                    mpsToMph, metresToFeet, metresToMiles, headingToCardinal
       motion.ts                   prefersReducedMotion, useReducedMotion
       inAppBrowser.ts
@@ -1258,7 +1260,7 @@ Environment variables: the section 3 production set in Production; the preview s
 }
 ```
 
-Vercel serves files that exist before applying the rewrite, so `/assets/*` and `/favicon.svg` are never rewritten; every other path returns `index.html` and the router handles it, including `/auth/callback` and `/alerts/verify`.
+Vercel serves files that exist before applying the rewrite, so `/assets/*` and `/favicon.svg` are never rewritten; every other path returns `index.html` and the router handles it, including the `/auth/*` pages and `/alerts/verify`.
 
 ### 21.3 GitHub Actions
 
