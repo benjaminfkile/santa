@@ -3,10 +3,20 @@ import { defineConfig, devices } from "@playwright/test";
 // docs/site.md section 22.2. E2E_BASE_URL is the preview site; the harness under
 // tests/e2e/harness refuses to run against anything but the dev stack. The
 // status walk runs serially in one worker; every other spec is parallel.
+// Global setup mints one admin ID token per run into `E2E_ADMIN_ID_TOKEN`
+// so every worker inherits the same token (TOTP codes are single use).
+// Against a deployed host the config caps concurrency at two workers with
+// `fullyParallel: false`, because the site sits behind a bot checkpoint
+// that answers 403 with a challenge when one address opens many pages at
+// once.
+const baseUrl = process.env.E2E_BASE_URL ?? "";
+const isDeployed = baseUrl !== "" && !/^https?:\/\/(localhost|127\.0\.0\.1)/.test(baseUrl);
+
 export default defineConfig({
   testDir: "tests/e2e/specs",
-  fullyParallel: true,
-  workers: process.env.CI ? 1 : undefined,
+  globalSetup: "./tests/e2e/globalSetup.ts",
+  fullyParallel: isDeployed ? false : true,
+  workers: isDeployed ? 2 : process.env.CI ? 1 : undefined,
   retries: 0,
   reporter: [["list"], ["html", { open: "never" }]],
   // Screenshot baselines are committed side-by-side with the specs at

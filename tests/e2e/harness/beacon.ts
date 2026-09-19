@@ -3,7 +3,8 @@
 // caller controls the rate and can stop replay at any point.
 // heartbeat() posts one POST /beacons/heartbeat so the beacon's
 // lastSeenAt is fresh, which the go-live rule requires (contracts 4.2,
-// 4.5 Events).
+// 4.5 Events). Both take the beacon key as an argument so the caller
+// picks which beacon they act as.
 
 import { e2eEnv } from "./env";
 
@@ -16,7 +17,7 @@ export type BeaconPoint = {
   accuracyM?: number | null;
 };
 
-async function postOne(point: BeaconPoint): Promise<void> {
+async function postOne(point: BeaconPoint, beaconKey: string): Promise<void> {
   const body = {
     lat: point.lat,
     lng: point.lng,
@@ -30,7 +31,7 @@ async function postOne(point: BeaconPoint): Promise<void> {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Beacon-Key": e2eEnv.BEACON_KEY,
+      "X-Beacon-Key": beaconKey,
     },
     credentials: "omit",
     body: JSON.stringify(body),
@@ -43,14 +44,14 @@ export type Replay = {
   done: Promise<void>;
 };
 
-export function replay(points: BeaconPoint[], ratePerSecond: number): Replay {
+export function replay(points: BeaconPoint[], ratePerSecond: number, beaconKey: string): Replay {
   if (ratePerSecond <= 0) throw new Error("ratePerSecond must be positive");
   let cancelled = false;
   const intervalMs = 1000 / ratePerSecond;
   const done = (async () => {
     for (const p of points) {
       if (cancelled) return;
-      await postOne(p);
+      await postOne(p, beaconKey);
       await new Promise((r) => setTimeout(r, intervalMs));
     }
   })();
@@ -62,7 +63,7 @@ export function replay(points: BeaconPoint[], ratePerSecond: number): Replay {
   };
 }
 
-export async function heartbeat(): Promise<void> {
+export async function heartbeat(beaconKey: string): Promise<void> {
   const body = {
     sentAt: new Date().toISOString(),
     health: { batteryPercent: 100 },
@@ -71,7 +72,7 @@ export async function heartbeat(): Promise<void> {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Beacon-Key": e2eEnv.BEACON_KEY,
+      "X-Beacon-Key": beaconKey,
     },
     credentials: "omit",
     body: JSON.stringify(body),

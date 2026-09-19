@@ -1,13 +1,20 @@
 // docs/site.md section 22.2. The status walk on the dedicated
 // "E2E walk" event (year 2100). Runs serially in a single worker; the
 // harness aborts when the API is not the dev API or the admin token is
-// not admin, and restores the previous current event at the end.
+// not admin, and restores the previous current event at the end. The
+// walk finds or creates its own event (kept between runs, always left
+// at status 1 and not current) and creates and enrolls its own beacon
+// through the admin API and the enroll endpoint (contracts 3.3, 3.4,
+// 4.5 Beacons), using that key for heartbeats and fixes; the beacon is
+// revoked in the finally.
 
 import { test, expect } from "@playwright/test";
 import {
   activateBeacon,
   assertDevApi,
-  e2eEnv,
+  createBeacon,
+  createEvent,
+  enrollBeacon,
   fetchCdnSnapshot,
   getAdminSnapshot,
   getMe,
@@ -20,6 +27,7 @@ import {
   personSignIn,
   postEventMessage,
   replay,
+  revokeBeacon,
   setCurrentEvent,
   setEventStatus,
   waitForState,
@@ -49,24 +57,20 @@ test("status walk", async ({ page }) => {
     await button.click();
   });
   const events = await listEvents();
-  const walk = events.find((e) => e.year === 2100 && e.name === "E2E walk");
-  if (!walk) throw new Error("Dedicated E2E walk event (year 2100) is missing");
+  const existing = events.find((e) => e.year === 2100 && e.name === "E2E walk");
+  const walk = existing ?? (await createEvent({ year: 2100, name: "E2E walk", inheritRoute: true }));
   const previousCurrent = events.find((e) => e.isCurrent && e.id !== walk.id) ?? null;
 
-  // 1. Record the currently active beacon so it can be restored at the end.
-  // The harness beacon is the row whose keyPrefix is a prefix of the E2E key
-  // (contracts: beacon.keyPrefix); status 3 refuses without a healthy active
-  // beacon (contracts 4.5 Events, 409 no_healthy_beacon).
+  // 1. Record the currently active beacon so it can be restored at the end
+  // (contracts 4.5 Events: status 3 refuses without a healthy active beacon,
+  // 409 no_healthy_beacon), then create a fresh beacon for this run and
+  // enroll it as a real beacon would (contracts 3.3 and 3.4).
   const beacons = await listBeacons();
   const previousActiveBeacon = beacons.find((b) => b.isActive) ?? null;
-  const harnessBeacon = beacons.find(
-    (b) => b.keyPrefix !== "" && e2eEnv.BEACON_KEY.startsWith(b.keyPrefix),
-  );
-  if (!harnessBeacon) {
-    throw new Error(
-      "No dev beacon matches E2E_BEACON_KEY by keyPrefix; create one and set the secret",
-    );
-  }
+  const created = await createBeacon({ name: `e2e-walk-${Date.now()}` });
+  const enrolled = await enrollBeacon(created.enrollment.token);
+  const beaconKey = enrolled.key;
+  const beaconId = created.beacon.id;
 
   await setCurrentEvent(walk.id);
 
@@ -98,10 +102,10 @@ test("status walk", async ({ page }) => {
 
     // 4. status 3, live page with waiting-for-fix chip, live indicator.
     // The API refuses status 3 without a healthy active beacon (contracts
-    // 4.5 Events, 409 no_healthy_beacon); activate the harness beacon and
+    // 4.5 Events, 409 no_healthy_beacon); activate the walk's beacon and
     // send one heartbeat so its lastSeenAt is fresh (contracts 4.2).
-    await activateBeacon(harnessBeacon.id);
-    await heartbeat();
+    await activateBeacon(beaconId);
+    await heartbeat(beaconKey);
     await setEventStatus(walk.id, 3);
     await page.waitForFunction(
       "!!document.querySelector('[data-testid=\"map\"]')",
@@ -133,7 +137,7 @@ test("status walk", async ({ page }) => {
     //    increase; speed shows. Turn the flight history toggle on and
     //    assert one polyline is drawn (the flight history overlay) and
     //    that the marker's seq changes across replay while the polyline
-    //    stays put — the marker is the only thing that moves.
+    //    stays put; the marker is the only thing that moves.
     const adminSnap = await getAdminSnapshot();
     const snapshot = await fetchCdnSnapshot(adminSnap.url);
     const points = snapshot.event?.flightHistory?.points ?? null;
@@ -155,7 +159,7 @@ test("status walk", async ({ page }) => {
     await page.getByRole("button", { name: /tracker menu/i }).click();
     await page.locator('[data-testid="tracker-menu-flight-history"]').click();
     await page.keyboard.press("Escape");
-    const rep = replay(fixes, 2);
+    const rep = replay(fixes, 2, beaconKey);
     await waitForState(page, (s) => (s?.live?.seq ?? 0) > 0, POLL_PLUS);
     const latency = Date.now() - postedAt;
     // eslint-disable-next-line no-console
@@ -231,9 +235,9 @@ test("status walk", async ({ page }) => {
     await expect(page.locator("body")).toContainText(messageBody);
     expect(await page.locator('[data-testid="countdown"]').count()).toBe(0);
   } finally {
-    // 11. Restore.
+    // 11. Restore. The walk event is kept between runs; leave it at status 1.
     try {
-      await setEventStatus(walk.id, 4);
+      await setEventStatus(walk.id, 1);
     } catch {
       // ignore
     }
@@ -244,12 +248,18 @@ test("status walk", async ({ page }) => {
         // ignore
       }
     }
-    if (previousActiveBeacon && previousActiveBeacon.id !== harnessBeacon.id) {
+    if (previousActiveBeacon && previousActiveBeacon.id !== beaconId) {
       try {
         await activateBeacon(previousActiveBeacon.id);
       } catch {
         // ignore
       }
+    }
+    try {
+      await revokeBeacon(beaconId);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn(`revoke of e2e walk beacon ${beaconId} failed`, err);
     }
   }
 });
