@@ -17,6 +17,7 @@
     "size": "size-limit",
     "icons:gen": "node scripts/gen-icons.mjs",
     "contracts:check": "node scripts/check-contracts.mjs",
+    "check:no-infra": "node scripts/check-no-infra.mjs",
     "contracts:types": "node scripts/gen-contracts.mjs"
   },
   "dependencies": {
