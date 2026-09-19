@@ -150,6 +150,67 @@ export async function activateBeacon(id: number): Promise<void> {
   await request<void>("POST", `/admin/beacons/${id}/activate`);
 }
 
+export type CreatedBeacon = {
+  beacon: AdminBeacon;
+  key: string;
+  enrollment: { token: string; url: string; qrPngDataUrl: string; expiresAt: string };
+};
+
+export async function createBeacon(body: { name: string; notes?: string }): Promise<CreatedBeacon> {
+  return request<CreatedBeacon>("POST", "/admin/beacons", {
+    name: body.name,
+    notes: body.notes ?? "",
+  });
+}
+
+export async function revokeBeacon(id: number): Promise<void> {
+  await request<void>("POST", `/admin/beacons/${id}/revoke`);
+}
+
+export type EnrolledBeacon = {
+  beaconId: number;
+  name: string;
+  key: string;
+  apiBaseUrl: string;
+  hubUrl: string;
+  ingestChannel: string;
+  serverTime: string;
+};
+
+export async function enrollBeacon(token: string): Promise<EnrolledBeacon> {
+  const res = await fetch(`${e2eEnv.API_BASE_URL}/beacons/enroll`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "omit",
+    body: JSON.stringify({ token }),
+  });
+  const text = await res.text();
+  const json = text ? JSON.parse(text) : null;
+  if (!res.ok) {
+    const code = json && typeof json === "object" && "code" in json ? String((json as { code: unknown }).code) : "";
+    throw new AdminApiError(res.status, code, `POST /beacons/enroll → ${res.status}${code ? ` ${code}` : ""}`);
+  }
+  return json as EnrolledBeacon;
+}
+
+export async function createEvent(body: {
+  year: number;
+  name: string;
+  scheduledAt?: string | null;
+  fundsPercent?: number;
+  routeId?: number | null;
+  inheritRoute?: boolean;
+}): Promise<AdminEvent> {
+  return request<AdminEvent>("POST", "/admin/events", {
+    year: body.year,
+    name: body.name,
+    scheduledAt: body.scheduledAt ?? null,
+    fundsPercent: body.fundsPercent ?? 0,
+    routeId: body.routeId ?? null,
+    inheritRoute: body.inheritRoute ?? true,
+  });
+}
+
 export type AdminQrCode = {
   id: number;
   tag: string;
