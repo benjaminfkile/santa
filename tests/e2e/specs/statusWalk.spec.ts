@@ -107,10 +107,12 @@ test("status walk", async ({ page }) => {
     await activateBeacon(beaconId);
     await heartbeat(beaconKey);
     await setEventStatus(walk.id, 3);
+    // The switch to live takes one poll; the map then arrives as its own chunk
+    // and mounts after it loads, which a cold browser pays for on top.
     await page.waitForFunction(
       "!!document.querySelector('[data-testid=\"map\"]')",
       undefined,
-      { timeout: POLL_PLUS },
+      { timeout: POLL_PLUS * 3 },
     );
     // The live page mounts the map. On a fresh event the chip says waiting for a
     // fix; locations accumulate on the walk event in dev (site.md 22.2), and a

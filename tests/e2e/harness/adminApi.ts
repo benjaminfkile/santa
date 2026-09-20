@@ -214,6 +214,8 @@ export async function createEvent(body: {
 export type AdminQrCode = {
   id: number;
   tag: string;
+  active?: boolean;
+  opens?: { kind: string; slug: string | null };
   scans?: { people?: number };
 };
 

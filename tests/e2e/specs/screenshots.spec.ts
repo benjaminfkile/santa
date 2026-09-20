@@ -29,8 +29,9 @@ const WIDTHS = [
   { name: "desktop-1280", width: 1280, height: 800 },
   { name: "phone-400", width: 400, height: 800 },
 ];
+// The off-season home (no current event) is not here: no admin call leaves dev
+// without a current event, so the state cannot be produced on demand.
 const HOME_STATES: { name: string; statusId: EventStatusId | null }[] = [
-  { name: "no_event", statusId: null },
   { name: "planned", statusId: 1 },
   { name: "scheduled", statusId: 2 },
   { name: "live", statusId: 3 },
@@ -140,7 +141,8 @@ test.describe("home states", () => {
           }
         } finally {
           try {
-            await setEventStatus(walk.id, 4);
+            // The walk event is always left planned (site.md 22.2).
+            await setEventStatus(walk.id, 1);
           } catch {
             // ignore
           }

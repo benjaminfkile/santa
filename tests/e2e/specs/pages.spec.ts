@@ -89,7 +89,11 @@ test("the sponsors page renders one card per snapshot sponsor with equal per-row
     sponsors?: unknown[];
   };
   const pages = snap.content?.pages ?? [];
-  const target = pages.find((p) => p.sections.some((s) => s.kind === "sponsor_grid"));
+  // A role page has no address of its own (it renders at "/" while its status
+  // holds), so only an ordinary page can be opened by its slug.
+  const target = pages.find(
+    (p) => p.role === "none" && p.sections.some((s) => s.kind === "sponsor_grid"),
+  );
   test.skip(target === undefined, "no sponsor_grid section in the published document");
   if (!target) return;
   const sponsorCount = (snap.sponsors ?? []).length;
@@ -206,30 +210,31 @@ test("/nope renders the 404 page", async ({ page }) => {
   await expect(page.locator("body")).toContainText(/not found|404/i);
 });
 
-test("/q/qr-001 lands on the sponsors page and the code's people count rises by one", async ({ page }) => {
-  // docs/site.md section 4 and contracts 4.5a. A33 seeded qr-001 in dev
-  // pointing at the sponsors page; scanning it fires POST /qr-codes/qr-001/scans
-  // and the panel's people count for that code rises by one.
+test("a printed code that opens a page lands on it and the code's people count rises by one", async ({ page }) => {
+  // docs/site.md section 4 and contracts 4.5a. Any active code whose target
+  // is a page will do: scanning it fires POST /qr-codes/<tag>/scans, the site
+  // lands on the page, and the panel's people count for the code rises by one.
   const codes = await listQrCodes();
-  const qr001 = codes.find((c) => c.tag === "qr-001");
-  test.skip(qr001 === undefined, "qr-001 not seeded on dev; complete A33 first");
-  if (!qr001) return;
-  const before = await getQrCodeDetail(qr001.id);
+  const code = codes.find((c) => c.active === true && c.opens?.kind === "page" && !!c.opens.slug);
+  test.skip(code === undefined, "no active code on dev opens a page");
+  if (!code || !code.opens?.slug) return;
+  const before = await getQrCodeDetail(code.id);
   const beforePeople = Number(before.scans?.people ?? 0);
 
-  const scanRequest = page.waitForRequest((r) => /\/qr-codes\/qr-001\/scans$/.test(r.url()) && r.method() === "POST");
-  await goto(page, "/q/qr-001");
+  const scanPath = `/qr-codes/${code.tag}/scans`;
+  const scanRequest = page.waitForRequest((r) => new URL(r.url()).pathname.endsWith(scanPath) && r.method() === "POST");
+  await goto(page, `/q/${code.tag}`);
   const req = await scanRequest;
   const body = req.postData();
   expect(body).toBeTruthy();
   if (body) expect(() => JSON.parse(body)).not.toThrow();
 
-  await expect(page).toHaveURL(/\/sponsors$/, { timeout: 15_000 });
+  await expect(page).toHaveURL(new RegExp(`/${code.opens.slug}$`), { timeout: 15_000 });
   await expect(page.locator('main[data-page-role="none"]')).toBeVisible({ timeout: 15_000 });
 
   await expect
     .poll(async () => {
-      const detail = await getQrCodeDetail(qr001.id);
+      const detail = await getQrCodeDetail(code.id);
       return Number(detail.scans?.people ?? 0);
     }, { timeout: 10_000 })
     .toBeGreaterThanOrEqual(beforePeople + 1);

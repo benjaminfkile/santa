@@ -5,10 +5,11 @@ import { defineConfig, devices } from "@playwright/test";
 // status walk runs serially in one worker; every other spec is parallel.
 // Global setup mints one admin ID token per run into `E2E_ADMIN_ID_TOKEN`
 // so every worker inherits the same token (TOTP codes are single use).
-// Against a deployed host the config caps concurrency at two workers with
-// `fullyParallel: false`, because the site sits behind a bot checkpoint
-// that answers 403 with a challenge when one address opens many pages at
-// once.
+// Against a deployed host the config runs one worker with
+// `fullyParallel: false`: the walk and the home state screenshots drive the
+// same dev event, so two of them at once flip it under each other, and the
+// site sits behind a bot checkpoint that answers 403 with a challenge when
+// one address opens many pages at once.
 const baseUrl = process.env.E2E_BASE_URL ?? "";
 const isDeployed = baseUrl !== "" && !/^https?:\/\/(localhost|127\.0\.0\.1)/.test(baseUrl);
 
@@ -16,7 +17,7 @@ export default defineConfig({
   testDir: "tests/e2e/specs",
   globalSetup: "./tests/e2e/globalSetup.ts",
   fullyParallel: isDeployed ? false : true,
-  workers: isDeployed ? 2 : process.env.CI ? 1 : undefined,
+  workers: isDeployed ? 1 : process.env.CI ? 1 : undefined,
   retries: 0,
   reporter: [["list"], ["html", { open: "never" }]],
   // Screenshot baselines are committed side-by-side with the specs at
