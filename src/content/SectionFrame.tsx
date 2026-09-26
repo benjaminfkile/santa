@@ -2,8 +2,10 @@
 // The `map` section ignores width and spacing. Every content kind except
 // `hero`, `map`, `divider`, and `countdown` renders inside a card built
 // only from tokens (panel fill, line border, radius-md, shadow, space-5
-// padding on desktop, space-4 below 640 px). A token background becomes
-// the card fill; a media background is clipped inside its rounded corners.
+// padding on desktop, space-4 below 640 px). A card has one fixed
+// maximum width and is centred whatever the section's `presentation.width`;
+// cardless kinds still honour that width. A token background becomes the
+// card fill; a media background is clipped inside its rounded corners.
 
 import type { CSSProperties, ReactNode } from "react";
 import type { Presentation } from "../contracts";

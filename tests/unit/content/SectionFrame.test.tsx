@@ -255,4 +255,39 @@ describe("SectionFrame", () => {
     expect(sections[0].dataset.card).toBe("false");
     expect(sections[1].dataset.card).toBe("true");
   });
+
+  it("card kinds render the card with the same class set for any presentation.width", () => {
+    // Cards have one fixed maximum width and are centred whatever the
+    // section's width setting: presentation.width never lands on the card.
+    const { container: fullContainer } = render(
+      <SectionFrame presentation={base({ width: "full" })} bundle={emptyBundle} kind="rich_text">
+        <div>x</div>
+      </SectionFrame>,
+    );
+    const { container: narrowContainer } = render(
+      <SectionFrame presentation={base({ width: "narrow" })} bundle={emptyBundle} kind="rich_text">
+        <div>y</div>
+      </SectionFrame>,
+    );
+    const fullSection = fullContainer.querySelector("section")!;
+    const narrowSection = narrowContainer.querySelector("section")!;
+    expect(fullSection.dataset.width).toBe("full");
+    expect(narrowSection.dataset.width).toBe("narrow");
+    const fullCard = fullSection.firstElementChild as HTMLElement;
+    const narrowCard = narrowSection.firstElementChild as HTMLElement;
+    expect(fullCard.tagName).toBe("DIV");
+    expect(narrowCard.tagName).toBe("DIV");
+    expect(fullCard.className).toBe(narrowCard.className);
+  });
+
+  it("cardless kinds keep the section's width class: a hero with narrow stays narrow", () => {
+    const { container } = render(
+      <SectionFrame presentation={base({ width: "narrow" })} bundle={emptyBundle} kind="hero">
+        <div>x</div>
+      </SectionFrame>,
+    );
+    const section = container.querySelector("section")!;
+    expect(section.dataset.card).toBe("false");
+    expect(section.dataset.width).toBe("narrow");
+  });
 });
