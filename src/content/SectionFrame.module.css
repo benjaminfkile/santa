@@ -27,6 +27,10 @@
 .alignCenter { text-align: center; }
 
 .content { width: 100%; margin-inline: auto; box-sizing: border-box; position: relative; z-index: 1; }
+/* A section whose component renders nothing collapses the frame: no card,
+   no padding, no background, no icons before or after, and the section
+   element takes no space in the flow. */
+.sectionFrame:has(.content:empty) { display: none; }
 /* Cardless kinds (hero, map, divider, countdown) cap the content by the
    section's width setting. Card kinds ignore this: the card is sized by
    its own rule below and the content fills the card. */

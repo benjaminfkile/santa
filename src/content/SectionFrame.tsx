@@ -5,7 +5,9 @@
 // padding on desktop, space-4 below 640 px). A card has one fixed
 // maximum width and is centred whatever the section's `presentation.width`;
 // cardless kinds still honour that width. A token background becomes the
-// card fill; a media background is clipped inside its rounded corners.
+// card fill; a media background is clipped inside its rounded corners. A
+// section whose component renders nothing collapses the frame (no card,
+// no padding, no background, no icons before or after, no space taken).
 
 import type { CSSProperties, ReactNode } from "react";
 import type { Presentation } from "../contracts";
@@ -111,7 +113,7 @@ export function SectionFrame({ presentation, bundle, kind, children }: SectionFr
     <>
       {background}
       {iconBefore}
-      <div className={styles.content}>{children}</div>
+      <div className={styles.content} data-testid="section-frame-content">{children}</div>
       {iconAfter}
     </>
   );
