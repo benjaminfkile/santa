@@ -5929,6 +5929,8 @@ export interface components {
             iconBefore?: null | components["schemas"]["IconValue"];
             iconAfter?: null | components["schemas"]["IconValue"];
             anchor?: null | string;
+            card?: null | boolean;
+            iconSize?: null | string;
         };
         PreviewTokenDto: {
             token?: string;

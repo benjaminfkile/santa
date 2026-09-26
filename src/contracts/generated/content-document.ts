@@ -150,6 +150,8 @@ export interface Presentation {
       )
     | null;
   anchor: string | null;
+  card?: boolean | null;
+  iconSize?: "sm" | "md" | "lg" | "xl" | null;
 }
 export interface MediaRef {
   mediaId: string;

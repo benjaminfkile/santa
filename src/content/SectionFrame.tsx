@@ -1,10 +1,12 @@
 // docs/site.md section 7.2. Turns a section's presentation into layout.
-// The `map` section ignores width and spacing. Every content kind except
-// `hero`, `map`, `divider`, and `countdown` renders inside a card built
-// only from tokens (panel fill, line border, radius-md, shadow, space-5
-// padding on desktop, space-4 below 640 px). A card has one fixed
-// maximum width and is centred whatever the section's `presentation.width`;
-// cardless kinds still honour that width. A token background becomes the
+// The `map` section ignores width and spacing and never has a card. Every
+// other section renders inside a card built only from tokens (panel fill,
+// line border, radius-md, shadow, space-5 padding on desktop, space-4
+// below 640 px) unless its `presentation.card` is false. A card has one
+// fixed maximum width and is centred whatever the section's
+// `presentation.width`; a section without a card renders on the page
+// background and honours that width. `presentation.iconSize` sizes the
+// icons before and after (7.3). A token background becomes the
 // card fill; a media background is clipped inside its rounded corners. A
 // section whose component renders nothing collapses the frame (no card,
 // no padding, no background, no icons before or after, no space taken).
@@ -14,6 +16,8 @@ import type { Presentation } from "../contracts";
 import type { ContentBundle } from "../store/types";
 import { Icon } from "./primitives/Icon";
 import { Media } from "./primitives/Media";
+import { SECTION_ICON_SIZES, iconSizeKey } from "./iconSizes";
+import { hasSectionCard } from "./sectionCard";
 import * as styles from "./SectionFrame.module.css";
 
 export type SectionFrameProps = {
@@ -48,14 +52,13 @@ const BG_TOKEN_CLASS: Record<string, string | undefined> = {
   night: styles.bgNight,
 };
 
-const CARDLESS_KINDS = new Set(["hero", "map", "divider", "countdown"]);
-
 export function SectionFrame({ presentation, bundle, kind, children }: SectionFrameProps) {
   const isMap = kind === "map";
   const width = isMap ? "full" : presentation.width;
   const spacing = isMap ? "none" : presentation.spacing;
   const bg = presentation.background;
-  const hasCard = !CARDLESS_KINDS.has(kind);
+  const hasCard = hasSectionCard(kind, presentation);
+  const iconPx = SECTION_ICON_SIZES[iconSizeKey(presentation.iconSize)];
 
   const style: CSSProperties = {};
   const frameClasses = [
@@ -98,14 +101,14 @@ export function SectionFrame({ presentation, bundle, kind, children }: SectionFr
   const iconBefore =
     presentation.iconBefore !== null ? (
       <div className={styles.iconBefore} aria-hidden data-testid="section-frame-icon-before">
-        <Icon icon={presentation.iconBefore} bundle={bundle} alt="" decorative />
+        <Icon icon={presentation.iconBefore} bundle={bundle} alt="" decorative size={iconPx} />
       </div>
     ) : null;
 
   const iconAfter =
     presentation.iconAfter !== null ? (
       <div className={styles.iconAfter} aria-hidden data-testid="section-frame-icon-after">
-        <Icon icon={presentation.iconAfter} bundle={bundle} alt="" decorative />
+        <Icon icon={presentation.iconAfter} bundle={bundle} alt="" decorative size={iconPx} />
       </div>
     ) : null;
 
