@@ -1,5 +1,8 @@
 // docs/site.md section 7.3. resolveMedia and resolveIcon are the only
-// functions that reach into the bundle's media and icons maps.
+// functions that reach into the bundle's media and icons maps. For a
+// media-sourced icon whose entry is raster and carries variants, the
+// smallest variant (the `480` key when present) is returned; svg and gif
+// entries and rasters without variants fall back to `url`.
 
 import type { ContentBundle } from "../../store/types";
 import type { IconRef } from "../../contracts";
@@ -40,6 +43,11 @@ export function resolveIcon(bundle: ContentBundle, ref: IconRef): string | null 
       console.warn(`content: missing media icon "${ref.id}"`);
     }
     return null;
+  }
+  const kind = (entry.kind ?? "").toLowerCase();
+  if (kind !== "svg" && kind !== "gif") {
+    const smallest = entry.variants?.["480"];
+    if (smallest) return smallest;
   }
   return entry.url ?? null;
 }

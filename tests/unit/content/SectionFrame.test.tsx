@@ -6,6 +6,8 @@
 // decision).
 
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { render } from "@testing-library/react";
 import { SectionFrame } from "../../../src/content/SectionFrame";
 import type { ContentBundle } from "../../../src/store/types";
@@ -278,6 +280,29 @@ describe("SectionFrame", () => {
     expect(fullCard.tagName).toBe("DIV");
     expect(narrowCard.tagName).toBe("DIV");
     expect(fullCard.className).toBe(narrowCard.className);
+  });
+
+  it.each(["rich_text", "hero", "map", "divider", "countdown", "event_times", "funds_ring"] as const)(
+    "leaves an empty content div when the section renders nothing (kind: %s), so the frame's CSS rule collapses it",
+    (kind) => {
+      const { container, getByTestId } = render(
+        <SectionFrame presentation={base()} bundle={emptyBundle} kind={kind}>
+          {null}
+        </SectionFrame>,
+      );
+      const section = container.querySelector("section")!;
+      const content = getByTestId("section-frame-content");
+      expect(section.contains(content)).toBe(true);
+      expect(content.children.length).toBe(0);
+      expect(content.textContent).toBe("");
+      expect(section.textContent).toBe("");
+    },
+  );
+
+  it("carries the CSS rule that collapses a section whose content is empty", () => {
+    const cssPath = resolve(__dirname, "..", "..", "..", "src", "content", "SectionFrame.module.css");
+    const css = readFileSync(cssPath, "utf8");
+    expect(css).toMatch(/\.sectionFrame:has\(\.content:empty\)\s*\{\s*display:\s*none;?\s*\}/);
   });
 
   it("cardless kinds keep the section's width class: a hero with narrow stays narrow", () => {

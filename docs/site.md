@@ -595,6 +595,8 @@ export const registry = {
 
 A test asserts that every kind in the vendored `contracts/kinds.json` has an entry and that each renders its `defaults` without throwing. `Unknown` renders nothing and logs the kind once.
 
+A section whose component renders nothing collapses its frame: no card, no padding, no background, no icons before or after, and the section element takes no space in the flow.
+
 ### 7.3 Primitives
 
 | Primitive | Component | Rendering |
@@ -605,6 +607,8 @@ A test asserts that every kind in the vendored `contracts/kinds.json` has an ent
 | `Inline` | `inline/Inline.tsx` | Section 7.5. |
 
 `primitives/resolve.ts` holds `resolveMedia(bundle, id)` and `resolveIcon(bundle, icon)`; nothing else touches the maps.
+
+A media-sourced icon whose entry is raster loads its smallest variant (the `480` key when present) and falls back to `url`; svg and gif entries keep `url`.
 
 ### 7.4 Section kinds
 
