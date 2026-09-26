@@ -2,7 +2,9 @@
 // frames wrapping the kind's component. A `hero` section immediately
 // followed by a `countdown` section on the same page renders as one
 // two-column row at 760 px and up, with the hero copy left-aligned in the
-// first column and the countdown card in the second. While the event is
+// first column and the countdown card in the second. The row sits inside
+// one card unless the hero's `presentation.card` is false, in which case it
+// renders open on the page background. While the event is
 // live the live page renders its `map` section alone: the tracker owns
 // the viewport and nothing else on the page is reachable.
 
@@ -11,6 +13,7 @@ import type { ContentBundle } from "../store/types";
 import { useStore } from "../store/useStore";
 import { selectTakeover } from "./selectPage";
 import { SectionFrame } from "./SectionFrame";
+import { hasSectionCard } from "./sectionCard";
 import { registry, Unknown } from "./registry";
 import * as frameStyles from "./SectionFrame.module.css";
 
@@ -49,21 +52,26 @@ export function PageRenderer({ page, bundle }: PageRendererProps) {
       next !== undefined &&
       next.kind === "countdown"
     ) {
+      const pairCard = hasSectionCard(section.kind, section.presentation);
+      const pairContent = (
+        <div className={frameStyles.content}>
+          <div className={frameStyles.heroCountdownPairSlot} data-testid="hero-countdown-hero">
+            {renderSection(section, bundle, { paired: true })}
+          </div>
+          <div className={frameStyles.heroCountdownPairSlot} data-testid="hero-countdown-countdown">
+            {renderSection(next, bundle)}
+          </div>
+        </div>
+      );
       rows.push(
         <section
           key={section.id}
-          className={frameStyles.heroCountdownPair}
+          className={[frameStyles.heroCountdownPair, pairCard ? frameStyles.hasCard : ""].filter(Boolean).join(" ")}
           data-testid="hero-countdown-pair"
           data-section-kind="hero+countdown"
+          data-card={pairCard ? "true" : "false"}
         >
-          <div className={frameStyles.content}>
-            <div className={frameStyles.heroCountdownPairSlot} data-testid="hero-countdown-hero">
-              {renderSection(section, bundle, { paired: true })}
-            </div>
-            <div className={frameStyles.heroCountdownPairSlot} data-testid="hero-countdown-countdown">
-              {renderSection(next, bundle)}
-            </div>
-          </div>
+          {pairCard ? <div className={frameStyles.card}>{pairContent}</div> : pairContent}
         </section>,
       );
       i += 1;

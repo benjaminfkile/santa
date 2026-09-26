@@ -1,6 +1,8 @@
 // docs/site.md section 7.4. Hero section: eyebrow in mono accent, title as
 // <h1> in Bricolage, tagline capped at 56ch, icon above the title, up to
-// two links in the fill and outline recipes.
+// two links in the fill and outline recipes. `iconSize` sizes the icon: a
+// library icon sits in a round badge of that size with the glyph at 60
+// percent, a media icon renders at that size uncropped with no badge.
 
 import type { IconRef, Link } from "../../../contracts";
 import type { SectionComponent } from "../../registry";
@@ -8,6 +10,7 @@ import { Inline } from "../../inline/Inline";
 import { Icon } from "../../primitives/Icon";
 import { ContentLink } from "../../primitives/LinkView";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
+import { HERO_ICON_SIZES, iconSizeKey } from "../../iconSizes";
 import * as styles from "./Hero.module.css";
 
 type HeroData = {
@@ -17,6 +20,7 @@ type HeroData = {
   icon?: IconRef | null;
   links?: Link[];
   height?: "short" | "tall";
+  iconSize?: "sm" | "md" | "lg" | "xl" | null;
   paired?: boolean;
 };
 
@@ -30,6 +34,8 @@ export const Hero: SectionComponent = ({ data, bundle }) => {
   const height = d.height ?? "tall";
   const links = Array.isArray(d.links) ? d.links.slice(0, 2) : [];
   const event = useSnapshotEvent();
+  const iconPx = HERO_ICON_SIZES[iconSizeKey(d.iconSize)];
+  const iconIsMedia = d.icon?.source === "media";
   const rootClass = [
     styles.hero,
     height === "tall" ? styles.heroTall : styles.heroShort,
@@ -40,8 +46,15 @@ export const Hero: SectionComponent = ({ data, bundle }) => {
   return (
     <div className={rootClass}>
       {d.icon ? (
-        <div className={styles.heroIcon} aria-hidden>
-          <Icon icon={d.icon} bundle={bundle} decorative size={56} />
+        <div
+          className={iconIsMedia ? styles.heroIconMedia : styles.heroIcon}
+          style={{ width: iconPx, height: iconPx }}
+          aria-hidden
+          data-testid="hero-icon"
+          data-icon-size={iconPx}
+          data-icon-badge={iconIsMedia ? "false" : "true"}
+        >
+          <Icon icon={d.icon} bundle={bundle} decorative size={iconPx} />
         </div>
       ) : null}
       {d.eyebrow ? (

@@ -1,10 +1,11 @@
 /* docs/site.md section 7.2. Section frame: wraps every section, controls
-   width, alignment, spacing, and token/media backgrounds. Every content
-   kind except hero, map, divider, and countdown renders inside a card
-   (panel fill, line border, radius-md, shadow, space-5 padding on
-   desktop, space-4 below 640 px). Cards have one fixed maximum width
+   width, alignment, spacing, and token/media backgrounds. Every section
+   except map renders inside a card (panel fill, line border, radius-md,
+   shadow, space-5 padding on desktop, space-4 below 640 px) unless its
+   presentation turns the card off. Cards have one fixed maximum width
    (var(--width-wide)) and are centred whatever the section's width
-   setting; cardless kinds honour the width setting on the content. A
+   setting; a section without a card honours the width setting on the
+   content. A
    token background replaces the panel fill, a media background is
    clipped inside the card's rounded corners. */
 
@@ -31,9 +32,9 @@
    no padding, no background, no icons before or after, and the section
    element takes no space in the flow. */
 .sectionFrame:has(.content:empty) { display: none; }
-/* Cardless kinds (hero, map, divider, countdown) cap the content by the
-   section's width setting. Card kinds ignore this: the card is sized by
-   its own rule below and the content fills the card. */
+/* A section without a card (map, or `card: false`) caps the content by
+   the section's width setting. A carded section ignores this: the card
+   is sized by its own rule below and the content fills the card. */
 .widthFull > .content { max-width: 100%; }
 .widthWide > .content { max-width: var(--width-wide); }
 .widthNarrow > .content { max-width: var(--width-narrow); }
@@ -110,7 +111,9 @@
 
 /* Studio pairing: a hero followed by a countdown becomes a two-column row
    at 760 px and up. The hero copy is left-aligned in this column with the
-   eyebrow, title, tagline capped at 56 ch, and the two links. */
+   eyebrow, title, tagline capped at 56 ch, and the two links. The pair
+   sits inside one card (the card rule above) unless the hero's card is
+   off, in which case the row stays open on the page background. */
 .heroCountdownPair {
   display: flex;
   flex-direction: column;
@@ -119,7 +122,8 @@
   padding-block: var(--space-5);
   color: var(--text);
 }
-.heroCountdownPair > .content {
+.heroCountdownPair > .content,
+.heroCountdownPair > .card > .content {
   width: 100%;
   max-width: var(--width-wide);
   margin-inline: auto;
@@ -128,8 +132,10 @@
   grid-template-columns: 1fr;
   align-items: center;
 }
+.heroCountdownPair.hasCard { padding-block: calc(var(--space-4) / 2); }
 @media (min-width: 760px) {
-  .heroCountdownPair > .content {
+  .heroCountdownPair > .content,
+  .heroCountdownPair > .card > .content {
     grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.9fr);
     gap: var(--space-7);
   }

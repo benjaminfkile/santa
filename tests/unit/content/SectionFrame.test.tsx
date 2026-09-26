@@ -1,9 +1,9 @@
 // docs/site.md section 7.2. SectionFrame width, background, spacing,
-// decoration icons, anchor id, and the card default (every content kind
-// except hero, map, divider, and countdown renders inside a card built
-// from tokens; the card takes a token fill when set and clips a media
-// background inside its rounded corners; `data-card` exposes the
-// decision).
+// decoration icons and their sizes, anchor id, and the card default
+// (every kind except map renders inside a card built from tokens unless
+// `presentation.card` is false; the card takes a token fill when set and
+// clips a media background inside its rounded corners; `data-card`
+// exposes the decision).
 
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
@@ -179,23 +179,121 @@ describe("SectionFrame", () => {
     expect(cardChild.querySelector('[data-testid="body"]')).not.toBeNull();
   });
 
-  it.each(["hero", "map", "divider", "countdown"] as const)(
-    "does not render the card for %s",
+  it.each([
+    "rich_text",
+    "hero",
+    "divider",
+    "countdown",
+    "media",
+    "links",
+    "icon_row",
+    "funds_ring",
+    "event_times",
+    "latest_message",
+    "leaderboard",
+    "sponsor_carousel",
+    "sponsor_grid",
+    "route_preview",
+    "cookie_control",
+    "alerts_signup",
+    "contact_form",
+  ] as const)("renders the card for %s when presentation has no card setting", (kind) => {
+    const { container } = render(
+      <SectionFrame presentation={base()} bundle={emptyBundle} kind={kind}>
+        <div data-testid="body">x</div>
+      </SectionFrame>,
+    );
+    const section = container.querySelector("section")!;
+    expect(section.dataset.card).toBe("true");
+    expect(section.querySelector(':scope > [data-testid="section-frame-content"]')).toBeNull();
+  });
+
+  it("treats card: null as carded", () => {
+    const { container } = render(
+      <SectionFrame presentation={base({ card: null })} bundle={emptyBundle} kind="hero">
+        <div>x</div>
+      </SectionFrame>,
+    );
+    expect(container.querySelector("section")?.dataset.card).toBe("true");
+  });
+
+  it.each(["rich_text", "hero", "divider", "countdown"] as const)(
+    "card: false renders %s without a card, on the page background",
     (kind) => {
       const { container } = render(
-        <SectionFrame presentation={base()} bundle={emptyBundle} kind={kind}>
+        <SectionFrame presentation={base({ card: false })} bundle={emptyBundle} kind={kind}>
           <div data-testid="body">x</div>
         </SectionFrame>,
       );
       const section = container.querySelector("section")!;
       expect(section.dataset.card).toBe("false");
-      // The children render directly under the section, not inside a card.
-      expect(section.querySelector(':scope > [data-testid="body"]')).toBeNull();
-      const content = section.querySelector(':scope > div');
+      // The content renders directly under the section, not inside a card.
+      const content = section.querySelector(':scope > [data-testid="section-frame-content"]');
       expect(content).not.toBeNull();
       expect(content?.querySelector('[data-testid="body"]')).not.toBeNull();
     },
   );
+
+  it.each(["full", "wide", "narrow"] as const)(
+    "card: false honours presentation.width %s on the content",
+    (width) => {
+      const { container } = render(
+        <SectionFrame presentation={base({ card: false, width })} bundle={emptyBundle} kind="rich_text">
+          <div>x</div>
+        </SectionFrame>,
+      );
+      const section = container.querySelector("section")!;
+      expect(section.dataset.card).toBe("false");
+      expect(section.dataset.width).toBe(width);
+      // The content is the section's direct child, so the frame's width
+      // rule (`.width<Width> > .content`) caps it.
+      expect(section.querySelector(':scope > [data-testid="section-frame-content"]')).not.toBeNull();
+      const cssPath = resolve(__dirname, "..", "..", "..", "src", "content", "SectionFrame.module.css");
+      const css = readFileSync(cssPath, "utf8");
+      const cls = `width${width[0].toUpperCase()}${width.slice(1)}`;
+      expect(css).toMatch(new RegExp(`\\.${cls} > \\.content \\{ max-width:`));
+    },
+  );
+
+  it.each([undefined, null, true, false] as const)("never cards a map (card: %s)", (card) => {
+    const { container } = render(
+      <SectionFrame presentation={base({ card })} bundle={emptyBundle} kind="map">
+        <div data-testid="body">x</div>
+      </SectionFrame>,
+    );
+    const section = container.querySelector("section")!;
+    expect(section.dataset.card).toBe("false");
+    expect(section.querySelector(':scope > [data-testid="section-frame-content"]')).not.toBeNull();
+  });
+
+  it.each([
+    [undefined, 24],
+    [null, 24],
+    ["sm", 24],
+    ["md", 48],
+    ["lg", 72],
+    ["xl", 96],
+  ] as const)("presentation.iconSize %s sizes the icons before and after at %i px", (iconSize, px) => {
+    const { getByTestId } = render(
+      <SectionFrame
+        presentation={base({
+          iconSize,
+          iconBefore: { source: "library", id: "star" },
+          iconAfter: { source: "media", id: "abc" },
+        })}
+        bundle={emptyBundle}
+        kind="rich_text"
+      >
+        <div>x</div>
+      </SectionFrame>,
+    );
+    const before = getByTestId("section-frame-icon-before").firstElementChild!;
+    const after = getByTestId("section-frame-icon-after").firstElementChild!;
+    expect(before.getAttribute("width")).toBe(String(px));
+    expect(before.getAttribute("height")).toBe(String(px));
+    expect(after.getAttribute("width")).toBe(String(px));
+    expect(after.getAttribute("height")).toBe(String(px));
+  });
 
   it("uses the token fill on the card when a token background is set", () => {
     const { container, getByTestId } = render(
@@ -245,7 +343,7 @@ describe("SectionFrame", () => {
   it("sets data-card on the section element", () => {
     const { container } = render(
       <>
-        <SectionFrame presentation={base()} bundle={emptyBundle} kind="hero">
+        <SectionFrame presentation={base()} bundle={emptyBundle} kind="map">
           <div>x</div>
         </SectionFrame>
         <SectionFrame presentation={base()} bundle={emptyBundle} kind="rich_text">
@@ -258,7 +356,7 @@ describe("SectionFrame", () => {
     expect(sections[1].dataset.card).toBe("true");
   });
 
-  it("card kinds render the card with the same class set for any presentation.width", () => {
+  it("carded sections render the card with the same class set for any presentation.width", () => {
     // Cards have one fixed maximum width and are centred whatever the
     // section's width setting: presentation.width never lands on the card.
     const { container: fullContainer } = render(
@@ -305,14 +403,14 @@ describe("SectionFrame", () => {
     expect(css).toMatch(/\.sectionFrame:has\(\.content:empty\)\s*\{\s*display:\s*none;?\s*\}/);
   });
 
-  it("cardless kinds keep the section's width class: a hero with narrow stays narrow", () => {
+  it("a carded hero with narrow keeps the card rule", () => {
     const { container } = render(
       <SectionFrame presentation={base({ width: "narrow" })} bundle={emptyBundle} kind="hero">
         <div>x</div>
       </SectionFrame>,
     );
     const section = container.querySelector("section")!;
-    expect(section.dataset.card).toBe("false");
+    expect(section.dataset.card).toBe("true");
     expect(section.dataset.width).toBe("narrow");
   });
 });

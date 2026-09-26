@@ -30,9 +30,11 @@
   margin: 0;
 }
 
+/* The icon box takes its width and height from the hero's iconSize
+   (src/content/iconSizes.ts). A library icon sits in a round badge with
+   the glyph at 60 percent; a media icon fills the box uncropped. */
 .heroIcon {
-  width: 56px;
-  height: 56px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: var(--panel);
   color: var(--accent);
@@ -44,6 +46,17 @@
 }
 .heroIcon img,
 .heroIcon svg { width: 60%; height: 60%; }
+.heroIconMedia {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.heroIconMedia img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 
 .heroTitle {
   font-family: var(--font-display);
