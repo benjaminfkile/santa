@@ -2,8 +2,11 @@
    width, alignment, spacing, and token/media backgrounds. Every content
    kind except hero, map, divider, and countdown renders inside a card
    (panel fill, line border, radius-md, shadow, space-5 padding on
-   desktop, space-4 below 640 px). A token background replaces the panel
-   fill, a media background is clipped inside the card's rounded corners. */
+   desktop, space-4 below 640 px). Cards have one fixed maximum width
+   (var(--width-wide)) and are centred whatever the section's width
+   setting; cardless kinds honour the width setting on the content. A
+   token background replaces the panel fill, a media background is
+   clipped inside the card's rounded corners. */
 
 .sectionFrame {
   display: flex;
@@ -24,22 +27,26 @@
 .alignCenter { text-align: center; }
 
 .content { width: 100%; margin-inline: auto; box-sizing: border-box; position: relative; z-index: 1; }
-.widthFull > .content,
-.widthFull > .card > .content { max-width: 100%; }
-.widthWide > .content,
-.widthWide > .card > .content { max-width: var(--width-wide); }
-.widthNarrow > .content,
-.widthNarrow > .card > .content { max-width: var(--width-narrow); }
-.widthNarrow.alignStart > .content,
-.widthNarrow.alignStart > .card > .content { margin-inline: 0; }
+/* Cardless kinds (hero, map, divider, countdown) cap the content by the
+   section's width setting. Card kinds ignore this: the card is sized by
+   its own rule below and the content fills the card. */
+.widthFull > .content { max-width: 100%; }
+.widthWide > .content { max-width: var(--width-wide); }
+.widthNarrow > .content { max-width: var(--width-narrow); }
+.widthNarrow.alignStart > .content { margin-inline: 0; }
 
-/* The card. One per section, never nested; the frame keeps its width
-   rule and the card fills that width. Consecutive card frames are
-   separated by var(--space-4) via halved padding-block. */
+/* The card. One per section, never nested. Every card has the same
+   fixed maximum width (var(--width-wide)) and is centred inside the
+   frame whatever the section's width setting; below that width the card
+   fills the frame. Its content fills the card minus the card's padding.
+   Consecutive card frames are separated by var(--space-4) via halved
+   padding-block. */
 .card {
   position: relative;
   isolation: isolate;
   width: 100%;
+  max-width: var(--width-wide);
+  margin-inline: auto;
   box-sizing: border-box;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
@@ -52,6 +59,7 @@
   flex-direction: column;
   gap: var(--space-3);
 }
+.card > .content { max-width: 100%; margin-inline: 0; }
 @media (max-width: 640px) {
   .card { padding: var(--space-4); }
 }
