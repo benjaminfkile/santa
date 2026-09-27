@@ -74,3 +74,23 @@ export function resolveDefaultTheme(
   }
   return offered[0] ?? THEMES.standard;
 }
+
+// The tracker's starting style: the stored key when it is offered, then the
+// site appearance (`night` for dark, `standard` for light) when that key is
+// offered, then the section's `defaultTheme`, then the first offered.
+export function resolveInitialTheme(
+  opts: {
+    stored: string | null | undefined;
+    appearance: "light" | "dark";
+    defaultTheme: string | null | undefined;
+  },
+  offered: MapTheme[],
+): MapTheme {
+  const appearanceKey: ThemeKey = opts.appearance === "dark" ? "night" : "standard";
+  for (const key of [opts.stored, appearanceKey, opts.defaultTheme]) {
+    if (key === null || key === undefined) continue;
+    const found = offered.find((t) => t.key === key);
+    if (found !== undefined) return found;
+  }
+  return offered[0] ?? THEMES.standard;
+}
