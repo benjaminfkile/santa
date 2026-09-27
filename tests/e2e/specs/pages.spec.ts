@@ -1,7 +1,7 @@
 // docs/site.md section 22.2. Parallel page smoke: each ordinary page in
 // the published document renders its first section; the route-preview
-// page loads the map and draws a polyline; /preview renders the ended
-// page while the walk is planned; /alerts/verify and /alerts/unsubscribe
+// page loads the map and draws a polyline; /preview of the ended page
+// starts a preview session on / with the banner and Exit; /alerts/verify and /alerts/unsubscribe
 // with invalid tokens render the invalid copy; the CSP meta is present.
 
 import { test, expect } from "@playwright/test";
@@ -147,11 +147,14 @@ test("the header theme menu sets data-theme dark, survives a reload, and can be 
     .toBe("light");
 });
 
-test("/preview renders the ended page with the preview banner while the walk is planned", async ({ page }) => {
+test("/preview of a role page starts a session on / with the preview banner and Exit preview", async ({ page }) => {
   const minted = await mintPreviewToken("ended");
   await goto(page, `/preview?token=${minted.token}&page=ended`);
+  await expect(page).toHaveURL(/\/$/, { timeout: 15_000 });
   await expect(page.locator('[data-testid="preview-banner"]')).toBeVisible();
-  await expect(page.locator('main[data-page-role="ended"]')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator("main[data-page-role]")).toBeVisible({ timeout: 15_000 });
+  await page.locator('[data-testid="preview-exit"]').click();
+  await expect(page.locator('[data-testid="preview-banner"]')).toHaveCount(0);
 });
 
 test("/alerts/verify with an invalid token renders the invalid copy after one POST", async ({ page }) => {

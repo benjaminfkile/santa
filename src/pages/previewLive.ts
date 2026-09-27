@@ -1,7 +1,7 @@
 // docs/site.md section 7.8. The live state of the preview poll, read by the
 // Preview banner: when the last change was applied and whether five or
-// more polls in a row have failed. PreviewPage writes it and resets it on
-// unmount.
+// more polls in a row have failed. The PreviewSession component writes it;
+// ending or expiring the session resets it.
 
 import { useSyncExternalStore } from "react";
 

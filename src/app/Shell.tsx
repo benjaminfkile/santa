@@ -26,6 +26,11 @@ import { useThemeChoice } from "../content/theme/colorScheme";
 import { LightsLayer, useSnowEnabled, setSnowOverride } from "../content/theme/seasonalLayers";
 import type { ContentBundle } from "../store/types";
 import { usePreviewLive } from "../pages/previewLive";
+import {
+  endPreviewSession,
+  usePreviewSession,
+  type PreviewSessionState,
+} from "../pages/previewSession";
 import { formatMountainClock } from "../lib/time";
 import * as styles from "./Shell.module.css";
 
@@ -36,6 +41,7 @@ export function Shell({ children }: ShellProps) {
   const online = useStore((s) => s.diag.online);
   const consecutiveFailures = useStore((s) => s.diag.consecutivePollFailures);
   const preview = useStore((s) => s.preview);
+  const session = usePreviewSession();
   const bundle = useStore(selectBundle, bundleEqual);
   const takeover = useStore(selectTakeover);
 
@@ -58,7 +64,11 @@ export function Shell({ children }: ShellProps) {
         Skip to content
       </a>
       <Header bundle={bundle} />
-      <Banners updatesPaused={updatesPaused} previewActive={preview !== null} />
+      <Banners
+        updatesPaused={updatesPaused}
+        previewActive={preview !== null || session !== null}
+        session={session}
+      />
       {children}
       <Footer bundle={bundle} />
     </>
@@ -456,9 +466,11 @@ function renderEntry(
 function Banners({
   updatesPaused,
   previewActive,
+  session,
 }: {
   updatesPaused: boolean;
   previewActive: boolean;
+  session: PreviewSessionState;
 }) {
   if (!updatesPaused && !previewActive) return null;
   return (
@@ -470,8 +482,24 @@ function Banners({
       ) : null}
       {previewActive ? (
         <div className={`${styles.banner} ${styles.bannerPreview}`} data-testid="preview-banner">
-          {copy.banners.preview}
-          <PreviewLiveNote />
+          {session?.expired === true ? (
+            <span data-testid="preview-expired">{copy.banners.previewExpired}</span>
+          ) : (
+            <>
+              {copy.banners.preview}
+              <PreviewLiveNote />
+            </>
+          )}
+          {session !== null ? (
+            <button
+              type="button"
+              className={styles.bannerAction}
+              onClick={endPreviewSession}
+              data-testid="preview-exit"
+            >
+              {copy.banners.previewExit}
+            </button>
+          ) : null}
         </div>
       ) : null}
     </div>

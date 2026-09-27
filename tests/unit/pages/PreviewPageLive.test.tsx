@@ -1,7 +1,7 @@
-// docs/site.md section 7.8. The preview page follows the draft: it polls
+// docs/site.md section 7.8. The preview session follows the draft: it polls
 // every 2 s while visible and not while hidden, sends If-None-Match with
 // the last ETag, ignores a 304 and an identical 200, applies a changed 200
-// in place, stops on a 404, and marks the banner Reconnecting after five
+// in place, stops on a 404 with the expired banner, and marks the banner Reconnecting after five
 // failures in a row until the next success.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -10,9 +10,21 @@ import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { Shell } from "../../../src/app/Shell";
 import { AuthProvider } from "../../../src/auth/AuthProvider";
 import { PreviewPage } from "../../../src/pages/PreviewPage";
+import { HomePage } from "../../../src/pages/HomePage";
+import { PreviewSession } from "../../../src/app/PreviewSession";
+import { endPreviewSession } from "../../../src/pages/previewSession";
 import { store } from "../../../src/store/useStore";
 import { initialStore } from "../../../src/store/types";
-import type { ContentDocument } from "../../../src/contracts";
+import type { ContentDocument, LiveObject } from "../../../src/contracts";
+
+function makeLive(): LiveObject {
+  return {
+    schemaVersion: 1, eventId: 1, eventStatusId: 1, pollIntervalMs: 5000,
+    snapshotUrl: null, cookieTally: {}, seq: null, lat: null, lng: null, speedMps: null,
+    altitudeM: null, headingDeg: null, accuracyM: null, recordedAt: null, receivedAt: null,
+    publishedAt: "2024-12-24T00:00:00Z",
+  };
+}
 
 function makeContent(title: string): ContentDocument {
   return {
@@ -82,8 +94,10 @@ function renderPreview() {
   return render(
     <MemoryRouter initialEntries={[`/preview?token=${token}&page=planned`]}>
       <AuthProvider>
+        <PreviewSession />
         <Shell>
           <Routes>
+            <Route path="/" element={<HomePage />} />
             <Route path="/preview" element={<PreviewPage />} />
           </Routes>
         </Shell>
@@ -103,17 +117,19 @@ beforeEach(() => {
   });
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
-  act(() => store.setState({ ...initialStore }));
+  act(() => store.setState({ ...initialStore, live: makeLive() }));
 });
 
 afterEach(() => {
   cleanup();
+  act(() => endPreviewSession());
+  window.sessionStorage.clear();
   vi.unstubAllGlobals();
   vi.useRealTimers();
   act(() => store.setState({ ...initialStore }));
 });
 
-describe("PreviewPage live polling", () => {
+describe("preview session live polling", () => {
   it("polls every 2 s while visible and not while hidden, and at once on return", async () => {
     fetchMock.mockImplementation(async () => status(304));
     fetchMock.mockResolvedValueOnce(ok("One", '"v1"'));
@@ -185,7 +201,7 @@ describe("PreviewPage live polling", () => {
     expect(getByTestId("preview-live").textContent).toBe("Live, last change 12:04:11");
   });
 
-  it("a 404 stops polling and shows the expired state", async () => {
+  it("a 404 stops polling and shows the expired banner", async () => {
     fetchMock
       .mockResolvedValueOnce(ok("One", '"v1"'))
       .mockResolvedValueOnce(status(404))

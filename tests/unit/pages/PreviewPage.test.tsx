@@ -1,14 +1,19 @@
-// docs/site.md section 22.1. PreviewPage: fetches with the token, stores
-// the bundle, renders the named page, shows the banner, clears on
-// navigation, handles 404.
+// docs/site.md section 22.1. PreviewPage: starts the session, which
+// fetches with the token and stores the bundle; redirects to the named
+// page's normal path; handles 404; applies the theme parameter for as
+// long as the session runs.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, cleanup, render, waitFor } from "@testing-library/react";
-import { MemoryRouter, Routes, Route, Link } from "react-router-dom";
+import { MemoryRouter, Routes, Route, useLocation } from "react-router-dom";
 import { store } from "../../../src/store/useStore";
 import { initialStore } from "../../../src/store/types";
 import type { LiveObject, ContentDocument } from "../../../src/contracts";
 import { PreviewPage } from "../../../src/pages/PreviewPage";
+import { HomePage } from "../../../src/pages/HomePage";
+import { SlugPage } from "../../../src/pages/SlugPage";
+import { PreviewSession } from "../../../src/app/PreviewSession";
+import { endPreviewSession } from "../../../src/pages/previewSession";
 import { ApiRequestError } from "../../../src/api/client";
 import { THEME_KEY } from "../../../src/content/theme/colorScheme";
 
@@ -70,24 +75,26 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  act(() => endPreviewSession());
+  window.sessionStorage.clear();
   act(() => store.setState({ ...initialStore }));
 });
+
+function Where() {
+  const loc = useLocation();
+  return <p data-testid="where">{loc.pathname}</p>;
+}
 
 function renderAt(url: string) {
   return render(
     <MemoryRouter initialEntries={[url]}>
+      <PreviewSession />
       <Routes>
+        <Route path="/" element={<HomePage />} />
         <Route path="/preview" element={<PreviewPage />} />
-        <Route
-          path="/other"
-          element={
-            <main id="main">
-              <p>Other page</p>
-            </main>
-          }
-        />
-        <Route path="*" element={<Link to="/other">Go</Link>} />
+        <Route path="/:slug" element={<SlugPage />} />
       </Routes>
+      <Where />
     </MemoryRouter>,
   );
 }
@@ -103,11 +110,18 @@ describe("PreviewPage", () => {
     await waitFor(() => expect(store.getState().preview).not.toBeNull());
   });
 
-  it("renders the named page (a role page by slug)", async () => {
+  it("a role page by slug redirects to / and renders the draft home selection", async () => {
     vi.mocked(previewApi.fetchPreviewDocument).mockResolvedValueOnce(okResult());
     act(() => store.setState((s) => ({ ...s, live: makeLive(1) })));
-    const { container } = renderAt(`/preview?token=${validToken}&page=ended`);
-    await waitFor(() => expect(container.querySelector('main[data-page-slug]')?.getAttribute("data-page-slug")).toBe("ended"));
+    const { container, getByTestId } = renderAt(`/preview?token=${validToken}&page=ended`);
+    await waitFor(() => expect(getByTestId("where").textContent).toBe("/"));
+    await waitFor(() => expect(container.querySelector('main[data-page-slug]')?.getAttribute("data-page-slug")).toBe("planned"));
+  });
+
+  it("without a token renders the expired copy and starts nothing", async () => {
+    const { container } = renderAt("/preview");
+    expect(container.textContent).toContain("This preview link has expired");
+    expect(previewApi.fetchPreviewDocument).not.toHaveBeenCalled();
   });
 
   it("adds robots=noindex to the document head", async () => {
@@ -119,21 +133,13 @@ describe("PreviewPage", () => {
     );
   });
 
-  it("404 renders 'This preview link has expired'", async () => {
+  it("404 lands on / and leaves no draft", async () => {
     vi.mocked(previewApi.fetchPreviewDocument).mockRejectedValueOnce(
       new ApiRequestError(404, { code: "not_found", message: "x", details: null, requestId: "r" }, null),
     );
     act(() => store.setState((s) => ({ ...s, live: makeLive(1) })));
-    const { container } = renderAt(`/preview?token=${validToken}`);
-    await waitFor(() => expect(container.textContent).toContain("This preview link has expired"));
-  });
-
-  it("clears store.preview on unmount", async () => {
-    vi.mocked(previewApi.fetchPreviewDocument).mockResolvedValueOnce(okResult());
-    act(() => store.setState((s) => ({ ...s, live: makeLive(1) })));
-    const { unmount } = renderAt(`/preview?token=${validToken}&page=ended`);
-    await waitFor(() => expect(store.getState().preview).not.toBeNull());
-    unmount();
+    const { getByTestId } = renderAt(`/preview?token=${validToken}`);
+    await waitFor(() => expect(getByTestId("where").textContent).toBe("/"));
     expect(store.getState().preview).toBeNull();
   });
 
@@ -154,7 +160,7 @@ describe("PreviewPage", () => {
       return renderAt(`/preview?token=${validToken}&page=ended&theme=${theme}`);
     }
 
-    it("theme=dark sets data-theme dark while mounted and leaves the stored choice", async () => {
+    it("theme=dark sets data-theme dark while the session runs and leaves the stored choice", async () => {
       const { container, unmount } = mountWithTheme("dark");
       await waitFor(() => expect(container.querySelector("main[data-page-slug]")).not.toBeNull());
       expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
@@ -164,7 +170,7 @@ describe("PreviewPage", () => {
       expect(window.localStorage.getItem(THEME_KEY)).toBe("light");
     });
 
-    it("theme=light sets data-theme light while mounted and leaves the stored choice", async () => {
+    it("theme=light sets data-theme light while the session runs and leaves the stored choice", async () => {
       window.localStorage.setItem(THEME_KEY, "dark");
       document.documentElement.setAttribute("data-theme", "dark");
       const { container, unmount } = mountWithTheme("light");
