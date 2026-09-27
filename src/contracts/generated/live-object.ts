@@ -23,4 +23,5 @@ export interface LiveObject {
   recordedAt?: string | null;
   receivedAt?: string | null;
   publishedAt?: string;
+  onlineCount?: number | null;
 }
