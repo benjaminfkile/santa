@@ -64,7 +64,7 @@ export function MapView({ options, onController, onLibs, className, children }: 
   }, [attempt]);
 
   return (
-    <div className={className ?? styles.mapView} style={{ position: "relative", width: "100%", height: "100%" }}>
+    <div className={className ?? styles.mapView}>
       <div
         ref={containerRef}
         className={styles.mapViewCanvas}
