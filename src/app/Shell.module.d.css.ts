@@ -6,6 +6,7 @@ export const bannerPreview: string;
 export const bannerUpdatesPaused: string;
 export const banners: string;
 export const brand: string;
+export const brandLogo: string;
 export const brandMark: string;
 export const brandStar: string;
 export const displayChip: string;

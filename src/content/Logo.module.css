@@ -1,0 +1,16 @@
+/* docs/site.md section 7.3. The logo box takes its height from its caller;
+   the image fills that height, keeps its aspect ratio, and is never
+   cropped. */
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  line-height: 0;
+}
+.logo img {
+  display: block;
+  height: 100%;
+  width: auto;
+  object-fit: contain;
+}

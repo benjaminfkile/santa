@@ -56,6 +56,7 @@ export interface Snapshot {
     icon?: {
       source?: string;
       id?: string;
+      display?: unknown;
     } | null;
     sort?: number;
   }[];
@@ -72,6 +73,13 @@ export interface Snapshot {
             [k: string]: string | undefined;
           };
           dzi?: string | null;
+          dark?: {
+            url?: string;
+            variants?: {
+              [k: string]: string | undefined;
+            };
+          } | null;
+          invertInDark?: boolean;
         }
       | undefined;
   };

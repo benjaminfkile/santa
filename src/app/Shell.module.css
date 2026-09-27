@@ -41,13 +41,15 @@
   letter-spacing: -0.005em;
   white-space: nowrap;
 }
-.brand img,
-.brand svg { width: 30px; height: 18px; }
+.brandLogo { height: 32px; }
 .brandMark {
   color: var(--accent);
   width: 30px;
   height: 18px;
   flex: none;
+}
+@media (max-width: 639px) {
+  .brandLogo { height: 28px; }
 }
 .brandStar {
   fill: var(--gold);
