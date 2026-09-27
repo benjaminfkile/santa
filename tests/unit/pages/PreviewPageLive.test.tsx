@@ -11,6 +11,7 @@ import { Shell } from "../../../src/app/Shell";
 import { AuthProvider } from "../../../src/auth/AuthProvider";
 import { PreviewPage } from "../../../src/pages/PreviewPage";
 import { HomePage } from "../../../src/pages/HomePage";
+import { SlugPage } from "../../../src/pages/SlugPage";
 import { PreviewSession } from "../../../src/app/PreviewSession";
 import { endPreviewSession } from "../../../src/pages/previewSession";
 import { store } from "../../../src/store/useStore";
@@ -99,6 +100,7 @@ function renderPreview() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/preview" element={<PreviewPage />} />
+            <Route path="/:slug" element={<SlugPage />} />
           </Routes>
         </Shell>
       </AuthProvider>

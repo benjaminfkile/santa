@@ -110,12 +110,12 @@ describe("PreviewPage", () => {
     await waitFor(() => expect(store.getState().preview).not.toBeNull());
   });
 
-  it("a role page by slug redirects to / and renders the draft home selection", async () => {
+  it("a role page opens at its own slug and renders whatever the event status", async () => {
     vi.mocked(previewApi.fetchPreviewDocument).mockResolvedValueOnce(okResult());
     act(() => store.setState((s) => ({ ...s, live: makeLive(1) })));
     const { container, getByTestId } = renderAt(`/preview?token=${validToken}&page=ended`);
-    await waitFor(() => expect(getByTestId("where").textContent).toBe("/"));
-    await waitFor(() => expect(container.querySelector('main[data-page-slug]')?.getAttribute("data-page-slug")).toBe("planned"));
+    await waitFor(() => expect(getByTestId("where").textContent).toBe("/ended"));
+    await waitFor(() => expect(container.querySelector('main[data-page-slug]')?.getAttribute("data-page-slug")).toBe("ended"));
   });
 
   it("without a token renders the expired copy and starts nothing", async () => {

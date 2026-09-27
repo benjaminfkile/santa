@@ -53,7 +53,10 @@ export function selectSlug(s: SiteStore, slug: string): Surface {
   if (bundle === null || bundle.content === null) return { kind: "loading" };
   const page = bundle.content.pages.find((p) => p.slug === slug);
   if (!page) return { kind: "notFound" };
-  return page.role === "none" ? { kind: "page", page } : { kind: "redirectHome" };
+  // A role page lives at / for visitors; a preview session also opens it at
+  // its own slug so any role page can be checked whatever the event status.
+  if (page.role === "none" || s.preview !== null) return { kind: "page", page };
+  return { kind: "redirectHome" };
 }
 
 // Two surfaces are the same when their kind and their page (by identity,

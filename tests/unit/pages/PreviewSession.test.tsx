@@ -173,12 +173,12 @@ describe("preview session", () => {
     expect(getByTestId("preview-banner").textContent).toContain("Preview");
   });
 
-  it("a role page or no page redirects to /", async () => {
+  it("a role page opens at its own slug and no page opens at /", async () => {
     fetchMock.mockImplementation(async () => status(304));
     fetchMock.mockResolvedValueOnce(ok("Draft"));
     const { container, getByTestId } = renderApp(`/preview?token=${token}&page=planned`);
     await flush();
-    expect(getByTestId("where").textContent).toBe("/");
+    expect(getByTestId("where").textContent).toBe("/planned");
     expect(mainText(container)).toContain("Draft home");
   });
 

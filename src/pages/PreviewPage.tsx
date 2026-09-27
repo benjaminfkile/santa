@@ -1,9 +1,9 @@
 // docs/site.md section 7.8. Preview link: /preview?token=&page=&theme=
 // starts the tab's preview session (the PreviewSession component then
 // follows the draft into store.preview), waits for the first draft, and
-// navigates with replace to the page's normal path: / for a role page or
-// no page, /<slug> otherwise. From there every route renders from the
-// draft. An expired link lands on / with the expired banner. With no
+// navigates with replace to / when no page is named and to /<slug>
+// otherwise (a role page included). From there every route renders from
+// the draft. An expired link lands on / with the expired banner. With no
 // draft yet after five failures it shows the error with a Retry button.
 // The page itself always carries robots=noindex.
 
@@ -20,7 +20,6 @@ import {
   usePreviewSession,
 } from "./previewSession";
 import { copy } from "../copy/copy";
-import type { ContentDocument } from "../contracts";
 import * as btn from "../ui/Button.module.css";
 
 export function PreviewPage() {
@@ -70,14 +69,14 @@ export function PreviewPage() {
     }
     return <Loading />;
   }
-  return <Navigate to={previewPath(preview.content.pages, pageSlug)} replace />;
+  return <Navigate to={previewPath(pageSlug)} replace />;
 }
 
-// The normal path of the named page: / for a role page or no page,
-// /<slug> for any other slug (an unknown slug then renders NotFound).
-function previewPath(pages: ContentDocument["pages"], slug: string | null): string {
+// The path the session opens at: / when no page is named, /<slug>
+// otherwise. A role page renders at its own slug inside a preview session,
+// so the named role page shows whatever the event status (an unknown slug
+// renders NotFound).
+function previewPath(slug: string | null): string {
   if (slug === null || slug === "") return "/";
-  const page = pages.find((p) => p.slug === slug);
-  if (page !== undefined && page.role !== "none") return "/";
   return `/${slug}`;
 }
