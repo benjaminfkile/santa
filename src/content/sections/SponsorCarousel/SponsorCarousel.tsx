@@ -146,6 +146,7 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
               sizeOverride={`${logoWidth}px`}
               className={styles.sponsorCarouselLogo}
               testId="sponsor-logo"
+              small={false}
             />
           ) : (
             <span className={styles.sponsorCarouselNameOnly}>{current.name}</span>
@@ -212,7 +213,7 @@ function SponsorDialog({
     >
       <div className={styles.sponsorDialogBody}>
         {media ? (
-          <Media media={media} bundle={bundle} sizeOverride={`${logoWidth}px`} className={styles.sponsorDialogLogo} />
+          <Media media={media} bundle={bundle} sizeOverride={`${logoWidth}px`} className={styles.sponsorDialogLogo} small={false} />
         ) : null}
         <p className={styles.sponsorDialogName}>{sponsor.name}</p>
         <div className={styles.sponsorDialogActions}>

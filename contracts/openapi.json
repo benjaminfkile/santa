@@ -254,6 +254,9 @@
                 }
               }
             }
+          },
+          "304": {
+            "description": "Not Modified"
           }
         }
       }
@@ -1978,6 +1981,15 @@
         "tags": [
           "AdminContent"
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewTokenRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": "Created",
@@ -4349,6 +4361,12 @@
           },
           "inheritRoute": {
             "type": "boolean"
+          },
+          "scheduleTimeZone": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -4733,6 +4751,12 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "scheduleTimeZone": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "wentLiveAt": {
             "type": [
@@ -5702,6 +5726,12 @@
           "invertInDark": {
             "type": "boolean"
           },
+          "smallMediaId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "uploadedBy": {
             "type": "string"
           },
@@ -5810,6 +5840,22 @@
           },
           "invertInDark": {
             "type": "boolean"
+          },
+          "small": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MediaSmallEntry"
+              }
+            ]
+          },
+          "smallMediaId": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -5840,6 +5886,40 @@
               "null",
               "boolean"
             ]
+          },
+          "smallMediaId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "MediaSmallEntry": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "variants": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "dark": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MediaDarkEntry"
+              }
+            ]
+          },
+          "invertInDark": {
+            "type": "boolean"
           }
         }
       },
@@ -6635,25 +6715,13 @@
             "format": "int32"
           },
           "scheduledAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
+            "$ref": "#/components/schemas/JsonElement"
           },
           "wentLiveAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
+            "$ref": "#/components/schemas/JsonElement"
           },
           "endedAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
+            "$ref": "#/components/schemas/JsonElement"
           },
           "fundsPercent": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -6678,6 +6746,9 @@
               "null",
               "string"
             ]
+          },
+          "scheduleTimeZone": {
+            "$ref": "#/components/schemas/JsonElement"
           }
         }
       },
@@ -7347,6 +7418,24 @@
               "null",
               "string"
             ]
+          },
+          "cardOpacityLight": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "cardOpacityDark": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -7372,6 +7461,20 @@
                 "$ref": "#/components/schemas/AuditStampDto"
               }
             ]
+          }
+        }
+      },
+      "PreviewTokenRequest": {
+        "type": "object",
+        "properties": {
+          "ttlMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },

@@ -75,15 +75,28 @@ export interface Snapshot {
           dzi?: string | null;
           dark?: {
             url?: string;
+            variants?: Variants;
+          } | null;
+          invertInDark?: boolean;
+          small?: {
+            url?: string;
             variants?: {
               [k: string]: string | undefined;
             };
+            dark?: {
+              url?: string;
+              variants?: Variants;
+            } | null;
+            invertInDark?: boolean;
           } | null;
-          invertInDark?: boolean;
+          smallMediaId?: string | null;
         }
       | undefined;
   };
   icons?: {
     [k: string]: string | undefined;
   };
+}
+export interface Variants {
+  [k: string]: string | undefined;
 }

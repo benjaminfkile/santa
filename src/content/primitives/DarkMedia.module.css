@@ -13,3 +13,19 @@
 :root[data-theme="dark"] .invertInDark {
   filter: invert(1) hue-rotate(180deg);
 }
+
+/* Small screens for media entries, by CSS alone: an entry with a small
+   version draws both branches, `wideOnly` hidden under 760 px and
+   `smallOnly` hidden at 760 px and up. Each branch carries its own dark
+   mode classes above, so the two rules compose. */
+
+@media (max-width: 759.98px) {
+  .wideOnly {
+    display: none;
+  }
+}
+@media (min-width: 760px) {
+  .smallOnly {
+    display: none;
+  }
+}
