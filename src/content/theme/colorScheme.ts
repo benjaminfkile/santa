@@ -3,7 +3,9 @@
 // media-query listener, the store/clear functions, the hook that lets
 // the ThemeToggle read the resolved value, and one MutationObserver on
 // <html> that non-CSS consumers (the map's overlay palette, canvas snow)
-// subscribe to.
+// subscribe to. A non-persisted setTheme (the preview route) holds a
+// temporary override that the media-query listener leaves alone until
+// releaseTheme drops it.
 
 import { useSyncExternalStore, useCallback } from "react";
 import { storageGet, storageSet, storageRemove } from "../../lib/storage";
@@ -19,6 +21,8 @@ let mediaListener: ((e: MediaQueryListEvent) => void) | null = null;
 
 const schemeListeners = new Set<() => void>();
 let schemeObserver: MutationObserver | null = null;
+
+let override: ResolvedTheme | null = null;
 
 function readStoredChoice(): ThemeChoice {
   const v = storageGet(THEME_KEY);
@@ -45,13 +49,30 @@ function notify(): void {
   listeners.forEach((l) => l());
 }
 
-export function setTheme(theme: ResolvedTheme): void {
-  storageSet(THEME_KEY, theme);
+export function setTheme(
+  theme: ResolvedTheme,
+  opts: { persist?: boolean } = {},
+): void {
+  if (opts.persist === false) {
+    override = theme;
+  } else {
+    override = null;
+    storageSet(THEME_KEY, theme);
+  }
   apply(theme);
   notify();
 }
 
+// Drops a non-persisted theme and applies the visitor's stored choice.
+export function releaseTheme(): void {
+  if (override === null) return;
+  override = null;
+  apply(resolveTheme(readStoredChoice()));
+  notify();
+}
+
 export function clearTheme(): void {
+  override = null;
   storageRemove(THEME_KEY);
   apply(resolveTheme("system"));
   notify();
@@ -83,7 +104,7 @@ export function startSystemListener(): void {
   }
   mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
   mediaListener = (e) => {
-    if (readStoredChoice() !== "system") return;
+    if (override !== null || readStoredChoice() !== "system") return;
     apply(e.matches ? "dark" : "light");
     notify();
   };
