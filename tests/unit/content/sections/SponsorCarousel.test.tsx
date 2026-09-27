@@ -239,4 +239,30 @@ describe("SponsorCarousel card variant", () => {
     expect(container.textContent).not.toMatch(/on the tracker/i);
     expect(container.textContent).not.toMatch(/\d+\s*s\b/);
   });
+
+  it("a filled logoWidth sizes the card's logo through the CSS variable", () => {
+    seedSponsors([{ id: 1, name: "A", lingerMs: 5000 }]);
+    const { container } = render(
+      <MemoryRouter>
+        <SponsorCarousel
+          data={{ variant: "card", logoWidth: 300 }}
+          items={[]}
+          bundle={buildBundle()}
+        />
+      </MemoryRouter>,
+    );
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.style.getPropertyValue("--sponsor-logo-width")).toBe("300px");
+  });
+
+  it("without a logoWidth the card leaves the CSS default in place", () => {
+    seedSponsors([{ id: 1, name: "A", lingerMs: 5000 }]);
+    const { container } = render(
+      <MemoryRouter>
+        <SponsorCarousel data={{ variant: "card" }} items={[]} bundle={buildBundle()} />
+      </MemoryRouter>,
+    );
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.style.getPropertyValue("--sponsor-logo-width")).toBe("");
+  });
 });

@@ -39,14 +39,18 @@
   min-width: 0;
 }
 .sponsorCarouselReducedMotion .sponsorCarouselSlide { transition: none; }
+/* The card's logo follows the section's logoWidth (a CSS variable the
+   component sets when the field is filled in; 48 px otherwise), never
+   wider than its container, height keeping the image's shape. */
 .sponsorCarouselLogo {
-  width: 48px;
-  height: 48px;
+  width: min(var(--sponsor-logo-width, 48px), 100%);
+  height: auto;
+  aspect-ratio: 1 / 1;
   border-radius: var(--radius-sm);
   background: var(--panel-2);
   border: 1px solid var(--line);
   object-fit: contain;
-  flex: none;
+  flex: 0 1 auto;
 }
 .sponsorCarouselNameOnly {
   font-family: var(--font-sans);

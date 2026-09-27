@@ -17,20 +17,29 @@ export type MapViewProps = {
   children?: (state: { controller: MapController | null; error: unknown | null; retry: () => void }) => ReactNode;
 };
 
+// A transient library-load failure (a network blip at the moment the live
+// screen mounts) retries by itself before the "map unavailable" panel and
+// its manual Retry appear.
+const AUTO_RETRIES = 3;
+const AUTO_RETRY_BASE_MS = 1000;
+
 export function MapView({ options, onController, onLibs, className, children }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const controllerRef = useRef<MapController | null>(null);
   const [controller, setController] = useState<MapController | null>(null);
   const [error, setError] = useState<unknown | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const autoRetriesLeftRef = useRef(AUTO_RETRIES);
 
   const retry = useCallback(() => {
+    autoRetriesLeftRef.current = AUTO_RETRIES;
     setError(null);
     setAttempt((n) => n + 1);
   }, []);
 
   useEffect(() => {
     let cancelled = false;
+    let retryTimer: number | undefined;
     const el = containerRef.current;
     if (el === null) return;
     (async () => {
@@ -41,17 +50,27 @@ export function MapView({ options, onController, onLibs, className, children }: 
         const c = createMapController(libs, el, options);
         controllerRef.current = c;
         if (!cancelled) {
+          autoRetriesLeftRef.current = AUTO_RETRIES;
           setController(c);
           onController?.(c);
         } else {
           c.destroy();
         }
       } catch (e) {
-        if (!cancelled) setError(e);
+        if (cancelled) return;
+        if (autoRetriesLeftRef.current > 0) {
+          const backoff =
+            AUTO_RETRY_BASE_MS * 2 ** (AUTO_RETRIES - autoRetriesLeftRef.current);
+          autoRetriesLeftRef.current -= 1;
+          retryTimer = window.setTimeout(() => setAttempt((n) => n + 1), backoff);
+        } else {
+          setError(e);
+        }
       }
     })();
     return () => {
       cancelled = true;
+      if (retryTimer !== undefined) window.clearTimeout(retryTimer);
       const c = controllerRef.current;
       if (c !== null) {
         c.destroy();

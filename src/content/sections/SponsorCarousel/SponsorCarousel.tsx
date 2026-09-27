@@ -8,7 +8,7 @@
 // and a link to the sponsor's site; the dialog closes on its button, on
 // Escape, or on a tap outside it.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { SectionComponent } from "../../registry";
 import type { MediaRef, Sponsor } from "../../../contracts";
 import { Inline } from "../../inline/Inline";
@@ -116,8 +116,16 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
     .filter(Boolean)
     .join(" ");
 
+  // The card's rendered logo size follows an explicit logoWidth; without
+  // one the CSS default (48 px) applies. The live tile keeps the legacy
+  // fixed tile whatever the setting.
+  const rootStyle =
+    variant === "card" && d.logoWidth !== undefined && d.logoWidth !== null
+      ? ({ "--sponsor-logo-width": `${d.logoWidth}px` } as CSSProperties)
+      : undefined;
+
   return (
-    <div className={rootClass} data-variant={variant}>
+    <div className={rootClass} data-variant={variant} style={rootStyle}>
       {variant === "card" && d.heading ? (
         <p className={styles.sponsorCarouselHeading}>
           <Inline text={d.heading} bundle={bundle} event={event} />
