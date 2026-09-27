@@ -34,6 +34,9 @@ export default defineConfig({
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:5173",
     trace: "retain-on-failure",
+    // Displayed times follow the browser's timezone, so the screenshot
+    // baselines are only stable when every run uses one fixed zone.
+    timezoneId: "America/Denver",
     // The site's CSP has no 'unsafe-eval'; the harness evaluates scripts in the
     // page, so the test context bypasses it. The CSP itself is asserted by its
     // own spec.
