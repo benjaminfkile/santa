@@ -16,6 +16,9 @@ export const copy = {
     preview: "Preview",
     previewLive: (time: string) => `Live, last change ${time}`,
     previewReconnecting: "Reconnecting",
+    previewExpired: "This preview link has expired",
+    previewExit: "Exit preview",
+    previewRetry: "Retry",
   },
   notFound: {
     heading: "Page not found",
@@ -28,6 +31,7 @@ export const copy = {
   },
   errors: {
     generic: "Something went wrong. Please try again.",
+    unreachable: "Could not reach the server.",
     misconfigured: (variable: string) =>
       `Site misconfigured: ${variable} is missing or malformed.`,
   },

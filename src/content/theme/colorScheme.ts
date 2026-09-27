@@ -3,7 +3,7 @@
 // media-query listener, the store/clear functions, the hook that lets
 // the ThemeToggle read the resolved value, and one MutationObserver on
 // <html> that non-CSS consumers (the map's overlay palette, canvas snow)
-// subscribe to. A non-persisted setTheme (the preview route) holds a
+// subscribe to. A non-persisted setTheme (the preview session) holds a
 // temporary override that the media-query listener leaves alone until
 // releaseTheme drops it.
 
