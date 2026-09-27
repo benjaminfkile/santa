@@ -1,10 +1,14 @@
 // docs/site.md section 7.3 and 7.7. The Icon primitive renders a library
 // id inline through a generated SVG component (so it takes the accent),
-// and a media id (or an unknown library id) through <img>.
+// and a media id (or an unknown library id) through <img>. A media icon
+// with a dark version renders a second <img> and CSS shows one per theme;
+// one with `invertInDark` and no dark version is inverted in dark mode.
 
 import type { IconRef } from "../../contracts";
 import type { ContentBundle } from "../../store/types";
-import { resolveIcon } from "./resolve";
+import { resolveIcon, resolveIconDark } from "./resolve";
+import * as darkStyles from "./DarkMedia.module.css";
+import type { DarkMode } from "./Media";
 import { LIBRARY_ICONS } from "../icons/generated";
 
 const INLINE_SIZE = 16;
@@ -43,16 +47,28 @@ export function Icon({ icon, bundle, alt = "", decorative = false, inline = fals
 
   const src = resolveIcon(bundle, icon);
   if (src === null) return null;
-  return (
+  const { dark, invertInDark } = resolveIconDark(bundle, icon);
+  const image = (url: string, className?: string, darkMode?: DarkMode) => (
     <img
-      src={src}
+      src={url}
       alt={isDecorative ? "" : alt}
       aria-hidden={isDecorative || undefined}
       width={px}
       height={px}
       loading="lazy"
       decoding="async"
+      className={className}
+      data-dark-mode={darkMode}
       data-icon-source={icon.source}
     />
   );
+  if (dark !== null) {
+    return (
+      <>
+        {image(src, darkStyles.lightOnly, "light")}
+        {image(dark, darkStyles.darkOnly, "dark")}
+      </>
+    );
+  }
+  return invertInDark ? image(src, darkStyles.invertInDark, "invert") : image(src);
 }

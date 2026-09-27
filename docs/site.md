@@ -613,6 +613,8 @@ A section whose component renders nothing collapses its frame: no card, no paddi
 
 A media-sourced icon whose entry is raster loads its smallest variant (the `480` key when present) and falls back to `url`; svg and gif entries keep `url`.
 
+Dark mode for a media entry is CSS only, so nothing flashes on load (the head script stamps `data-theme` before first paint) and no script picks an image. An entry whose `dark` is set renders two images with the same alt: the light one carries a class hidden under `:root[data-theme="dark"]` and the dark one (`dark.url`, its own `srcset` from `dark.variants`) a class hidden otherwise; `display: none` keeps the hidden one out of the accessibility tree. An entry with `invertInDark` true and no `dark` renders one image with a class that applies `filter: invert(1) hue-rotate(180deg)` under `:root[data-theme="dark"]`. With neither set, and always in light mode, one plain image. The rules live in `primitives/DarkMedia.module.css` and apply wherever `Media` or a media-sourced `Icon` draws an entry: section icons, the Logo, a media background, the `route_preview` image, sponsor logos, galleries, and media blocks (a media-sourced icon takes the dark version's `480` variant when raster). Library icons and the deep-zoom poster viewer are not affected.
+
 ### 7.4 Section kinds
 
 Content kinds read `data`, `items`, and the bundle only. Live kinds read the store through selectors, exactly as contracts 1.3a lists.

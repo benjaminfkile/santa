@@ -1,0 +1,15 @@
+/* docs/site.md section 7.3. Dark mode for media entries, by CSS alone:
+   data-theme is stamped before first paint, so no image ever flashes.
+   An entry with a dark version draws two images: `lightOnly` is hidden
+   in dark mode and `darkOnly` everywhere else. `invertInDark` inverts
+   the single image in dark mode and keeps its hues. */
+
+:root[data-theme="dark"] .lightOnly {
+  display: none;
+}
+:root:not([data-theme="dark"]) .darkOnly {
+  display: none;
+}
+:root[data-theme="dark"] .invertInDark {
+  filter: invert(1) hue-rotate(180deg);
+}
