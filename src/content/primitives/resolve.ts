@@ -3,6 +3,8 @@
 // media-sourced icon whose entry is raster and carries variants, the
 // smallest variant (the `480` key when present) is returned; svg and gif
 // entries and rasters without variants fall back to `url`.
+// resolveIconDark gives the same choice for the entry's dark version and
+// whether the entry inverts in dark mode; library icons have neither.
 
 import type { ContentBundle } from "../../store/types";
 import type { IconRef } from "../../contracts";
@@ -50,6 +52,18 @@ export function resolveIcon(bundle: ContentBundle, ref: IconRef): string | null 
     if (smallest) return smallest;
   }
   return entry.url ?? null;
+}
+
+export type IconDark = { dark: string | null; invertInDark: boolean };
+
+export function resolveIconDark(bundle: ContentBundle, ref: IconRef): IconDark {
+  if (ref.source === "library") return { dark: null, invertInDark: false };
+  const entry = bundle.media?.[ref.id];
+  if (!entry) return { dark: null, invertInDark: false };
+  const kind = (entry.kind ?? "").toLowerCase();
+  const raster = kind !== "svg" && kind !== "gif";
+  const dark = (raster ? entry.dark?.variants?.["480"] : undefined) || entry.dark?.url || null;
+  return { dark, invertInDark: dark === null && entry.invertInDark === true };
 }
 
 export function _resetResolveLogs(): void {
