@@ -2,6 +2,7 @@ export const __esModule: true;
 export const actions: string;
 export const authButton: string;
 export const banner: string;
+export const bannerNote: string;
 export const bannerPreview: string;
 export const bannerUpdatesPaused: string;
 export const banners: string;

@@ -25,6 +25,8 @@ import { useAuth } from "../auth/AuthProvider";
 import { useThemeChoice } from "../content/theme/colorScheme";
 import { LightsLayer, useSnowEnabled, setSnowOverride } from "../content/theme/seasonalLayers";
 import type { ContentBundle } from "../store/types";
+import { usePreviewLive } from "../pages/previewLive";
+import { formatMountainClock } from "../lib/time";
 import * as styles from "./Shell.module.css";
 
 export type ShellProps = { children: ReactNode };
@@ -469,9 +471,28 @@ function Banners({
       {previewActive ? (
         <div className={`${styles.banner} ${styles.bannerPreview}`} data-testid="preview-banner">
           {copy.banners.preview}
+          <PreviewLiveNote />
         </div>
       ) : null}
     </div>
+  );
+}
+
+function PreviewLiveNote() {
+  const { lastChangeAt, reconnecting } = usePreviewLive();
+  return (
+    <>
+      {lastChangeAt !== null ? (
+        <span className={styles.bannerNote} data-testid="preview-live">
+          {copy.banners.previewLive(formatMountainClock(lastChangeAt))}
+        </span>
+      ) : null}
+      {reconnecting ? (
+        <span className={styles.bannerNote} data-testid="preview-reconnecting">
+          {copy.banners.previewReconnecting}
+        </span>
+      ) : null}
+    </>
   );
 }
 

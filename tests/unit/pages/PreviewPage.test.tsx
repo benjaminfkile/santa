@@ -13,7 +13,7 @@ import { ApiRequestError } from "../../../src/api/client";
 import { THEME_KEY } from "../../../src/content/theme/colorScheme";
 
 vi.mock("../../../src/api/preview", () => ({
-  fetchPreviewBundle: vi.fn(),
+  fetchPreviewDocument: vi.fn(),
 }));
 
 import * as previewApi from "../../../src/api/preview";
@@ -48,6 +48,11 @@ function makeContent(): ContentDocument {
   };
 }
 
+function okResult(): previewApi.PreviewFetchResult {
+  const bundle = { content: makeContent(), media: {}, icons: {} };
+  return { kind: "ok", bundle, text: JSON.stringify(bundle), etag: null };
+}
+
 function makeLive(statusId: number | null): LiveObject {
   return {
     schemaVersion: 1, eventId: 1, eventStatusId: statusId, pollIntervalMs: 5000,
@@ -59,7 +64,8 @@ function makeLive(statusId: number | null): LiveObject {
 
 beforeEach(() => {
   act(() => store.setState({ ...initialStore }));
-  vi.mocked(previewApi.fetchPreviewBundle).mockReset();
+  vi.mocked(previewApi.fetchPreviewDocument).mockReset();
+  vi.mocked(previewApi.fetchPreviewDocument).mockResolvedValue({ kind: "not-modified" });
 });
 
 afterEach(() => {
@@ -90,28 +96,22 @@ const validToken = "wpv_" + "A".repeat(40);
 
 describe("PreviewPage", () => {
   it("fetches with the token and stores the bundle", async () => {
-    vi.mocked(previewApi.fetchPreviewBundle).mockResolvedValueOnce({
-      content: makeContent(), media: {}, icons: {},
-    });
+    vi.mocked(previewApi.fetchPreviewDocument).mockResolvedValueOnce(okResult());
     act(() => store.setState((s) => ({ ...s, live: makeLive(1) })));
     renderAt(`/preview?token=${validToken}&page=ended`);
-    await waitFor(() => expect(previewApi.fetchPreviewBundle).toHaveBeenCalledWith(validToken));
+    await waitFor(() => expect(previewApi.fetchPreviewDocument).toHaveBeenCalledWith(validToken, null));
     await waitFor(() => expect(store.getState().preview).not.toBeNull());
   });
 
   it("renders the named page (a role page by slug)", async () => {
-    vi.mocked(previewApi.fetchPreviewBundle).mockResolvedValueOnce({
-      content: makeContent(), media: {}, icons: {},
-    });
+    vi.mocked(previewApi.fetchPreviewDocument).mockResolvedValueOnce(okResult());
     act(() => store.setState((s) => ({ ...s, live: makeLive(1) })));
     const { container } = renderAt(`/preview?token=${validToken}&page=ended`);
     await waitFor(() => expect(container.querySelector('main[data-page-slug]')?.getAttribute("data-page-slug")).toBe("ended"));
   });
 
   it("adds robots=noindex to the document head", async () => {
-    vi.mocked(previewApi.fetchPreviewBundle).mockResolvedValueOnce({
-      content: makeContent(), media: {}, icons: {},
-    });
+    vi.mocked(previewApi.fetchPreviewDocument).mockResolvedValueOnce(okResult());
     act(() => store.setState((s) => ({ ...s, live: makeLive(1) })));
     renderAt(`/preview?token=${validToken}`);
     await waitFor(() =>
@@ -120,7 +120,7 @@ describe("PreviewPage", () => {
   });
 
   it("404 renders 'This preview link has expired'", async () => {
-    vi.mocked(previewApi.fetchPreviewBundle).mockRejectedValueOnce(
+    vi.mocked(previewApi.fetchPreviewDocument).mockRejectedValueOnce(
       new ApiRequestError(404, { code: "not_found", message: "x", details: null, requestId: "r" }, null),
     );
     act(() => store.setState((s) => ({ ...s, live: makeLive(1) })));
@@ -129,9 +129,7 @@ describe("PreviewPage", () => {
   });
 
   it("clears store.preview on unmount", async () => {
-    vi.mocked(previewApi.fetchPreviewBundle).mockResolvedValueOnce({
-      content: makeContent(), media: {}, icons: {},
-    });
+    vi.mocked(previewApi.fetchPreviewDocument).mockResolvedValueOnce(okResult());
     act(() => store.setState((s) => ({ ...s, live: makeLive(1) })));
     const { unmount } = renderAt(`/preview?token=${validToken}&page=ended`);
     await waitFor(() => expect(store.getState().preview).not.toBeNull());
@@ -151,9 +149,7 @@ describe("PreviewPage", () => {
     });
 
     function mountWithTheme(theme: string) {
-      vi.mocked(previewApi.fetchPreviewBundle).mockResolvedValueOnce({
-        content: makeContent(), media: {}, icons: {},
-      });
+      vi.mocked(previewApi.fetchPreviewDocument).mockResolvedValueOnce(okResult());
       act(() => store.setState((s) => ({ ...s, live: makeLive(1) })));
       return renderAt(`/preview?token=${validToken}&page=ended&theme=${theme}`);
     }

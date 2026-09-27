@@ -14,6 +14,8 @@ export const copy = {
     updatesPaused: "Updates paused, retrying",
     offline: "You appear to be offline",
     preview: "Preview",
+    previewLive: (time: string) => `Live, last change ${time}`,
+    previewReconnecting: "Reconnecting",
   },
   notFound: {
     heading: "Page not found",
