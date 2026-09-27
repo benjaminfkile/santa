@@ -105,6 +105,7 @@
 .liftoffTimerLabel { color: var(--text-dim); }
 .liftoffTimerValue { color: var(--text-bright); }
 .distanceChip { composes: pill; }
+.watchingPill { composes: pill; }
 .infoOverlaysStatus { composes: pill; color: var(--text-dim); }
 .infoOverlaysStatusSignalLost { color: var(--err); }
 .infoOverlaysStatusSignalLost svg { color: var(--err); }

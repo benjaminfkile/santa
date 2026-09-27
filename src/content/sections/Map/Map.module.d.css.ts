@@ -39,5 +39,6 @@ export const sponsorOverlay: string;
 export const topLeft: string;
 export const topRight: string;
 export const unavailable: string;
+export const watchingPill: string;
 export const zoomGroup: string;
 

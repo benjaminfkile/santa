@@ -1,6 +1,6 @@
 // docs/site.md sections 7.6 and 8. The live screen, laid out as the legacy
-// tracker: the map fills the viewport; pills top-left (live state, airborne
-// time, distance, instruments, the message ticker); the tracker menu button
+// tracker: the map fills the viewport; pills top-left (live state, viewers,
+// airborne time, distance, instruments, the message ticker); the tracker menu button
 // and the cookie panel top-right; the cookie pill and the sponsor tile
 // bottom-left; zoom while following and recenter after a drag bottom-right.
 // While the event is live the section is fixed to the viewport and nothing
@@ -29,6 +29,7 @@ import { FixStatus } from "./InfoOverlays";
 import { LiveIndicator } from "./LiveIndicator";
 import { LiftoffTimer } from "./LiftoffTimer";
 import { LiveStrip } from "./LiveStrip";
+import { WatchingPill } from "./WatchingPill";
 import { DistanceChip } from "./DistanceChip";
 import { MapControls } from "./MapControls";
 import { RouteDisclaimer } from "./RouteDisclaimer";
@@ -65,6 +66,7 @@ type MapSectionData = {
     cookieControl?: boolean;
     distanceChip?: boolean;
     liveStrip?: boolean;
+    onlineCount?: boolean;
   };
 };
 
@@ -134,6 +136,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     cookieControl: d.overlays?.cookieControl ?? false,
     distanceChip: d.overlays?.distanceChip ?? false,
     liveStrip: d.overlays?.liveStrip ?? true,
+    onlineCount: d.overlays?.onlineCount ?? true,
   };
 
   const flightHistoryDefault = d.flightHistoryDefault === true;
@@ -303,6 +306,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
             <>
               <div className={styles.topLeft}>
                 {overlays.liveIndicator ? <LiveIndicator /> : null}
+                {overlays.onlineCount ? <WatchingPill /> : null}
                 <FixStatus />
                 {overlays.liftoffTimer ? <LiftoffTimer /> : null}
                 {overlays.distanceChip ? <DistanceChip distanceMetres={userState.distanceMetres} /> : null}

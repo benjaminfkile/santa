@@ -41,6 +41,7 @@ export const copy = {
 
     offline: "Offline",
     updatedAgo: (seconds: number) => `Updated ${seconds}s ago`,
+    watching: (count: number) => `${count.toLocaleString("en-US")} watching`,
     waitingForFix: "Waiting for the first fix",
     signalLostAgo: (seconds: number) => `No update for ${seconds}s`,
     unavailablePlaceholder: "N/A",
