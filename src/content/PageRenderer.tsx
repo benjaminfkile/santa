@@ -14,6 +14,7 @@ import { useStore } from "../store/useStore";
 import { selectTakeover } from "./selectPage";
 import { SectionFrame } from "./SectionFrame";
 import { hasSectionCard } from "./sectionCard";
+import { cardOpacityStyle } from "./cardOpacity";
 import { registry, Unknown } from "./registry";
 import * as frameStyles from "./SectionFrame.module.css";
 
@@ -71,7 +72,7 @@ export function PageRenderer({ page, bundle }: PageRendererProps) {
           data-section-kind="hero+countdown"
           data-card={pairCard ? "true" : "false"}
         >
-          {pairCard ? <div className={frameStyles.card}>{pairContent}</div> : pairContent}
+          {pairCard ? <div className={frameStyles.card} style={cardOpacityStyle(section.presentation, bundle)}>{pairContent}</div> : pairContent}
         </section>,
       );
       i += 1;

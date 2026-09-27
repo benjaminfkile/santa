@@ -7,7 +7,9 @@
    setting; a section without a card honours the width setting on the
    content. A
    token background replaces the panel fill, a media background is
-   clipped inside the card's rounded corners. */
+   clipped inside the card's rounded corners. The card fill (--card-fill)
+   is mixed with transparent at the theme's resolved opacity; the border,
+   shadow, and content stay opaque. */
 
 .sectionFrame {
   display: flex;
@@ -55,7 +57,8 @@
   box-sizing: border-box;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: var(--panel);
+  --card-fill: var(--panel);
+  background: color-mix(in srgb, var(--card-fill) var(--card-fill-alpha, 100%), transparent);
   box-shadow: var(--shadow);
   padding: var(--space-5);
   color: inherit;
@@ -65,6 +68,13 @@
   gap: var(--space-3);
 }
 .card > .content { max-width: 100%; margin-inline: 0; }
+/* Card fill opacity. The frame publishes --card-opacity-light and
+   --card-opacity-dark on the card; the one for the theme in use becomes
+   the fill's alpha, so flipping the theme switches it with no script.
+   Without them the fill is opaque. Only the background colour is mixed:
+   the card element itself never takes an opacity. */
+:root:not([data-theme="dark"]) .card { --card-fill-alpha: var(--card-opacity-light, 100%); }
+:root[data-theme="dark"] .card { --card-fill-alpha: var(--card-opacity-dark, 100%); }
 @media (max-width: 640px) {
   .card { padding: var(--space-4); }
 }
@@ -74,15 +84,22 @@
 
 /* Token backgrounds. Without a card the frame paints them; with a card
    they become the card fill instead (surface = panel, muted = panel-2,
-   accent and night as before with their text colours). */
+   accent and night as before with their text colours) by setting
+   --card-fill, which the card rule mixes at the theme's opacity. */
 .bgSurface { background: var(--panel); }
 .bgMuted { background: var(--panel-2); }
 .bgAccent { background: var(--accent); color: var(--on-accent); }
 .bgNight { background: var(--ground); color: var(--text); }
-.card.bgSurface { background: var(--panel); }
-.card.bgMuted { background: var(--panel-2); }
-.card.bgAccent { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
-.card.bgNight { background: var(--ground); color: var(--text); }
+.card.bgSurface { --card-fill: var(--panel); }
+.card.bgMuted { --card-fill: var(--panel-2); }
+.card.bgAccent { --card-fill: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.card.bgNight { --card-fill: var(--ground); color: var(--text); }
+.card.bgSurface,
+.card.bgMuted,
+.card.bgAccent,
+.card.bgNight {
+  background: color-mix(in srgb, var(--card-fill) var(--card-fill-alpha, 100%), transparent);
+}
 
 .background {
   position: absolute;
