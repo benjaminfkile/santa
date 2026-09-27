@@ -1,7 +1,7 @@
 // docs/site.md section 22.1. time helpers.
 
 import { describe, it, expect } from "vitest";
-import { formatCountdown, formatElapsed, formatMountainTime } from "../../../src/lib/time";
+import { formatCountdown, formatElapsed, formatEventTime, formatClock } from "../../../src/lib/time";
 
 describe("formatCountdown", () => {
   it("formats a positive duration as Xd Xh Xm Xs", () => {
@@ -34,19 +34,27 @@ describe("formatElapsed", () => {
   });
 });
 
-describe("formatMountainTime", () => {
-  it("formats an ISO date in America/Denver with a zone abbreviation", () => {
-    // 2026-12-22T01:00:00Z is Dec 21 6:00 PM MST
-    const out = formatMountainTime("2026-12-22T01:00:00.000Z");
-    expect(out).toMatch(/Dec\s+21/);
-    expect(out).toMatch(/6:00/);
-    expect(out).toMatch(/PM/);
-    expect(out).toMatch(/M[SD]T/);
+describe("formatEventTime", () => {
+  it("formats an ISO date in the given zone with its abbreviation", () => {
+    expect(formatEventTime("2026-12-22T01:00:00.000Z", "America/Denver")).toBe("Dec 21, 6:00 PM MST");
+    expect(formatEventTime("2026-12-22T01:00:00.000Z", "America/New_York")).toBe("Dec 21, 8:00 PM EST");
   });
 
   it("returns an empty string for null or invalid input", () => {
-    expect(formatMountainTime(null)).toBe("");
-    expect(formatMountainTime(undefined)).toBe("");
-    expect(formatMountainTime("not a date")).toBe("");
+    expect(formatEventTime(null)).toBe("");
+    expect(formatEventTime(undefined)).toBe("");
+    expect(formatEventTime("not a date")).toBe("");
+  });
+});
+
+describe("formatClock", () => {
+  it("formats hh:mm:ss on a 24-hour clock in the given zone", () => {
+    const ms = Date.parse("2024-12-24T19:04:05Z");
+    expect(formatClock(ms, "America/Denver")).toBe("12:04:05");
+    expect(formatClock(ms, "Europe/London")).toBe("19:04:05");
+  });
+
+  it("returns an empty string for a non-finite value", () => {
+    expect(formatClock(Number.NaN)).toBe("");
   });
 });

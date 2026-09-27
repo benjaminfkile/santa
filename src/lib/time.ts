@@ -1,8 +1,7 @@
 // docs/site.md section 2. Time helpers: `formatCountdown`, `formatElapsed`,
-// `formatMountainTime`, and `formatMountainClock`. `America/Denver` is the
-// canonical event zone.
-
-const MOUNTAIN_ZONE = "America/Denver";
+// `formatEventTime`, and `formatClock`. Times arrive as UTC and display in
+// the viewer's browser timezone; the optional `timeZone` argument overrides
+// it for deterministic tests.
 
 function pad2(n: number): string {
   return n < 10 ? `0${n}` : String(n);
@@ -40,12 +39,12 @@ function partsOf(fmt: Intl.DateTimeFormat, date: Date): Record<string, string> {
   return map;
 }
 
-export function formatMountainTime(iso: string | null | undefined): string {
+export function formatEventTime(iso: string | null | undefined, timeZone?: string): string {
   const ms = safeParse(iso);
   if (ms === null) return "";
   const date = new Date(ms);
   const fmt = new Intl.DateTimeFormat("en-US", {
-    timeZone: MOUNTAIN_ZONE,
+    timeZone,
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -63,11 +62,11 @@ export function formatMountainTime(iso: string | null | undefined): string {
   return `${month} ${day}, ${hour}:${minute} ${dayPeriod} ${zone}`.trim();
 }
 
-// hh:mm:ss on a 24-hour clock in America/Denver.
-export function formatMountainClock(ms: number): string {
+// hh:mm:ss on a 24-hour clock in the viewer's timezone.
+export function formatClock(ms: number, timeZone?: string): string {
   if (!Number.isFinite(ms)) return "";
   const fmt = new Intl.DateTimeFormat("en-US", {
-    timeZone: MOUNTAIN_ZONE,
+    timeZone,
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",

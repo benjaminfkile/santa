@@ -7,7 +7,7 @@ import { Inline } from "../../inline/Inline";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
 import { selectTimeReady } from "../../../store/liveState";
-import { formatCountdown, formatMountainTime } from "../../../lib/time";
+import { formatCountdown, formatEventTime } from "../../../lib/time";
 import { useNow } from "../../../lib/useNow";
 import * as styles from "./Countdown.module.css";
 
@@ -48,7 +48,7 @@ export const Countdown: SectionComponent = ({ data, bundle }) => {
       )}
       {timeReady && event?.scheduledAt ? (
         <p className={styles.countdownScheduled}>
-          {formatMountainTime(event.scheduledAt)}
+          {formatEventTime(event.scheduledAt)}
         </p>
       ) : null}
     </div>

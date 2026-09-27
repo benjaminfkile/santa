@@ -17,6 +17,7 @@ import { endPreviewSession } from "../../../src/pages/previewSession";
 import { store } from "../../../src/store/useStore";
 import { initialStore } from "../../../src/store/types";
 import type { ContentDocument, LiveObject } from "../../../src/contracts";
+import { formatClock } from "../../../src/lib/time";
 
 function makeLive(): LiveObject {
   return {
@@ -110,7 +111,6 @@ function renderPreview() {
 
 beforeEach(() => {
   vi.useFakeTimers();
-  // 2024-12-24T19:04:05Z is 12:04:05 in America/Denver.
   vi.setSystemTime(new Date("2024-12-24T19:04:05Z"));
   visibility = "visible";
   Object.defineProperty(document, "visibilityState", {
@@ -187,20 +187,20 @@ describe("preview session live polling", () => {
     expect(first).not.toBeNull();
     const main = container.querySelector("main[data-page-slug]");
     expect(main?.textContent).toContain("One");
-    expect(getByTestId("preview-live").textContent).toBe("Live, last change 12:04:05");
+    expect(getByTestId("preview-live").textContent).toBe(`Live, last change ${formatClock(Date.parse("2024-12-24T19:04:05Z"))}`);
 
     await flush(2000);
     expect(store.getState().preview).toBe(first);
     await flush(2000);
     expect(store.getState().preview).toBe(first);
-    expect(getByTestId("preview-live").textContent).toBe("Live, last change 12:04:05");
+    expect(getByTestId("preview-live").textContent).toBe(`Live, last change ${formatClock(Date.parse("2024-12-24T19:04:05Z"))}`);
 
     await flush(2000);
     expect(store.getState().preview).not.toBe(first);
     const after = container.querySelector("main[data-page-slug]");
     expect(after).toBe(main);
     expect(after?.textContent).toContain("Two");
-    expect(getByTestId("preview-live").textContent).toBe("Live, last change 12:04:11");
+    expect(getByTestId("preview-live").textContent).toBe(`Live, last change ${formatClock(Date.parse("2024-12-24T19:04:11Z"))}`);
   });
 
   it("a 404 stops polling and shows the expired banner", async () => {

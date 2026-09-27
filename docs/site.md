@@ -117,7 +117,7 @@ santa/
     copy/
       copy.ts                     the few site-coded strings (loading, errors, sign-in hint, not found); everything else is content
     lib/
-      time.ts                     formatCountdown, formatElapsed, formatMountainTime
+      time.ts                     formatCountdown, formatElapsed, formatEventTime, formatClock
       useNow.ts                   a ticking clock for React
       units.ts                    mpsToMph, metresToFeet, metresToMiles, headingToCardinal
       motion.ts                   prefersReducedMotion, useReducedMotion
@@ -549,7 +549,7 @@ A 1 s UI clock (`useNow()`) drives the countdown, liftoff timer, "updated N s ag
 
 ## 7. Pages and sections
 
-All time formatting uses the device clock; scheduled times are shown in `America/Denver` with the zone abbreviation from `Intl.DateTimeFormat`. Every string a visitor reads comes from the content document, rendered through the inline grammar (7.5); the site's own copy is limited to `copy/copy.ts`.
+All time formatting uses the device clock; times arrive as UTC and are shown in the viewer's browser timezone with the zone abbreviation from `Intl.DateTimeFormat`. Every string a visitor reads comes from the content document, rendered through the inline grammar (7.5); the site's own copy is limited to `copy/copy.ts`.
 
 ### 7.1 Loading and reload
 
@@ -631,7 +631,7 @@ Content kinds read `data`, `items`, and the bundle only. Live kinds read the sto
 | `divider` | `data.style` | A line, a row of snowflake icons, or a string of lights (CSS) |
 | `funds_ring` | `snapshot.event.fundsPercent`, `year` | SVG ring filled to the percent with the number in the middle, animated fill unless reduced motion; `showYear` adds the year to the heading; 0 and no year when `event` is null |
 | `countdown` | `snapshot.event.scheduledAt`, `live.eventStatusId` | `Xd Xh Xm Xs` from the 1 s clock; renders nothing unless status is 2 and `now < scheduledAt`; blank while `!timeReady` |
-| `event_times` | `snapshot.event.scheduledAt`, `wentLiveAt`, `endedAt`, `live.eventStatusId` | One labelled line per field in `data.fields` whose value exists, formatted in `America/Denver`; `airborneFor` is `formatElapsed(now - wentLiveAt)` on the 1 s clock while status is 3; blank while `!timeReady` |
+| `event_times` | `snapshot.event.scheduledAt`, `wentLiveAt`, `endedAt`, `live.eventStatusId` | One labelled line per field in `data.fields` whose value exists, formatted in the viewer's timezone; `airborneFor` is `formatElapsed(now - wentLiveAt)` on the 1 s clock while status is 3; blank while `!timeReady` |
 | `latest_message` | `snapshot.event.latestMessage` | `card`: body plus `eventTime` (or `createdAt` when null); `ticker`: one collapsible line; `aria-live="polite"`; nothing when null |
 | `map` | the live object, `snapshot.event.flightHistory`, and everything section 8 lists | The live screen (7.6) |
 | `leaderboard` | `live.cookieTally`, `snapshot.cookieTypes` | Section 9 |
@@ -648,7 +648,7 @@ Headings: every kind with a `heading` renders it as `<h2>` when non-null. Copy f
 
 Blocks render through `registry.blocks` inside `rich_text`: `heading` (`<h1>` to `<h3>` by `level`, icon before the text), `paragraph`, `list` (bullet, numbered, or icon-marked with `data.icon` before each item), `quote` (`<blockquote>` with `<cite>`), `media` (`Media` at `small` 320 px, `medium` 640 px, or the frame width, with a `<figcaption>`), `links` (buttons or a list), `icon` (one icon at `sm` 24, `md` 48, `lg` 96, `xl` 160 px, aligned), `divider`.
 
-`inline/parse.ts` is the site's copy of the grammar in contracts 1.3a and mirrors the API's parser: it tokenizes `**`, `*`, backtick, `[label](href)`, `{icon:<id>}`, `{icon:media:<uuid>}`, `{event:name}`, `{event:year}`, `{event:scheduledAt}`, and newlines; everything else is text; unbalanced markers are text. `Inline.tsx` maps tokens to `<strong>`, `<em>`, `<code>`, `LinkView`, `Icon` (inline-sized, `aria-hidden`), `<br>`, and text nodes. Placeholders resolve through `inline/placeholders.ts` from `snapshot.event` (`name`, `String(year)`, `scheduledAt` formatted in `America/Denver`; empty string when `event` is null or the field is null). There is no `dangerouslySetInnerHTML` anywhere in the site.
+`inline/parse.ts` is the site's copy of the grammar in contracts 1.3a and mirrors the API's parser: it tokenizes `**`, `*`, backtick, `[label](href)`, `{icon:<id>}`, `{icon:media:<uuid>}`, `{event:name}`, `{event:year}`, `{event:scheduledAt}`, and newlines; everything else is text; unbalanced markers are text. `Inline.tsx` maps tokens to `<strong>`, `<em>`, `<code>`, `LinkView`, `Icon` (inline-sized, `aria-hidden`), `<br>`, and text nodes. Placeholders resolve through `inline/placeholders.ts` from `snapshot.event` (`name`, `String(year)`, `scheduledAt` formatted in the viewer's timezone; empty string when `event` is null or the field is null). There is no `dangerouslySetInnerHTML` anywhere in the site.
 
 ### 7.6 The live screen (`map` section)
 
@@ -732,7 +732,7 @@ Data row units: speed as mph from `speedMps`, heading as degrees plus cardinal f
 
 **Following the draft.** `PreviewSession`, mounted once above the routes in `App`, owns the poll and survives navigation. It calls `GET <api>/preview/document?token=` (the one CDN-free read on the site; `credentials: "omit"`, no bearer). While `document.visibilityState` is `visible` it fetches the document again every 2000 ms (the next fetch is scheduled when the previous one settles), stops while the tab is hidden, and fetches once at once when the tab becomes visible again. Each request sends `If-None-Match` with the last `ETag` the API returned (none when the last response carried no `ETag`); a `304` means no change. On a `200` the body text is compared with the last body and `store.preview` is replaced only when it differs, so an unchanged draft never re-renders; a replaced bundle updates the page in place, with no navigation, no reload, and the scroll position kept. A failed fetch (network error, timeout, any status other than `404`) keeps the last good draft and tries again on the next tick; after five failures in a row the Preview banner shows "Reconnecting", cleared by the next success (with no draft yet, `/preview` shows the error with a Retry button instead).
 
-**The banner.** While a session is active the Preview banner shows on every page: "Preview", then "Live, last change hh:mm:ss" (the time the last changed bundle was applied, on a 24-hour clock in `America/Denver`), "Reconnecting" when it applies, and an "Exit preview" button. Exit ends the session: it clears the `sessionStorage` key, `store.preview`, and the theme override, stops the poll, and stays on the current path, which now shows the published site.
+**The banner.** While a session is active the Preview banner shows on every page: "Preview", then "Live, last change hh:mm:ss" (the time the last changed bundle was applied, on a 24-hour clock in the viewer's timezone), "Reconnecting" when it applies, and an "Exit preview" button. Exit ends the session: it clears the `sessionStorage` key, `store.preview`, and the theme override, stops the poll, and stays on the current path, which now shows the published site.
 
 **Expiry.** A `404` ends the session: polling stops and does not retry, the `sessionStorage` key, `store.preview`, and the theme override are cleared, and the page falls back to the published site. The banner then reads "This preview link has expired" with the same Exit action, which dismisses it. A link that is already expired lands on `/` with that banner; `/preview` with no token renders "This preview link has expired" and starts nothing.
 
@@ -1041,7 +1041,7 @@ On mount: `GET /me` and `GET /me/subscriptions` in parallel, once per sign-in; a
 - A form: address (prefilled with the account email, editable), submit `POST /me/subscriptions { channel: "email", address }`. The site trims the address; the API lowercases it.
 - The form is shown when no subscription is active (none with `verifiedAt` set and `unsubscribedAt` null); otherwise it sits behind an "Add another address" link that reveals it, so a verified person is not offered "subscribe" again.
 - The list of `Subscription` rows: `address`, state (`verifiedAt` null: "Pending, check your email"; `unsubscribedAt` set: "Unsubscribed"; otherwise "Active"), `createdAt`.
-- **Alerts sent to you**: `GET /me/alerts` (fetched with the other two on mount), the `AlertItem` rows newest first as a list: `sentAt` in Mountain time, the event name, the subject line, a small kind label ("status" or "update") and the address it went to when the person has more than one; "No alerts have been sent to you yet" when empty. Nothing here is a form. Actions per row: **Resend confirmation** when `verifiedAt` is null and `unsubscribedAt` is null (`POST .../resend-verification`, `202`), **Unsubscribe** when `unsubscribedAt` is null (`DELETE`, `204`), **Re-subscribe** when `unsubscribedAt` is set (`POST /me/subscriptions` with the same address, which re-activates the row).
+- **Alerts sent to you**: `GET /me/alerts` (fetched with the other two on mount), the `AlertItem` rows newest first as a list: `sentAt` in the viewer's timezone, the event name, the subject line, a small kind label ("status" or "update") and the address it went to when the person has more than one; "No alerts have been sent to you yet" when empty. Nothing here is a form. Actions per row: **Resend confirmation** when `verifiedAt` is null and `unsubscribedAt` is null (`POST .../resend-verification`, `202`), **Unsubscribe** when `unsubscribedAt` is null (`DELETE`, `204`), **Re-subscribe** when `unsubscribedAt` is set (`POST /me/subscriptions` with the same address, which re-activates the row).
 - `data.copy` above the form (the editor's explanation of what alerts are sent).
 
 | Response | Handling |
@@ -1320,7 +1320,7 @@ Fixtures come from the vendored `contracts/fixtures/*.json`; schema validation o
 | `SectionFrame` | each width, background kind, spacing, decoration icons, anchor id |
 | `nav` | home entry, hidden pages excluded, role pages excluded, extra links appended, order |
 | `Leaderboard.rankCookieTypes` | zero fill; sort by count, then `sort`, then `id`; empty types renders nothing |
-| `Countdown`, `EventTimes` | countdown format and hide at zero, nothing outside status 2; each field shown only when present; `airborneFor` ticks; `America/Denver` formatting |
+| `Countdown`, `EventTimes` | countdown format and hide at zero, nothing outside status 2; each field shown only when present; `airborneFor` ticks; formatting in the viewer's timezone |
 | `time`, `units` | `formatElapsed`, `formatCountdown`, `mpsToMph`, feet under a mile and miles over, heading to cardinal |
 | `CookieControl` | each response row in section 10 |
 | `AlertsSignup`, `VerifyPage`, `UnsubscribePage` | each response row in section 13; token regex gate; post on mount; the form hidden behind the link while a subscription is active; the sent-alerts list and its empty state |
@@ -1360,7 +1360,7 @@ Dedicated walk event: year `2100`, name `E2E walk`, with `inheritRoute: true`. T
 
 1. Record the currently current event id (if any) and the currently active beacon id (if any) from `GET /admin/beacons`. Create a fresh beacon over `POST /admin/beacons` named `e2e-walk-<Date.now()>`, take the enrollment token from the response, and exchange it over `POST /beacons/enroll` (contracts 3.3, 3.4) to obtain a beacon key the walk uses for every heartbeat and fix. `POST /admin/events/{walk}/current`.
 2. Ensure status 1 (`POST .../status { statusId: 1, notify: false }`, tolerating `409 event_status_unchanged`). Open `/`. Assert the planned page (the role page's first section is present), no countdown, the event name `E2E walk` rendered through a placeholder, no map element.
-3. `PATCH { scheduledAt: now + 2 h }`, status 2 with `notify: false`. Assert the countdown appears within `pollIntervalMs + 2000` ms and decreases over 3 s; the scheduled time renders in Mountain time.
+3. `PATCH { scheduledAt: now + 2 h }`, status 2 with `notify: false`. Assert the countdown appears within `pollIntervalMs + 2000` ms and decreases over 3 s; the scheduled time renders in the viewer's timezone.
 4. Activate the walk's beacon (`POST /admin/beacons/{id}/activate`) and send one `heartbeat(beaconKey)` so the go-live rule is satisfied (contracts 4.5 Events, `409 no_healthy_beacon`; healthy = active, not revoked, seen within the stale window). Status 3 with `notify: false`. Assert the live page's map section renders within `pollIntervalMs + 2000` ms with the waiting-for-fix chip; the live indicator reaches "Live" within 20 s (hub joined) or the test records "polling only" and continues.
 5. Read `snapshot.event.flightHistory.points` from the CDN snapshot; `replay(points.slice(0, 60), 2)`. Turn the flight history toggle on and assert the map root reports `data-flight-history="on"` (the overlay draws onto the Maps canvas, so the root attribute is the DOM-visible signal) and that it stays on while the marker moves. Assert the marker's `data-seq` increases and the data row shows a speed within `pollIntervalMs + 2000` ms of the first fix; log the observed latency from POST to marker update.
 6. Sign in as the E2E person via the site link; open the cookie control; read `remaining`; leave one cookie of the first type; assert `201`, `remaining` decreased by one, and the leaderboard count for that type increases by one within `2 * pollIntervalMs + 2000` ms.
@@ -1410,7 +1410,7 @@ Site-specific steps within the overall cut-over:
 - User location uses `watchPosition`, is never persisted, and shows distance in feet under one mile and miles otherwise.
 - Wake lock is acquired only on the live screen and re-acquired on visibility.
 - Snow follows `settings.theme.snowDefault` on every page except the live screen, where it is off by default, and is absent under reduced motion.
-- Countdown hides once `now >= scheduledAt`; the scheduled time stays and nothing implies liftoff. All scheduled and end times display in `America/Denver`.
+- Countdown hides once `now >= scheduledAt`; the scheduled time stays and nothing implies liftoff. All scheduled and end times display in the viewer's timezone.
 - The live indicator shows "Updated N s ago" from `publishedAt` on the device clock; no clock-skew correction anywhere.
 - Every sponsor in the snapshot appears wherever a sponsor section is placed; sponsors that may not advertise are not in the snapshot at all.
 - The carousel plays snapshot order (pinned first, then largest gift first) and honours `lingerMs`; nothing on the site re-sorts sponsors; `sponsor_grid` is the static alternative. There are no sponsor tiers.
