@@ -6,7 +6,6 @@ export const sponsorCarouselDot: string;
 export const sponsorCarouselDotOn: string;
 export const sponsorCarouselDots: string;
 export const sponsorCarouselHeading: string;
-export const sponsorCarouselLinger: string;
 export const sponsorCarouselLogo: string;
 export const sponsorCarouselName: string;
 export const sponsorCarouselNameOnly: string;
