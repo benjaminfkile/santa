@@ -40,10 +40,12 @@ export interface SiteSettings {
         | {
             source: "library";
             id: string;
+            display?: Display | null;
           }
         | {
             source: "media";
             id: string;
+            display?: Display | null;
           }
       )
     | null;
@@ -52,10 +54,12 @@ export interface SiteSettings {
         | {
             source: "library";
             id: string;
+            display?: Display | null;
           }
         | {
             source: "media";
             id: string;
+            display?: Display | null;
           }
       )
     | null;
@@ -90,6 +94,17 @@ export interface SiteSettings {
   contactEmail: string | null;
   donateUrl: string | null;
   analyticsEnabled: boolean;
+  logoMedia?: MediaRef | null;
+  headerShowsSiteName?: boolean | null;
+}
+export interface Display {
+  sizePx?: number;
+  fit?: "contain" | "cover";
+  shape?: "none" | "circle" | "rounded" | "square";
+  paddingPx?: number;
+  background?: "none" | "surface" | "muted" | "accent" | "night";
+  shadow?: boolean;
+  align?: "start" | "center" | "end";
 }
 export interface Link {
   label: string;
@@ -99,14 +114,21 @@ export interface Link {
         | {
             source: "library";
             id: string;
+            display?: Display | null;
           }
         | {
             source: "media";
             id: string;
+            display?: Display | null;
           }
       )
     | null;
   newTab: boolean;
+}
+export interface MediaRef {
+  mediaId: string;
+  alt: string | null;
+  display?: Display | null;
 }
 export interface Presentation {
   width: "full" | "wide" | "narrow";
@@ -130,10 +152,12 @@ export interface Presentation {
         | {
             source: "library";
             id: string;
+            display?: Display | null;
           }
         | {
             source: "media";
             id: string;
+            display?: Display | null;
           }
       )
     | null;
@@ -142,18 +166,16 @@ export interface Presentation {
         | {
             source: "library";
             id: string;
+            display?: Display | null;
           }
         | {
             source: "media";
             id: string;
+            display?: Display | null;
           }
       )
     | null;
   anchor: string | null;
   card?: boolean | null;
   iconSize?: "sm" | "md" | "lg" | "xl" | null;
-}
-export interface MediaRef {
-  mediaId: string;
-  alt: string | null;
 }

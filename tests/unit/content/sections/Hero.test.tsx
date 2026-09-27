@@ -142,4 +142,68 @@ describe("Hero", () => {
     expect(css).not.toMatch(/\.heroIconMedia[^{]*\{[^}]*border-radius/);
     expect(css).toMatch(/\.heroIcon \{[^}]*border-radius: 50%;/);
   });
+
+  describe("showLogo", () => {
+    const withLogo: ContentBundle = {
+      ...bundle,
+      content: {
+        settings: { siteName: "Site", logoMedia: { mediaId: "logo", alt: null } },
+      } as unknown as ContentBundle["content"],
+    };
+    const withoutLogo: ContentBundle = {
+      ...bundle,
+      content: { settings: { siteName: "Site", logoMedia: null } } as unknown as ContentBundle["content"],
+    };
+
+    it.each([
+      [undefined, 56],
+      ["sm", 56],
+      ["md", 96],
+      ["lg", 144],
+      ["xl", 200],
+    ] as const)("iconSize %s draws the logo %i px tall in place of the icon", (iconSize, px) => {
+      const { getByTestId, queryByTestId } = render(
+        wrap(
+          <Hero
+            data={{ title: "Hi", tagline: null, icon: { source: "library", id: "star" }, links: [], height: "tall", iconSize, showLogo: true }}
+            items={[]}
+            bundle={withLogo}
+          />,
+        ),
+      );
+      expect(queryByTestId("hero-icon")).toBeNull();
+      const logo = getByTestId("hero-logo");
+      expect(logo.style.height).toBe(`${px}px`);
+      expect(logo.style.width).toBe("");
+      expect(logo.querySelector("img")?.getAttribute("src")).toBe("https://cdn/logo.png");
+    });
+
+    it("falls back to the icon when no logo is set", () => {
+      const { getByTestId, queryByTestId } = render(
+        wrap(
+          <Hero
+            data={{ title: "Hi", tagline: null, icon: { source: "library", id: "star" }, links: [], height: "tall", iconSize: "md", showLogo: true }}
+            items={[]}
+            bundle={withoutLogo}
+          />,
+        ),
+      );
+      expect(queryByTestId("hero-logo")).toBeNull();
+      expect(getByTestId("hero-icon").style.width).toBe("96px");
+    });
+
+    it("draws the icon when showLogo is not true", () => {
+      const { getByTestId, queryByTestId } = render(
+        wrap(
+          <Hero
+            data={{ title: "Hi", tagline: null, icon: { source: "library", id: "star" }, links: [], height: "tall", showLogo: null }}
+            items={[]}
+            bundle={withLogo}
+          />,
+        ),
+      );
+      expect(queryByTestId("hero-logo")).toBeNull();
+      expect(getByTestId("hero-icon")).not.toBeNull();
+    });
+  });
 });

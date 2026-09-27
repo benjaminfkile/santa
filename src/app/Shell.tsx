@@ -1,5 +1,6 @@
 // docs/site.md section 7.7. Wraps every route: skip link, header with
-// brand, sign-in, theme toggle and menu, nav drawer, banners, footer.
+// brand (the site logo or the built-in mark), sign-in, theme toggle and
+// menu, nav drawer, banners, footer.
 // While the event is live the shell steps aside: the live screen owns the
 // viewport and nothing else on the site renders or scrolls.
 
@@ -19,6 +20,7 @@ import { buildNav, type NavEntry } from "../content/nav";
 import { copy } from "../copy/copy";
 import { ReloadPrompt } from "../pages/ReloadPrompt";
 import { ContentLink } from "../content/primitives/LinkView";
+import { Logo } from "../content/Logo";
 import { useAuth } from "../auth/AuthProvider";
 import { useThemeChoice } from "../content/theme/colorScheme";
 import { LightsLayer, useSnowEnabled, setSnowOverride } from "../content/theme/seasonalLayers";
@@ -93,6 +95,11 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
     };
   }, []);
   const settings = bundle?.content?.settings ?? null;
+  // With a logo image the brand link shows the logo, then the site name
+  // unless `headerShowsSiteName` is false; the link keeps the site name as
+  // its accessible name either way. Without one it shows BrandMark and name.
+  const hasLogo = (settings?.logoMedia ?? null) !== null;
+  const showName = !hasLogo || settings?.headerShowsSiteName !== false;
   const { state: authState, signIn, signOut } = useAuth();
   const location = useLocation();
 
@@ -159,9 +166,17 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
       data-testid="site-header"
     >
       {settings ? (
-        <Link to="/" className={styles.brand}>
-          <BrandMark />
-          <span>{settings.siteName}</span>
+        <Link
+          to="/"
+          className={styles.brand}
+          aria-label={hasLogo && !showName ? settings.siteName : undefined}
+        >
+          {hasLogo && bundle !== null ? (
+            <Logo bundle={bundle} className={styles.brandLogo} testId="brand-logo" />
+          ) : (
+            <BrandMark />
+          )}
+          {showName ? <span>{settings.siteName}</span> : null}
         </Link>
       ) : null}
       {entries.length > 0 ? (

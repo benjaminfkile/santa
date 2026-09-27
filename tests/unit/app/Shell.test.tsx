@@ -6,6 +6,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { act, cleanup, render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { Shell } from "../../../src/app/Shell";
 import { AuthProvider } from "../../../src/auth/AuthProvider";
 import { store } from "../../../src/store/useStore";
@@ -61,7 +63,7 @@ function makeContent(): ContentDocument {
   };
 }
 
-function seed(content: ContentDocument, mapFirst: boolean = false) {
+function seed(content: ContentDocument, mapFirst: boolean = false, media: Record<string, unknown> = {}) {
   const page = content.pages[0];
   if (mapFirst) {
     page.role = "live";
@@ -73,7 +75,7 @@ function seed(content: ContentDocument, mapFirst: boolean = false) {
       snapshot: {
         schemaVersion: 1,
         content: content as unknown,
-        media: {},
+        media,
         icons: {},
         event: { statusId: mapFirst ? 3 : 1 },
       },
@@ -245,5 +247,74 @@ describe("Shell structure", () => {
     expect(queryByText("WMSFO Test")).toBeNull();
     expect(queryByTestId("site-footer")).toBeNull();
     expect(document.documentElement.getAttribute("data-takeover")).toBe("live");
+  });
+});
+
+const LOGO_MEDIA = {
+  "logo-1": { url: "https://cdn/logo.svg", kind: "svg", width: 400, height: 100, alt: "Asset alt", variants: {} },
+};
+
+function renderShell() {
+  return render(
+    <MemoryRouter>
+      <AuthProvider>
+        <Shell>
+          <div>body</div>
+        </Shell>
+      </AuthProvider>
+    </MemoryRouter>,
+  );
+}
+
+describe("Shell brand logo", () => {
+  it("shows the built-in mark and the site name without logoMedia", () => {
+    seed(makeContent());
+    const { getByTestId, queryByTestId } = renderShell();
+    const brand = getByTestId("site-header").querySelector('a[href="/"]')!;
+    expect(queryByTestId("brand-logo")).toBeNull();
+    expect(brand.querySelector('svg[aria-label="WMSFO"]')).not.toBeNull();
+    expect(brand.textContent).toBe("WMSFO Test");
+    expect(brand.getAttribute("aria-label")).toBeNull();
+  });
+
+  it("shows the logo in place of the mark, then the site name, with logoMedia", () => {
+    const content = makeContent();
+    content.settings.logoMedia = { mediaId: "logo-1", alt: null };
+    seed(content, false, LOGO_MEDIA);
+    const { getByTestId } = renderShell();
+    const brand = getByTestId("site-header").querySelector('a[href="/"]')!;
+    const logo = getByTestId("brand-logo");
+    expect(brand.contains(logo)).toBe(true);
+    expect(logo.querySelector("img")?.getAttribute("src")).toBe("https://cdn/logo.svg");
+    expect(brand.querySelector('svg[aria-label="WMSFO"]')).toBeNull();
+    expect(brand.textContent).toBe("WMSFO Test");
+  });
+
+  it("hides the site name when headerShowsSiteName is false and keeps it as the link's name", () => {
+    const content = makeContent();
+    content.settings.logoMedia = { mediaId: "logo-1", alt: null };
+    content.settings.headerShowsSiteName = false;
+    seed(content, false, LOGO_MEDIA);
+    const { getByTestId, getByRole } = renderShell();
+    const brand = getByTestId("site-header").querySelector('a[href="/"]')!;
+    expect(brand.textContent).toBe("");
+    expect(getByTestId("brand-logo")).not.toBeNull();
+    expect(getByRole("link", { name: "WMSFO Test" })).toBe(brand);
+  });
+
+  it("keeps the site name when headerShowsSiteName is false but no logo is set", () => {
+    const content = makeContent();
+    content.settings.headerShowsSiteName = false;
+    seed(content);
+    const { getByTestId } = renderShell();
+    const brand = getByTestId("site-header").querySelector('a[href="/"]')!;
+    expect(brand.textContent).toBe("WMSFO Test");
+    expect(brand.querySelector('svg[aria-label="WMSFO"]')).not.toBeNull();
+  });
+
+  it("sizes the header logo 32 px tall, 28 px below 640 px", () => {
+    const css = readFileSync(resolve(__dirname, "..", "..", "..", "src", "app", "Shell.module.css"), "utf8");
+    expect(css).toMatch(/\.brandLogo \{ height: 32px; \}/);
+    expect(css).toMatch(/@media \(max-width: 639px\) \{\s*\.brandLogo \{ height: 28px; \}/);
   });
 });
