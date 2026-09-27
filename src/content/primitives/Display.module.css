@@ -1,0 +1,38 @@
+/* docs/site.md section 7.3. The wrapper an icon or a media ref with a
+   `display` setting renders in. Backgrounds use the same tokens as the
+   section background tokens (7.2). */
+
+.displayIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: content-box;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+.displayMedia {
+  display: block;
+  box-sizing: content-box;
+  max-width: 100%;
+}
+.displayMedia img { display: block; max-width: 100%; }
+
+.shapeCircle { border-radius: 50%; overflow: hidden; }
+.shapeRounded { border-radius: var(--radius-md); overflow: hidden; }
+.shapeSquare { border-radius: 0; overflow: hidden; }
+.shapeCircle img,
+.shapeRounded img { border-radius: inherit; }
+
+.bgSurface { background: var(--panel); }
+.bgMuted { background: var(--panel-2); }
+.bgAccent { background: var(--accent); color: var(--on-accent); }
+.bgNight { background: var(--ground); color: var(--text); }
+
+.shadow { box-shadow: var(--shadow); }
+
+.alignStart,
+.alignCenter,
+.alignEnd { display: flex; width: fit-content; }
+.alignStart { margin-inline-end: auto; }
+.alignCenter { margin-inline: auto; }
+.alignEnd { margin-inline-start: auto; }

@@ -4,7 +4,8 @@
 // library icon sits in a round badge of that size with the glyph at 60
 // percent, a media icon renders at that size uncropped with no badge.
 // `showLogo` true draws the site logo in place of the icon, its height
-// taken from the same size table; with no logo set the icon stays.
+// taken from the same size table; with no logo set the icon stays. A
+// valid `icon.display.sizePx` beats `iconSize` for the icon and its badge.
 
 import type { IconRef, Link } from "../../../contracts";
 import type { SectionComponent } from "../../registry";
@@ -14,6 +15,7 @@ import { ContentLink } from "../../primitives/LinkView";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { Logo } from "../../Logo";
 import { HERO_ICON_SIZES, iconSizeKey } from "../../iconSizes";
+import { displaySizePx } from "../../primitives/display";
 import * as styles from "./Hero.module.css";
 
 type HeroData = {
@@ -38,7 +40,8 @@ export const Hero: SectionComponent = ({ data, bundle }) => {
   const height = d.height ?? "tall";
   const links = Array.isArray(d.links) ? d.links.slice(0, 2) : [];
   const event = useSnapshotEvent();
-  const iconPx = HERO_ICON_SIZES[iconSizeKey(d.iconSize)];
+  const presetPx = HERO_ICON_SIZES[iconSizeKey(d.iconSize)];
+  const iconPx = displaySizePx(d.icon?.display) ?? presetPx;
   const iconIsMedia = d.icon?.source === "media";
   const drawLogo = d.showLogo === true && (bundle.content?.settings?.logoMedia ?? null) !== null;
   const rootClass = [
@@ -51,7 +54,7 @@ export const Hero: SectionComponent = ({ data, bundle }) => {
   return (
     <div className={rootClass}>
       {drawLogo ? (
-        <Logo bundle={bundle} height={iconPx} className={styles.heroLogo} testId="hero-logo" />
+        <Logo bundle={bundle} height={presetPx} className={styles.heroLogo} testId="hero-logo" />
       ) : d.icon ? (
         <div
           className={iconIsMedia ? styles.heroIconMedia : styles.heroIcon}
