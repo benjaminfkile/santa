@@ -21,7 +21,7 @@ import { MapView } from "../../../map/MapView";
 import type { MapController } from "../../../map/mapController";
 import type { UserLocationState } from "../../../map/userLocation";
 import type { MapTheme } from "../../../map/themes";
-import { resolveOfferedThemes, resolveDefaultTheme } from "../../../map/themes";
+import { resolveOfferedThemes, resolveInitialTheme } from "../../../map/themes";
 import { acquire as acquireWakeLock, release as releaseWakeLock } from "../../../map/wakeLock";
 import type { Snapshot } from "../../../contracts";
 import { copy } from "../../../copy/copy";
@@ -93,14 +93,22 @@ function isPhoneWidth(): boolean {
     : false;
 }
 
+// The site's effective appearance: the root's `data-theme`, dark or light.
+function readAppearance(): "light" | "dark" {
+  return typeof document !== "undefined" &&
+    document.documentElement.getAttribute("data-theme") === "dark"
+    ? "dark"
+    : "light";
+}
+
 export const Map: SectionComponent = ({ data, bundle }) => {
   const d = (data ?? {}) as MapSectionData;
   const offered = useMemo(() => resolveOfferedThemes(d.themes ?? null), [d.themes]);
   const stored = storageGet(THEME_STORAGE_KEY);
   const initialTheme = useMemo(
     () =>
-      resolveDefaultTheme(
-        stored ?? d.defaultTheme ?? null,
+      resolveInitialTheme(
+        { stored, appearance: readAppearance(), defaultTheme: d.defaultTheme },
         offered,
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps

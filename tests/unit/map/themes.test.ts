@@ -1,7 +1,8 @@
 // docs/site.md sections 8.4, 22.1. The theme registry mirrors the contract's
 // enum; `resolveOfferedThemes` filters unknown keys and falls back to the
 // whole registry on an empty result; `resolveDefaultTheme` picks the
-// requested key when it is offered. Every theme's chrome text on chrome bg
+// requested key when it is offered; `resolveInitialTheme` resolves the stored
+// key, then the appearance, then `defaultTheme`, then the first offered. Every theme's chrome text on chrome bg
 // and tile text on tile background clear WCAG 4.5:1.
 
 import { describe, it, expect } from "vitest";
@@ -10,6 +11,7 @@ import {
   THEME_KEYS,
   resolveOfferedThemes,
   resolveDefaultTheme,
+  resolveInitialTheme,
 } from "../../../src/map/themes";
 
 type Rgb = { r: number; g: number; b: number; a: number };
@@ -113,6 +115,58 @@ describe("resolveDefaultTheme", () => {
   it("falls back to the first offered when the key is null", () => {
     const offered = resolveOfferedThemes(["night", "charcoal"] as string[]);
     expect(resolveDefaultTheme(null, offered).key).toBe("night");
+  });
+});
+
+describe("resolveInitialTheme", () => {
+  const all = resolveOfferedThemes(null);
+
+  it("picks night for a dark appearance when nothing is stored", () => {
+    expect(
+      resolveInitialTheme({ stored: null, appearance: "dark", defaultTheme: "blizzard" }, all).key,
+    ).toBe("night");
+  });
+
+  it("picks standard for a light appearance when nothing is stored", () => {
+    expect(
+      resolveInitialTheme({ stored: null, appearance: "light", defaultTheme: "blizzard" }, all).key,
+    ).toBe("standard");
+  });
+
+  it("lets a stored key beat the appearance", () => {
+    expect(
+      resolveInitialTheme({ stored: "charcoal", appearance: "dark", defaultTheme: null }, all).key,
+    ).toBe("charcoal");
+    expect(
+      resolveInitialTheme({ stored: "nebula", appearance: "light", defaultTheme: null }, all).key,
+    ).toBe("nebula");
+  });
+
+  it("skips a stored key that is not offered", () => {
+    const offered = resolveOfferedThemes(["standard", "night"] as string[]);
+    expect(
+      resolveInitialTheme({ stored: "charcoal", appearance: "dark", defaultTheme: null }, offered).key,
+    ).toBe("night");
+  });
+
+  it("falls through to defaultTheme when the appearance's key is not offered", () => {
+    const offered = resolveOfferedThemes(["expedition", "blizzard", "charcoal"] as string[]);
+    expect(
+      resolveInitialTheme({ stored: null, appearance: "dark", defaultTheme: "charcoal" }, offered).key,
+    ).toBe("charcoal");
+    expect(
+      resolveInitialTheme({ stored: null, appearance: "light", defaultTheme: "blizzard" }, offered).key,
+    ).toBe("blizzard");
+  });
+
+  it("falls through to the first offered when neither the appearance nor defaultTheme is offered", () => {
+    const offered = resolveOfferedThemes(["expedition", "blizzard"] as string[]);
+    expect(
+      resolveInitialTheme({ stored: null, appearance: "dark", defaultTheme: "nebula" }, offered).key,
+    ).toBe("expedition");
+    expect(
+      resolveInitialTheme({ stored: null, appearance: "light", defaultTheme: null }, offered).key,
+    ).toBe("expedition");
   });
 });
 
