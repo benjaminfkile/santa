@@ -1,20 +1,26 @@
 /* docs/site.md section 7.4. Hero: eyebrow in mono accent, h1 in Bricolage,
    intro at 56ch, the two call-to-action buttons in the fill and outline
-   recipes. */
+   recipes. The hero follows the section's align at every width: `start`
+   puts the icon or logo, the copy, and the links at the start; `center`
+   (the frame's `data-align="center"`) centres them. */
 
 .hero {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-3);
+  text-align: start;
+}
+:global(section[data-align="center"]) .hero:not(.heroPaired) {
+  align-items: center;
   text-align: center;
 }
 .heroTall { min-height: var(--hero-tall); justify-content: center; }
 .heroShort { min-height: var(--hero-short); justify-content: center; }
 
 /* Paired variant used when a hero is followed by a countdown on the same
-   page: the hero copy stacks to the left, at start alignment, above the
-   liftoff card in the neighbouring column. */
+   page: the hero copy stacks to the left, at start alignment whatever the
+   section's align, above the liftoff card in the neighbouring column. */
 .heroPaired {
   align-items: flex-start;
   text-align: start;
@@ -79,10 +85,10 @@
   display: flex;
   gap: var(--space-3);
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   margin-top: var(--space-2);
 }
-.heroPaired .heroLinks { justify-content: flex-start; }
+:global(section[data-align="center"]) .hero:not(.heroPaired) .heroLinks { justify-content: center; }
 .heroLink {
   min-height: 40px;
   padding: 0.4rem 1rem;
@@ -117,8 +123,4 @@
   background: var(--text-bright);
   border-color: var(--text-bright);
   color: var(--ground);
-}
-
-@media (max-width: 760px) {
-  .hero { text-align: start; align-items: stretch; }
 }
