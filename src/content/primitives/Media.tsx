@@ -4,12 +4,16 @@
 // otherwise, both with the same alt; the hidden one is `display: none`
 // and so out of the accessibility tree. An entry with `invertInDark` and
 // no dark version renders one image that CSS inverts in dark mode.
-// `data-dark-mode` names the rule each image carries.
+// `data-dark-mode` names the rule each image carries. A ref with
+// `display` renders inside a wrapper from `displayStyle`, which sizes
+// the box, fits and shapes the image, and places the wrapper.
 
+import type { CSSProperties } from "react";
 import type { MediaRef } from "../../contracts";
 import type { ContentBundle } from "../../store/types";
 import { resolveMedia } from "./resolve";
 import * as darkStyles from "./DarkMedia.module.css";
+import { displayStyle, readDisplay } from "./display";
 
 // Which dark mode rule an image carries: shown only in light mode, shown
 // only in dark mode, or inverted in dark mode.
@@ -42,7 +46,28 @@ function isRasterKind(kind: string | undefined): boolean {
   return RASTER_KINDS.has(lower) || !["svg", "gif"].includes(lower);
 }
 
-export function Media({ media, bundle, frame = "full", sizeOverride, loading = "lazy", className, testId }: MediaProps) {
+export function Media(props: MediaProps) {
+  const display = readDisplay(props.media.display);
+  if (display === null) return <MediaBody {...props} />;
+  const d = displayStyle(display, "media");
+  const sizeOverride = d.sizePx !== null ? `${d.sizePx}px` : props.sizeOverride;
+  return (
+    <span className={d.className} style={d.style} data-display="media" {...d.data}>
+      <MediaBody {...props} sizeOverride={sizeOverride} imageStyle={d.imageStyle} />
+    </span>
+  );
+}
+
+function MediaBody({
+  media,
+  bundle,
+  frame = "full",
+  sizeOverride,
+  loading = "lazy",
+  className,
+  testId,
+  imageStyle,
+}: MediaProps & { imageStyle?: CSSProperties }) {
   const entry = resolveMedia(bundle, media.mediaId);
   const alt = media.alt ?? entry?.alt ?? "";
   if (entry === null) {
@@ -76,6 +101,7 @@ export function Media({ media, bundle, frame = "full", sizeOverride, loading = "
         loading={loading}
         decoding="async"
         className={joinClasses(className, extraClass)}
+        style={imageStyle}
         data-dark-mode={darkMode}
         data-testid={testId}
       />

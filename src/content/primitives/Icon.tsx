@@ -3,13 +3,17 @@
 // and a media id (or an unknown library id) through <img>. A media icon
 // with a dark version renders a second <img> and CSS shows one per theme;
 // one with `invertInDark` and no dark version is inverted in dark mode.
+// An icon with `display` renders inside a wrapper from `displayStyle`;
+// its `sizePx` beats the `size` the caller passes.
 
+import type { CSSProperties } from "react";
 import type { IconRef } from "../../contracts";
 import type { ContentBundle } from "../../store/types";
 import { resolveIcon, resolveIconDark } from "./resolve";
 import * as darkStyles from "./DarkMedia.module.css";
 import type { DarkMode } from "./Media";
 import { LIBRARY_ICONS } from "../icons/generated";
+import { displayStyle, readDisplay } from "./display";
 
 const INLINE_SIZE = 16;
 const DEFAULT_SIZE = 24;
@@ -23,7 +27,26 @@ export type IconProps = {
   size?: number;
 };
 
-export function Icon({ icon, bundle, alt = "", decorative = false, inline = false, size }: IconProps) {
+export function Icon(props: IconProps) {
+  const display = readDisplay(props.icon.display);
+  if (display === null) return <IconBody {...props} />;
+  if (!iconResolves(props.icon, props.bundle)) return null;
+  const d = displayStyle(display, "icon");
+  const px = d.sizePx ?? props.size ?? (props.inline ? INLINE_SIZE : DEFAULT_SIZE);
+  const body = <IconBody {...props} size={px} imageStyle={d.imageStyle} />;
+  return (
+    <span className={d.className} style={{ width: px, height: px, ...d.style }} data-display="icon" {...d.data}>
+      {body}
+    </span>
+  );
+}
+
+function iconResolves(icon: IconRef, bundle: ContentBundle): boolean {
+  if (icon.source === "library" && LIBRARY_ICONS[icon.id]) return true;
+  return resolveIcon(bundle, icon) !== null;
+}
+
+function IconBody({ icon, bundle, alt = "", decorative = false, inline = false, size, imageStyle }: IconProps & { imageStyle?: CSSProperties }) {
   const px = size ?? (inline ? INLINE_SIZE : DEFAULT_SIZE);
   const isDecorative = decorative || alt === "";
 
@@ -58,6 +81,7 @@ export function Icon({ icon, bundle, alt = "", decorative = false, inline = fals
       loading="lazy"
       decoding="async"
       className={className}
+      style={imageStyle}
       data-dark-mode={darkMode}
       data-icon-source={icon.source}
     />
