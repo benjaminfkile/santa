@@ -413,4 +413,93 @@ describe("SectionFrame", () => {
     expect(section.dataset.card).toBe("true");
     expect(section.dataset.width).toBe("narrow");
   });
+
+  describe("card fill opacity", () => {
+    function withTheme(theme: Partial<ContentBundle["content"]["settings"]["theme"]>): ContentBundle {
+      return {
+        ...emptyBundle,
+        content: {
+          ...emptyBundle.content,
+          settings: {
+            ...emptyBundle.content.settings,
+            theme: { ...emptyBundle.content.settings.theme, ...theme },
+          },
+        },
+      };
+    }
+
+    function renderCard(presentation: Presentation, bundle: ContentBundle) {
+      const utils = render(
+        <SectionFrame presentation={presentation} bundle={bundle} kind="rich_text">
+          <p>x</p>
+        </SectionFrame>,
+      );
+      return { ...utils, card: utils.getByTestId("section-frame-card") };
+    }
+
+    it("emits the section pair as custom properties on the card", () => {
+      const { card } = renderCard(
+        base({ cardOpacityLight: 40, cardOpacityDark: 70 }),
+        withTheme({ cardOpacityLight: 90, cardOpacityDark: 10 }),
+      );
+      expect(card.style.getPropertyValue("--card-opacity-light")).toBe("40%");
+      expect(card.style.getPropertyValue("--card-opacity-dark")).toBe("70%");
+    });
+
+    it("falls back to the sitewide pair when the section has none", () => {
+      const { card } = renderCard(base(), withTheme({ cardOpacityLight: 55, cardOpacityDark: 25 }));
+      expect(card.style.getPropertyValue("--card-opacity-light")).toBe("55%");
+      expect(card.style.getPropertyValue("--card-opacity-dark")).toBe("25%");
+    });
+
+    it("resolves each theme on its own: a null section value takes the sitewide value", () => {
+      const { card } = renderCard(
+        base({ cardOpacityLight: 30, cardOpacityDark: null }),
+        withTheme({ cardOpacityDark: 60 }),
+      );
+      expect(card.style.getPropertyValue("--card-opacity-light")).toBe("30%");
+      expect(card.style.getPropertyValue("--card-opacity-dark")).toBe("60%");
+    });
+
+    it("emits nothing when both are absent, so the fill stays opaque", () => {
+      const { card } = renderCard(base(), emptyBundle);
+      expect(card.style.getPropertyValue("--card-opacity-light")).toBe("");
+      expect(card.style.getPropertyValue("--card-opacity-dark")).toBe("");
+      expect(card.getAttribute("style")).toBeNull();
+    });
+
+    it("gives a token-background card the same treatment", () => {
+      const { card, container } = renderCard(
+        base({ background: { kind: "token", token: "accent" }, cardOpacityLight: 20, cardOpacityDark: 80 }),
+        emptyBundle,
+      );
+      expect(container.querySelector("section")?.dataset.bg).toBe("accent");
+      expect(card.style.getPropertyValue("--card-opacity-light")).toBe("20%");
+      expect(card.style.getPropertyValue("--card-opacity-dark")).toBe("80%");
+    });
+
+    it("never puts an opacity on the card or anything in the content subtree", () => {
+      const { card, getByTestId } = renderCard(
+        base({ cardOpacityLight: 10, cardOpacityDark: 10 }),
+        emptyBundle,
+      );
+      expect(card.style.opacity).toBe("");
+      const content = getByTestId("section-frame-content");
+      for (const el of [content, ...Array.from(content.querySelectorAll<HTMLElement>("*"))]) {
+        expect(el.style.opacity).toBe("");
+        expect(el.getAttribute("style") ?? "").not.toMatch(/opacity/);
+      }
+    });
+
+    it("mixes only the fill in CSS, scoped per theme, and never sets opacity on the card", () => {
+      const cssPath = resolve(__dirname, "..", "..", "..", "src", "content", "SectionFrame.module.css");
+      const css = readFileSync(cssPath, "utf8");
+      expect(css).toContain(
+        "background: color-mix(in srgb, var(--card-fill) var(--card-fill-alpha, 100%), transparent);",
+      );
+      expect(css).toContain(':root:not([data-theme="dark"]) .card { --card-fill-alpha: var(--card-opacity-light, 100%); }');
+      expect(css).toContain(':root[data-theme="dark"] .card { --card-fill-alpha: var(--card-opacity-dark, 100%); }');
+      expect(css).not.toMatch(/(^|[^-])opacity\s*:/m);
+    });
+  });
 });

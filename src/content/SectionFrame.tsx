@@ -10,6 +10,9 @@
 // card fill; a media background is clipped inside its rounded corners. A
 // section whose component renders nothing collapses the frame (no card,
 // no padding, no background, no icons before or after, no space taken).
+// The card fill's opacity resolves per theme (section, then sitewide,
+// then 100) and is published on the card as custom properties; only the
+// fill is mixed with transparent, never the border, shadow, or content.
 
 import type { CSSProperties, ReactNode } from "react";
 import type { Presentation } from "../contracts";
@@ -18,6 +21,7 @@ import { Icon } from "./primitives/Icon";
 import { Media } from "./primitives/Media";
 import { SECTION_ICON_SIZES, iconSizeKey } from "./iconSizes";
 import { hasSectionCard } from "./sectionCard";
+import { cardOpacityStyle } from "./cardOpacity";
 import * as styles from "./SectionFrame.module.css";
 
 export type SectionFrameProps = {
@@ -134,7 +138,13 @@ export function SectionFrame({ presentation, bundle, kind, children }: SectionFr
       data-card={hasCard ? "true" : "false"}
       data-testid={`section-${kind}`}
     >
-      {hasCard ? <div className={cardClasses.filter(Boolean).join(" ")}>{inner}</div> : inner}
+      {hasCard ? (
+        <div className={cardClasses.filter(Boolean).join(" ")} style={cardOpacityStyle(presentation, bundle)} data-testid="section-frame-card">
+          {inner}
+        </div>
+      ) : (
+        inner
+      )}
     </section>
   );
 }
