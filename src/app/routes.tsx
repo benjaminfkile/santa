@@ -1,6 +1,7 @@
 // docs/site.md section 4. The route table. Live-status takeover: while
-// live.eventStatusId === 3 every path outside the site-coded paths
-// renders the live role page. Two legacy redirects: /santa -> /,
+// live.eventStatusId === 3 and no preview session is loaded, every path
+// outside the site-coded paths renders the live role page. A preview
+// session keeps the ordinary table, so slugs resolve to draft pages. Two legacy redirects: /santa -> /,
 // /funding -> /donate.
 //
 // Route-level lazy() for the alerts and auth chunks per section 18. All
@@ -15,6 +16,7 @@ import { QrPage } from "../pages/QrPage";
 import { NotFound } from "../pages/NotFound";
 import { Loading } from "../pages/Loading";
 import { useStore } from "../store/useStore";
+import { selectTakeover } from "../content/selectPage";
 
 const VerifyPage = lazy(() =>
   import("../pages/Alerts/VerifyPage").then((m) => ({ default: m.VerifyPage })),
@@ -66,8 +68,7 @@ function AuthRoutes() {
 }
 
 export function AppRoutes() {
-  const status = useStore((s) => s.live?.eventStatusId ?? null);
-  const isLiveTakeover = status === 3;
+  const isLiveTakeover = useStore(selectTakeover);
 
   if (isLiveTakeover) {
     return (

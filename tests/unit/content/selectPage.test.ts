@@ -1,7 +1,7 @@
 // docs/site.md section 5.4 and 22.1 rows for selectPage.
 
 import { describe, it, expect } from "vitest";
-import { selectHome, selectSlug, selectRole } from "../../../src/content/selectPage";
+import { selectHome, selectSlug, selectRole, selectTakeover } from "../../../src/content/selectPage";
 import type { SiteStore, ContentBundle } from "../../../src/store/types";
 import { initialStore } from "../../../src/store/types";
 import type { ContentDocument, LiveObject, PageRole } from "../../../src/contracts";
@@ -173,5 +173,25 @@ describe("selectSlug", () => {
   it("reload wins", () => {
     const s: SiteStore = { ...stateFor(1), schemaMismatch: true };
     expect(selectSlug(s, "about")).toEqual({ kind: "reload" });
+  });
+});
+
+describe("selectTakeover", () => {
+  it("holds while live without a preview", () => {
+    expect(selectTakeover(stateFor(3))).toBe(true);
+  });
+  it("stays false while live with a preview set, and a slug resolves to the named draft page", () => {
+    const draft = makeBundle();
+    const s: SiteStore = { ...stateFor(3), preview: draft };
+    expect(selectTakeover(s)).toBe(false);
+    const about = selectSlug(s, "about");
+    expect(about.kind).toBe("page");
+    if (about.kind === "page") expect(about.page).toBe(draft.content!.pages[6]);
+    const live = selectSlug(s, "live");
+    expect(live.kind).toBe("page");
+    if (live.kind === "page") expect(live.page.role).toBe("live");
+  });
+  it("is false when the event is not live", () => {
+    expect(selectTakeover(stateFor(2))).toBe(false);
   });
 });

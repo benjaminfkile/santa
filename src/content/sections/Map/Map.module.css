@@ -10,6 +10,7 @@
   position: relative;
   width: 100%;
   min-height: 480px;
+  height: min(80vh, 720px);
   overflow: hidden;
   background: var(--ground);
   color: var(--text);
