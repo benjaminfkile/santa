@@ -81,10 +81,10 @@ describe("live route table", () => {
     expect(getByTestId("page").textContent).toBe("live");
   });
 
-  it("resolves a slug to the named draft page inside a preview session", () => {
+  it("takes over every slug inside a preview session too: preview is the real live experience", () => {
     setLive({ content: content("draft-"), media: {}, icons: {} });
     const { getByTestId } = renderAt("/about");
-    expect(getByTestId("page").textContent).toBe("about");
+    expect(getByTestId("page").textContent).toBe("draft-live");
   });
 
   it("renders the draft live page at / and at its slug inside a preview session", () => {

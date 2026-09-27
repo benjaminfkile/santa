@@ -24,6 +24,7 @@ export const signIn: string;
 export const siteHeader: string;
 export const skipLink: string;
 export const systemButton: string;
+export const takeoverBanners: string;
 export const themeMenu: string;
 export const themeOption: string;
 export const themePicker: string;

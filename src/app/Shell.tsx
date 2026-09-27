@@ -56,7 +56,21 @@ export function Shell({ children }: ShellProps) {
 
   if (schemaMismatch) return <ReloadPrompt />;
 
-  if (takeover) return <>{children}</>;
+  if (takeover) {
+    // The tracker owns the whole viewport; a preview session keeps its
+    // banner floating over it so Exit preview stays reachable.
+    const previewActive = preview !== null || session !== null;
+    return (
+      <>
+        {previewActive ? (
+          <div className={styles.takeoverBanners}>
+            <Banners updatesPaused={false} previewActive session={session} />
+          </div>
+        ) : null}
+        {children}
+      </>
+    );
+  }
 
   return (
     <>

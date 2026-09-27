@@ -248,6 +248,28 @@ describe("Shell structure", () => {
     expect(queryByTestId("site-footer")).toBeNull();
     expect(document.documentElement.getAttribute("data-takeover")).toBe("live");
   });
+
+  it("keeps the preview banner floating over the live takeover", () => {
+    seed(makeContent(), true);
+    act(() => {
+      store.setState({ preview: { content: null, media: {}, icons: {} } as never });
+    });
+    const { getByTestId, queryByTestId } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <AuthProvider>
+          <Shell>
+            <main id="main" data-page-role="live">
+              <div data-testid="map-placeholder" />
+            </main>
+          </Shell>
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+    expect(getByTestId("map-placeholder")).not.toBeNull();
+    expect(queryByTestId("site-header")).toBeNull();
+    expect(getByTestId("preview-banner")).not.toBeNull();
+    expect(document.documentElement.getAttribute("data-takeover")).toBe("live");
+  });
 });
 
 const LOGO_MEDIA = {

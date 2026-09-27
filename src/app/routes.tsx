@@ -1,7 +1,7 @@
 // docs/site.md section 4. The route table. Live-status takeover: while
-// live.eventStatusId === 3 and no preview session is loaded, every path
-// outside the site-coded paths renders the live role page. A preview
-// session keeps the ordinary table, so slugs resolve to draft pages. Two legacy redirects: /santa -> /,
+// live.eventStatusId === 3 every path outside the site-coded paths
+// renders the live role page, in a preview session too (the draft's live
+// page under the preview banner). Two legacy redirects: /santa -> /,
 // /funding -> /donate.
 //
 // Route-level lazy() for the alerts and auth chunks per section 18. All

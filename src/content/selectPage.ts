@@ -68,8 +68,10 @@ export function surfaceEqual(a: Surface, b: Surface): boolean {
   return true;
 }
 
-// The live takeover: while the event is live and no preview is loaded,
-// every path renders the tracker alone (docs 7.6, 24).
+// The live takeover: while the event is live, every path renders the
+// tracker alone (docs 7.6, 24), in a preview session too, so preview is
+// the real live experience over the draft content; only the preview
+// banner is added on top (Shell).
 export function selectTakeover(s: SiteStore): boolean {
-  return s.live?.eventStatusId === 3 && s.preview === null;
+  return s.live?.eventStatusId === 3;
 }
