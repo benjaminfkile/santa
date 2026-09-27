@@ -39,6 +39,18 @@
   min-width: 0;
 }
 .sponsorCarouselReducedMotion .sponsorCarouselSlide { transition: none; }
+/* The card stacks: the logo with the sponsor's name under it, never
+   beside it. The live tile keeps the legacy row. */
+.sponsorCarouselCard .sponsorCarouselSlide {
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+.sponsorCarouselCard .sponsorCarouselName {
+  white-space: normal;
+  text-align: center;
+  max-width: 100%;
+}
 /* The card's logo follows the section's logoWidth (a CSS variable the
    component sets when the field is filled in; 48 px otherwise), never
    wider than its container, height keeping the image's shape. */
