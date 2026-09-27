@@ -7,7 +7,7 @@ import type { SectionComponent } from "../../registry";
 import { Inline } from "../../inline/Inline";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
-import { formatMountainTime } from "../../../lib/time";
+import { formatEventTime } from "../../../lib/time";
 import * as styles from "./LatestMessage.module.css";
 
 type LatestMessageData = {
@@ -26,7 +26,7 @@ export const LatestMessage: SectionComponent = ({ data, bundle }) => {
   if (message === null || message === undefined) return null;
 
   const timeIso = message.eventTime ?? message.createdAt ?? null;
-  const timeText = formatMountainTime(timeIso);
+  const timeText = formatEventTime(timeIso);
   const heading = d.heading ?? null;
   const body = message.body ?? "";
 

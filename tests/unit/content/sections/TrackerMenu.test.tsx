@@ -1,5 +1,5 @@
 // docs/site.md section 7.6 and S17f. Tracker menu data row units:
-// distance in feet under a mile / miles above; mountain time for the
+// distance in feet under a mile / miles above; the viewer's timezone for the
 // liftoff, recorded, and received timestamps; every value in --font-mono
 // with tabular numerals through the co-located CSS module.
 
@@ -9,6 +9,7 @@ import { dirname, resolve } from "node:path";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { act, cleanup, render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { formatEventTime } from "../../../../src/lib/time";
 
 import { TrackerMenu } from "../../../../src/content/sections/Map/TrackerMenu";
 import { store } from "../../../../src/store/useStore";
@@ -138,7 +139,7 @@ describe("TrackerMenu data row", () => {
     expect(getByTestId("data-row-distance").textContent).toMatch(/\d+\.\d{2} mi/);
   });
 
-  it("formats liftoff, recorded, and received times through formatMountainTime", () => {
+  it("formats liftoff, recorded, and received times through formatEventTime", () => {
     seedLive();
     const { getByTestId } = render(
       <MemoryRouter>
@@ -172,10 +173,9 @@ describe("TrackerMenu data row", () => {
         />
       </MemoryRouter>,
     );
-    // formatMountainTime renders "MST" or "MDT" as the zone abbreviation.
-    expect(getByTestId("data-row-liftoff").textContent).toMatch(/M[SD]T/);
-    expect(getByTestId("data-row-recorded").textContent).toMatch(/M[SD]T/);
-    expect(getByTestId("data-row-received").textContent).toMatch(/M[SD]T/);
+    expect(getByTestId("data-row-liftoff").textContent).toContain(formatEventTime("2026-12-24T01:00:00Z"));
+    expect(getByTestId("data-row-recorded").textContent).toContain(formatEventTime("2026-12-24T02:15:00Z"));
+    expect(getByTestId("data-row-received").textContent).toContain(formatEventTime("2026-12-24T02:15:03Z"));
   });
 
   it("data row cells are rendered in --font-mono with tabular numerals", () => {

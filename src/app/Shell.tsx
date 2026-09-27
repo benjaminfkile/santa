@@ -31,7 +31,7 @@ import {
   usePreviewSession,
   type PreviewSessionState,
 } from "../pages/previewSession";
-import { formatMountainClock } from "../lib/time";
+import { formatClock } from "../lib/time";
 import * as styles from "./Shell.module.css";
 
 export type ShellProps = { children: ReactNode };
@@ -512,7 +512,7 @@ function PreviewLiveNote() {
     <>
       {lastChangeAt !== null ? (
         <span className={styles.bannerNote} data-testid="preview-live">
-          {copy.banners.previewLive(formatMountainClock(lastChangeAt))}
+          {copy.banners.previewLive(formatClock(lastChangeAt))}
         </span>
       ) : null}
       {reconnecting ? (

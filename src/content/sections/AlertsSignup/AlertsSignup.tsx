@@ -25,7 +25,7 @@ import {
 import { ApiRequestError, surfaceFor } from "../../../api/errors";
 import { SignInRequired } from "../../../auth/getIdToken";
 import { StatusPill } from "../../primitives/StatusPill";
-import { formatMountainTime } from "../../../lib/time";
+import { formatEventTime } from "../../../lib/time";
 import * as styles from "./AlertsSignup.module.css";
 import * as btn from "../../../ui/Button.module.css";
 import * as field from "../../../ui/Field.module.css";
@@ -404,7 +404,7 @@ function SubscriptionRow({
   const unsubscribed = row.unsubscribedAt !== null && row.unsubscribedAt !== undefined;
   const tone = unsubscribed ? "dim" : pending ? "warn" : "ok";
   const label = unsubscribed ? "Unsubscribed" : pending ? "Pending, check your email" : "Active";
-  const createdAt = formatMountainTime(row.createdAt);
+  const createdAt = formatEventTime(row.createdAt);
   return (
     <li className={styles.alertsSignupRow} data-testid={`subscription-${num(row.id)}`}>
       <div className={styles.alertsSignupRowWho}>
@@ -495,7 +495,7 @@ function AlertRow({
   row: AlertItem;
   showAddress: boolean;
 }) {
-  const sentAt = formatMountainTime(row.sentAt);
+  const sentAt = formatEventTime(row.sentAt);
   const kindLabel = row.kind === "update" ? "update" : "status";
   return (
     <li className={styles.alertsSignupSentRow} data-testid={`alert-${num(row.id)}`}>

@@ -7,7 +7,7 @@
 import { useEffect, useRef } from "react";
 import { useStore } from "../../../store/useStore";
 import { mpsToMph, metresToFeet, headingToCardinal } from "../../../lib/units";
-import { formatMountainTime } from "../../../lib/time";
+import { formatEventTime } from "../../../lib/time";
 import { formatDistanceMetres } from "../../../map/userLocation";
 import { copy } from "../../../copy/copy";
 import type { MapTheme } from "../../../map/themes";
@@ -202,19 +202,19 @@ export function TrackerMenu(props: TrackerMenuProps) {
             <div>
               <dt><TakeoffGlyph /><span>Liftoff</span></dt>
               <dd data-testid="data-row-liftoff">
-                {formatMountainTime(wentLiveAt) || copy.live.unavailablePlaceholder}
+                {formatEventTime(wentLiveAt) || copy.live.unavailablePlaceholder}
               </dd>
             </div>
             <div>
               <dt><ClockGlyph /><span>Recorded</span></dt>
               <dd data-testid="data-row-recorded">
-                {formatMountainTime(recordedAt) || copy.live.unavailablePlaceholder}
+                {formatEventTime(recordedAt) || copy.live.unavailablePlaceholder}
               </dd>
             </div>
             <div>
               <dt><InboxGlyph /><span>Received</span></dt>
               <dd data-testid="data-row-received">
-                {formatMountainTime(receivedAt) || copy.live.unavailablePlaceholder}
+                {formatEventTime(receivedAt) || copy.live.unavailablePlaceholder}
               </dd>
             </div>
           </dl>

@@ -1,5 +1,5 @@
 // docs/site.md section 22.1. EventTimes: each field shown only when
-// present; `airborneFor` ticks; `America/Denver` formatting.
+// present; `airborneFor` ticks; formatting in the viewer's timezone.
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { act, cleanup, render } from "@testing-library/react";
@@ -8,6 +8,7 @@ import { store } from "../../../../src/store/useStore";
 import { initialStore } from "../../../../src/store/types";
 import type { ContentBundle } from "../../../../src/store/types";
 import type { Snapshot, LiveObject } from "../../../../src/contracts";
+import { formatEventTime } from "../../../../src/lib/time";
 
 const bundle: ContentBundle = {
   content: null as unknown as ContentBundle["content"],
@@ -64,7 +65,7 @@ describe("EventTimes", () => {
     expect(container.textContent).toContain("Wheels down");
   });
 
-  it("formats scheduledAt in America/Denver", () => {
+  it("formats scheduledAt in the viewer's timezone", () => {
     setState(
       { eventStatusId: 4 },
       {
@@ -85,9 +86,7 @@ describe("EventTimes", () => {
       />,
     );
     const value = container.querySelector("dd")?.textContent ?? "";
-    expect(value).toMatch(/Dec\s+21/);
-    expect(value).toMatch(/PM/);
-    expect(value).toMatch(/M[SD]T/);
+    expect(value).toBe(formatEventTime("2026-12-22T01:00:00Z"));
   });
 
   it("shows airborneFor only while status is 3", () => {

@@ -1,5 +1,5 @@
 // docs/site.md section 7.4. EventTimes: one labelled line per field in
-// `data.fields` whose value exists, formatted in `America/Denver`;
+// `data.fields` whose value exists, formatted in the viewer's timezone;
 // `airborneFor` is `formatElapsed(now - wentLiveAt)` on the 1 s clock while
 // status is 3; blank while `!timeReady`.
 
@@ -8,7 +8,7 @@ import { Inline } from "../../inline/Inline";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
 import { selectTimeReady } from "../../../store/liveState";
-import { formatElapsed, formatMountainTime } from "../../../lib/time";
+import { formatElapsed, formatEventTime } from "../../../lib/time";
 import { useNow } from "../../../lib/useNow";
 import * as styles from "./EventTimes.module.css";
 
@@ -55,7 +55,7 @@ export const EventTimes: SectionComponent = ({ data, bundle }) => {
     }
     const value = event?.[key];
     if (!value) continue;
-    rows.push({ key, label: labels[key], value: formatMountainTime(value) });
+    rows.push({ key, label: labels[key], value: formatEventTime(value) });
   }
 
   if (rows.length === 0) return <div className={`${styles.eventTimes} ${styles.eventTimesEmpty}`} />;
