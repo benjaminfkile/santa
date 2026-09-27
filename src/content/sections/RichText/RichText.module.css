@@ -3,6 +3,10 @@
    share the same set of typed class names. */
 
 .richText { display: flex; flex-direction: column; gap: var(--space-4); max-width: 68ch; }
+/* A section aligned to the centre centres the 68ch column inside its card
+   or content box, so the centred lines sit in the middle of the section on
+   any width. A section aligned to the start keeps the column at the start. */
+:global(section[data-align="center"]) .richText { margin-inline: auto; }
 
 .blockHeading {
   font-family: var(--font-display);
