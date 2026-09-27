@@ -3,6 +3,8 @@
 // Preview banner (through the shell reading store.preview), and renders
 // the page whose slug matches. A 404 renders "This preview link has
 // expired". Sets robots=noindex; clears store.preview on unmount.
+// theme=light or theme=dark applies that theme while mounted without
+// storing it, and the stored choice is applied again on unmount.
 
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -13,6 +15,7 @@ import { NotFound } from "./NotFound";
 import { fetchPreviewBundle } from "../api/preview";
 import { ApiRequestError } from "../api/errors";
 import { selectHome } from "../content/selectPage";
+import { releaseTheme, setTheme } from "../content/theme/colorScheme";
 import * as btn from "../ui/Button.module.css";
 
 type LoadState =
@@ -25,6 +28,8 @@ export function PreviewPage() {
   const [params] = useSearchParams();
   const token = params.get("token") ?? "";
   const pageSlug = params.get("page");
+  const themeParam = params.get("theme");
+  const theme = themeParam === "light" || themeParam === "dark" ? themeParam : null;
   const preview = useStore((s) => s.preview);
   const home = useStore(selectHome);
   const [state, setState] = useState<LoadState>({ kind: "loading" });
@@ -40,6 +45,14 @@ export function PreviewPage() {
       meta.remove();
     };
   }, []);
+
+  useEffect(() => {
+    if (theme === null) return;
+    setTheme(theme, { persist: false });
+    return () => {
+      releaseTheme();
+    };
+  }, [theme]);
 
   useEffect(() => {
     return () => {

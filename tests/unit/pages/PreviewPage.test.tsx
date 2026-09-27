@@ -10,6 +10,7 @@ import { initialStore } from "../../../src/store/types";
 import type { LiveObject, ContentDocument } from "../../../src/contracts";
 import { PreviewPage } from "../../../src/pages/PreviewPage";
 import { ApiRequestError } from "../../../src/api/client";
+import { THEME_KEY } from "../../../src/content/theme/colorScheme";
 
 vi.mock("../../../src/api/preview", () => ({
   fetchPreviewBundle: vi.fn(),
@@ -136,5 +137,54 @@ describe("PreviewPage", () => {
     await waitFor(() => expect(store.getState().preview).not.toBeNull());
     unmount();
     expect(store.getState().preview).toBeNull();
+  });
+
+  describe("theme parameter", () => {
+    beforeEach(() => {
+      window.localStorage.setItem(THEME_KEY, "light");
+      document.documentElement.setAttribute("data-theme", "light");
+    });
+
+    afterEach(() => {
+      window.localStorage.removeItem(THEME_KEY);
+      document.documentElement.removeAttribute("data-theme");
+    });
+
+    function mountWithTheme(theme: string) {
+      vi.mocked(previewApi.fetchPreviewBundle).mockResolvedValueOnce({
+        content: makeContent(), media: {}, icons: {},
+      });
+      act(() => store.setState((s) => ({ ...s, live: makeLive(1) })));
+      return renderAt(`/preview?token=${validToken}&page=ended&theme=${theme}`);
+    }
+
+    it("theme=dark sets data-theme dark while mounted and leaves the stored choice", async () => {
+      const { container, unmount } = mountWithTheme("dark");
+      await waitFor(() => expect(container.querySelector("main[data-page-slug]")).not.toBeNull());
+      expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
+      expect(window.localStorage.getItem(THEME_KEY)).toBe("light");
+      unmount();
+      expect(document.documentElement.getAttribute("data-theme")).toBe("light");
+      expect(window.localStorage.getItem(THEME_KEY)).toBe("light");
+    });
+
+    it("theme=light sets data-theme light while mounted and leaves the stored choice", async () => {
+      window.localStorage.setItem(THEME_KEY, "dark");
+      document.documentElement.setAttribute("data-theme", "dark");
+      const { container, unmount } = mountWithTheme("light");
+      await waitFor(() => expect(container.querySelector("main[data-page-slug]")).not.toBeNull());
+      expect(document.documentElement.getAttribute("data-theme")).toBe("light");
+      expect(window.localStorage.getItem(THEME_KEY)).toBe("dark");
+      unmount();
+      expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
+      expect(window.localStorage.getItem(THEME_KEY)).toBe("dark");
+    });
+
+    it("ignores an unknown theme value", async () => {
+      const { container } = mountWithTheme("sepia");
+      await waitFor(() => expect(container.querySelector("main[data-page-slug]")).not.toBeNull());
+      expect(document.documentElement.getAttribute("data-theme")).toBe("light");
+      expect(window.localStorage.getItem(THEME_KEY)).toBe("light");
+    });
   });
 });
