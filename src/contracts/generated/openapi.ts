@@ -374,6 +374,13 @@ export interface paths {
                         "application/json": components["schemas"]["ContentBundleDto"];
                     };
                 };
+                /** @description Not Modified */
+                304: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
         };
         put?: never;
@@ -2922,7 +2929,11 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PreviewTokenRequest"];
+                };
+            };
             responses: {
                 /** @description Created */
                 201: {
@@ -5173,6 +5184,7 @@ export interface components {
             /** Format: int64 */
             routeId?: null | number | string;
             inheritRoute?: boolean;
+            scheduleTimeZone?: null | string;
         };
         CreatePageRequest: {
             slug?: string;
@@ -5274,6 +5286,7 @@ export interface components {
             isCurrent?: boolean;
             /** Format: date-time */
             scheduledAt?: null | string;
+            scheduleTimeZone?: null | string;
             /** Format: date-time */
             wentLiveAt?: null | string;
             /** Format: date-time */
@@ -5531,6 +5544,7 @@ export interface components {
             dziUrl?: null | string;
             darkMediaId?: null | string;
             invertInDark?: boolean;
+            smallMediaId?: null | string;
             uploadedBy?: string;
             /** Format: date-time */
             createdAt?: string;
@@ -5562,6 +5576,8 @@ export interface components {
             dzi?: null | string;
             dark?: null | components["schemas"]["MediaDarkEntry"];
             invertInDark?: boolean;
+            small?: null | components["schemas"]["MediaSmallEntry"];
+            smallMediaId?: null | string;
         };
         MediaPatchRequest: {
             alt?: null | string;
@@ -5569,6 +5585,16 @@ export interface components {
             /** Format: uuid */
             darkMediaId?: null | string;
             invertInDark?: null | boolean;
+            /** Format: uuid */
+            smallMediaId?: null | string;
+        };
+        MediaSmallEntry: {
+            url?: string;
+            variants?: {
+                [key: string]: string;
+            };
+            dark?: null | components["schemas"]["MediaDarkEntry"];
+            invertInDark?: boolean;
         };
         MediaUploadUrlRequest: {
             filename?: string;
@@ -5778,17 +5804,15 @@ export interface components {
             name?: null | string;
             /** Format: int32 */
             year?: null | number | string;
-            /** Format: date-time */
-            scheduledAt?: null | string;
-            /** Format: date-time */
-            wentLiveAt?: null | string;
-            /** Format: date-time */
-            endedAt?: null | string;
+            scheduledAt?: components["schemas"]["JsonElement"];
+            wentLiveAt?: components["schemas"]["JsonElement"];
+            endedAt?: components["schemas"]["JsonElement"];
             /** Format: int32 */
             fundsPercent?: null | number | string;
             /** Format: int64 */
             routeId?: null | number | string;
             routeImageMediaId?: null | string;
+            scheduleTimeZone?: components["schemas"]["JsonElement"];
         };
         PatchPageRequest: {
             slug?: null | string;
@@ -5950,6 +5974,10 @@ export interface components {
             anchor?: null | string;
             card?: null | boolean;
             iconSize?: null | string;
+            /** Format: int32 */
+            cardOpacityLight?: null | number | string;
+            /** Format: int32 */
+            cardOpacityDark?: null | number | string;
         };
         PreviewTokenDto: {
             token?: string;
@@ -5957,6 +5985,10 @@ export interface components {
             /** Format: date-time */
             expiresAt?: string;
             audit?: null | components["schemas"]["AuditStampDto"];
+        };
+        PreviewTokenRequest: {
+            /** Format: int32 */
+            ttlMinutes?: null | number | string;
         };
         ProblemDto: {
             path?: string;

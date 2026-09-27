@@ -67,6 +67,8 @@ export interface SiteSettings {
     snowDefault: boolean;
     lightsDefault: boolean;
     ornaments?: boolean;
+    cardOpacityLight?: number | null;
+    cardOpacityDark?: number | null;
   };
   /**
    * @minItems 0
@@ -178,4 +180,6 @@ export interface Presentation {
   anchor: string | null;
   card?: boolean | null;
   iconSize?: "sm" | "md" | "lg" | "xl" | null;
+  cardOpacityLight?: number | null;
+  cardOpacityDark?: number | null;
 }

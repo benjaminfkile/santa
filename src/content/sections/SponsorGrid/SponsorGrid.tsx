@@ -77,6 +77,7 @@ function SponsorCard({
               sizeOverride="480px"
               className={styles.sponsorGridLogo}
               testId="sponsor-logo"
+              small={false}
             />
           ) : (
             <span className={styles.sponsorGridNameLarge}>{sponsor.name}</span>

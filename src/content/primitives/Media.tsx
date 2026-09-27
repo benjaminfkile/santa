@@ -4,9 +4,13 @@
 // otherwise, both with the same alt; the hidden one is `display: none`
 // and so out of the accessibility tree. An entry with `invertInDark` and
 // no dark version renders one image that CSS inverts in dark mode.
-// `data-dark-mode` names the rule each image carries. A ref with
-// `display` renders inside a wrapper from `displayStyle`, which sizes
-// the box, fits and shapes the image, and places the wrapper.
+// `data-dark-mode` names the rule each image carries. An entry with a
+// small version (`small.url`) draws two branches: the entry as above
+// hidden under 760 px, and the small version (its own srcset, dark, and
+// invertInDark, composed the same way) hidden at 760 px and up;
+// `data-screen` names the branch. `small={false}` draws the entry alone.
+// A ref with `display` renders inside a wrapper from `displayStyle`,
+// which sizes the box, fits and shapes the image, and places the wrapper.
 
 import type { CSSProperties } from "react";
 import type { MediaRef } from "../../contracts";
@@ -19,6 +23,19 @@ import { displayStyle, readDisplay } from "./display";
 // only in dark mode, or inverted in dark mode.
 export type DarkMode = "light" | "dark" | "invert";
 
+// Which screen width an image draws at when the entry has a small version:
+// 760 px and up, or under 760 px.
+export type Screen = "wide" | "small";
+
+type Box = { width?: number; height?: number };
+
+type DarkSource = {
+  url: string;
+  variants: Record<string, string | undefined>;
+  dark: { url?: string; variants?: Record<string, string | undefined> } | null;
+  invertInDark: boolean;
+};
+
 export type FrameWidth = "full" | "wide" | "narrow";
 
 export type MediaProps = {
@@ -29,6 +46,8 @@ export type MediaProps = {
   loading?: "lazy" | "eager";
   className?: string;
   testId?: string;
+  // Whether the entry's small version draws under 760 px (default true).
+  small?: boolean;
 };
 
 const SIZES_BY_FRAME: Record<FrameWidth, string> = {
@@ -66,6 +85,7 @@ function MediaBody({
   loading = "lazy",
   className,
   testId,
+  small = true,
   imageStyle,
 }: MediaProps & { imageStyle?: CSSProperties }) {
   const entry = resolveMedia(bundle, media.mediaId);
@@ -86,9 +106,16 @@ function MediaBody({
   const height = entry.height ?? undefined;
   const raster = isRasterKind(entry.kind);
   const sizes = sizeOverride ?? SIZES_BY_FRAME[frame];
-  const darkUrl = entry.dark?.url || null;
 
-  const image = (src: string, variants: Record<string, string | undefined>, originalWidth: number | undefined, extraClass?: string, darkMode?: DarkMode) => {
+  const image = (
+    src: string,
+    variants: Record<string, string | undefined>,
+    originalWidth: number | undefined,
+    box: Box,
+    classes: (string | undefined)[],
+    darkMode?: DarkMode,
+    screen?: Screen,
+  ) => {
     const srcSet = raster ? buildSrcSet(src, variants, originalWidth) : undefined;
     return (
       <img
@@ -96,28 +123,56 @@ function MediaBody({
         srcSet={srcSet}
         sizes={srcSet ? sizes : undefined}
         alt={alt}
-        width={width}
-        height={height}
+        width={box.width}
+        height={box.height}
         loading={loading}
         decoding="async"
-        className={joinClasses(className, extraClass)}
+        className={joinClasses(className, ...classes)}
         style={imageStyle}
         data-dark-mode={darkMode}
+        data-screen={screen}
         data-testid={testId}
       />
     );
   };
 
-  if (darkUrl !== null) {
-    return (
-      <>
-        {image(url, entry.variants ?? {}, width, darkStyles.lightOnly, "light")}
-        {image(darkUrl, entry.dark?.variants ?? {}, undefined, darkStyles.darkOnly, "dark")}
-      </>
-    );
-  }
-  if (entry.invertInDark === true) return image(url, entry.variants ?? {}, width, darkStyles.invertInDark, "invert");
-  return image(url, entry.variants ?? {}, width);
+  // One branch: the dark swap for a source, as light and dark images, one
+  // inverting image, or one plain image, each also carrying `screenClass`.
+  const branch = (source: DarkSource, box: Box, screenClass?: string, screen?: Screen) => {
+    const darkUrl = source.dark?.url || null;
+    if (darkUrl !== null) {
+      return (
+        <>
+          {image(source.url, source.variants, box.width, box, [darkStyles.lightOnly, screenClass], "light", screen)}
+          {image(darkUrl, source.dark?.variants ?? {}, undefined, box, [darkStyles.darkOnly, screenClass], "dark", screen)}
+        </>
+      );
+    }
+    if (source.invertInDark) return image(source.url, source.variants, box.width, box, [darkStyles.invertInDark, screenClass], "invert", screen);
+    return image(source.url, source.variants, box.width, box, [screenClass], undefined, screen);
+  };
+
+  const main: DarkSource = {
+    url,
+    variants: entry.variants ?? {},
+    dark: entry.dark ?? null,
+    invertInDark: entry.invertInDark === true,
+  };
+  const smallUrl = (small && entry.small?.url) || null;
+  const mainBox: Box = { width, height };
+  if (smallUrl === null) return branch(main, mainBox);
+  const smallSource: DarkSource = {
+    url: smallUrl,
+    variants: entry.small?.variants ?? {},
+    dark: entry.small?.dark ?? null,
+    invertInDark: entry.small?.invertInDark === true,
+  };
+  return (
+    <>
+      {branch(main, mainBox, darkStyles.wideOnly, "wide")}
+      {branch(smallSource, {}, darkStyles.smallOnly, "small")}
+    </>
+  );
 }
 
 function buildSrcSet(url: string, variants: Record<string, string | undefined>, width: number | undefined): string | undefined {
