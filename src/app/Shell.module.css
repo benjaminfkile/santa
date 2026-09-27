@@ -237,6 +237,10 @@
   background: var(--accent);
   color: var(--on-accent);
 }
+.bannerNote {
+  margin-left: var(--space-3);
+  font-size: 0.85rem;
+}
 
 .footer {
   display: flex;

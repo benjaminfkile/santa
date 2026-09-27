@@ -1,5 +1,6 @@
 // docs/site.md section 2. Time helpers: `formatCountdown`, `formatElapsed`,
-// and `formatMountainTime`. `America/Denver` is the canonical event zone.
+// `formatMountainTime`, and `formatMountainClock`. `America/Denver` is the
+// canonical event zone.
 
 const MOUNTAIN_ZONE = "America/Denver";
 
@@ -60,4 +61,18 @@ export function formatMountainTime(iso: string | null | undefined): string {
   const dayPeriod = p.dayPeriod ?? "";
   const zone = p.timeZoneName ?? "";
   return `${month} ${day}, ${hour}:${minute} ${dayPeriod} ${zone}`.trim();
+}
+
+// hh:mm:ss on a 24-hour clock in America/Denver.
+export function formatMountainClock(ms: number): string {
+  if (!Number.isFinite(ms)) return "";
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone: MOUNTAIN_ZONE,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+  const p = partsOf(fmt, new Date(ms));
+  return `${p.hour ?? "00"}:${p.minute ?? "00"}:${p.second ?? "00"}`;
 }
