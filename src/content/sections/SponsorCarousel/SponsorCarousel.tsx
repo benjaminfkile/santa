@@ -1,7 +1,8 @@
-// docs/site.md sections 7.4 and 15. SponsorCarousel plays snapshot order
-// (never shuffled): one sponsor at a time for its `lingerMs`, wraps around,
-// pauses while the document is hidden. The `card` variant (the section)
-// shows the logo tile, the name, and the "N s on the tracker" line; the
+// docs/site.md sections 7.4 and 15. SponsorCarousel starts at a random
+// sponsor when the first non-empty list arrives, then plays snapshot order
+// (never shuffled) from there: one sponsor at a time for its `lingerMs`,
+// wraps around, pauses while the document is hidden. The `card` variant
+// (the section) shows the logo tile, the name, and the dots; the
 // `tile` variant (the live screen) is the legacy tracker's bare logo tile.
 // Tapping a sponsor opens a small centred dialog with the logo, the name,
 // and a link to the sponsor's site; the dialog closes on its button, on
@@ -30,9 +31,8 @@ function sponsorHref(s: Sponsor): string | null {
   return s.websiteUrl ?? s.fbUrl ?? s.igUrl ?? null;
 }
 
-function lingerLabel(ms: number): string {
-  const seconds = Math.max(1, Math.round(ms / 1000));
-  return `${seconds}s on the tracker`;
+function randomIndex(length: number): number {
+  return Math.min(length - 1, Math.floor(Math.random() * length));
 }
 
 export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
@@ -43,9 +43,15 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
   const event = useSnapshotEvent();
   const reduced = useReducedMotion();
 
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() =>
+    sponsors && sponsors.length > 0 ? randomIndex(sponsors.length) : 0,
+  );
   const [open, setOpen] = useState<Sponsor | null>(null);
-  const prevIdAtIndexRef = useRef<number | null>(sponsors?.[0]?.id ?? null);
+  const prevIdAtIndexRef = useRef<number | null>(sponsors?.[index]?.id ?? null);
+  // True once a non-empty list has arrived and the random start is chosen.
+  const indexRef = useRef(index);
+  indexRef.current = index;
+  const startedRef = useRef(sponsors !== null && sponsors.length > 0);
 
   useEffect(() => {
     if (!sponsors || sponsors.length === 0) {
@@ -53,16 +59,22 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
       setIndex(0);
       return;
     }
-    setIndex((cur) => {
-      const clamped = cur < sponsors.length ? cur : 0;
-      const idAtCur = sponsors[clamped]?.id ?? null;
-      if (idAtCur !== null && idAtCur === prevIdAtIndexRef.current) {
-        prevIdAtIndexRef.current = idAtCur;
-        return clamped;
-      }
-      prevIdAtIndexRef.current = sponsors[0]?.id ?? null;
-      return 0;
-    });
+    if (!startedRef.current) {
+      startedRef.current = true;
+      const start = randomIndex(sponsors.length);
+      prevIdAtIndexRef.current = sponsors[start]?.id ?? null;
+      setIndex(start);
+      return;
+    }
+    const cur = indexRef.current;
+    const clamped = cur < sponsors.length ? cur : 0;
+    const idAtCur = sponsors[clamped]?.id ?? null;
+    if (idAtCur !== null && idAtCur === prevIdAtIndexRef.current) {
+      setIndex(clamped);
+      return;
+    }
+    prevIdAtIndexRef.current = sponsors[0]?.id ?? null;
+    setIndex(0);
   }, [sponsors]);
 
   useEffect(() => {
@@ -96,7 +108,6 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
   const media: MediaRef | null = current.logoMediaId
     ? { mediaId: current.logoMediaId, alt: current.name ?? null }
     : null;
-  const linger = current.lingerMs ?? DEFAULT_LINGER_MS;
   const rootClass = [
     styles.sponsorCarousel,
     variant === "tile" ? styles.sponsorCarouselTile : styles.sponsorCarouselCard,
@@ -132,12 +143,7 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
             <span className={styles.sponsorCarouselNameOnly}>{current.name}</span>
           )}
           {variant === "card" ? (
-            <>
-              <span className={styles.sponsorCarouselName}>{current.name}</span>
-              <span className={styles.sponsorCarouselLinger} data-testid="sponsor-linger">
-                {lingerLabel(linger)}
-              </span>
-            </>
+            <span className={styles.sponsorCarouselName}>{current.name}</span>
           ) : null}
         </button>
         {variant === "card" && sponsors.length > 1 ? (

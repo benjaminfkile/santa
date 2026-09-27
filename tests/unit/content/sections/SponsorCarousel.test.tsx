@@ -1,9 +1,10 @@
-// docs/site.md sections 7.4 and S17f (15). SponsorCarousel keeps its
-// index across a snapshot change when the sponsor at that index is
-// unchanged, and restarts at the first otherwise.
+// docs/site.md sections 7.4 and 15. SponsorCarousel starts at a random
+// sponsor, plays snapshot order from there and wraps, keeps its index
+// across a snapshot change when the sponsor at that index is unchanged,
+// restarts at the first otherwise, and the card variant has no linger line.
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { act, cleanup, render } from "@testing-library/react";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import { SponsorCarousel } from "../../../../src/content/sections/SponsorCarousel/SponsorCarousel";
@@ -57,12 +58,15 @@ function seedSponsors(sponsors: SponsorSeed[]): void {
 }
 
 beforeEach(() => {
+  vi.spyOn(Math, "random").mockReturnValue(0);
   act(() => {
     store.setState({ ...initialStore });
   });
 });
 
 afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
   cleanup();
   act(() => {
     store.setState({ ...initialStore });
@@ -133,5 +137,106 @@ describe("SponsorCarousel index across a snapshot change", () => {
     );
     // Restart from index 0, whose sponsor is now "E".
     expect(container.textContent).toContain("E");
+  });
+});
+
+function renderCarousel(): void {
+  render(
+    <MemoryRouter>
+      <SponsorCarousel data={{}} items={[]} bundle={buildBundle()} />
+    </MemoryRouter>,
+  );
+}
+
+function shownName(): string | null {
+  return screen.getByTestId("sponsor-open").getAttribute("aria-label");
+}
+
+describe("SponsorCarousel random start", () => {
+  it("starts at the random index and wraps from it in snapshot order", () => {
+    vi.useFakeTimers();
+    vi.spyOn(Math, "random").mockReturnValue(0.7);
+    seedSponsors([
+      { id: 1, name: "A", lingerMs: 1000 },
+      { id: 2, name: "B", lingerMs: 1000 },
+      { id: 3, name: "C", lingerMs: 1000 },
+    ]);
+    renderCarousel();
+    expect(shownName()).toBe("C");
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(shownName()).toBe("A");
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(shownName()).toBe("B");
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(shownName()).toBe("C");
+  });
+
+  it("picks the random start when the first list arrives after mount", () => {
+    vi.useFakeTimers();
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+    renderCarousel();
+    expect(screen.queryByTestId("sponsor-open")).toBeNull();
+    seedSponsors([
+      { id: 1, name: "A", lingerMs: 2000 },
+      { id: 2, name: "B", lingerMs: 1000 },
+      { id: 3, name: "C", lingerMs: 3000 },
+      { id: 4, name: "D", lingerMs: 1000 },
+    ]);
+    expect(shownName()).toBe("C");
+    act(() => {
+      vi.advanceTimersByTime(2999);
+    });
+    expect(shownName()).toBe("C");
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(shownName()).toBe("D");
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(shownName()).toBe("A");
+  });
+
+  it("keeps the random start across a snapshot change that leaves it unchanged", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+    seedSponsors([
+      { id: 1, name: "A" },
+      { id: 2, name: "B" },
+    ]);
+    renderCarousel();
+    expect(shownName()).toBe("B");
+    seedSponsors([
+      { id: 3, name: "C" },
+      { id: 2, name: "B" },
+    ]);
+    expect(shownName()).toBe("B");
+    seedSponsors([
+      { id: 3, name: "C" },
+      { id: 4, name: "D" },
+    ]);
+    expect(shownName()).toBe("C");
+  });
+});
+
+describe("SponsorCarousel card variant", () => {
+  it("renders no linger text", () => {
+    seedSponsors([
+      { id: 1, name: "A", lingerMs: 5000 },
+      { id: 2, name: "B", lingerMs: 5000 },
+    ]);
+    const { container } = render(
+      <MemoryRouter>
+        <SponsorCarousel data={{ variant: "card" }} items={[]} bundle={buildBundle()} />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByTestId("sponsor-linger")).toBeNull();
+    expect(container.textContent).not.toMatch(/on the tracker/i);
+    expect(container.textContent).not.toMatch(/\d+\s*s\b/);
   });
 });

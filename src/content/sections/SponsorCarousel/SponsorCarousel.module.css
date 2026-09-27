@@ -1,6 +1,5 @@
 /* docs/site.md sections 7.4 and 15. Sponsor carousel: the card variant on
-   ordinary pages (logo tile, name, the "N s on the tracker" line, the
-   dots), the tile variant on the live screen (the legacy tracker's bare
+   ordinary pages (logo tile, name, the dots), the tile variant on the live screen (the legacy tracker's bare
    logo tile: 70 px tall, at most 180 px wide, 5 px padding), and the
    centred dialog either opens on a tap. */
 
@@ -64,13 +63,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.sponsorCarouselLinger {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-dim);
 }
 .sponsorCarouselDots {
   display: flex;
