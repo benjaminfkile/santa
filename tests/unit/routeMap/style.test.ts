@@ -1,8 +1,10 @@
 // docs/site.md section 8.9. The optional style capabilities of the route
 // poster: without options the style is the site map's own, `routeColor`
 // recolours the route, `arrows` adds the arrowhead layer over the SDF
-// image, `timeLabels` adds one labelled dot per entry, and `details`
-// drops the basemap's landmark, place name, and road name label layers.
+// image, `timeLabels` adds one labelled dot per entry, `details` drops
+// the basemap's landmark, place name, and road name label layers,
+// `poiKinds` filters the POI layers to the listed kinds, and `landmarks`
+// adds one smaller labelled dot per entry.
 
 import { describe, it, expect } from "vitest";
 import { layers as basemapLayers, namedFlavor } from "@protomaps/basemaps";
@@ -12,11 +14,14 @@ import type {
   LineLayerSpecification,
   SymbolLayerSpecification,
 } from "maplibre-gl";
-import { ROUTE_PALETTES, type Appearance } from "../../../src/routeMap/flavors";
+import { POI_COLOURS, ROUTE_PALETTES, type Appearance } from "../../../src/routeMap/flavors";
 import {
   ARROWS_LAYER,
   BASEMAP_SOURCE,
   DETAIL_LAYERS,
+  LANDMARKS_LAYER,
+  LANDMARKS_SOURCE,
+  LANDMARK_DOTS_LAYER,
   ROUTE_ARROW_ICON,
   ROUTE_SOURCE,
   TIME_LABELS_LAYER,
@@ -58,6 +63,13 @@ describe("route map style options", () => {
         });
         expect(allDetails).toEqual(plain);
         expect(JSON.stringify(allDetails)).toBe(JSON.stringify(plain));
+        const noExtras = buildStyle(appearance, BASE, PATH, MARKS, terrain, {
+          poiKinds: undefined,
+          landmarks: undefined,
+        });
+        expect(JSON.stringify(noExtras)).toBe(JSON.stringify(plain));
+        const noLandmarks = buildStyle(appearance, BASE, PATH, MARKS, terrain, { landmarks: [] });
+        expect(JSON.stringify(noLandmarks)).toBe(JSON.stringify(plain));
       }
     }
   });
@@ -246,5 +258,108 @@ describe("route map style options", () => {
         expect(bare.layers).toEqual(plain.layers.filter((l) => !all.has(l.id)));
       }
     }
+  });
+
+  it("keeps only the listed POI kinds, from the zoom their tile data begins, on exactly the POI layers", () => {
+    const kinds = ["peak", "museum", "hospital"];
+    for (const appearance of ["light", "dark"] as Appearance[]) {
+      for (const terrain of [false, true]) {
+        const plain = buildStyle(appearance, BASE, PATH, MARKS, terrain);
+        const style = buildStyle(appearance, BASE, PATH, MARKS, terrain, { poiKinds: kinds });
+        const pois = new Set(DETAIL_LAYERS.landmarks);
+        expect(builtDetailGroups(style).landmarks).toEqual([...DETAIL_LAYERS.landmarks].sort());
+        expect(style.layers.filter((l) => !pois.has(l.id))).toEqual(plain.layers);
+        expect(style.sources).toEqual(plain.sources);
+        for (const id of DETAIL_LAYERS.landmarks) {
+          const poi = layer<SymbolLayerSpecification>(style, id);
+          expect(poi.filter).toEqual([
+            "all",
+            ["in", ["get", "kind"], ["literal", kinds]],
+            [">=", ["zoom"], ["-", ["get", "min_zoom"], 1]],
+          ]);
+          expect(poi.minzoom).toBeUndefined();
+          expect(Object.keys(poi.layout ?? {}).some((k) => k.startsWith("icon-"))).toBe(false);
+          const color = poi.paint?.["text-color"] as unknown[];
+          expect(color[0]).toBe("case");
+          expect(color[color.length - 1]).toBe(POI_COLOURS[appearance].slategray);
+          expect(JSON.stringify(color)).toContain(POI_COLOURS[appearance].green);
+        }
+        const hidden = buildStyle(appearance, BASE, PATH, MARKS, terrain, {
+          poiKinds: kinds,
+          details: { landmarks: false },
+        });
+        expect(hidden).toEqual(plain);
+      }
+    }
+    // The package's own layer gates each feature at its stored min_zoom,
+    // one zoom after its tile data begins.
+    const packaged = basemapLayers(BASEMAP_SOURCE, namedFlavor("light"), { lang: "en" }).find(
+      (l) => l.id === "pois",
+    ) as SymbolLayerSpecification;
+    expect(JSON.stringify(packaged.filter)).toContain('[">=",["zoom"],["+",["get","min_zoom"],0]]');
+  });
+
+  it("drops the POI layers for an empty kind list", () => {
+    for (const appearance of ["light", "dark"] as Appearance[]) {
+      const plain = buildStyle(appearance, BASE, PATH, MARKS);
+      const style = buildStyle(appearance, BASE, PATH, MARKS, false, { poiKinds: [] });
+      expect(builtDetailGroups(style).landmarks).toEqual([]);
+      for (const id of DETAIL_LAYERS.landmarks) {
+        expect(style.layers.some((l) => l.id === id), id).toBe(false);
+      }
+      expect(style).toEqual(plain);
+    }
+  });
+
+  it("adds one smaller labelled dot per landmark in the halo pair, apart from the time labels", () => {
+    const landmarks = [
+      { lat: 46.87, lng: -114.0, label: "Missoula Airport" },
+      { lat: 46.9, lng: -113.95, label: "Mount Jumbo" },
+    ];
+    const timeLabels = [{ lat: 1, lng: 2, label: "15m" }];
+    for (const appearance of ["light", "dark"] as Appearance[]) {
+      const palette = ROUTE_PALETTES[appearance];
+      const style = buildStyle(appearance, BASE, PATH, MARKS, false, { landmarks, timeLabels });
+      const source = style.sources[LANDMARKS_SOURCE] as {
+        type: string;
+        data: { features: { properties: { label: string }; geometry: unknown }[] };
+      };
+      expect(source.type).toBe("geojson");
+      expect(source.data.features.map((f) => f.properties.label)).toEqual([
+        "Missoula Airport",
+        "Mount Jumbo",
+      ]);
+      expect(source.data.features[1].geometry).toEqual({ type: "Point", coordinates: [-113.95, 46.9] });
+
+      const labels = layer<SymbolLayerSpecification>(style, LANDMARKS_LAYER);
+      const timeLayer = layer<SymbolLayerSpecification>(style, TIME_LABELS_LAYER);
+      expect(labels.source).toBe(LANDMARKS_SOURCE);
+      expect(labels.minzoom).toBeUndefined();
+      expect(labels.layout?.["text-field"]).toEqual(["get", "label"]);
+      expect(labels.layout?.["text-font"]).toEqual(["Noto Sans Medium"]);
+      expect(labels.layout?.["text-size"]).toBe(14);
+      expect(labels.layout?.["text-size"]).toBeLessThan(timeLayer.layout?.["text-size"] as number);
+      expect(labels.layout?.["text-allow-overlap"]).toBeUndefined();
+      expect(labels.layout?.["text-ignore-placement"]).toBeUndefined();
+      expect(labels.paint?.["text-color"]).toBe(palette.labelText);
+      expect(labels.paint?.["text-halo-color"]).toBe(palette.labelHalo);
+      expect(labels.paint?.["text-halo-width"]).toBe(timeLayer.paint?.["text-halo-width"]);
+
+      const dots = layer<CircleLayerSpecification>(style, LANDMARK_DOTS_LAYER);
+      const timeDots = layer<CircleLayerSpecification>(style, TIME_LABEL_DOTS_LAYER);
+      expect(dots.source).toBe(LANDMARKS_SOURCE);
+      expect(dots.minzoom).toBeUndefined();
+      expect(dots.paint?.["circle-color"]).toBe(palette.landmarkFill);
+      expect(dots.paint?.["circle-stroke-color"]).toBe(palette.landmarkStroke);
+      expect(dots.paint).not.toEqual(timeDots.paint);
+
+      const ids = style.layers.map((l) => l.id);
+      expect(ids.indexOf(LANDMARK_DOTS_LAYER)).toBeGreaterThan(ids.indexOf("route-ends"));
+      expect(ids.indexOf(LANDMARKS_LAYER)).toBe(ids.indexOf(LANDMARK_DOTS_LAYER) + 1);
+      expect(ids.indexOf(TIME_LABEL_DOTS_LAYER)).toBeGreaterThan(ids.indexOf(LANDMARKS_LAYER));
+      expect(ids.filter((id) => id === LANDMARKS_LAYER)).toHaveLength(1);
+    }
+    expect(ROUTE_PALETTES.light).toMatchObject({ landmarkFill: "#5f6368", landmarkStroke: "#ffffff" });
+    expect(ROUTE_PALETTES.dark).toMatchObject({ landmarkFill: "#8fa3c2", landmarkStroke: "#0f1a2b" });
   });
 });

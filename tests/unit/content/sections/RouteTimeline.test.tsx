@@ -12,6 +12,9 @@
 //  - The pin eases between entries, and moves at once under reduced motion.
 //  - A timeline of fewer than two entries keeps the path and shows no
 //    marks, slider, or pin.
+//  - The section's `pois.kinds` and `landmarks` reach the style as its POI
+//    kind filter and its landmark labels; without them the style has
+//    neither.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, cleanup, act, fireEvent } from "@testing-library/react";
@@ -199,10 +202,10 @@ async function settle(): Promise<void> {
   });
 }
 
-function renderSection() {
+function renderSection(data: Record<string, unknown> = { style: "map" }) {
   return render(
     <MemoryRouter>
-      <RoutePreview data={{ style: "map" }} items={[]} bundle={buildBundle()} />
+      <RoutePreview data={data} items={[]} bundle={buildBundle()} />
     </MemoryRouter>,
   );
 }
@@ -223,8 +226,16 @@ function indexOfMinutes(minutes: number): number {
 
 type StyleShape = {
   sources: Record<string, { data?: unknown }>;
-  layers: { id: string }[];
+  layers: { id: string; filter?: unknown }[];
 };
+
+// The style the map shows now: the last one set, else the one it was
+// created with.
+function currentStyle(): StyleShape {
+  const map = mocks.maps[0];
+  const calls = map.setStyle.mock.calls;
+  return (calls.length > 0 ? calls[calls.length - 1][0] : map.options.style) as StyleShape;
+}
 
 function markCoordinates(style: StyleShape): number[][] {
   const data = style.sources["route-marks"].data as { features: { geometry: { coordinates: number[] } }[] };
@@ -509,5 +520,51 @@ describe("route map timeline", () => {
       expect(mocks.markers).toHaveLength(0);
       cleanup();
     }
+  });
+});
+
+describe("route map POI kinds and landmarks", () => {
+  it("passes the section's POI kinds and landmarks into the style", async () => {
+    setEvent(null, TIMELINE);
+    renderSection({
+      style: "map",
+      pois: { kinds: ["peak", "museum"] },
+      landmarks: [
+        { name: "Mount Jumbo", lat: 46.88, lng: -113.96 },
+        { name: "Caras Park", lat: 46.87, lng: -113.99 },
+      ],
+    });
+    await settle();
+    expect(mocks.maps).toHaveLength(1);
+    for (const style of [mocks.maps[0].options.style as StyleShape, currentStyle()]) {
+      const pois = style.layers.find((l) => l.id === "pois");
+      expect(pois).toBeDefined();
+      expect(JSON.stringify(pois?.filter)).toContain('["literal",["peak","museum"]]');
+      const data = style.sources["route-landmarks"].data as {
+        features: { properties: { label: string }; geometry: { coordinates: number[] } }[];
+      };
+      expect(data.features.map((f) => f.properties.label)).toEqual(["Mount Jumbo", "Caras Park"]);
+      expect(data.features[0].geometry.coordinates).toEqual([-113.96, 46.88]);
+      expect(style.layers.some((l) => l.id === "route-landmarks")).toBe(true);
+      expect(style.layers.some((l) => l.id === "route-time-labels")).toBe(true);
+    }
+    expect(markCoordinates(currentStyle())).toHaveLength(TIMELINE.length);
+  });
+
+  it("drops the POI layers for an empty kind list", async () => {
+    setEvent(null, TIMELINE);
+    renderSection({ style: "map", pois: { kinds: [] } });
+    await settle();
+    expect(currentStyle().layers.some((l) => l.id === "pois")).toBe(false);
+  });
+
+  it("passes neither without them in the section", async () => {
+    setEvent(null, TIMELINE);
+    renderSection();
+    await settle();
+    const style = currentStyle();
+    expect(style.layers.some((l) => l.id === "pois")).toBe(false);
+    expect(style.sources["route-landmarks"]).toBeUndefined();
+    expect(style.layers.some((l) => l.id.startsWith("route-landmark"))).toBe(false);
   });
 });

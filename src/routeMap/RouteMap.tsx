@@ -5,7 +5,8 @@
 // archive, the style, WebGL) is logged once and reported through
 // `onFail`, which hands the section back to the image rendering. The map
 // is destroyed on unmount. `marks` are drawn as dots on the path and
-// `timeLabels` as labelled dots beside them; `pin`
+// `timeLabels` as labelled dots beside them; `poiKinds` and `landmarks`
+// pass through to the style options of the same names; `pin`
 // stands the Santa pin (the caller's `pinElement`) on a point, placed at
 // once on mount and eased to each new point after, except when
 // `reducedMotion` is set, where it moves at once. The caller renders the
@@ -31,6 +32,7 @@ import {
   mountRouteMap,
   probeTerrain,
   type Appearance,
+  type Landmark,
   type LatLng,
   type RouteMapHandle,
   type TimeLabel,
@@ -50,6 +52,8 @@ export type RouteMapProps = {
   path: readonly LatLng[];
   marks?: readonly LatLng[];
   timeLabels?: readonly TimeLabel[];
+  poiKinds?: readonly string[];
+  landmarks?: readonly Landmark[];
   pin?: LatLng | null;
   pinElement?: HTMLElement;
   reducedMotion?: boolean;
@@ -66,6 +70,8 @@ export function RouteMap({
   path,
   marks = NO_MARKS,
   timeLabels = NO_LABELS,
+  poiKinds,
+  landmarks,
   pin = null,
   pinElement,
   reducedMotion = false,
@@ -89,6 +95,8 @@ export function RouteMap({
     path,
     marks,
     timeLabels,
+    poiKinds,
+    landmarks,
     pin,
     pinElement,
     appearance,
@@ -102,6 +110,8 @@ export function RouteMap({
     path,
     marks,
     timeLabels,
+    poiKinds,
+    landmarks,
     pin,
     pinElement,
     appearance,
@@ -127,6 +137,8 @@ export function RouteMap({
       path: latest.current.path,
       marks: latest.current.marks,
       timeLabels: latest.current.timeLabels,
+      poiKinds: latest.current.poiKinds,
+      landmarks: latest.current.landmarks,
       appearance: latest.current.appearance,
       terrain: latest.current.terrain,
       pinElement: latest.current.pinElement,
@@ -143,6 +155,8 @@ export function RouteMap({
           path: now.path,
           marks: now.marks,
           timeLabels: now.timeLabels,
+          poiKinds: now.poiKinds,
+          landmarks: now.landmarks,
           appearance: now.appearance,
           terrain: now.terrain,
         });
@@ -169,8 +183,8 @@ export function RouteMap({
   }, [mounted, terrainControl]);
 
   useEffect(() => {
-    handleRef.current?.update({ path, marks, timeLabels, appearance, terrain });
-  }, [path, marks, timeLabels, appearance, terrain]);
+    handleRef.current?.update({ path, marks, timeLabels, poiKinds, landmarks, appearance, terrain });
+  }, [path, marks, timeLabels, poiKinds, landmarks, appearance, terrain]);
 
   const fullscreenSeen = useRef(fullscreen);
   useEffect(() => {

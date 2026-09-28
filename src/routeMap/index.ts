@@ -16,6 +16,8 @@
 // its container and fits the path again (the fullscreen edges call it).
 // `timeLabels` hands the style's time label layers their dots and ready
 // made labels; a new set rebuilds the style through the same diff.
+// `poiKinds` and `landmarks` reach the style's options of the same names
+// only when given, and a changed list rebuilds the style the same way.
 // `probeTerrain` reads the header of `<base>/terrain.pmtiles` once per
 // page load and resolves whether the archive exists; a missing or failing
 // archive logs once and resolves false.
@@ -33,12 +35,14 @@ import {
   pathBounds,
   terrainUrl,
   tilesUrl,
+  type Landmark,
   type LatLng,
+  type StyleOptions,
   type TimeLabel,
 } from "./style";
 
 export type { Appearance } from "./flavors";
-export type { LatLng, TimeLabel } from "./style";
+export type { Landmark, LatLng, TimeLabel } from "./style";
 
 export type RouteMapOptions = {
   container: HTMLElement;
@@ -47,6 +51,8 @@ export type RouteMapOptions = {
   appearance: Appearance;
   terrain?: boolean;
   timeLabels?: readonly TimeLabel[];
+  poiKinds?: readonly string[];
+  landmarks?: readonly Landmark[];
   pinElement?: HTMLElement;
   onError: (error: unknown) => void;
 };
@@ -57,6 +63,8 @@ export type RouteMapUpdate = {
   appearance: Appearance;
   terrain?: boolean;
   timeLabels?: readonly TimeLabel[];
+  poiKinds?: readonly string[];
+  landmarks?: readonly Landmark[];
 };
 
 export type RouteMapHandle = {
@@ -130,6 +138,21 @@ function sameLabels(a: readonly TimeLabel[], b: readonly TimeLabel[]): boolean {
   return true;
 }
 
+function sameKinds(a: readonly string[] | undefined, b: readonly string[] | undefined): boolean {
+  if (a === b) return true;
+  if (a === undefined || b === undefined || a.length !== b.length) return false;
+  return a.every((kind, i) => kind === b[i]);
+}
+
+function sameLandmarks(
+  a: readonly Landmark[] | undefined,
+  b: readonly Landmark[] | undefined,
+): boolean {
+  if (a === b) return true;
+  if (a === undefined || b === undefined) return false;
+  return sameLabels(a, b);
+}
+
 export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapHandle> {
   const base = env.ROUTE_BASEMAP_URL;
   if (base === "") throw new Error("VITE_ROUTE_BASEMAP_URL is not set");
@@ -139,6 +162,16 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
   let appearance = options.appearance;
   let terrain = options.terrain ?? false;
   let timeLabels = options.timeLabels ?? [];
+  let poiKinds = options.poiKinds;
+  let landmarks = options.landmarks;
+
+  function styleOptions(): StyleOptions {
+    return {
+      timeLabels,
+      ...(poiKinds !== undefined ? { poiKinds } : {}),
+      ...(landmarks !== undefined ? { landmarks } : {}),
+    };
+  }
 
   const header = await archiveAt(tilesUrl(base)).getHeader();
 
@@ -149,7 +182,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
 
   const map = new MapLibreMap({
     container,
-    style: buildStyle(appearance, base, path, marks, terrain, { timeLabels }),
+    style: buildStyle(appearance, base, path, marks, terrain, styleOptions()),
     bounds: pathBounds(path) ?? undefined,
     fitBoundsOptions: { padding: padding() },
     minZoom: header.minZoom,
@@ -216,6 +249,8 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
         !pathChanged &&
         !marksChanged &&
         sameLabels(timeLabels, nextLabels) &&
+        sameKinds(poiKinds, next.poiKinds) &&
+        sameLandmarks(landmarks, next.landmarks) &&
         next.appearance === appearance &&
         nextTerrain === terrain
       ) {
@@ -226,7 +261,9 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
       appearance = next.appearance;
       terrain = nextTerrain;
       timeLabels = nextLabels;
-      map.setStyle(buildStyle(appearance, base, path, marks, terrain, { timeLabels }), {
+      poiKinds = next.poiKinds;
+      landmarks = next.landmarks;
+      map.setStyle(buildStyle(appearance, base, path, marks, terrain, styleOptions()), {
         diff: true,
       });
       if (pathChanged) fit();

@@ -22,6 +22,9 @@
 //     wrapper, the fullscreen target (useRouteMapFullscreen), and the map
 //     carries a fullscreen button and a terrain toggle unless
 //     `data.controls.fullscreen` or `data.controls.terrain` is false.
+//     `data.pois.kinds` reaches the style as its POI kind list and
+//     `data.landmarks` as its landmarks, each name the label; without
+//     them the style gets neither.
 
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -54,6 +57,8 @@ type RouteMapProps = {
   path: readonly LatLng[];
   marks?: readonly LatLng[];
   timeLabels?: readonly TimelineLabel[];
+  poiKinds?: readonly string[];
+  landmarks?: readonly { lat: number; lng: number; label: string }[];
   pin?: LatLng | null;
   pinElement?: HTMLElement;
   reducedMotion?: boolean;
@@ -92,6 +97,8 @@ type RoutePreviewData = {
   emptyText?: string | null;
   disclaimer?: string | null;
   controls?: { fullscreen?: boolean; terrain?: boolean } | null;
+  pois?: { kinds?: string[] | null } | null;
+  landmarks?: { name: string; lat: number; lng: number }[] | null;
 };
 
 // The Santa pin's element, handed to the route map as its marker; the
@@ -138,6 +145,15 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   const timeLabels = useMemo(
     () => (timeline === null ? NO_LABELS : routeTimeLabels(timeline)),
     [timeline],
+  );
+  const poiKinds = d.pois?.kinds ?? undefined;
+  const landmarkData = d.landmarks;
+  const landmarks = useMemo(
+    () =>
+      landmarkData === null || landmarkData === undefined
+        ? undefined
+        : landmarkData.map(({ name, lat, lng }) => ({ lat, lng, label: name })),
+    [landmarkData],
   );
   const [selected, setSelected] = useState(0);
   const reducedMotion = useReducedMotion();
@@ -187,6 +203,8 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
                 path={path}
                 marks={marks}
                 timeLabels={timeLabels}
+                poiKinds={poiKinds}
+                landmarks={landmarks}
                 pin={pin}
                 pinElement={pinElement}
                 reducedMotion={reducedMotion}
