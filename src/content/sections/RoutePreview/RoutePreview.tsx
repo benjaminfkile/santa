@@ -16,9 +16,12 @@
 //     more `event.routeMap.timeline` entries the map also carries a dot at
 //     every entry and the Santa pin on the selected one, and a time slider
 //     over the entries (starting at the first) sits under the frame; with
-//     fewer, only the path is drawn.
+//     fewer, only the path is drawn. The frame and the slider share one
+//     wrapper, the fullscreen target (useRouteMapFullscreen), and the map
+//     carries a fullscreen button and a terrain toggle unless
+//     `data.controls.fullscreen` or `data.controls.terrain` is false.
 
-import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { SectionComponent } from "../../registry";
 import type { ContentDocument, MediaRef } from "../../../contracts";
@@ -32,11 +35,13 @@ import { PosterViewer } from "./PosterViewer";
 import { routeMapPath, type LatLng } from "./routeMapPath";
 import { routeMapTimeline, routeTimeLabel } from "./routeTimelineData";
 import { RouteTimeSlider } from "./RouteTimeSlider";
+import { useRouteMapFullscreen } from "./useRouteMapFullscreen";
 import { SantaIcon } from "../../icons/generated/santa";
 import { useReducedMotion } from "../../../lib/motion";
 import { env } from "../../../config/env";
 import { copy } from "../../../copy/copy";
 import * as styles from "./RoutePreview.module.css";
+import * as ibtn from "../../../ui/IconButton.module.css";
 
 type RouteMapProps = {
   path: readonly LatLng[];
@@ -45,6 +50,11 @@ type RouteMapProps = {
   pinElement?: HTMLElement;
   reducedMotion?: boolean;
   ariaLabel?: string;
+  fullscreenControl?: boolean;
+  terrainControl?: boolean;
+  controlClassName?: string;
+  fullscreen?: boolean;
+  onToggleFullscreen?: () => void;
   onFail: () => void;
 };
 
@@ -72,6 +82,7 @@ type RoutePreviewData = {
   style?: "image" | "viewer" | "map";
   emptyText?: string | null;
   disclaimer?: string | null;
+  controls?: { fullscreen?: boolean; terrain?: boolean } | null;
 };
 
 // The Santa pin's element, handed to the route map as its marker; the
@@ -124,6 +135,9 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
     [stop],
   );
 
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const fullscreen = useRouteMapFullscreen(stageRef);
+
   const showMap =
     d.style === "map" && path.length >= 2 && env.ROUTE_BASEMAP_URL !== "" && !mapFailed;
   const style = d.style === "viewer" ? "viewer" : showMap ? "map" : "image";
@@ -144,18 +158,42 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
             </p>
           </div>
         ) : null}
-        <div className={styles.routeMap} data-testid="route-map-frame">
-          <Suspense fallback={null}>
-            <LazyRouteMap
-              path={path}
-              marks={marks}
-              pin={pin}
-              pinElement={pinElement}
-              reducedMotion={reducedMotion}
-              ariaLabel={d.heading ?? undefined}
-              onFail={onMapFail}
+        <div
+          ref={stageRef}
+          className={
+            fullscreen.mode === "takeover"
+              ? `${styles.routeMapStage} ${styles.routeMapStageTakeover}`
+              : styles.routeMapStage
+          }
+          data-testid="route-map-stage"
+          data-fullscreen={fullscreen.mode}
+        >
+          <div className={styles.routeMap} data-testid="route-map-frame">
+            <Suspense fallback={null}>
+              <LazyRouteMap
+                path={path}
+                marks={marks}
+                pin={pin}
+                pinElement={pinElement}
+                reducedMotion={reducedMotion}
+                ariaLabel={d.heading ?? undefined}
+                fullscreenControl={d.controls?.fullscreen !== false}
+                terrainControl={d.controls?.terrain !== false}
+                controlClassName={ibtn.ibtn}
+                fullscreen={fullscreen.mode !== "off"}
+                onToggleFullscreen={fullscreen.toggle}
+                onFail={onMapFail}
+              />
+            </Suspense>
+          </div>
+          {timeline !== null && stop !== null ? (
+            <RouteTimeSlider
+              timeline={timeline}
+              index={timeline.indexOf(stop)}
+              label={routeTimeLabel(event?.scheduledAt, stop.minutes)}
+              onSelect={setSelected}
             />
-          </Suspense>
+          ) : null}
         </div>
         {createPortal(
           <span className={styles.routePinBadge}>
@@ -163,14 +201,6 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
           </span>,
           pinElement,
         )}
-        {timeline !== null && stop !== null ? (
-          <RouteTimeSlider
-            timeline={timeline}
-            index={timeline.indexOf(stop)}
-            label={routeTimeLabel(event?.scheduledAt, stop.minutes)}
-            onSelect={setSelected}
-          />
-        ) : null}
       </div>
     );
   }

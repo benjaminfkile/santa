@@ -6,6 +6,8 @@ export const locationPromptDenied: string;
 export const locationPromptInapp: string;
 export const routeDisclaimer: string;
 export const routeMap: string;
+export const routeMapStage: string;
+export const routeMapStageTakeover: string;
 export const routePin: string;
 export const routePinBadge: string;
 export const routePinIcon: string;

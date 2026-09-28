@@ -4,7 +4,7 @@
 // style needs no sprite.
 
 import { describe, it, expect } from "vitest";
-import { DARK_FLAVOR, LIGHT_FLAVOR, ROUTE_PALETTES } from "../../../src/routeMap/flavors";
+import { DARK_FLAVOR, HILLSHADE_PAINTS, LIGHT_FLAVOR, ROUTE_PALETTES } from "../../../src/routeMap/flavors";
 import { buildStyle, pathBounds } from "../../../src/routeMap/style";
 import { nightTheme } from "../../../src/map/themes/night";
 import { standardTheme } from "../../../src/map/themes/standard";
@@ -40,6 +40,41 @@ describe("route map flavors", () => {
     expect(light.sprite).toBeUndefined();
     expect(JSON.stringify(light.layers)).not.toContain("icon-image");
     expect(light.layers[light.layers.length - 1].id).toBe("route-ends");
+  });
+
+  it("places the terrain hillshade under the water, roads, labels, and route", () => {
+    const path = [{ lat: 1, lng: 2 }, { lat: 3, lng: 4 }];
+    const plain = buildStyle("light", "https://cdn.example/basemap", path);
+    expect(plain.sources.terrain).toBeUndefined();
+    expect(plain.layers.some((l) => l.type === "hillshade")).toBe(false);
+
+    const light = buildStyle("light", "https://cdn.example/basemap", path, [], true);
+    const dark = buildStyle("dark", "https://cdn.example/basemap", path, [], true);
+    expect(light.sources.terrain).toEqual({
+      type: "raster-dem",
+      url: "pmtiles://https://cdn.example/basemap/terrain.pmtiles",
+      encoding: "terrarium",
+    });
+    const ids = light.layers.map((l) => l.id);
+    const at = ids.indexOf("terrain-hillshade");
+    expect(ids[at + 1]).toBe("water");
+    expect(at).toBeGreaterThan(ids.indexOf("earth"));
+    expect(at).toBeLessThan(ids.indexOf("roads_minor"));
+    expect(at).toBeLessThan(ids.indexOf("places_locality"));
+    expect(at).toBeLessThan(ids.indexOf("route-line"));
+    expect(ids).toEqual(dark.layers.map((l) => l.id));
+    expect(Object.keys(light.sources)).toEqual(Object.keys(dark.sources));
+  });
+
+  it("keeps the hillshade subtle in both appearances", () => {
+    for (const paint of Object.values(HILLSHADE_PAINTS)) {
+      expect(paint["hillshade-exaggeration"]).toBeGreaterThan(0);
+      expect(paint["hillshade-exaggeration"]).toBeLessThanOrEqual(0.35);
+    }
+    const night = JSON.stringify(nightTheme).toLowerCase();
+    for (const key of ["hillshade-shadow-color", "hillshade-highlight-color", "hillshade-accent-color"] as const) {
+      expect(night).toContain(HILLSHADE_PAINTS.dark[key].toLowerCase());
+    }
   });
 
   it("bounds a path by its extreme points", () => {

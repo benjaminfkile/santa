@@ -1,0 +1,473 @@
+// docs/site.md sections 8.9, 22.1. The route map's control stack with
+// MapLibre and pmtiles mocked:
+//  - The fullscreen button and the terrain toggle render by default and
+//    hide when `controls.fullscreen` or `controls.terrain` is false; the
+//    terrain toggle also hides when the terrain archive probe rejects.
+//  - Fullscreen enters and exits through the Fullscreen API and through
+//    the takeover, resizing the map and refitting the path on both edges;
+//    Escape exits both; the takeover alone locks the body scroll; the
+//    slider still works in fullscreen.
+//  - The terrain toggle adds and removes the hillshade layer, the choice
+//    is stored, restores on the next mount, and survives an appearance
+//    switch.
+// Every test imports the modules afresh, so the once-per-page-load
+// terrain probe runs again.
+
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, cleanup, act, fireEvent } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import type { ComponentType } from "react";
+import type { ContentBundle } from "../../../../src/store/types";
+import type { ContentDocument, Snapshot } from "../../../../src/contracts";
+
+type FakeMapInstance = {
+  options: Record<string, unknown>;
+  setStyle: ReturnType<typeof vi.fn>;
+  fitBounds: ReturnType<typeof vi.fn>;
+  resize: ReturnType<typeof vi.fn>;
+  remove: ReturnType<typeof vi.fn>;
+};
+
+const mocks = vi.hoisted(() => ({
+  maps: [] as FakeMapInstance[],
+  failing: new Set<string>(),
+}));
+
+vi.mock("maplibre-gl", () => {
+  class FakeMap {
+    options: Record<string, unknown>;
+    setStyle = vi.fn();
+    fitBounds = vi.fn();
+    resize = vi.fn();
+    remove = vi.fn();
+    constructor(options: Record<string, unknown>) {
+      this.options = options;
+      mocks.maps.push(this as unknown as FakeMapInstance);
+    }
+    on() {
+      return this;
+    }
+    once() {
+      return this;
+    }
+  }
+  class FakeMarker {
+    setLngLat() {
+      return this;
+    }
+    addTo() {
+      return this;
+    }
+    remove() {}
+  }
+  return { Map: FakeMap, Marker: FakeMarker, addProtocol: vi.fn(), setWorkerUrl: vi.fn() };
+});
+
+vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
+  default: "/assets/maplibre-gl-worker.js",
+}));
+
+vi.mock("pmtiles", () => {
+  class PMTiles {
+    url: string;
+    constructor(url: string) {
+      this.url = url;
+    }
+    async getHeader() {
+      if (mocks.failing.has(this.url)) throw new Error(`${this.url} unreachable`);
+      return { minZoom: 0, maxZoom: 15 };
+    }
+  }
+  class Protocol {
+    tiles = new Map<string, PMTiles>();
+    tile = vi.fn();
+    add(p: PMTiles) {
+      this.tiles.set(p.url, p);
+    }
+    get(url: string) {
+      return this.tiles.get(url);
+    }
+  }
+  return { PMTiles, Protocol };
+});
+
+const BASEMAP = "https://cdn.example/basemap";
+const TERRAIN_URL = `${BASEMAP}/terrain.pmtiles`;
+const PATH = [
+  { lat: 46.87, lng: -114.0 },
+  { lat: 46.9, lng: -113.95 },
+  { lat: 46.85, lng: -113.9 },
+];
+const TIMELINE = [
+  { minutes: 0, lat: 46.87, lng: -114.0 },
+  { minutes: 5, lat: 46.9, lng: -113.95 },
+  { minutes: 10, lat: 46.85, lng: -113.9 },
+];
+
+type StyleShape = {
+  sources: Record<string, { type: string; url?: string; encoding?: string }>;
+  layers: { id: string; type: string; source?: string; paint?: Record<string, unknown> }[];
+};
+
+type SectionProps = { data: unknown; items: unknown[]; bundle: ContentBundle };
+
+let RoutePreview: ComponentType<SectionProps>;
+let HILLSHADE_PAINTS: typeof import("../../../../src/routeMap/flavors").HILLSHADE_PAINTS;
+let store: typeof import("../../../../src/store/useStore").store;
+let initialStore: typeof import("../../../../src/store/types").initialStore;
+let mutableEnv: { ROUTE_BASEMAP_URL: string };
+let originalBasemap = "";
+
+function buildBundle(): ContentBundle {
+  return {
+    content: { pages: [], nav: [] } as unknown as ContentDocument,
+    media: {},
+    icons: {},
+  } as unknown as ContentBundle;
+}
+
+function setEvent(): void {
+  store.setState((s) => ({
+    ...s,
+    snapshot: {
+      schemaVersion: 1,
+      event: {
+        id: 1,
+        routeImageMediaId: null,
+        routeMap: { path: PATH, timeline: TIMELINE, durationMinutes: 10, timed: true },
+      },
+    } as unknown as Snapshot,
+  }));
+}
+
+async function settle(): Promise<void> {
+  await act(async () => {
+    await vi.dynamicImportSettled();
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+  });
+}
+
+async function renderSection(data: Record<string, unknown> = {}) {
+  const result = render(
+    <MemoryRouter>
+      <RoutePreview data={{ style: "map", ...data }} items={[]} bundle={buildBundle()} />
+    </MemoryRouter>,
+  );
+  await settle();
+  return result;
+}
+
+function q(container: HTMLElement, testId: string): HTMLElement | null {
+  return container.querySelector(`[data-testid="${testId}"]`);
+}
+
+function hasHillshade(style: StyleShape): boolean {
+  return style.layers.some((l) => l.id === "terrain-hillshade");
+}
+
+function lastStyle(map: FakeMapInstance): StyleShape {
+  const calls = map.setStyle.mock.calls;
+  return (calls.length > 0 ? calls[calls.length - 1][0] : map.options.style) as StyleShape;
+}
+
+// A document with the Fullscreen API: `requestFullscreen` makes the
+// element the fullscreen element and fires `fullscreenchange`, as does
+// `exitFullscreen` on the way out.
+function installFullscreenApi() {
+  let current: Element | null = null;
+  const fire = () => document.dispatchEvent(new Event("fullscreenchange"));
+  const request = vi.fn(async function (this: Element) {
+    current = this;
+    fire();
+  });
+  const exit = vi.fn(async () => {
+    current = null;
+    fire();
+  });
+  Object.defineProperty(document, "fullscreenEnabled", { configurable: true, get: () => true });
+  Object.defineProperty(document, "fullscreenElement", { configurable: true, get: () => current });
+  Object.defineProperty(document, "exitFullscreen", { configurable: true, value: exit });
+  Object.defineProperty(HTMLElement.prototype, "requestFullscreen", {
+    configurable: true,
+    value: request,
+  });
+  return { request, exit };
+}
+
+function removeFullscreenApi(): void {
+  const d = document as unknown as Record<string, unknown>;
+  delete d.fullscreenEnabled;
+  delete d.fullscreenElement;
+  delete d.exitFullscreen;
+  delete (HTMLElement.prototype as unknown as Record<string, unknown>).requestFullscreen;
+}
+
+beforeEach(async () => {
+  vi.resetModules();
+  mocks.maps.length = 0;
+  mocks.failing.clear();
+  window.localStorage.clear();
+  document.body.style.overflow = "";
+  document.documentElement.setAttribute("data-theme", "light");
+  ({ RoutePreview } = await import("../../../../src/content/sections/RoutePreview/RoutePreview"));
+  ({ HILLSHADE_PAINTS } = await import("../../../../src/routeMap/flavors"));
+  ({ store } = await import("../../../../src/store/useStore"));
+  ({ initialStore } = await import("../../../../src/store/types"));
+  const { env } = await import("../../../../src/config/env");
+  mutableEnv = env as unknown as { ROUTE_BASEMAP_URL: string };
+  originalBasemap = mutableEnv.ROUTE_BASEMAP_URL;
+  mutableEnv.ROUTE_BASEMAP_URL = BASEMAP;
+  setEvent();
+});
+
+afterEach(() => {
+  cleanup();
+  removeFullscreenApi();
+  store.setState(() => ({ ...initialStore }));
+  mutableEnv.ROUTE_BASEMAP_URL = originalBasemap;
+  document.documentElement.removeAttribute("data-theme");
+  document.body.style.overflow = "";
+  vi.restoreAllMocks();
+});
+
+describe("route map control stack", () => {
+  it("renders the fullscreen button and the terrain toggle by default", async () => {
+    const { container } = await renderSection();
+    const fullscreen = q(container, "route-map-fullscreen");
+    const terrain = q(container, "route-map-terrain");
+    expect(fullscreen?.getAttribute("aria-label")).toBe("Show the route map fullscreen");
+    expect(terrain?.getAttribute("aria-label")).toBe("Terrain view");
+    expect(terrain?.getAttribute("aria-pressed")).toBe("false");
+    expect(q(container, "route-map-controls")?.contains(fullscreen!)).toBe(true);
+  });
+
+  it("hides each button when its switch is false", async () => {
+    const first = await renderSection({ controls: { fullscreen: false } });
+    expect(q(first.container, "route-map-fullscreen")).toBeNull();
+    expect(q(first.container, "route-map-terrain")).not.toBeNull();
+    cleanup();
+
+    const second = await renderSection({ controls: { terrain: false } });
+    expect(q(second.container, "route-map-fullscreen")).not.toBeNull();
+    expect(q(second.container, "route-map-terrain")).toBeNull();
+    cleanup();
+
+    const third = await renderSection({ controls: { fullscreen: false, terrain: false } });
+    expect(q(third.container, "route-map-controls")).toBeNull();
+  });
+
+  it("hides the terrain toggle and logs once when the terrain archive probe rejects", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    mocks.failing.add(TERRAIN_URL);
+    const { container } = await renderSection();
+    expect(q(container, "route-map")).not.toBeNull();
+    expect(q(container, "route-map-terrain")).toBeNull();
+    expect(q(container, "route-map-fullscreen")).not.toBeNull();
+    expect(warn).toHaveBeenCalledTimes(1);
+    cleanup();
+
+    await renderSection();
+    expect(warn).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("route map fullscreen", () => {
+  it("enters and exits through the Fullscreen API, refitting on both edges", async () => {
+    const api = installFullscreenApi();
+    const { container } = await renderSection();
+    const stage = q(container, "route-map-stage")!;
+    const map = mocks.maps[0];
+    const button = q(container, "route-map-fullscreen")!;
+
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    await settle();
+    expect(api.request).toHaveBeenCalledTimes(1);
+    expect(api.request.mock.contexts[0]).toBe(stage);
+    expect(stage.getAttribute("data-fullscreen")).toBe("api");
+    expect(stage.contains(q(container, "route-map-frame"))).toBe(true);
+    expect(stage.contains(q(container, "route-timeline-slider"))).toBe(true);
+    expect(map.resize).toHaveBeenCalledTimes(1);
+    expect(map.fitBounds).toHaveBeenCalledTimes(1);
+    expect(q(container, "route-map-fullscreen")?.getAttribute("aria-label")).toBe("Exit fullscreen");
+    expect(document.body.style.overflow).toBe("");
+
+    await act(async () => {
+      fireEvent.click(q(container, "route-map-fullscreen")!);
+    });
+    await settle();
+    expect(api.exit).toHaveBeenCalledTimes(1);
+    expect(stage.getAttribute("data-fullscreen")).toBe("off");
+    expect(map.resize).toHaveBeenCalledTimes(2);
+    expect(map.fitBounds).toHaveBeenCalledTimes(2);
+    expect(q(container, "route-map-fullscreen")?.getAttribute("aria-label")).toBe(
+      "Show the route map fullscreen",
+    );
+  });
+
+  it("exits the Fullscreen API on Escape", async () => {
+    const api = installFullscreenApi();
+    const { container } = await renderSection();
+    const stage = q(container, "route-map-stage")!;
+    await act(async () => {
+      fireEvent.click(q(container, "route-map-fullscreen")!);
+    });
+    await settle();
+    expect(stage.getAttribute("data-fullscreen")).toBe("api");
+
+    await act(async () => {
+      fireEvent.keyDown(document, { key: "Escape" });
+    });
+    await settle();
+    expect(api.exit).toHaveBeenCalledTimes(1);
+    expect(stage.getAttribute("data-fullscreen")).toBe("off");
+    expect(mocks.maps[0].resize).toHaveBeenCalledTimes(2);
+  });
+
+  it("follows a fullscreen exit made by the browser", async () => {
+    const api = installFullscreenApi();
+    const { container } = await renderSection();
+    const stage = q(container, "route-map-stage")!;
+    await act(async () => {
+      fireEvent.click(q(container, "route-map-fullscreen")!);
+    });
+    await settle();
+    await act(async () => {
+      await (document as unknown as { exitFullscreen: () => Promise<void> }).exitFullscreen();
+    });
+    await settle();
+    expect(api.exit).toHaveBeenCalledTimes(1);
+    expect(stage.getAttribute("data-fullscreen")).toBe("off");
+    expect(mocks.maps[0].fitBounds).toHaveBeenCalledTimes(2);
+  });
+
+  it("takes over the viewport where the API is missing, locking the body scroll only while up", async () => {
+    const { container } = await renderSection();
+    const stage = q(container, "route-map-stage")!;
+    const map = mocks.maps[0];
+    expect(document.body.style.overflow).toBe("");
+
+    await act(async () => {
+      fireEvent.click(q(container, "route-map-fullscreen")!);
+    });
+    await settle();
+    expect(stage.getAttribute("data-fullscreen")).toBe("takeover");
+    expect(document.body.style.overflow).toBe("hidden");
+    expect(map.resize).toHaveBeenCalledTimes(1);
+    expect(map.fitBounds).toHaveBeenCalledTimes(1);
+    expect(q(container, "route-map-fullscreen")?.getAttribute("aria-label")).toBe("Exit fullscreen");
+
+    const slider = q(container, "route-timeline-slider") as HTMLInputElement;
+    expect(stage.contains(slider)).toBe(true);
+    await act(async () => {
+      fireEvent.change(slider, { target: { value: "2" } });
+    });
+    expect(slider.value).toBe("2");
+    expect(stage.getAttribute("data-fullscreen")).toBe("takeover");
+
+    await act(async () => {
+      fireEvent.click(q(container, "route-map-fullscreen")!);
+    });
+    await settle();
+    expect(stage.getAttribute("data-fullscreen")).toBe("off");
+    expect(document.body.style.overflow).toBe("");
+    expect(map.resize).toHaveBeenCalledTimes(2);
+    expect(map.fitBounds).toHaveBeenCalledTimes(2);
+  });
+
+  it("leaves the takeover on Escape and releases the body scroll", async () => {
+    const { container } = await renderSection();
+    const stage = q(container, "route-map-stage")!;
+    await act(async () => {
+      fireEvent.click(q(container, "route-map-fullscreen")!);
+    });
+    await settle();
+    expect(document.body.style.overflow).toBe("hidden");
+
+    await act(async () => {
+      fireEvent.keyDown(document, { key: "Escape" });
+    });
+    await settle();
+    expect(stage.getAttribute("data-fullscreen")).toBe("off");
+    expect(document.body.style.overflow).toBe("");
+    expect(mocks.maps[0].resize).toHaveBeenCalledTimes(2);
+    expect(mocks.maps[0].fitBounds).toHaveBeenCalledTimes(2);
+  });
+
+  it("releases the body scroll when the section unmounts in the takeover", async () => {
+    const { container, unmount } = await renderSection();
+    await act(async () => {
+      fireEvent.click(q(container, "route-map-fullscreen")!);
+    });
+    await settle();
+    expect(document.body.style.overflow).toBe("hidden");
+    unmount();
+    expect(document.body.style.overflow).toBe("");
+  });
+});
+
+describe("route map terrain", () => {
+  it("adds and removes the hillshade over the terrain archive and remembers the choice", async () => {
+    const { container } = await renderSection();
+    const map = mocks.maps[0];
+    expect(hasHillshade(lastStyle(map))).toBe(false);
+
+    await act(async () => {
+      fireEvent.click(q(container, "route-map-terrain")!);
+    });
+    await settle();
+    const on = lastStyle(map);
+    expect(map.setStyle.mock.calls[map.setStyle.mock.calls.length - 1][1]).toEqual({ diff: true });
+    expect(hasHillshade(on)).toBe(true);
+    expect(on.sources.terrain).toMatchObject({
+      type: "raster-dem",
+      url: `pmtiles://${TERRAIN_URL}`,
+      encoding: "terrarium",
+    });
+    expect(q(container, "route-map-terrain")?.getAttribute("aria-pressed")).toBe("true");
+    expect(window.localStorage.getItem("wmsfo.routeMap.terrain")).toBe("on");
+
+    await act(async () => {
+      fireEvent.click(q(container, "route-map-terrain")!);
+    });
+    await settle();
+    const off = lastStyle(map);
+    expect(hasHillshade(off)).toBe(false);
+    expect(off.sources.terrain).toBeUndefined();
+    expect(window.localStorage.getItem("wmsfo.routeMap.terrain")).toBe("off");
+  });
+
+  it("restores the remembered choice on the next mount and keeps it across an appearance switch", async () => {
+    const first = await renderSection();
+    await act(async () => {
+      fireEvent.click(q(first.container, "route-map-terrain")!);
+    });
+    await settle();
+    cleanup();
+
+    const { container } = await renderSection();
+    const map = mocks.maps[1];
+    expect(q(container, "route-map-terrain")?.getAttribute("aria-pressed")).toBe("true");
+    const light = lastStyle(map);
+    expect(hasHillshade(light)).toBe(true);
+    expect(light.layers.find((l) => l.id === "terrain-hillshade")?.paint).toEqual(HILLSHADE_PAINTS.light);
+
+    await act(async () => {
+      document.documentElement.setAttribute("data-theme", "dark");
+      await Promise.resolve();
+    });
+    await settle();
+    const dark = lastStyle(map);
+    expect(hasHillshade(dark)).toBe(true);
+    expect(dark.layers.find((l) => l.id === "terrain-hillshade")?.paint).toEqual(HILLSHADE_PAINTS.dark);
+    expect(light.layers.map((l) => l.id)).toEqual(dark.layers.map((l) => l.id));
+  });
+
+  it("draws no hillshade when the switch is off, whatever was remembered", async () => {
+    window.localStorage.setItem("wmsfo.routeMap.terrain", "on");
+    const { container } = await renderSection({ controls: { terrain: false } });
+    expect(q(container, "route-map-terrain")).toBeNull();
+    expect(hasHillshade(lastStyle(mocks.maps[0]))).toBe(false);
+  });
+});

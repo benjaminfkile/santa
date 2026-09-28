@@ -55,6 +55,11 @@ export const copy = {
     centerOnSanta: "Center on Santa",
     snow: "Snow",
     routeTime: "Time along the route",
+    routeMap: {
+      fullscreen: "Show the route map fullscreen",
+      exitFullscreen: "Exit fullscreen",
+      terrain: "Terrain view",
+    },
     poster: {
       zoomIn: "Zoom in",
       zoomOut: "Zoom out",
