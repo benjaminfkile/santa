@@ -1,13 +1,22 @@
 // docs/site.md section 8.9. The optional style capabilities of the route
 // poster: without options the style is the site map's own, `routeColor`
 // recolours the route, `arrows` adds the arrowhead layer over the SDF
-// image, and `timeLabels` adds one labelled dot per entry.
+// image, `timeLabels` adds one labelled dot per entry, and `details`
+// drops the basemap's landmark, place name, and road name label layers.
 
 import { describe, it, expect } from "vitest";
-import type { CircleLayerSpecification, LineLayerSpecification, SymbolLayerSpecification } from "maplibre-gl";
+import { layers as basemapLayers, namedFlavor } from "@protomaps/basemaps";
+import type {
+  CircleLayerSpecification,
+  LayerSpecification,
+  LineLayerSpecification,
+  SymbolLayerSpecification,
+} from "maplibre-gl";
 import { ROUTE_PALETTES, type Appearance } from "../../../src/routeMap/flavors";
 import {
   ARROWS_LAYER,
+  BASEMAP_SOURCE,
+  DETAIL_LAYERS,
   ROUTE_ARROW_ICON,
   ROUTE_SOURCE,
   TIME_LABELS_LAYER,
@@ -42,6 +51,13 @@ describe("route map style options", () => {
         expect(JSON.stringify(unset)).toBe(JSON.stringify(plain));
         const unitScale = buildStyle(appearance, BASE, PATH, MARKS, terrain, { arrowScale: 1 });
         expect(JSON.stringify(unitScale)).toBe(JSON.stringify(plain));
+        const noDetails = buildStyle(appearance, BASE, PATH, MARKS, terrain, { details: {} });
+        expect(JSON.stringify(noDetails)).toBe(JSON.stringify(plain));
+        const allDetails = buildStyle(appearance, BASE, PATH, MARKS, terrain, {
+          details: { landmarks: true, placeNames: true, roadLabels: true },
+        });
+        expect(allDetails).toEqual(plain);
+        expect(JSON.stringify(allDetails)).toBe(JSON.stringify(plain));
       }
     }
   });
@@ -150,5 +166,85 @@ describe("route map style options", () => {
     }
     expect(ROUTE_PALETTES.light).toMatchObject({ labelText: "#202124", labelHalo: "#ffffff" });
     expect(ROUTE_PALETTES.dark).toMatchObject({ labelText: "#f2f6ff", labelHalo: "#0f1a2b" });
+  });
+
+  // The label layers of each detail group, read out of the generated
+  // layers by what they draw rather than by id, so a basemap package that
+  // renames or splits them no longer matches DETAIL_LAYERS. Place and road
+  // names come from the built style. The site flavors set no POI colours,
+  // so the package leaves the POI layer out of the built style; its ids
+  // come from the package's own layers for a flavor that has them.
+  function symbolIds(
+    all: readonly LayerSpecification[],
+    keep: (l: SymbolLayerSpecification) => boolean,
+  ): string[] {
+    return all
+      .filter((l): l is SymbolLayerSpecification => l.type === "symbol")
+      .filter(keep)
+      .map((l) => l.id)
+      .sort();
+  }
+
+  function builtDetailGroups(style: ReturnType<typeof buildStyle>) {
+    const basemap = style.layers.filter((l) => "source" in l && l.source === BASEMAP_SOURCE);
+    return {
+      landmarks: symbolIds(basemap, (l) => l["source-layer"] === "pois"),
+      placeNames: symbolIds(
+        basemap,
+        (l) =>
+          l["source-layer"] === "places" &&
+          /"(locality|neighbourhood)"/.test(JSON.stringify(l.filter)),
+      ),
+      roadLabels: symbolIds(basemap, (l) => l["source-layer"] === "roads"),
+    };
+  }
+
+  const PACKAGE_POIS = symbolIds(
+    basemapLayers(BASEMAP_SOURCE, namedFlavor("light"), { lang: "en" }),
+    (l) => l["source-layer"] === "pois",
+  );
+
+  it("names every detail group's layers as the basemap generates them", () => {
+    expect(PACKAGE_POIS.length).toBeGreaterThan(0);
+    expect([...DETAIL_LAYERS.landmarks].sort()).toEqual(PACKAGE_POIS);
+    for (const appearance of ["light", "dark"] as Appearance[]) {
+      const groups = builtDetailGroups(buildStyle(appearance, BASE, PATH, MARKS));
+      expect(groups.landmarks).toEqual([]);
+      for (const group of ["placeNames", "roadLabels"] as const) {
+        expect(groups[group].length, group).toBeGreaterThan(0);
+        expect([...DETAIL_LAYERS[group]].sort(), group).toEqual(groups[group]);
+      }
+    }
+  });
+
+  it("drops exactly the layers of each detail group turned off", () => {
+    const groupNames = Object.keys(DETAIL_LAYERS) as (keyof typeof DETAIL_LAYERS)[];
+    for (const appearance of ["light", "dark"] as Appearance[]) {
+      for (const terrain of [false, true]) {
+        const plain = buildStyle(appearance, BASE, PATH, MARKS, terrain);
+        const groups = builtDetailGroups(plain);
+        for (const group of groupNames) {
+          const style = buildStyle(appearance, BASE, PATH, MARKS, terrain, {
+            details: { [group]: false },
+          });
+          const dropped = new Set(groups[group]);
+          expect(style.layers.map((l) => l.id)).toEqual(
+            plain.layers.map((l) => l.id).filter((id) => !dropped.has(id)),
+          );
+          expect(style.layers).toEqual(plain.layers.filter((l) => !dropped.has(l.id)));
+          expect(style.sources).toEqual(plain.sources);
+          for (const other of groupNames.filter((g) => g !== group)) {
+            for (const id of groups[other]) {
+              expect(style.layers.some((l) => l.id === id), id).toBe(true);
+            }
+          }
+        }
+        const bare = buildStyle(appearance, BASE, PATH, MARKS, terrain, {
+          details: { landmarks: false, placeNames: false, roadLabels: false },
+        });
+        const all = new Set(groupNames.flatMap((g) => groups[g]));
+        expect(bare.layers).toEqual(plain.layers.filter((l) => !all.has(l.id)));
+      }
+    }
   });
 });
