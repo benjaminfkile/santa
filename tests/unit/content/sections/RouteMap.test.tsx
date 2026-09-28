@@ -66,7 +66,16 @@ vi.mock("maplibre-gl", () => {
       for (const fn of [...(this.handlers[event] ?? []), ...once]) fn(data);
     }
   }
-  return { Map: FakeMap, addProtocol: vi.fn(), setWorkerUrl: vi.fn() };
+  class FakeMarker {
+    setLngLat() {
+      return this;
+    }
+    addTo() {
+      return this;
+    }
+    remove() {}
+  }
+  return { Map: FakeMap, Marker: FakeMarker, addProtocol: vi.fn(), setWorkerUrl: vi.fn() };
 });
 
 vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
