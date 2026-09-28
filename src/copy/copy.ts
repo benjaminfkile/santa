@@ -54,6 +54,7 @@ export const copy = {
     zoomOut: "Zoom out",
     centerOnSanta: "Center on Santa",
     snow: "Snow",
+    routeTime: "Time along the route",
     poster: {
       zoomIn: "Zoom in",
       zoomOut: "Zoom out",

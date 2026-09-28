@@ -72,3 +72,5 @@
   .maplibregl-cooperative-gesture-screen,
   .maplibregl-cooperative-gesture-screen.maplibregl-show { transition: none; }
 }
+
+.maplibregl-marker { position: absolute; top: 0; left: 0; will-change: transform; }

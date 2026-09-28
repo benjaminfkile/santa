@@ -6,6 +6,9 @@ export const locationPromptDenied: string;
 export const locationPromptInapp: string;
 export const routeDisclaimer: string;
 export const routeMap: string;
+export const routePin: string;
+export const routePinBadge: string;
+export const routePinIcon: string;
 export const routePoster: string;
 export const routePosterControls: string;
 export const routePosterFullscreen: string;
@@ -20,4 +23,7 @@ export const routePreviewImageWrap: string;
 export const routePreviewLink: string;
 export const routePreviewOverlay: string;
 export const routePreviewViewer: string;
+export const routeTimeline: string;
+export const routeTimelineLabel: string;
+export const routeTimelineSlider: string;
 

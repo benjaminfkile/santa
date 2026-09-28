@@ -8,10 +8,12 @@
 // while panning) do not. The path is fitted with padding on mount and on
 // every container resize. `update` swaps the style as a diff: a new
 // appearance changes paint properties only, so the basemap tiles stay on
-// screen.
+// screen. `setPin` stands the Santa pin (a MapLibre marker around the
+// caller's element) on a point, eased over PIN_TRANSITION_MS when asked
+// to animate and placed at once otherwise; null removes it.
 
 import "./maplibre.css";
-import { Map as MapLibreMap, addProtocol, setWorkerUrl } from "maplibre-gl";
+import { Map as MapLibreMap, Marker, addProtocol, setWorkerUrl } from "maplibre-gl";
 import type { AddProtocolAction } from "maplibre-gl";
 import { PMTiles, Protocol } from "pmtiles";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
@@ -25,16 +27,31 @@ export type { LatLng } from "./style";
 export type RouteMapOptions = {
   container: HTMLElement;
   path: readonly LatLng[];
+  marks?: readonly LatLng[];
   appearance: Appearance;
+  pinElement?: HTMLElement;
   onError: (error: unknown) => void;
 };
 
+export type RouteMapUpdate = {
+  path: readonly LatLng[];
+  marks?: readonly LatLng[];
+  appearance: Appearance;
+};
+
 export type RouteMapHandle = {
-  update: (next: { path: readonly LatLng[]; appearance: Appearance }) => void;
+  update: (next: RouteMapUpdate) => void;
+  setPin: (point: LatLng | null, animate: boolean) => void;
   destroy: () => void;
 };
 
 const FIT_PADDING = 40;
+
+export const PIN_TRANSITION_MS = 300;
+
+function easeOutCubic(t: number): number {
+  return 1 - (1 - t) ** 3;
+}
 
 let protocol: Protocol | null = null;
 
@@ -61,6 +78,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
   if (base === "") throw new Error("VITE_ROUTE_BASEMAP_URL is not set");
   const { container, onError } = options;
   let path = options.path;
+  let marks = options.marks ?? [];
   let appearance = options.appearance;
 
   const proto = ensureProtocol();
@@ -79,7 +97,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
 
   const map = new MapLibreMap({
     container,
-    style: buildStyle(appearance, base, path),
+    style: buildStyle(appearance, base, path, marks),
     bounds: pathBounds(path) ?? undefined,
     fitBoundsOptions: { padding: padding() },
     minZoom: header.minZoom,
@@ -119,16 +137,69 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
     observer.observe(container);
   }
 
+  let pin: Marker | null = null;
+  let pinAt: LatLng | null = null;
+  let frame: number | null = null;
+
+  function stopEasing(): void {
+    if (frame !== null) cancelAnimationFrame(frame);
+    frame = null;
+  }
+
+  function placePin(point: LatLng): void {
+    pinAt = point;
+    pin?.setLngLat([point.lng, point.lat]);
+  }
+
   return {
     update(next) {
+      const nextMarks = next.marks ?? [];
       const pathChanged = !samePath(path, next.path);
-      if (!pathChanged && next.appearance === appearance) return;
+      const marksChanged = !samePath(marks, nextMarks);
+      if (!pathChanged && !marksChanged && next.appearance === appearance) return;
       path = next.path;
+      marks = nextMarks;
       appearance = next.appearance;
-      map.setStyle(buildStyle(appearance, base, path), { diff: true });
+      map.setStyle(buildStyle(appearance, base, path, marks), { diff: true });
       if (pathChanged) fit();
     },
+    setPin(point, animate) {
+      stopEasing();
+      if (point === null) {
+        pin?.remove();
+        pin = null;
+        pinAt = null;
+        return;
+      }
+      if (pin === null) {
+        pin = new Marker({ element: options.pinElement, anchor: "center" })
+          .setLngLat([point.lng, point.lat])
+          .addTo(map);
+        pinAt = point;
+        return;
+      }
+      const from = pinAt;
+      if (!animate || from === null || typeof requestAnimationFrame !== "function") {
+        placePin(point);
+        return;
+      }
+      let start: number | null = null;
+      const step = (now: number): void => {
+        if (start === null) start = now;
+        const t = Math.min(1, (now - start) / PIN_TRANSITION_MS);
+        const k = easeOutCubic(t);
+        placePin({
+          lat: from.lat + (point.lat - from.lat) * k,
+          lng: from.lng + (point.lng - from.lng) * k,
+        });
+        frame = t < 1 ? requestAnimationFrame(step) : null;
+      };
+      frame = requestAnimationFrame(step);
+    },
     destroy() {
+      stopEasing();
+      pin?.remove();
+      pin = null;
       observer?.disconnect();
       observer = null;
       map.remove();

@@ -1,7 +1,8 @@
 // docs/site.md section 8.9. Builds the MapLibre style of the route map for
 // one appearance: the @protomaps/basemaps layers over the CDN basemap in
-// that appearance's flavor, then the route path as a line and the start
-// and end markers as circles. Both appearances share every source and
+// that appearance's flavor, then the route path as a line, the timeline
+// marks as small dots on it, and the start and end markers as circles.
+// Both appearances share every source and
 // layer id, so a switch between them is a paint-only style diff.
 
 import { layers } from "@protomaps/basemaps";
@@ -16,7 +17,9 @@ export type LatLng = { lat: number; lng: number };
 export const BASEMAP_SOURCE = "protomaps";
 export const ROUTE_SOURCE = "route";
 export const ENDS_SOURCE = "route-ends";
+export const MARKS_SOURCE = "route-marks";
 export const ROUTE_LAYER = "route-line";
+export const MARKS_LAYER = "route-marks";
 export const ENDS_LAYER = "route-ends";
 
 export const OSM_ATTRIBUTION =
@@ -67,6 +70,7 @@ export function buildStyle(
   appearance: Appearance,
   base: string,
   path: readonly LatLng[],
+  marks: readonly LatLng[] = [],
 ): StyleSpecification {
   const palette = ROUTE_PALETTES[appearance];
   const coordinates = path.map((p) => [p.lng, p.lat]);
@@ -93,6 +97,17 @@ export function buildStyle(
           geometry: { type: "LineString", coordinates },
         },
       },
+      [MARKS_SOURCE]: {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: marks.map((point) => ({
+            type: "Feature" as const,
+            properties: {},
+            geometry: { type: "Point" as const, coordinates: [point.lng, point.lat] },
+          })),
+        },
+      },
       [ENDS_SOURCE]: {
         type: "geojson",
         data: {
@@ -116,6 +131,18 @@ export function buildStyle(
           "line-color": palette.routeColor,
           "line-opacity": palette.routeOpacity,
           "line-width": ["interpolate", ["linear"], ["zoom"], 8, 3, 14, 5],
+        },
+      },
+      {
+        id: MARKS_LAYER,
+        type: "circle",
+        source: MARKS_SOURCE,
+        paint: {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 8, 2, 14, 3],
+          "circle-color": palette.markerStroke,
+          "circle-opacity": 0.9,
+          "circle-stroke-color": palette.routeColor,
+          "circle-stroke-width": 1,
         },
       },
       {

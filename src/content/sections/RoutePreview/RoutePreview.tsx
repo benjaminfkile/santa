@@ -12,9 +12,14 @@
 //     of section 8.9 (MapLibre over the CDN basemap, `event.routeMap.path`
 //     drawn on it) in its own `routemap` chunk. With no route map (null,
 //     or fewer than two points), no VITE_ROUTE_BASEMAP_URL, or a failed
-//     load, the section renders exactly what `image` renders.
+//     load, the section renders exactly what `image` renders. With two or
+//     more `event.routeMap.timeline` entries the map also carries a dot at
+//     every entry and the Santa pin on the selected one, and a time slider
+//     over the entries (starting at the first) sits under the frame; with
+//     fewer, only the path is drawn.
 
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import type { SectionComponent } from "../../registry";
 import type { ContentDocument, MediaRef } from "../../../contracts";
 import { Inline } from "../../inline/Inline";
@@ -25,11 +30,25 @@ import { Media } from "../../primitives/Media";
 import { resolveMedia } from "../../primitives/resolve";
 import { PosterViewer } from "./PosterViewer";
 import { routeMapPath, type LatLng } from "./routeMapPath";
+import { routeMapTimeline, routeTimeLabel } from "./routeTimelineData";
+import { RouteTimeSlider } from "./RouteTimeSlider";
+import { SantaIcon } from "../../icons/generated/santa";
+import { useReducedMotion } from "../../../lib/motion";
 import { env } from "../../../config/env";
 import { copy } from "../../../copy/copy";
 import * as styles from "./RoutePreview.module.css";
 
-type RouteMapProps = { path: readonly LatLng[]; ariaLabel?: string; onFail: () => void };
+type RouteMapProps = {
+  path: readonly LatLng[];
+  marks?: readonly LatLng[];
+  pin?: LatLng | null;
+  pinElement?: HTMLElement;
+  reducedMotion?: boolean;
+  ariaLabel?: string;
+  onFail: () => void;
+};
+
+const NO_MARKS: readonly LatLng[] = [];
 
 // The route map host, in the `routemap` chunk. A chunk that fails to load
 // resolves to a component that reports the failure, so the section falls
@@ -54,6 +73,16 @@ type RoutePreviewData = {
   emptyText?: string | null;
   disclaimer?: string | null;
 };
+
+// The Santa pin's element, handed to the route map as its marker; the
+// badge and icon are portalled into it.
+function createPinElement(): HTMLElement {
+  const el = document.createElement("div");
+  el.className = styles.routePin;
+  el.setAttribute("data-testid", "route-map-pin");
+  el.setAttribute("aria-hidden", "true");
+  return el;
+}
 
 function findViewerPageSlug(content: ContentDocument | null | undefined): string | null {
   if (!content?.pages) return null;
@@ -80,6 +109,20 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
 
   const viewerSlug = useMemo(() => findViewerPageSlug(content), [content]);
   const path = useMemo(() => routeMapPath(routeMap), [routeMap]);
+  const parsedTimeline = useMemo(() => routeMapTimeline(routeMap), [routeMap]);
+  const timeline = parsedTimeline.length >= 2 ? parsedTimeline : null;
+  const marks = useMemo(
+    () => (timeline === null ? NO_MARKS : timeline.map(({ lat, lng }) => ({ lat, lng }))),
+    [timeline],
+  );
+  const [selected, setSelected] = useState(0);
+  const reducedMotion = useReducedMotion();
+  const [pinElement] = useState(createPinElement);
+  const stop = timeline === null ? null : timeline[Math.min(selected, timeline.length - 1)];
+  const pin = useMemo(
+    () => (stop === null ? null : { lat: stop.lat, lng: stop.lng }),
+    [stop],
+  );
 
   const showMap =
     d.style === "map" && path.length >= 2 && env.ROUTE_BASEMAP_URL !== "" && !mapFailed;
@@ -103,9 +146,31 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
         ) : null}
         <div className={styles.routeMap} data-testid="route-map-frame">
           <Suspense fallback={null}>
-            <LazyRouteMap path={path} ariaLabel={d.heading ?? undefined} onFail={onMapFail} />
+            <LazyRouteMap
+              path={path}
+              marks={marks}
+              pin={pin}
+              pinElement={pinElement}
+              reducedMotion={reducedMotion}
+              ariaLabel={d.heading ?? undefined}
+              onFail={onMapFail}
+            />
           </Suspense>
         </div>
+        {createPortal(
+          <span className={styles.routePinBadge}>
+            <SantaIcon className={styles.routePinIcon} />
+          </span>,
+          pinElement,
+        )}
+        {timeline !== null && stop !== null ? (
+          <RouteTimeSlider
+            timeline={timeline}
+            index={timeline.indexOf(stop)}
+            label={routeTimeLabel(event?.scheduledAt, stop.minutes)}
+            onSelect={setSelected}
+          />
+        ) : null}
       </div>
     );
   }
