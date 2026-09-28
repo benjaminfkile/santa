@@ -5335,6 +5335,7 @@ export interface components {
             routeUrl?: null | string;
             routeImageMediaId?: null | string;
             routeImage?: null | components["schemas"]["MediaAssetDto"];
+            posterLayout?: null | components["schemas"]["JsonElement"];
             createdBy?: string;
             /** Format: date-time */
             createdAt?: string;
@@ -5850,6 +5851,7 @@ export interface components {
             routeId?: null | number | string;
             routeImageMediaId?: null | string;
             scheduleTimeZone?: components["schemas"]["JsonElement"];
+            posterLayout?: components["schemas"]["JsonElement"];
         };
         PatchPageRequest: {
             slug?: null | string;
