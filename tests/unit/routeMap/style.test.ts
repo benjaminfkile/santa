@@ -40,6 +40,8 @@ describe("route map style options", () => {
         });
         expect(unset).toEqual(plain);
         expect(JSON.stringify(unset)).toBe(JSON.stringify(plain));
+        const unitScale = buildStyle(appearance, BASE, PATH, MARKS, terrain, { arrowScale: 1 });
+        expect(JSON.stringify(unitScale)).toBe(JSON.stringify(plain));
       }
     }
   });
@@ -76,6 +78,25 @@ describe("route map style options", () => {
     const ids = style.layers.map((l) => l.id);
     expect(ids.indexOf(ARROWS_LAYER)).toBeGreaterThan(ids.indexOf("route-line"));
     expect(style.sprite).toBeUndefined();
+  });
+
+  it("scales the arrow icon size and spacing together", () => {
+    const arrowsAt = (arrowScale?: number) =>
+      layer<SymbolLayerSpecification>(
+        buildStyle("light", BASE, PATH, MARKS, false, { arrows: true, arrowScale }),
+        ARROWS_LAYER,
+      ).layout;
+    const defaults = arrowsAt();
+    expect(arrowsAt(1)).toEqual(defaults);
+    const size = defaults?.["icon-size"] as number;
+    const spacing = defaults?.["symbol-spacing"] as number;
+    expect(size).toBe(1);
+    expect(spacing).toBe(140);
+    const scaled = arrowsAt(1.5);
+    expect(scaled?.["icon-size"]).toBe(size * 1.5);
+    expect(scaled?.["symbol-spacing"]).toBe(spacing * 1.5);
+    expect(arrowsAt(0)).toEqual(defaults);
+    expect(arrowsAt(-2)).toEqual(defaults);
   });
 
   it("makes an SDF arrowhead image of a sane size", () => {
