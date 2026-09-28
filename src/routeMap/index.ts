@@ -14,6 +14,8 @@
 // adds the hillshade over the terrain archive to the style, through the
 // same diff, so an appearance switch keeps it. `refit` resizes the map to
 // its container and fits the path again (the fullscreen edges call it).
+// `timeLabels` hands the style's time label layers their dots and ready
+// made labels; a new set rebuilds the style through the same diff.
 // `probeTerrain` reads the header of `<base>/terrain.pmtiles` once per
 // page load and resolves whether the archive exists; a missing or failing
 // archive logs once and resolves false.
@@ -32,10 +34,11 @@ import {
   terrainUrl,
   tilesUrl,
   type LatLng,
+  type TimeLabel,
 } from "./style";
 
 export type { Appearance } from "./flavors";
-export type { LatLng } from "./style";
+export type { LatLng, TimeLabel } from "./style";
 
 export type RouteMapOptions = {
   container: HTMLElement;
@@ -43,6 +46,7 @@ export type RouteMapOptions = {
   marks?: readonly LatLng[];
   appearance: Appearance;
   terrain?: boolean;
+  timeLabels?: readonly TimeLabel[];
   pinElement?: HTMLElement;
   onError: (error: unknown) => void;
 };
@@ -52,6 +56,7 @@ export type RouteMapUpdate = {
   marks?: readonly LatLng[];
   appearance: Appearance;
   terrain?: boolean;
+  timeLabels?: readonly TimeLabel[];
 };
 
 export type RouteMapHandle = {
@@ -116,6 +121,15 @@ function samePath(a: readonly LatLng[], b: readonly LatLng[]): boolean {
   return true;
 }
 
+function sameLabels(a: readonly TimeLabel[], b: readonly TimeLabel[]): boolean {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i].lat !== b[i].lat || a[i].lng !== b[i].lng || a[i].label !== b[i].label) return false;
+  }
+  return true;
+}
+
 export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapHandle> {
   const base = env.ROUTE_BASEMAP_URL;
   if (base === "") throw new Error("VITE_ROUTE_BASEMAP_URL is not set");
@@ -124,6 +138,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
   let marks = options.marks ?? [];
   let appearance = options.appearance;
   let terrain = options.terrain ?? false;
+  let timeLabels = options.timeLabels ?? [];
 
   const header = await archiveAt(tilesUrl(base)).getHeader();
 
@@ -134,7 +149,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
 
   const map = new MapLibreMap({
     container,
-    style: buildStyle(appearance, base, path, marks, terrain),
+    style: buildStyle(appearance, base, path, marks, terrain, { timeLabels }),
     bounds: pathBounds(path) ?? undefined,
     fitBoundsOptions: { padding: padding() },
     minZoom: header.minZoom,
@@ -196,9 +211,11 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
       const pathChanged = !samePath(path, next.path);
       const marksChanged = !samePath(marks, nextMarks);
       const nextTerrain = next.terrain ?? false;
+      const nextLabels = next.timeLabels ?? [];
       if (
         !pathChanged &&
         !marksChanged &&
+        sameLabels(timeLabels, nextLabels) &&
         next.appearance === appearance &&
         nextTerrain === terrain
       ) {
@@ -208,7 +225,10 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
       marks = nextMarks;
       appearance = next.appearance;
       terrain = nextTerrain;
-      map.setStyle(buildStyle(appearance, base, path, marks, terrain), { diff: true });
+      timeLabels = nextLabels;
+      map.setStyle(buildStyle(appearance, base, path, marks, terrain, { timeLabels }), {
+        diff: true,
+      });
       if (pathChanged) fit();
     },
     refit,
