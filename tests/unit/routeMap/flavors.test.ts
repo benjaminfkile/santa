@@ -4,7 +4,13 @@
 // style needs no sprite.
 
 import { describe, it, expect } from "vitest";
-import { DARK_FLAVOR, HILLSHADE_PAINTS, LIGHT_FLAVOR, ROUTE_PALETTES } from "../../../src/routeMap/flavors";
+import {
+  DARK_FLAVOR,
+  HILLSHADE_PAINTS,
+  LIGHT_FLAVOR,
+  POI_COLOURS,
+  ROUTE_PALETTES,
+} from "../../../src/routeMap/flavors";
 import { buildStyle, pathBounds } from "../../../src/routeMap/style";
 import { nightTheme } from "../../../src/map/themes/night";
 import { standardTheme } from "../../../src/map/themes/standard";
@@ -16,6 +22,20 @@ describe("route map flavors", () => {
       if (typeof value !== "string") continue;
       expect(night, `${key} ${value}`).toContain(value.toLowerCase());
     }
+  });
+
+  it("takes the dark POI and landmark colours from the night tracker theme", () => {
+    const night = JSON.stringify(nightTheme).toLowerCase();
+    const values = [
+      ...Object.values(POI_COLOURS.dark),
+      ROUTE_PALETTES.dark.landmarkFill,
+      ROUTE_PALETTES.dark.landmarkStroke,
+    ];
+    for (const value of values) expect(night, value).toContain(value.toLowerCase());
+    expect(ROUTE_PALETTES.light.landmarkFill).toBe(standardTheme.chrome.fg);
+    expect(ROUTE_PALETTES.light.landmarkStroke).toBe(standardTheme.chrome.bg);
+    expect(DARK_FLAVOR.pois).toBeUndefined();
+    expect(LIGHT_FLAVOR.pois).toBeUndefined();
   });
 
   it("takes the light labels from the standard tracker theme's chrome", () => {
