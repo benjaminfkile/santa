@@ -14,8 +14,10 @@
 //     or fewer than two points), no VITE_ROUTE_BASEMAP_URL, or a failed
 //     load, the section renders exactly what `image` renders. With two or
 //     more `event.routeMap.timeline` entries the map also carries a dot at
-//     every entry and the Santa pin on the selected one, and a time slider
-//     over the entries (starting at the first) sits under the frame; with
+//     every entry, a labelled dot at every interior 15 minute multiple,
+//     and the Santa pin on the selected one, and a time slider over the
+//     entries (starting at the first, labelled with the elapsed flight
+//     time) sits under the frame; with
 //     fewer, only the path is drawn. The frame and the slider share one
 //     wrapper, the fullscreen target (useRouteMapFullscreen), and the map
 //     carries a fullscreen button and a terrain toggle unless
@@ -33,7 +35,12 @@ import { Media } from "../../primitives/Media";
 import { resolveMedia } from "../../primitives/resolve";
 import { PosterViewer } from "./PosterViewer";
 import { routeMapPath, type LatLng } from "./routeMapPath";
-import { routeMapTimeline, routeTimeLabel } from "./routeTimelineData";
+import {
+  routeMapTimeline,
+  routeTimeLabel,
+  routeTimeLabels,
+  type TimelineLabel,
+} from "./routeTimelineData";
 import { RouteTimeSlider } from "./RouteTimeSlider";
 import { useRouteMapFullscreen } from "./useRouteMapFullscreen";
 import { SantaIcon } from "../../icons/generated/santa";
@@ -46,6 +53,7 @@ import * as ibtn from "../../../ui/IconButton.module.css";
 type RouteMapProps = {
   path: readonly LatLng[];
   marks?: readonly LatLng[];
+  timeLabels?: readonly TimelineLabel[];
   pin?: LatLng | null;
   pinElement?: HTMLElement;
   reducedMotion?: boolean;
@@ -59,6 +67,7 @@ type RouteMapProps = {
 };
 
 const NO_MARKS: readonly LatLng[] = [];
+const NO_LABELS: readonly TimelineLabel[] = [];
 
 // The route map host, in the `routemap` chunk. A chunk that fails to load
 // resolves to a component that reports the failure, so the section falls
@@ -126,6 +135,10 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
     () => (timeline === null ? NO_MARKS : timeline.map(({ lat, lng }) => ({ lat, lng }))),
     [timeline],
   );
+  const timeLabels = useMemo(
+    () => (timeline === null ? NO_LABELS : routeTimeLabels(timeline)),
+    [timeline],
+  );
   const [selected, setSelected] = useState(0);
   const reducedMotion = useReducedMotion();
   const [pinElement] = useState(createPinElement);
@@ -173,6 +186,7 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
               <LazyRouteMap
                 path={path}
                 marks={marks}
+                timeLabels={timeLabels}
                 pin={pin}
                 pinElement={pinElement}
                 reducedMotion={reducedMotion}
@@ -190,7 +204,7 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
             <RouteTimeSlider
               timeline={timeline}
               index={timeline.indexOf(stop)}
-              label={routeTimeLabel(event?.scheduledAt, stop.minutes)}
+              label={routeTimeLabel(stop.minutes)}
               onSelect={setSelected}
             />
           ) : null}

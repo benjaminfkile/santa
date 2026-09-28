@@ -185,6 +185,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  window.localStorage.removeItem("wmsfo.routeMap.terrain");
   cleanup();
   store.setState(() => ({ ...initialStore }));
   mutableEnv.ROUTE_BASEMAP_URL = originalBasemap;
@@ -259,6 +260,7 @@ describe("route_preview style map", () => {
   });
 
   it("switches the style live when the appearance changes, on the same map", async () => {
+    window.localStorage.setItem("wmsfo.routeMap.terrain", "off");
     setEvent("poster-1", routeMapOf(PATH));
     const { container } = renderSection({ style: "map" });
     await settle();
@@ -287,8 +289,7 @@ describe("route_preview style map", () => {
     const light = map.setStyle.mock.calls[1][0] as StyleShape;
     expect(backgroundColor(light)).toBe(LIGHT_FLAVOR.background);
     expect(mocks.maps).toHaveLength(1);
-    expect(map.remove).not.toHaveBeenCalled();
-  });
+    expect(map.remove).not.toHaveBeenCalled();  });
 
   it("removes the map on unmount", async () => {
     setEvent("poster-1", routeMapOf(PATH));

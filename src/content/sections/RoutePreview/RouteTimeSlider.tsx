@@ -1,6 +1,6 @@
 // docs/site.md section 8.9. The route map's time slider: a range input
 // whose steps are exactly the timeline entries (value = entry index), the
-// full card width, with the selected entry's time label beside it. The
+// full card width, with the selected entry's elapsed time label beside it. The
 // arrow keys step one entry and Home and End jump to the first and last;
 // `aria-valuetext` is the visible label.
 

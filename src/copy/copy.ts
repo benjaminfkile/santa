@@ -55,6 +55,7 @@ export const copy = {
     centerOnSanta: "Center on Santa",
     snow: "Snow",
     routeTime: "Time along the route",
+    routeElapsed: (elapsed: string) => `${elapsed} into the flight`,
     routeMap: {
       fullscreen: "Show the route map fullscreen",
       exitFullscreen: "Exit fullscreen",

@@ -1,9 +1,12 @@
 // docs/site.md sections 8.9, 17, 22.1. The route map timeline with
 // MapLibre and pmtiles mocked:
-//  - The slider has one step per timeline entry; the arrow keys step one
-//    entry and Home and End reach the ends.
-//  - The time label is scheduledAt plus the selected minutes in the given
-//    timezone, or +h:mm without scheduledAt; aria-valuetext matches it.
+//  - The slider has min 0, one step per timeline entry, and starts at 0;
+//    the arrow keys step one entry and Home and End reach the ends.
+//  - The time label and aria-valuetext are the elapsed flight time
+//    ("1h 15m into the flight"), with no wall clock even when the event
+//    has a scheduledAt.
+//  - The style's time labels are exactly the interior multiples of 15
+//    minutes, in the "1h 15m" form.
 //  - The marks source holds every timeline entry; the Santa pin starts on
 //    the first entry and follows the slider.
 //  - The pin eases between entries, and moves at once under reduced motion.
@@ -20,9 +23,10 @@ import type { ContentDocument, Snapshot } from "../../../../src/contracts";
 import { env } from "../../../../src/config/env";
 import { RoutePreview } from "../../../../src/content/sections/RoutePreview/RoutePreview";
 import {
-  formatOffset,
+  formatElapsed,
   routeMapTimeline,
   routeTimeLabel,
+  routeTimeLabels,
 } from "../../../../src/content/sections/RoutePreview/routeTimelineData";
 import { PIN_TRANSITION_MS } from "../../../../src/routeMap";
 
@@ -126,6 +130,16 @@ const TIMELINE = [
   { minutes: 72, lat: 46.85, lng: -113.9 },
 ];
 
+// Every 5 minutes from liftoff to 90, then the last point at 93.
+const LONG_TIMELINE = [
+  ...Array.from({ length: 19 }, (_, i) => ({
+    minutes: i * 5,
+    lat: 46.8 + i * 0.01,
+    lng: -114.0 + i * 0.01,
+  })),
+  { minutes: 93, lat: 47.0, lng: -113.8 },
+];
+
 const SCHEDULED_AT = "2026-12-22T01:00:00.000Z";
 
 const mutableEnv = env as unknown as { ROUTE_BASEMAP_URL: string };
@@ -203,6 +217,10 @@ function label(container: HTMLElement): string {
   return container.querySelector('[data-testid="route-timeline-label"]')?.textContent ?? "";
 }
 
+function indexOfMinutes(minutes: number): number {
+  return LONG_TIMELINE.findIndex((e) => e.minutes === minutes);
+}
+
 type StyleShape = {
   sources: Record<string, { data?: unknown }>;
   layers: { id: string }[];
@@ -261,22 +279,55 @@ describe("route timeline data", () => {
     ]);
   });
 
-  it("labels an entry as scheduledAt plus its minutes in the given timezone", () => {
-    expect(routeTimeLabel(SCHEDULED_AT, 0, "America/Denver")).toBe("Dec 21, 6:00 PM MST");
-    expect(routeTimeLabel(SCHEDULED_AT, 5, "America/Denver")).toBe("Dec 21, 6:05 PM MST");
-    expect(routeTimeLabel(SCHEDULED_AT, 72, "America/Denver")).toBe("Dec 21, 7:12 PM MST");
-    expect(routeTimeLabel(SCHEDULED_AT, 360, "UTC")).toBe("Dec 22, 7:00 AM UTC");
+  it("formats elapsed minutes as minutes under an hour and hours plus minutes after", () => {
+    expect(formatElapsed(0)).toBe("0m");
+    expect(formatElapsed(5)).toBe("5m");
+    expect(formatElapsed(45)).toBe("45m");
+    expect(formatElapsed(60)).toBe("1h 0m");
+    expect(formatElapsed(75)).toBe("1h 15m");
+    expect(formatElapsed(605)).toBe("10h 5m");
+    expect(routeTimeLabel(0)).toBe("0m into the flight");
+    expect(routeTimeLabel(45)).toBe("45m into the flight");
+    expect(routeTimeLabel(75)).toBe("1h 15m into the flight");
   });
 
-  it("labels an entry as +h:mm without scheduledAt", () => {
-    expect(routeTimeLabel(null, 0)).toBe("+0:00");
-    expect(routeTimeLabel(undefined, 5)).toBe("+0:05");
-    expect(routeTimeLabel("", 72)).toBe("+1:12");
-    expect(formatOffset(605)).toBe("+10:05");
+  it("labels every interior multiple of 15 minutes, never minute 0 or the final entry", () => {
+    expect(routeTimeLabels(LONG_TIMELINE).map((l) => l.label)).toEqual([
+      "15m",
+      "30m",
+      "45m",
+      "1h 0m",
+      "1h 15m",
+      "1h 30m",
+    ]);
+    const endsOnFifteen = LONG_TIMELINE.slice(0, 19);
+    expect(endsOnFifteen[endsOnFifteen.length - 1].minutes).toBe(90);
+    expect(routeTimeLabels(endsOnFifteen).map((l) => l.label)).toEqual([
+      "15m",
+      "30m",
+      "45m",
+      "1h 0m",
+      "1h 15m",
+    ]);
   });
 });
 
 describe("route map timeline", () => {
+  it("starts at 0 with min 0 and one 5 minute step per entry", async () => {
+    setEvent(null, LONG_TIMELINE);
+    const { container } = renderSection();
+    await settle();
+    const input = slider(container);
+    expect(input.min).toBe("0");
+    expect(input.max).toBe(String(LONG_TIMELINE.length - 1));
+    expect(input.step).toBe("1");
+    expect(input.value).toBe("0");
+    expect(label(container)).toBe("0m into the flight");
+    fireEvent.keyDown(input, { key: "ArrowRight" });
+    expect(slider(container).value).toBe("1");
+    expect(label(container)).toBe("5m into the flight");
+  });
+
   it("has one slider step per timeline entry, with Home and End reaching the ends", async () => {
     setEvent(null, TIMELINE);
     const { container } = renderSection();
@@ -308,28 +359,71 @@ describe("route map timeline", () => {
     expect(slider(container).value).toBe("3");
   });
 
-  it("labels a scheduled event with scheduledAt plus the selected minutes, and aria-valuetext matches", async () => {
+  it("speaks elapsed flight time in the label and aria-valuetext", async () => {
+    setEvent(null, LONG_TIMELINE);
+    const { container } = renderSection();
+    await settle();
+    const expectAt = (text: string) => {
+      expect(label(container)).toBe(text);
+      expect(slider(container).getAttribute("aria-valuetext")).toBe(text);
+    };
+    expectAt("0m into the flight");
+    fireEvent.change(slider(container), { target: { value: String(indexOfMinutes(45)) } });
+    expectAt("45m into the flight");
+    fireEvent.change(slider(container), { target: { value: String(indexOfMinutes(75)) } });
+    expectAt("1h 15m into the flight");
+    fireEvent.keyDown(slider(container), { key: "End" });
+    expectAt("1h 33m into the flight");
+  });
+
+  it("shows no wall clock time for an event with a scheduledAt", async () => {
     setEvent(SCHEDULED_AT, TIMELINE);
     const { container } = renderSection();
     await settle();
-    expect(label(container)).toBe(routeTimeLabel(SCHEDULED_AT, 0));
-    expect(slider(container).getAttribute("aria-valuetext")).toBe(label(container));
+    const stage = () => container.querySelector('[data-testid="route-map-stage"]')?.textContent ?? "";
+    expect(label(container)).toBe("0m into the flight");
+    expect(stage()).not.toMatch(/AM|PM|Dec|:\d\d/);
     fireEvent.keyDown(slider(container), { key: "End" });
-    expect(label(container)).toBe(routeTimeLabel(SCHEDULED_AT, 72));
-    expect(label(container)).not.toBe(routeTimeLabel(SCHEDULED_AT, 0));
-    expect(slider(container).getAttribute("aria-valuetext")).toBe(label(container));
+    expect(label(container)).toBe("1h 12m into the flight");
+    expect(slider(container).getAttribute("aria-valuetext")).toBe("1h 12m into the flight");
+    expect(stage()).not.toMatch(/AM|PM|Dec|:\d\d/);
   });
 
-  it("labels an unscheduled event with the elapsed time as +h:mm", async () => {
-    setEvent(null, TIMELINE);
-    const { container } = renderSection();
+  it("passes the style a time label at every interior multiple of 15 minutes", async () => {
+    setEvent(SCHEDULED_AT, LONG_TIMELINE);
+    renderSection();
     await settle();
-    expect(label(container)).toBe("+0:00");
-    fireEvent.keyDown(slider(container), { key: "ArrowRight" });
-    expect(label(container)).toBe("+0:05");
-    fireEvent.keyDown(slider(container), { key: "End" });
-    expect(label(container)).toBe("+1:12");
-    expect(slider(container).getAttribute("aria-valuetext")).toBe("+1:12");
+    const style = mocks.maps[0].options.style as StyleShape;
+    const data = style.sources["route-time-labels"].data as {
+      features: { properties: { label: string }; geometry: { coordinates: number[] } }[];
+    };
+    const expected = [15, 30, 45, 60, 75, 90].map((m) => LONG_TIMELINE[indexOfMinutes(m)]);
+    expect(data.features.map((f) => f.properties.label)).toEqual([
+      "15m",
+      "30m",
+      "45m",
+      "1h 0m",
+      "1h 15m",
+      "1h 30m",
+    ]);
+    expect(data.features.map((f) => f.geometry.coordinates)).toEqual(
+      expected.map((e) => [e.lng, e.lat]),
+    );
+    const ids = style.layers.map((l) => l.id);
+    expect(ids).toContain("route-time-label-dots");
+    expect(ids).toContain("route-time-labels");
+    expect(markCoordinates(style)).toEqual(LONG_TIMELINE.map((e) => [e.lng, e.lat]));
+  });
+
+  it("labels the style at 15 only when the timeline reaches past it", async () => {
+    setEvent(null, TIMELINE);
+    renderSection();
+    await settle();
+    const style = mocks.maps[0].options.style as StyleShape;
+    const data = style.sources["route-time-labels"].data as {
+      features: { properties: { label: string } }[];
+    };
+    expect(data.features.map((f) => f.properties.label)).toEqual(["15m"]);
   });
 
   it("draws a mark at every entry, above the path and below the end markers", async () => {

@@ -4,7 +4,8 @@
 // light, dark, and system switch the map style live. Any failure (the
 // archive, the style, WebGL) is logged once and reported through
 // `onFail`, which hands the section back to the image rendering. The map
-// is destroyed on unmount. `marks` are drawn as dots on the path; `pin`
+// is destroyed on unmount. `marks` are drawn as dots on the path and
+// `timeLabels` as labelled dots beside them; `pin`
 // stands the Santa pin (the caller's `pinElement`) on a point, placed at
 // once on mount and eased to each new point after, except when
 // `reducedMotion` is set, where it moves at once. The caller renders the
@@ -19,7 +20,7 @@
 // refits the path), and a terrain toggle when `terrainControl` is set and
 // the terrain archive exists (probed once per page load after the map
 // mounts). The terrain choice is kept in storage under TERRAIN_KEY
-// ("on" or "off", off when absent) and applied to every style the map
+// ("on" or "off", on when absent) and applied to every style the map
 // builds, so an appearance switch keeps it.
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -32,6 +33,7 @@ import {
   type Appearance,
   type LatLng,
   type RouteMapHandle,
+  type TimeLabel,
 } from "./index";
 import * as styles from "./RouteMap.module.css";
 
@@ -42,10 +44,12 @@ function useAppearance(): Appearance {
 }
 
 const NO_MARKS: readonly LatLng[] = [];
+const NO_LABELS: readonly TimeLabel[] = [];
 
 export type RouteMapProps = {
   path: readonly LatLng[];
   marks?: readonly LatLng[];
+  timeLabels?: readonly TimeLabel[];
   pin?: LatLng | null;
   pinElement?: HTMLElement;
   reducedMotion?: boolean;
@@ -61,6 +65,7 @@ export type RouteMapProps = {
 export function RouteMap({
   path,
   marks = NO_MARKS,
+  timeLabels = NO_LABELS,
   pin = null,
   pinElement,
   reducedMotion = false,
@@ -77,13 +82,33 @@ export function RouteMap({
   const appearance = useAppearance();
   const [mounted, setMounted] = useState(false);
   const [terrainAvailable, setTerrainAvailable] = useState(false);
-  const [terrainOn, setTerrainOn] = useState(() => storageGet(TERRAIN_KEY) === "on");
+  const [terrainOn, setTerrainOn] = useState(() => storageGet(TERRAIN_KEY) !== "off");
   const showTerrain = terrainControl && terrainAvailable;
   const terrain = showTerrain && terrainOn;
-  const latest = useRef({ path, marks, pin, pinElement, appearance, terrain, reducedMotion, onFail });
+  const latest = useRef({
+    path,
+    marks,
+    timeLabels,
+    pin,
+    pinElement,
+    appearance,
+    terrain,
+    reducedMotion,
+    onFail,
+  });
 
   useEffect(() => {
-    latest.current = { path, marks, pin, pinElement, appearance, terrain, reducedMotion, onFail };
+    latest.current = {
+    path,
+    marks,
+    timeLabels,
+    pin,
+    pinElement,
+    appearance,
+    terrain,
+    reducedMotion,
+    onFail,
+  };
   });
 
   useEffect(() => {
@@ -101,6 +126,7 @@ export function RouteMap({
       container: host,
       path: latest.current.path,
       marks: latest.current.marks,
+      timeLabels: latest.current.timeLabels,
       appearance: latest.current.appearance,
       terrain: latest.current.terrain,
       pinElement: latest.current.pinElement,
@@ -116,6 +142,7 @@ export function RouteMap({
         handle.update({
           path: now.path,
           marks: now.marks,
+          timeLabels: now.timeLabels,
           appearance: now.appearance,
           terrain: now.terrain,
         });
@@ -142,8 +169,8 @@ export function RouteMap({
   }, [mounted, terrainControl]);
 
   useEffect(() => {
-    handleRef.current?.update({ path, marks, appearance, terrain });
-  }, [path, marks, appearance, terrain]);
+    handleRef.current?.update({ path, marks, timeLabels, appearance, terrain });
+  }, [path, marks, timeLabels, appearance, terrain]);
 
   const fullscreenSeen = useRef(fullscreen);
   useEffect(() => {

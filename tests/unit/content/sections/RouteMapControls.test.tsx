@@ -7,9 +7,11 @@
 //    the takeover, resizing the map and refitting the path on both edges;
 //    Escape exits both; the takeover alone locks the body scroll; the
 //    slider still works in fullscreen.
-//  - The terrain toggle adds and removes the hillshade layer, the choice
-//    is stored, restores on the next mount, and survives an appearance
-//    switch.
+//  - The terrain view starts on with no remembered choice and off with a
+//    remembered off; the toggle adds and removes the hillshade layer, the
+//    choice is stored, restores on the next mount, and survives an
+//    appearance switch; with the terrain probe failing the map stays
+//    without hillshade.
 // Every test imports the modules afresh, so the once-per-page-load
 // terrain probe runs again.
 
@@ -237,7 +239,7 @@ describe("route map control stack", () => {
     const terrain = q(container, "route-map-terrain");
     expect(fullscreen?.getAttribute("aria-label")).toBe("Show the route map fullscreen");
     expect(terrain?.getAttribute("aria-label")).toBe("Terrain view");
-    expect(terrain?.getAttribute("aria-pressed")).toBe("false");
+    expect(terrain?.getAttribute("aria-pressed")).toBe("true");
     expect(q(container, "route-map-controls")?.contains(fullscreen!)).toBe(true);
   });
 
@@ -263,6 +265,7 @@ describe("route map control stack", () => {
     expect(q(container, "route-map")).not.toBeNull();
     expect(q(container, "route-map-terrain")).toBeNull();
     expect(q(container, "route-map-fullscreen")).not.toBeNull();
+    expect(hasHillshade(lastStyle(mocks.maps[0]))).toBe(false);
     expect(warn).toHaveBeenCalledTimes(1);
     cleanup();
 
@@ -408,17 +411,51 @@ describe("route map fullscreen", () => {
 });
 
 describe("route map terrain", () => {
-  it("adds and removes the hillshade over the terrain archive and remembers the choice", async () => {
+  it("starts on with no remembered choice", async () => {
+    expect(window.localStorage.getItem("wmsfo.routeMap.terrain")).toBeNull();
     const { container } = await renderSection();
     const map = mocks.maps[0];
+    expect(q(container, "route-map-terrain")?.getAttribute("aria-pressed")).toBe("true");
+    expect(q(container, "route-map")?.getAttribute("data-terrain")).toBe("on");
+    const style = lastStyle(map);
+    expect(hasHillshade(style)).toBe(true);
+    expect(style.sources.terrain).toMatchObject({
+      type: "raster-dem",
+      url: `pmtiles://${TERRAIN_URL}`,
+      encoding: "terrarium",
+    });
+  });
+
+  it("stays off for a viewer who turned it off", async () => {
+    window.localStorage.setItem("wmsfo.routeMap.terrain", "off");
+    const { container } = await renderSection();
+    const map = mocks.maps[0];
+    expect(q(container, "route-map-terrain")?.getAttribute("aria-pressed")).toBe("false");
+    expect(q(container, "route-map")?.getAttribute("data-terrain")).toBe("off");
     expect(hasHillshade(lastStyle(map))).toBe(false);
+  });
+
+  it("removes and adds the hillshade through the toggle and remembers the choice", async () => {
+    const { container } = await renderSection();
+    const map = mocks.maps[0];
+    expect(hasHillshade(lastStyle(map))).toBe(true);
+
+    await act(async () => {
+      fireEvent.click(q(container, "route-map-terrain")!);
+    });
+    await settle();
+    const off = lastStyle(map);
+    expect(map.setStyle.mock.calls[map.setStyle.mock.calls.length - 1][1]).toEqual({ diff: true });
+    expect(hasHillshade(off)).toBe(false);
+    expect(off.sources.terrain).toBeUndefined();
+    expect(q(container, "route-map-terrain")?.getAttribute("aria-pressed")).toBe("false");
+    expect(window.localStorage.getItem("wmsfo.routeMap.terrain")).toBe("off");
 
     await act(async () => {
       fireEvent.click(q(container, "route-map-terrain")!);
     });
     await settle();
     const on = lastStyle(map);
-    expect(map.setStyle.mock.calls[map.setStyle.mock.calls.length - 1][1]).toEqual({ diff: true });
     expect(hasHillshade(on)).toBe(true);
     expect(on.sources.terrain).toMatchObject({
       type: "raster-dem",
@@ -427,15 +464,6 @@ describe("route map terrain", () => {
     });
     expect(q(container, "route-map-terrain")?.getAttribute("aria-pressed")).toBe("true");
     expect(window.localStorage.getItem("wmsfo.routeMap.terrain")).toBe("on");
-
-    await act(async () => {
-      fireEvent.click(q(container, "route-map-terrain")!);
-    });
-    await settle();
-    const off = lastStyle(map);
-    expect(hasHillshade(off)).toBe(false);
-    expect(off.sources.terrain).toBeUndefined();
-    expect(window.localStorage.getItem("wmsfo.routeMap.terrain")).toBe("off");
   });
 
   it("restores the remembered choice on the next mount and keeps it across an appearance switch", async () => {
@@ -446,8 +474,17 @@ describe("route map terrain", () => {
     await settle();
     cleanup();
 
+    const second = await renderSection();
+    expect(q(second.container, "route-map-terrain")?.getAttribute("aria-pressed")).toBe("false");
+    expect(hasHillshade(lastStyle(mocks.maps[1]))).toBe(false);
+    await act(async () => {
+      fireEvent.click(q(second.container, "route-map-terrain")!);
+    });
+    await settle();
+    cleanup();
+
     const { container } = await renderSection();
-    const map = mocks.maps[1];
+    const map = mocks.maps[2];
     expect(q(container, "route-map-terrain")?.getAttribute("aria-pressed")).toBe("true");
     const light = lastStyle(map);
     expect(hasHillshade(light)).toBe(true);
