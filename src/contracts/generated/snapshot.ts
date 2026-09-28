@@ -24,6 +24,19 @@ export interface Snapshot {
         recordedAt?: string | null;
       }[];
     } | null;
+    routeMap?: {
+      path?: {
+        lat?: number;
+        lng?: number;
+      }[];
+      timeline?: {
+        minutes?: number;
+        lat?: number;
+        lng?: number;
+      }[];
+      durationMinutes?: number;
+      timed?: boolean;
+    } | null;
     latestMessage?: {
       id?: number;
       body?: string;

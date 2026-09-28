@@ -1,0 +1,74 @@
+/* docs/site.md section 8.9. The part of MapLibre's stylesheet the route
+   map uses (the canvas, the control corners, the attribution, the
+   cooperative gesture notice), with the attribution and the notice on
+   the site's panel and text tokens. MapLibre's own sheet is not loaded: most of its weight
+   is icons for controls the route map does not show. */
+
+.maplibregl-map {
+  position: relative;
+  overflow: hidden;
+  font: 12px/20px var(--font-sans, sans-serif);
+  -webkit-tap-highlight-color: rgb(0 0 0 / 0);
+  -webkit-touch-callout: none;
+}
+.maplibregl-canvas { position: absolute; left: 0; top: 0; }
+.maplibregl-canvas-container.maplibregl-interactive { cursor: grab; }
+.maplibregl-canvas-container.maplibregl-touch-zoom-rotate,
+.maplibregl-canvas-container.maplibregl-touch-zoom-rotate .maplibregl-canvas { touch-action: pan-x pan-y; }
+.maplibregl-canvas-container.maplibregl-touch-drag-pan,
+.maplibregl-canvas-container.maplibregl-touch-drag-pan .maplibregl-canvas { touch-action: pinch-zoom; }
+.maplibregl-canvas-container.maplibregl-touch-zoom-rotate.maplibregl-touch-drag-pan,
+.maplibregl-canvas-container.maplibregl-touch-zoom-rotate.maplibregl-touch-drag-pan .maplibregl-canvas { touch-action: none; }
+.maplibregl-canvas-container.maplibregl-touch-drag-pan.maplibregl-cooperative-gestures,
+.maplibregl-canvas-container.maplibregl-touch-drag-pan.maplibregl-cooperative-gestures .maplibregl-canvas { touch-action: pan-x pan-y; }
+
+.maplibregl-ctrl-top-left,
+.maplibregl-ctrl-top-right,
+.maplibregl-ctrl-bottom-left,
+.maplibregl-ctrl-bottom-right { position: absolute; pointer-events: none; z-index: 2; }
+.maplibregl-ctrl-top-left { top: 0; left: 0; }
+.maplibregl-ctrl-top-right { top: 0; right: 0; }
+.maplibregl-ctrl-bottom-left { bottom: 0; left: 0; }
+.maplibregl-ctrl-bottom-right { bottom: 0; right: 0; }
+.maplibregl-ctrl { clear: both; pointer-events: auto; transform: translate(0); }
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl { float: right; }
+
+.maplibregl-ctrl.maplibregl-ctrl-attrib {
+  margin: 0;
+  padding: 0 6px;
+  border-top-left-radius: var(--radius-sm, 6px);
+  background: color-mix(in srgb, var(--panel) 85%, transparent);
+  color: var(--text);
+}
+.maplibregl-ctrl-attrib summary.maplibregl-ctrl-attrib-button { display: none; }
+.maplibregl-ctrl-attrib a { color: inherit; text-decoration: none; }
+.maplibregl-ctrl-attrib a:hover,
+.maplibregl-ctrl-attrib a:focus-visible { text-decoration: underline; }
+
+.maplibregl-cooperative-gesture-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--panel) 80%, transparent);
+  color: var(--text-bright);
+  font-size: 1.4em;
+  line-height: 1.2;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1s ease 1s;
+}
+.maplibregl-cooperative-gesture-screen.maplibregl-show { opacity: 1; transition: opacity 0.05s; }
+.maplibregl-cooperative-gesture-screen .maplibregl-mobile-message { display: none; }
+@media (hover: none), (pointer: coarse) {
+  .maplibregl-cooperative-gesture-screen .maplibregl-desktop-message { display: none; }
+  .maplibregl-cooperative-gesture-screen .maplibregl-mobile-message { display: block; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .maplibregl-cooperative-gesture-screen,
+  .maplibregl-cooperative-gesture-screen.maplibregl-show { transition: none; }
+}

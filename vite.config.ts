@@ -27,8 +27,35 @@ function cognitoIdpPlugin(): Plugin {
   };
 }
 
+// The route map fetches its tiles and glyphs from VITE_ROUTE_BASEMAP_URL.
+// A small plugin exposes that URL's origin to the CSP as
+// %ROUTE_BASEMAP_ORIGIN% (empty when the variable is unset).
+function routeBasemapOriginPlugin(): Plugin {
+  let base = "";
+  return {
+    name: "wmsfo-route-basemap-origin",
+    configResolved(config) {
+      base = loadEnv(config.mode, config.root, "VITE_").VITE_ROUTE_BASEMAP_URL
+        ?? process.env.VITE_ROUTE_BASEMAP_URL
+        ?? "";
+    },
+    transformIndexHtml: {
+      order: "pre",
+      handler(html) {
+        let origin = "";
+        try {
+          origin = base === "" ? "" : new URL(base).origin;
+        } catch {
+          origin = "";
+        }
+        return html.replaceAll("%ROUTE_BASEMAP_ORIGIN%", origin);
+      },
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), cognitoIdpPlugin()],
+  plugins: [react(), cognitoIdpPlugin(), routeBasemapOriginPlugin()],
   // amazon-cognito-identity-js pulls in the Node buffer shim, which reads
   // `global` at module load; the browser has only globalThis.
   define: { global: "globalThis" },
@@ -48,6 +75,7 @@ export default defineConfig({
             { name: "theme", test: /[\\/]src[\\/]content[\\/]theme[\\/]colorScheme|[\\/]src[\\/]lib[\\/]storage/, priority: 30 },
             { name: "map", test: /@googlemaps[\\/]js-api-loader|[\\/]src[\\/]map[\\/]/, priority: 20 },
             { name: "alerts", test: /[\\/]src[\\/]pages[\\/]Alerts[\\/]/, priority: 20 },
+            { name: "routemap", test: /[\\/]maplibre-gl[\\/]|[\\/]pmtiles[\\/]|@protomaps[\\/]basemaps|[\\/]src[\\/]routeMap[\\/]/, priority: 20 },
             { name: "osd", test: /[\\/]openseadragon[\\/]|[\\/]src[\\/]content[\\/]sections[\\/]RoutePreview[\\/]PosterViewer/, priority: 20 },
           ],
         },

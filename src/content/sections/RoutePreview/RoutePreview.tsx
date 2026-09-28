@@ -8,8 +8,13 @@
 //  - `viewer`: `data.disclaimer` in the disclaimer recipe plus the
 //     OpenSeadragon `PosterViewer` over the media entry's Deep Zoom
 //     pyramid (or its original url when there is none). No map chunk.
+//  - `map`: `data.disclaimer` in the disclaimer recipe plus the route map
+//     of section 8.9 (MapLibre over the CDN basemap, `event.routeMap.path`
+//     drawn on it) in its own `routemap` chunk. With no route map (null,
+//     or fewer than two points), no VITE_ROUTE_BASEMAP_URL, or a failed
+//     load, the section renders exactly what `image` renders.
 
-import { useMemo } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import type { SectionComponent } from "../../registry";
 import type { ContentDocument, MediaRef } from "../../../contracts";
 import { Inline } from "../../inline/Inline";
@@ -19,12 +24,33 @@ import { Link } from "react-router-dom";
 import { Media } from "../../primitives/Media";
 import { resolveMedia } from "../../primitives/resolve";
 import { PosterViewer } from "./PosterViewer";
+import { routeMapPath, type LatLng } from "./routeMapPath";
+import { env } from "../../../config/env";
 import { copy } from "../../../copy/copy";
 import * as styles from "./RoutePreview.module.css";
 
+type RouteMapProps = { path: readonly LatLng[]; ariaLabel?: string; onFail: () => void };
+
+// The route map host, in the `routemap` chunk. A chunk that fails to load
+// resolves to a component that reports the failure, so the section falls
+// back to the image rendering.
+const LazyRouteMap = lazy(() =>
+  import("../../../routeMap/RouteMap")
+    .then((mod) => ({ default: mod.RouteMap }))
+    .catch((error: unknown) => ({
+      default: function RouteMapUnavailable({ onFail }: RouteMapProps) {
+        useEffect(() => {
+          console.warn("route map: falling back to the poster", error);
+          onFail();
+        }, [onFail]);
+        return null;
+      },
+    })),
+);
+
 type RoutePreviewData = {
   heading?: string | null;
-  style?: "image" | "viewer";
+  style?: "image" | "viewer" | "map";
   emptyText?: string | null;
   disclaimer?: string | null;
 };
@@ -44,13 +70,45 @@ function findViewerPageSlug(content: ContentDocument | null | undefined): string
 
 export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   const d = (data ?? {}) as RoutePreviewData;
-  const style = d.style === "viewer" ? "viewer" : "image";
   const emptyText = d.emptyText ?? null;
   const mediaId = useStore((s) => s.snapshot?.event?.routeImageMediaId ?? null);
+  const routeMap = useStore((s) => s.snapshot?.event?.routeMap ?? null);
   const event = useSnapshotEvent();
   const content = bundle.content;
+  const [mapFailed, setMapFailed] = useState(false);
+  const onMapFail = useCallback(() => setMapFailed(true), []);
 
   const viewerSlug = useMemo(() => findViewerPageSlug(content), [content]);
+  const path = useMemo(() => routeMapPath(routeMap), [routeMap]);
+
+  const showMap =
+    d.style === "map" && path.length >= 2 && env.ROUTE_BASEMAP_URL !== "" && !mapFailed;
+  const style = d.style === "viewer" ? "viewer" : showMap ? "map" : "image";
+
+  if (style === "map") {
+    return (
+      <div className={`${styles.routePreview} ${styles.routePreviewViewer}`} data-testid="route-preview-map">
+        {d.heading ? (
+          <h2 className={styles.routePreviewHeading}>
+            <Inline text={d.heading} bundle={bundle} event={event} />
+          </h2>
+        ) : null}
+        {d.disclaimer ? (
+          <div className={styles.disclaimerRecipe} role="note">
+            <DisclaimerIcon />
+            <p>
+              <Inline text={d.disclaimer} bundle={bundle} event={event} />
+            </p>
+          </div>
+        ) : null}
+        <div className={styles.routeMap} data-testid="route-map-frame">
+          <Suspense fallback={null}>
+            <LazyRouteMap path={path} ariaLabel={d.heading ?? undefined} onFail={onMapFail} />
+          </Suspense>
+        </div>
+      </div>
+    );
+  }
 
   if (mediaId === null || mediaId === undefined || mediaId === "") {
     if (emptyText) {
