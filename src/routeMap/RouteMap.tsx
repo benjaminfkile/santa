@@ -10,11 +10,32 @@
 // `reducedMotion` is set, where it moves at once. The caller renders the
 // pin and reads the motion preference, so this chunk imports neither
 // react-dom nor the icon and motion modules.
+// The control stack sits at the top right of the frame, each button
+// carrying `controlClassName` (the caller passes the icon button recipe,
+// which stays out of this chunk because the tracker shares it): a
+// fullscreen button when `fullscreenControl` is set
+// (the caller owns the fullscreen state and passes `fullscreen` and
+// `onToggleFullscreen`; each change of `fullscreen` resizes the map and
+// refits the path), and a terrain toggle when `terrainControl` is set and
+// the terrain archive exists (probed once per page load after the map
+// mounts). The terrain choice is kept in storage under TERRAIN_KEY
+// ("on" or "off", off when absent) and applied to every style the map
+// builds, so an appearance switch keeps it.
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { getResolved, subscribeScheme } from "../content/theme/colorScheme";
-import { mountRouteMap, type Appearance, type LatLng, type RouteMapHandle } from "./index";
+import { copy } from "../copy/copy";
+import { storageGet, storageSet } from "../lib/storage";
+import {
+  mountRouteMap,
+  probeTerrain,
+  type Appearance,
+  type LatLng,
+  type RouteMapHandle,
+} from "./index";
 import * as styles from "./RouteMap.module.css";
+
+export const TERRAIN_KEY = "wmsfo.routeMap.terrain";
 
 function useAppearance(): Appearance {
   return useSyncExternalStore(subscribeScheme, getResolved, () => "light");
@@ -29,6 +50,11 @@ export type RouteMapProps = {
   pinElement?: HTMLElement;
   reducedMotion?: boolean;
   ariaLabel?: string;
+  fullscreenControl?: boolean;
+  terrainControl?: boolean;
+  controlClassName?: string;
+  fullscreen?: boolean;
+  onToggleFullscreen?: () => void;
   onFail: () => void;
 };
 
@@ -39,15 +65,25 @@ export function RouteMap({
   pinElement,
   reducedMotion = false,
   ariaLabel,
+  fullscreenControl = false,
+  terrainControl = false,
+  controlClassName,
+  fullscreen = false,
+  onToggleFullscreen,
   onFail,
 }: RouteMapProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const handleRef = useRef<RouteMapHandle | null>(null);
   const appearance = useAppearance();
-  const latest = useRef({ path, marks, pin, pinElement, appearance, reducedMotion, onFail });
+  const [mounted, setMounted] = useState(false);
+  const [terrainAvailable, setTerrainAvailable] = useState(false);
+  const [terrainOn, setTerrainOn] = useState(() => storageGet(TERRAIN_KEY) === "on");
+  const showTerrain = terrainControl && terrainAvailable;
+  const terrain = showTerrain && terrainOn;
+  const latest = useRef({ path, marks, pin, pinElement, appearance, terrain, reducedMotion, onFail });
 
   useEffect(() => {
-    latest.current = { path, marks, pin, pinElement, appearance, reducedMotion, onFail };
+    latest.current = { path, marks, pin, pinElement, appearance, terrain, reducedMotion, onFail };
   });
 
   useEffect(() => {
@@ -66,6 +102,7 @@ export function RouteMap({
       path: latest.current.path,
       marks: latest.current.marks,
       appearance: latest.current.appearance,
+      terrain: latest.current.terrain,
       pinElement: latest.current.pinElement,
       onError: fail,
     })
@@ -76,8 +113,14 @@ export function RouteMap({
         }
         handleRef.current = handle;
         const now = latest.current;
-        handle.update({ path: now.path, marks: now.marks, appearance: now.appearance });
+        handle.update({
+          path: now.path,
+          marks: now.marks,
+          appearance: now.appearance,
+          terrain: now.terrain,
+        });
         handle.setPin(now.pin, false);
+        setMounted(true);
       })
       .catch(fail);
     return () => {
@@ -88,8 +131,32 @@ export function RouteMap({
   }, []);
 
   useEffect(() => {
-    handleRef.current?.update({ path, marks, appearance });
-  }, [path, marks, appearance]);
+    if (!mounted || !terrainControl) return;
+    let cancelled = false;
+    void probeTerrain().then((exists) => {
+      if (!cancelled) setTerrainAvailable(exists);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [mounted, terrainControl]);
+
+  useEffect(() => {
+    handleRef.current?.update({ path, marks, appearance, terrain });
+  }, [path, marks, appearance, terrain]);
+
+  const fullscreenSeen = useRef(fullscreen);
+  useEffect(() => {
+    if (fullscreenSeen.current === fullscreen) return;
+    fullscreenSeen.current = fullscreen;
+    handleRef.current?.refit();
+  }, [fullscreen]);
+
+  function toggleTerrain(): void {
+    const next = !terrainOn;
+    setTerrainOn(next);
+    storageSet(TERRAIN_KEY, next ? "on" : "off");
+  }
 
   const pinLat = pin?.lat ?? null;
   const pinLng = pin?.lng ?? null;
@@ -98,14 +165,86 @@ export function RouteMap({
     handleRef.current?.setPin(point, !latest.current.reducedMotion);
   }, [pinLat, pinLng]);
 
+  const showFullscreen = fullscreenControl && onToggleFullscreen !== undefined;
+
   return (
-    <div
-      ref={hostRef}
-      className={styles.routeMapHost}
-      role="region"
-      aria-label={ariaLabel}
-      data-testid="route-map"
-      data-appearance={appearance}
-    />
+    <>
+      <div
+        ref={hostRef}
+        className={styles.routeMapHost}
+        role="region"
+        aria-label={ariaLabel}
+        data-testid="route-map"
+        data-appearance={appearance}
+        data-terrain={terrain ? "on" : "off"}
+      />
+      {mounted && (showFullscreen || showTerrain) ? (
+        <div className={styles.routeMapControls} data-testid="route-map-controls">
+          {showFullscreen ? (
+            <button
+              type="button"
+              className={controlClassName}
+              aria-label={fullscreen ? copy.map.routeMap.exitFullscreen : copy.map.routeMap.fullscreen}
+              aria-pressed={fullscreen}
+              onClick={onToggleFullscreen}
+              data-testid="route-map-fullscreen"
+            >
+              {fullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
+            </button>
+          ) : null}
+          {showTerrain ? (
+            <button
+              type="button"
+              className={controlClassName}
+              aria-label={copy.map.routeMap.terrain}
+              aria-pressed={terrainOn}
+              onClick={toggleTerrain}
+              data-testid="route-map-terrain"
+            >
+              <TerrainIcon />
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+const strokeProps = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "1.75",
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+};
+
+function FullscreenIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" {...strokeProps} aria-hidden>
+      <path d="M4 9V4h5" />
+      <path d="M20 9V4h-5" />
+      <path d="M4 15v5h5" />
+      <path d="M20 15v5h-5" />
+    </svg>
+  );
+}
+
+function ExitFullscreenIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" {...strokeProps} aria-hidden>
+      <path d="M9 4v5H4" />
+      <path d="M15 4v5h5" />
+      <path d="M9 20v-5H4" />
+      <path d="M15 20v-5h5" />
+    </svg>
+  );
+}
+
+function TerrainIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" {...strokeProps} aria-hidden>
+      <path d="M2 20l7-12 4 6 3-4 6 10z" />
+      <path d="M7.5 10.5l1.5 1.5 1.5-1.5" />
+    </svg>
   );
 }

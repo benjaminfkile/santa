@@ -14,6 +14,12 @@ import { useEffect, useRef, useState } from "react";
 import type OpenSeadragon from "openseadragon";
 import { copy } from "../../../copy/copy";
 import { useReducedMotion } from "../../../lib/motion";
+import {
+  currentFullscreenElement,
+  exitFullscreenNow,
+  fullscreenSupported,
+  requestFullscreenOn,
+} from "../../../lib/fullscreen";
 import * as styles from "./RoutePreview.module.css";
 import * as ibtn from "../../../ui/IconButton.module.css";
 
@@ -30,42 +36,6 @@ type OSDFactory = (options: OpenSeadragon.Options) => OpenSeadragon.Viewer;
 type OSDModule = {
   default: OSDFactory & { Point: new (x: number, y: number) => OpenSeadragon.Point };
 };
-
-function fullscreenSupported(): boolean {
-  if (typeof document === "undefined") return false;
-  const d = document as unknown as { fullscreenEnabled?: boolean; webkitFullscreenEnabled?: boolean };
-  return d.fullscreenEnabled === true || d.webkitFullscreenEnabled === true;
-}
-
-function currentFullscreenElement(): Element | null {
-  if (typeof document === "undefined") return null;
-  const d = document as unknown as { fullscreenElement?: Element | null; webkitFullscreenElement?: Element | null };
-  return d.fullscreenElement ?? d.webkitFullscreenElement ?? null;
-}
-
-function requestFullscreenOn(element: HTMLElement): void {
-  const el = element as HTMLElement & {
-    requestFullscreen?: () => Promise<void>;
-    webkitRequestFullscreen?: () => Promise<void>;
-  };
-  if (typeof el.requestFullscreen === "function") {
-    void el.requestFullscreen();
-  } else if (typeof el.webkitRequestFullscreen === "function") {
-    void el.webkitRequestFullscreen();
-  }
-}
-
-function exitFullscreenNow(): void {
-  const d = document as unknown as {
-    exitFullscreen?: () => Promise<void>;
-    webkitExitFullscreen?: () => Promise<void>;
-  };
-  if (typeof d.exitFullscreen === "function") {
-    void d.exitFullscreen();
-  } else if (typeof d.webkitExitFullscreen === "function") {
-    void d.webkitExitFullscreen();
-  }
-}
 
 export function PosterViewer({ mediaId, url, dzi, alt, ariaLabel }: PosterViewerProps) {
   const frameRef = useRef<HTMLDivElement | null>(null);
@@ -167,7 +137,7 @@ export function PosterViewer({ mediaId, url, dzi, alt, ariaLabel }: PosterViewer
       if (currentFullscreenElement() === frame) {
         exitFullscreenNow();
       } else {
-        requestFullscreenOn(frame);
+        void requestFullscreenOn(frame);
       }
     } else {
       setFallbackFullscreen((v) => !v);

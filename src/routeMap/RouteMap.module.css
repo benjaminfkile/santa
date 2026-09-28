@@ -5,3 +5,15 @@
   position: absolute;
   inset: 0;
 }
+
+/* The control stack at the top right of the frame, above the map canvas
+   and its attribution, in the icon button recipe (44 px targets). */
+.routeMapControls {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}

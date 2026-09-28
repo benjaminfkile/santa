@@ -142,6 +142,49 @@
   border-radius: 0;
 }
 
+/* The route map's stage: the map frame and the slider, the fullscreen
+   target. Fullscreen (the API's :fullscreen or the takeover class, the
+   same element fixed over the viewport where the API is missing) lays it
+   out over the whole screen on the site background, the frame taking the
+   height the slider leaves. No transition, so the switch is instant. */
+.routeMapStage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.routeMapStage:fullscreen {
+  box-sizing: border-box;
+  width: 100vw;
+  height: 100vh;
+  padding: var(--space-3);
+  background: var(--ground);
+}
+.routeMapStageTakeover {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  box-sizing: border-box;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  padding: max(var(--space-3), env(safe-area-inset-top)) max(var(--space-3), env(safe-area-inset-right)) max(var(--space-3), env(safe-area-inset-bottom)) max(var(--space-3), env(safe-area-inset-left));
+  background: var(--ground);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+/* Two rules, not one list: a browser without :fullscreen drops only the
+   first. */
+.routeMapStage:fullscreen .routeMap {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+.routeMapStageTakeover .routeMap {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+
 /* The route map's time slider under the frame: the selected entry's time
    label, then a full width range input with a 44 px touch target and a
    24 px thumb in the accent colour. */

@@ -10,7 +10,13 @@
 // appearance changes paint properties only, so the basemap tiles stay on
 // screen. `setPin` stands the Santa pin (a MapLibre marker around the
 // caller's element) on a point, eased over PIN_TRANSITION_MS when asked
-// to animate and placed at once otherwise; null removes it.
+// to animate and placed at once otherwise; null removes it. `terrain`
+// adds the hillshade over the terrain archive to the style, through the
+// same diff, so an appearance switch keeps it. `refit` resizes the map to
+// its container and fits the path again (the fullscreen edges call it).
+// `probeTerrain` reads the header of `<base>/terrain.pmtiles` once per
+// page load and resolves whether the archive exists; a missing or failing
+// archive logs once and resolves false.
 
 import "./maplibre.css";
 import { Map as MapLibreMap, Marker, addProtocol, setWorkerUrl } from "maplibre-gl";
@@ -19,7 +25,14 @@ import { PMTiles, Protocol } from "pmtiles";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { env } from "../config/env";
 import type { Appearance } from "./flavors";
-import { OSM_ATTRIBUTION, buildStyle, pathBounds, tilesUrl, type LatLng } from "./style";
+import {
+  OSM_ATTRIBUTION,
+  buildStyle,
+  pathBounds,
+  terrainUrl,
+  tilesUrl,
+  type LatLng,
+} from "./style";
 
 export type { Appearance } from "./flavors";
 export type { LatLng } from "./style";
@@ -29,6 +42,7 @@ export type RouteMapOptions = {
   path: readonly LatLng[];
   marks?: readonly LatLng[];
   appearance: Appearance;
+  terrain?: boolean;
   pinElement?: HTMLElement;
   onError: (error: unknown) => void;
 };
@@ -37,10 +51,12 @@ export type RouteMapUpdate = {
   path: readonly LatLng[];
   marks?: readonly LatLng[];
   appearance: Appearance;
+  terrain?: boolean;
 };
 
 export type RouteMapHandle = {
   update: (next: RouteMapUpdate) => void;
+  refit: () => void;
   setPin: (point: LatLng | null, animate: boolean) => void;
   destroy: () => void;
 };
@@ -64,6 +80,33 @@ function ensureProtocol(): Protocol {
   return protocol;
 }
 
+function archiveAt(url: string): PMTiles {
+  const proto = ensureProtocol();
+  let archive = proto.get(url);
+  if (archive === undefined) {
+    archive = new PMTiles(url);
+    proto.add(archive);
+  }
+  return archive;
+}
+
+let terrainProbe: Promise<boolean> | null = null;
+
+export function probeTerrain(): Promise<boolean> {
+  if (terrainProbe === null) {
+    const base = env.ROUTE_BASEMAP_URL;
+    terrainProbe = (async () => {
+      if (base === "") return false;
+      await archiveAt(terrainUrl(base)).getHeader();
+      return true;
+    })().catch((error: unknown) => {
+      console.warn("route map: no terrain archive, the terrain view is off", error);
+      return false;
+    });
+  }
+  return terrainProbe;
+}
+
 function samePath(a: readonly LatLng[], b: readonly LatLng[]): boolean {
   if (a === b) return true;
   if (a.length !== b.length) return false;
@@ -80,15 +123,9 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
   let path = options.path;
   let marks = options.marks ?? [];
   let appearance = options.appearance;
+  let terrain = options.terrain ?? false;
 
-  const proto = ensureProtocol();
-  const url = tilesUrl(base);
-  let archive = proto.get(url);
-  if (archive === undefined) {
-    archive = new PMTiles(url);
-    proto.add(archive);
-  }
-  const header = await archive.getHeader();
+  const header = await archiveAt(tilesUrl(base)).getHeader();
 
   function padding(): number {
     const { clientWidth, clientHeight } = container;
@@ -97,7 +134,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
 
   const map = new MapLibreMap({
     container,
-    style: buildStyle(appearance, base, path, marks),
+    style: buildStyle(appearance, base, path, marks, terrain),
     bounds: pathBounds(path) ?? undefined,
     fitBoundsOptions: { padding: padding() },
     minZoom: header.minZoom,
@@ -128,12 +165,14 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
     onError(event.error);
   });
 
+  function refit(): void {
+    map.resize();
+    fit();
+  }
+
   let observer: ResizeObserver | null = null;
   if (typeof ResizeObserver !== "undefined") {
-    observer = new ResizeObserver(() => {
-      map.resize();
-      fit();
-    });
+    observer = new ResizeObserver(refit);
     observer.observe(container);
   }
 
@@ -156,13 +195,23 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
       const nextMarks = next.marks ?? [];
       const pathChanged = !samePath(path, next.path);
       const marksChanged = !samePath(marks, nextMarks);
-      if (!pathChanged && !marksChanged && next.appearance === appearance) return;
+      const nextTerrain = next.terrain ?? false;
+      if (
+        !pathChanged &&
+        !marksChanged &&
+        next.appearance === appearance &&
+        nextTerrain === terrain
+      ) {
+        return;
+      }
       path = next.path;
       marks = nextMarks;
       appearance = next.appearance;
-      map.setStyle(buildStyle(appearance, base, path, marks), { diff: true });
+      terrain = nextTerrain;
+      map.setStyle(buildStyle(appearance, base, path, marks, terrain), { diff: true });
       if (pathChanged) fit();
     },
+    refit,
     setPin(point, animate) {
       stopEasing();
       if (point === null) {
