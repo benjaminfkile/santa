@@ -1,6 +1,7 @@
-/* docs/site.md sections 7.4, 8.5, 8.6. Route preview: image variant with
-   an optional link to the viewer page; viewer variant with the disclaimer
-   plus the pan-and-zoom poster. Also holds the shared `<dialog>` recipes
+/* docs/site.md sections 7.4, 8.5, 8.6, 8.9. Route preview: image variant
+   with an optional link to the viewer page; viewer variant with the
+   disclaimer plus the pan-and-zoom poster; map variant with the
+   disclaimer plus the route map. Also holds the shared `<dialog>` recipes
    for the route disclaimer and location prompt on the live screen. */
 
 .routePreview { display: flex; flex-direction: column; gap: var(--space-3); }
@@ -90,6 +91,16 @@
   margin-top: 2px;
 }
 .disclaimerRecipe p { margin: 0; font-size: 0.9375rem; }
+
+.routeMap {
+  position: relative;
+  width: 100%;
+  height: var(--route-preview-max-h);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+}
 
 .routePoster {
   position: relative;

@@ -114,6 +114,12 @@ santa/
       userLocation.ts             watchPosition, user marker, dotted line, distance
       themes/                     index.ts plus one file per theme
       wakeLock.ts
+    routeMap/                     the route map (section 8.9), imported only by sections/RoutePreview (style `map`) through import()
+      index.ts                    mountRouteMap: the pmtiles protocol, the archive header, the MapLibre map, fit, live style switch
+      RouteMap.tsx                React host: follows the site appearance, reports a failure so the section falls back
+      style.ts                    the MapLibre style: @protomaps/basemaps layers, the route line, the start and end markers
+      flavors.ts                  the light and dark basemap flavors derived from the standard and night tracker themes
+      maplibre.css                the part of MapLibre's stylesheet the route map uses, on the site's tokens
     copy/
       copy.ts                     the few site-coded strings (loading, errors, sign-in hint, not found); everything else is content
     lib/
@@ -134,8 +140,8 @@ santa/
 
 Rules that keep the structure honest:
 
-- Only `src/store/fetchers.ts` fetches from the CDN and only `src/api/client.ts` calls the API. Nothing else issues a network request except the Maps loader, the SignalR connection, and the analytics script.
-- `src/map/**` and `@microsoft/signalr` are never imported statically from anywhere; they enter through `import()` (section 18).
+- Only `src/store/fetchers.ts` fetches from the CDN and only `src/api/client.ts` calls the API. Nothing else issues a network request except the Maps loader, the SignalR connection, the route map's basemap reads (tiles and glyphs from `VITE_ROUTE_BASEMAP_URL`), and the analytics script.
+- `src/map/**`, `src/routeMap/**`, `maplibre-gl`, and `@microsoft/signalr` are never imported statically from anywhere; they enter through `import()` (section 18).
 - The store has no dependency on auth. Auth state lives in `AuthProvider` and gates two surfaces: the `alerts_signup` section and the `cookie_control` section.
 - `src/content/registry.ts` is the only place a section kind or a block kind is wired to a component. Nothing else switches on `kind`. A kind missing from the registry renders `Unknown`.
 - No page layout, copy, image, or link is coded into the site beyond `copy/copy.ts`; everything the visitor reads comes from `snapshot.content`.
@@ -158,6 +164,7 @@ All configuration is Vercel environment variables with the `VITE_` prefix, valid
 | `VITE_GOOGLE_MAPS_KEY` | referrer-restricted browser key | same key, referrers include the preview origin and `localhost:5173` |
 | `VITE_ANALYTICS_ID` | GA4 measurement id | empty |
 | `VITE_ANALYTICS_ORIGINS` | `https://<site-domain>` (comma-separated exact origins) | empty |
+| `VITE_ROUTE_BASEMAP_URL` | `https://<cdn-domain>/basemap` (the CDN folder holding the self-hosted OSM basemap: `<base>/tiles.pmtiles` and `<base>/glyphs/{fontstack}/{range}.pbf`) | the dev distribution's basemap folder; optional: unset, the `map` style of `route_preview` renders its `image` fallback (8.9) |
 
 ```ts
 // src/config/env.ts
@@ -172,6 +179,7 @@ export const env = {
   GOOGLE_MAPS_KEY: read("VITE_GOOGLE_MAPS_KEY", /^\S+$/),
   ANALYTICS_ID: readOptional("VITE_ANALYTICS_ID"),
   ANALYTICS_ORIGINS: readOptional("VITE_ANALYTICS_ORIGINS").split(",").map(s => s.trim()).filter(Boolean),
+  ROUTE_BASEMAP_URL: readOptionalUrl("VITE_ROUTE_BASEMAP_URL", "https:"),   // "" when unset; validated and without a trailing slash when set
 } as const;
 
 export const LIVE_URL = `${env.CDN_BASE_URL}/live/location.json`;
@@ -641,7 +649,7 @@ Content kinds read `data`, `items`, and the bundle only. Live kinds read the sto
 | `leaderboard` | `live.cookieTally`, `snapshot.cookieTypes` | Section 9 |
 | `sponsor_carousel` | `snapshot.sponsors`, `bundle.media` | Section 15; logo through `Media` with `sizes` fixed at `data.logoWidth` |
 | `sponsor_grid` | `snapshot.sponsors`, `bundle.media` | Every sponsor in snapshot order (pinned first, then largest gift first; the site never re-sorts) as equal cards in one responsive grid: `repeat(auto-fill, minmax(280px, 1fr))` with a 16 px gap, which gives three columns from 1024 px, two down to about 640 px, and one below; every card the same height in its row (`align-items: stretch`, the grid's implicit rows). A card is the sponsor's name as its heading at the top, the logo large and centred in a fixed 3:2 box (the 480 variant through `Media`, `object-fit: contain`, the name as large text when `logoMediaId` is null), then a bottom row with "Sponsor for N years" at the left when `showYears` and the link icons at the right (globe for `websiteUrl`, Facebook for `fbUrl`, Instagram for `igUrl`, each an `<a>` with its `aria-label` and `rel="noopener"`, only when non-null). The whole card is a link to `websiteUrl ?? fbUrl ?? igUrl` (new tab) when any is set, with the icons as separate links above it in the tab order; otherwise a plain card. The frost card recipe of 7.7, no tiers, no amounts, nothing that hints at a gift's size; `emptyText` when none |
-| `route_preview` | `snapshot.event.routeImageMediaId`, `bundle.media` | `image`: the poster through `Media` (960 variant, `srcset`) inside a bounded frame at the section's width, `--route-preview-max-h` (`min(70vh, 720px)`) tall, filled with `object-fit: cover` at `object-position: center` so a portrait poster shows its middle band at column width. The frame is wrapped in a link to the page holding the `viewer` style when one is published, unlinked otherwise; when linked, a quiet "Open the full route" label sits pinned to the bottom right of the frame over the panel and text tokens. `viewer`: the deep-zoom viewer of 8.5 (OpenSeadragon over the asset's `dzi` pyramid, or its original `url` when `dzi` is null) with pan, zoom, and fullscreen, and `data.disclaimer` rendered above it; `emptyText` when the id is null or unresolvable |
+| `route_preview` | `snapshot.event.routeImageMediaId`, `snapshot.event.routeMap`, `bundle.media` | `image`: the poster through `Media` (960 variant, `srcset`) inside a bounded frame at the section's width, `--route-preview-max-h` (`min(70vh, 720px)`) tall, filled with `object-fit: cover` at `object-position: center` so a portrait poster shows its middle band at column width. The frame is wrapped in a link to the page holding the `viewer` style when one is published, unlinked otherwise; when linked, a quiet "Open the full route" label sits pinned to the bottom right of the frame over the panel and text tokens. `viewer`: the deep-zoom viewer of 8.5 (OpenSeadragon over the asset's `dzi` pyramid, or its original `url` when `dzi` is null) with pan, zoom, and fullscreen, and `data.disclaimer` rendered above it. `map`: `event.routeMap.path` (contracts 1.3) drawn over the self-hosted basemap (`VITE_ROUTE_BASEMAP_URL`) by the route map of 8.9, in a frame `--route-preview-max-h` tall at the section's width, with `data.disclaimer` above it and the heading exactly as the other styles render them; when `event.routeMap` is null (or its path has fewer than two points), `VITE_ROUTE_BASEMAP_URL` is unset, or the style or tiles fail to load, it renders exactly what `image` renders. `emptyText` when the id is null or unresolvable (and, for `map`, there is no route map to draw) |
 | `cookie_control` | auth, `live.eventStatusId`, `snapshot.cookieTypes` | Section 10; `closedCopy` outside status 3; `signedOutCopy` with a sign-in link when signed out |
 | `alerts_signup` | auth, `GET /me`, `GET /me/subscriptions` | Section 13; `signedOutCopy` with a sign-in link (`returnTo` the current path) when signed out |
 | `contact_form` | `settings.contactEmail` | Section 14 |
@@ -762,7 +770,7 @@ export async function loadMaps() {
 }
 ```
 
-`src/map/**` is imported with `import()` from `sections/Map/Map.tsx` and from `sections/RoutePreview` (style `map`) only. A load failure retries by itself up to three times with doubling backoff from one second (`MapView`), so a network blip at the moment the live screen mounts heals without anyone noticing; only after those attempts does the map area render the "map unavailable" panel with a retry button, which starts a fresh set of attempts. The data row, leaderboard, message, carousel, and cookie control still work because they read the store, not the map. Google's console notice deprecating `google.maps.Marker` is expected and ignored (section 24: advanced markers require a cloud map id, which would move the six style arrays out of the repository), and a transient 500 from Google's internal `GetViewportInfo` telemetry call does not affect the map.
+`src/map/**` is imported with `import()` from `sections/Map/Map.tsx` only; the `map` style of `route_preview` is the MapLibre route map of 8.9 and never loads Google Maps. A load failure retries by itself up to three times with doubling backoff from one second (`MapView`), so a network blip at the moment the live screen mounts heals without anyone noticing; only after those attempts does the map area render the "map unavailable" panel with a retry button, which starts a fresh set of attempts. The data row, leaderboard, message, carousel, and cookie control still work because they read the store, not the map. Google's console notice deprecating `google.maps.Marker` is expected and ignored (section 24: advanced markers require a cloud map id, which would move the six style arrays out of the repository), and a transient 500 from Google's internal `GetViewportInfo` telemetry call does not affect the map.
 
 ### 8.2 Map options
 
@@ -873,6 +881,18 @@ export function release() { void sentinel?.release(); sentinel = null; }
 ```
 
 Acquired when the live screen mounts and on every `visibilitychange` to visible while the live screen is mounted; released on unmount. Nothing is shown to the user about it.
+
+### 8.9 Route map
+
+The `map` style of `route_preview` (7.4) draws `event.routeMap.path` (contracts 1.3: the linked recording simplified and smoothed by the API) over the site's own OpenStreetMap basemap on the CDN. It is MapLibre GL, not Google Maps: `src/map/**` and the Maps loader are the tracker's and are not involved. The time slider, the 5 minute marks, and the predicted Santa pin over `routeMap.timeline` build on this map.
+
+**Loading.** `src/routeMap/**` with `maplibre-gl`, `pmtiles`, and `@protomaps/basemaps` is the `routemap` chunk (section 18). `RoutePreview` decides first, from what it already has, whether a map can render (a route map with two or more points and `VITE_ROUTE_BASEMAP_URL` set); only then does it mount a frame and `React.lazy`-import `src/routeMap/RouteMap.tsx`, so the image and viewer styles, and a map style that falls back, never load the chunk. The chunk sets MapLibre's worker URL to its own bundled worker (`maplibre-gl-worker-*.js`, emitted by Vite), registers the `pmtiles://` protocol once, and reads the archive header of `<base>/tiles.pmtiles` before creating the map: an unreadable archive fails the mount with no map created, and the header's `minZoom` and `maxZoom` bound the map's zoom. The style reads tiles from `pmtiles://<base>/tiles.pmtiles` and glyphs from `<base>/glyphs/{fontstack}/{range}.pbf` (the basemap layers use Noto Sans Regular, Medium, and Italic); the basemap carries no sprite, so the one-way arrows and road shields are left out and the place labels keep their text without the town dot. The requests go to the basemap's origin, which the CSP's `connect-src` names through `%ROUTE_BASEMAP_ORIGIN%` (21.1).
+
+**Map.** The path is a GeoJSON line layer in the appearance's route colour and opacity with round joins and caps, over every basemap layer; the first and last points are small circle markers (the start filled in the route colour, the end in the text colour, each ringed in the chrome background). The camera fits the path's bounds with 40 px padding (less on a very small frame) when the map is created and again whenever the frame resizes (a `ResizeObserver` on the host; `trackResize` is off). `cooperativeGestures` is on, so a page scroll passes over the map and a two-finger or modifier gesture pans and zooms it; rotation, pitch, and box zoom are off. The attribution control is always expanded and reads "© OpenStreetMap contributors" (linked to the OSM copyright page), on the site's panel and text tokens. MapLibre's own stylesheet is not loaded (its weight is icons for controls the route map does not show); `src/routeMap/maplibre.css` carries the canvas, control corner, attribution, and cooperative gesture rules the route map uses. The map is removed on unmount; a new snapshot with the same path neither refits nor rebuilds, a changed path updates the line in place and refits.
+
+**Light and dark.** Two MapLibre styles are built from the `@protomaps/basemaps` layers with two flavors whose colours come from the tracker themes (8.4), so the route map reads as the same world as the tracker: light follows `standard` (Google's default roadmap, which `standard.ts` leaves unstyled: pale grey land `#f8f9fa`, `#aadaff` water, green parks, white roads with grey casings, yellow highways, and the labels in `standard`'s chrome text colours), dark follows `night` (`#242f3e` ground, `#17263c` water, `#263c3f` parks and woods, `#38414e` roads with `#212a37` casings, `#746855` highways, gold `#d59563` place labels, `#9ca5b3` road labels). The derivation is one commented table per flavor in `src/routeMap/flavors.ts`, every colour key beside the tracker value it is taken from, and a unit test asserts every dark colour is a value of `night.ts` and the route palettes are the tracker's (`#1a56c4` at 0.9 light, `#33d6ff` at 0.85 dark). The map follows the site appearance (`<html data-theme>`, so light, dark, and system all apply) live through `subscribeScheme` (7.7): a change calls `setStyle` with `diff: true` on the same map, and because both styles share every source and layer id the diff changes paint properties only, so the tiles stay on screen with no reload and no flash.
+
+**Fallbacks**, in order, each rendering exactly what the `image` style renders (the poster picture in its frame, linked to the viewer page when there is one; `emptyText` when there is no poster; the heading as always): `event.routeMap` is null or its path has fewer than two points; `VITE_ROUTE_BASEMAP_URL` is unset; the chunk, the archive header, WebGL, the style, the glyphs, or the tiles fail before the first complete render (MapLibre's first `idle`). A failure logs one `console.warn` and swaps the frame for the image view, so no card is ever left blank; a tile that fails after the first complete render (a blip while panning) leaves the map up.
 
 ---
 
@@ -1164,10 +1184,12 @@ Chunks (`build.rollupOptions.output.manualChunks`):
 
 | Chunk | Contents | Loaded when | Gzipped budget |
 |---|---|---|---|
-| `index` | React, router, store, shell, the page renderer, every section and block component except the map | First paint | 130 KB |
+| `index` | React, router, store, shell, the page renderer, every section and block component except the map (the `map` style of `route_preview` adds only its choice and its fallback to it; MapLibre is in `routemap`) | First paint | 130 KB |
 | `signalr` | `@microsoft/signalr` | After the first live object is applied (startup step 3) | 45 KB |
 | `map` | `src/map/**`, `@googlemaps/js-api-loader`, themes | A `map` section mounts | 50 KB (Google's own script excluded) |
 | `osd` | `openseadragon` and `PosterViewer` | A `route_preview` section in `viewer` style mounts | 80 KB |
+| `routemap` | `maplibre-gl`, `pmtiles`, `@protomaps/basemaps`, `src/routeMap/**` (the two styles, the host, the MapLibre rules) | A `route_preview` section in `map` style mounts with a route map and a basemap URL (8.9) | 250 KB (measured 237 KB brotli) |
+| `maplibre-gl-worker` | MapLibre's worker, bundled by Vite as a separate file | The route map starts | 130 KB (measured 119 KB brotli) |
 | `auth` | `amazon-cognito-identity-js`, `cognito.ts`, the five auth pages | An `/auth/*` route, a sign-in click, or a stored session at boot | 60 KB |
 | `alerts` | The two token landing pages | Route mounts | 15 KB |
 | CSS | all | First paint | 25 KB |
@@ -1241,19 +1263,20 @@ export default defineConfig({
       auth: ["amazon-cognito-identity-js"],
       maps: ["@googlemaps/js-api-loader"],
       osd: ["openseadragon"],
+      routemap: ["maplibre-gl", "pmtiles", "@protomaps/basemaps", "src/routeMap/**"],
     } } },
   },
   server: { port: 5173, strictPort: true },
 });
 ```
 
-The three families (IBM Plex Sans 400, 500, 600; IBM Plex Mono 400, 500; Bricolage Grotesque 600, 700) are self-hosted in the bundle through `@fontsource` (no third-party font host), so the site loads on networks that cannot reach Google. `index.html` uses Vite's `%VITE_*%` replacement for the CSP meta and preconnect, so no environment value is written into the repository. The Cognito host is `https://cognito-idp.<region>.amazonaws.com` with the region taken from the pool id at build time (a small Vite plugin exposes it as `%COGNITO_IDP_URL%`):
+The three families (IBM Plex Sans 400, 500, 600; IBM Plex Mono 400, 500; Bricolage Grotesque 600, 700) are self-hosted in the bundle through `@fontsource` (no third-party font host), so the site loads on networks that cannot reach Google. `index.html` uses Vite's `%VITE_*%` replacement for the CSP meta and preconnect, so no environment value is written into the repository. The Cognito host is `https://cognito-idp.<region>.amazonaws.com` with the region taken from the pool id at build time (a small Vite plugin exposes it as `%COGNITO_IDP_URL%`), and the origin of `VITE_ROUTE_BASEMAP_URL` is `%ROUTE_BASEMAP_ORIGIN%` (another small plugin; empty when the variable is unset), which the route map's tile and glyph reads need (8.9):
 
 ```html
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
   script-src 'self' https://maps.googleapis.com https://www.googletagmanager.com;
-  connect-src 'self' %VITE_CDN_BASE_URL% %VITE_API_BASE_URL% %VITE_HUB_URL% %COGNITO_IDP_URL%
+  connect-src 'self' %VITE_CDN_BASE_URL% %VITE_API_BASE_URL% %VITE_HUB_URL% %COGNITO_IDP_URL% %ROUTE_BASEMAP_ORIGIN%
               https://maps.googleapis.com https://www.googletagmanager.com https://*.google-analytics.com;
   img-src 'self' data: blob: %VITE_CDN_BASE_URL% https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.gstatic.com https://*.ggpht.com;
   style-src 'self' 'unsafe-inline';
@@ -1336,6 +1359,7 @@ Fixtures come from the vendored `contracts/fixtures/*.json`; schema validation o
 | `auth/cognito` (mocked SDK) | each wrapper call maps to the SDK method; every error name in 11.1 maps to its copy; sign-in stores tokens; `getIdToken` refreshes inside the last minute and throws `SignInRequired` when the refresh fails |
 | Auth pages | client checks (address shape, 12 characters, matching passwords); submit disabled in flight; `UserNotConfirmedException` routes to confirm with the email; confirm straight from sign-up signs in and lands on `returnTo`; forgot shows the same copy for unknown addresses |
 | `PosterViewer` | `dzi` present builds a Deep Zoom tile source, absent an image source; the viewer is destroyed on unmount and rebuilt on a new media id; the fullscreen button calls `requestFullscreen` and falls back to the fixed frame when absent; the osd chunk is imported only when the section mounts |
+| `RouteMap` (MapLibre and pmtiles mocked) | the style follows the appearance, light and dark at mount and a live switch that diffs the style on the same map; each fallback of 8.9 (no route map, no basemap URL, an unreadable archive, a style or tile error) renders the image-style view and logs once; the heading and disclaimer render around the map; the route line source is fed `routeMap.path`, the map fits its bounds with cooperative gestures, the archive's zoom range, and the OSM attribution; the dark flavor's colours are all `night.ts` values; the built `routemap` chunk is reached from `index` only through `import()` |
 | `ContactForm` | limits, trimming, each response row in section 14 |
 | `PreviewPage` | fetches with the token, stores the bundle, renders the named page, shows the banner, clears on navigation, handles `404` |
 | `api/client` | bearer added only when `auth`; `Retry-After` and `details.retryAfterSeconds`; `204`; `SignInRequired` when no token |

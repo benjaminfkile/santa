@@ -1,0 +1,7 @@
+/* docs/site.md section 8.9. The route map host fills the section's map
+   frame. */
+
+.routeMapHost {
+  position: absolute;
+  inset: 0;
+}

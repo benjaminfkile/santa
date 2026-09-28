@@ -5,6 +5,7 @@ export const locationPromptActions: string;
 export const locationPromptDenied: string;
 export const locationPromptInapp: string;
 export const routeDisclaimer: string;
+export const routeMap: string;
 export const routePoster: string;
 export const routePosterControls: string;
 export const routePosterFullscreen: string;
