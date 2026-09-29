@@ -98,6 +98,7 @@ export interface SiteSettings {
   analyticsEnabled: boolean;
   logoMedia?: MediaRef | null;
   headerShowsSiteName?: boolean | null;
+  routeMap?: RouteMapDisplay;
 }
 export interface Display {
   sizePx?: number;
@@ -131,6 +132,12 @@ export interface MediaRef {
   mediaId: string;
   alt: string | null;
   display?: Display | null;
+}
+export interface RouteMapDisplay {
+  timeLabelIntervalMinutes?: 0 | 5 | 10 | 15 | 30;
+  arrows?: boolean;
+  arrowSize?: "small" | "medium" | "large" | "xlarge";
+  routeWidth?: "thin" | "normal" | "thick" | "xthick";
 }
 export interface Presentation {
   width: "full" | "wide" | "narrow";

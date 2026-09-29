@@ -4,9 +4,26 @@
 import type { LiveObject } from "./generated/live-object";
 import type { Snapshot } from "./generated/snapshot";
 import type { Route } from "./generated/route";
-import type { ContentDocument, Link, Presentation, MediaRef, SiteSettings } from "./generated/content-document";
+import type {
+  ContentDocument,
+  Link,
+  Presentation,
+  MediaRef,
+  RouteMapDisplay,
+  SiteSettings,
+} from "./generated/content-document";
 
-export type { LiveObject, Snapshot, Route, ContentDocument, Link, Presentation, MediaRef, SiteSettings };
+export type {
+  LiveObject,
+  Snapshot,
+  Route,
+  ContentDocument,
+  Link,
+  Presentation,
+  MediaRef,
+  RouteMapDisplay,
+  SiteSettings,
+};
 export type Sponsor = NonNullable<Snapshot["sponsors"]>[number];
 export type CookieType = NonNullable<Snapshot["cookieTypes"]>[number];
 export type ContentPage = ContentDocument["pages"][number];

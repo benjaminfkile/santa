@@ -4,7 +4,8 @@
 // with a dark version renders a second <img> and CSS shows one per theme;
 // one with `invertInDark` and no dark version is inverted in dark mode.
 // An icon with `display` renders inside a wrapper from `displayStyle`;
-// its `sizePx` beats the `size` the caller passes.
+// its `sizePx` beats the `size` the caller passes. `iconResolves` says
+// whether an icon draws anything at all.
 
 import type { CSSProperties } from "react";
 import type { IconRef } from "../../contracts";
@@ -41,7 +42,7 @@ export function Icon(props: IconProps) {
   );
 }
 
-function iconResolves(icon: IconRef, bundle: ContentBundle): boolean {
+export function iconResolves(icon: IconRef, bundle: ContentBundle): boolean {
   if (icon.source === "library" && LIBRARY_ICONS[icon.id]) return true;
   return resolveIcon(bundle, icon) !== null;
 }
