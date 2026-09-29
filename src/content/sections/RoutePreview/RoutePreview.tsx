@@ -19,23 +19,24 @@
 //     entries (starting at the first, labelled with the elapsed flight
 //     time) sits under the frame; with
 //     fewer, only the path is drawn. The frame and the slider share one
-//     wrapper, the fullscreen target (useRouteMapFullscreen), and the map
-//     carries a fullscreen button and a terrain toggle unless
-//     `data.controls.fullscreen` or `data.controls.terrain` is false.
-//     `data.pois.kinds` reaches the style as its POI kind list and
-//     `data.landmarks` as its landmarks, each name the label; without
-//     them the style gets neither. A landmark with an icon or a
-//     description also gets a marker and its popover (RouteLandmarks).
-//     The four display values (time label interval, arrows, arrow size,
-//     route width) resolve from `data.display`, then the site settings'
-//     `routeMap` block, then the defaults (routeMapDisplay), and reach
-//     the style as the label interval, `arrows`, `arrowScale`, and
-//     `routeWidthScale`.
+//     wrapper, the fullscreen target (useRouteMapFullscreen). Every map
+//     input comes from `event.routeMapConfig` (routeMapConfig), each
+//     value falling back to its default; a null config draws the default
+//     map. The map carries a fullscreen button and a terrain toggle
+//     unless `controls.fullscreen` or `controls.terrain` is false.
+//     `pois.kinds` reaches the style as its POI kind list and `landmarks`
+//     as its landmarks, each name the label; without them the style gets
+//     neither. A landmark with an icon or a description also gets a
+//     marker and its popover (RouteLandmarks). The four display values
+//     (time label interval, arrows, arrow size, route width) reach the
+//     style as the label interval, `arrows`, `arrowScale`, and
+//     `routeWidthScale`. The section data carries only the heading, the
+//     style, the disclaimer, and the empty text.
 
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { SectionComponent } from "../../registry";
-import type { ContentDocument, MediaRef, RouteMapDisplay } from "../../../contracts";
+import type { ContentDocument, MediaRef } from "../../../contracts";
 import { Inline } from "../../inline/Inline";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
@@ -51,8 +52,8 @@ import {
   type TimelineLabel,
 } from "./routeTimelineData";
 import { RouteTimeSlider } from "./RouteTimeSlider";
-import { useRouteLandmarks, type LandmarkData } from "./RouteLandmarks";
-import { resolveRouteMapDisplay } from "./routeMapDisplay";
+import { useRouteLandmarks } from "./RouteLandmarks";
+import { resolveRouteMapConfig } from "./routeMapConfig";
 import { useRouteMapFullscreen } from "./useRouteMapFullscreen";
 import { SantaIcon } from "../../icons/generated/santa";
 import { useReducedMotion } from "../../../lib/motion";
@@ -108,10 +109,6 @@ type RoutePreviewData = {
   style?: "image" | "viewer" | "map";
   emptyText?: string | null;
   disclaimer?: string | null;
-  controls?: { fullscreen?: boolean; terrain?: boolean } | null;
-  pois?: { kinds?: string[] | null } | null;
-  landmarks?: LandmarkData[] | null;
-  display?: RouteMapDisplay | null;
 };
 
 // The Santa pin's element, handed to the route map as its marker; the
@@ -142,6 +139,7 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   const emptyText = d.emptyText ?? null;
   const mediaId = useStore((s) => s.snapshot?.event?.routeImageMediaId ?? null);
   const routeMap = useStore((s) => s.snapshot?.event?.routeMap ?? null);
+  const routeMapConfig = useStore((s) => s.snapshot?.event?.routeMapConfig ?? null);
   const event = useSnapshotEvent();
   const content = bundle.content;
   const [mapFailed, setMapFailed] = useState(false);
@@ -155,14 +153,14 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
     () => (timeline === null ? NO_MARKS : timeline.map(({ lat, lng }) => ({ lat, lng }))),
     [timeline],
   );
-  const display = resolveRouteMapDisplay(d.display, content?.settings);
+  const config = useMemo(() => resolveRouteMapConfig(routeMapConfig), [routeMapConfig]);
+  const display = config.display;
   const labelEvery = display.timeLabelIntervalMinutes;
   const timeLabels = useMemo(
     () => (timeline === null ? NO_LABELS : routeTimeLabels(timeline, labelEvery)),
     [timeline, labelEvery],
   );
-  const poiKinds = d.pois?.kinds ?? undefined;
-  const landmarks = useRouteLandmarks(d.landmarks, bundle);
+  const landmarks = useRouteLandmarks(config.landmarks, bundle);
   const [selected, setSelected] = useState(0);
   const reducedMotion = useReducedMotion();
   const [pinElement] = useState(createPinElement);
@@ -211,7 +209,7 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
                 path={path}
                 marks={marks}
                 timeLabels={timeLabels}
-                poiKinds={poiKinds}
+                poiKinds={config.poiKinds}
                 landmarks={landmarks.styleLandmarks}
                 landmarkMarkers={landmarks.markers}
                 arrows={display.arrows}
@@ -221,8 +219,8 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
                 pinElement={pinElement}
                 reducedMotion={reducedMotion}
                 ariaLabel={d.heading ?? undefined}
-                fullscreenControl={d.controls?.fullscreen !== false}
-                terrainControl={d.controls?.terrain !== false}
+                fullscreenControl={config.controls.fullscreen}
+                terrainControl={config.controls.terrain}
                 controlClassName={ibtn.ibtn}
                 fullscreen={fullscreen.mode !== "off"}
                 onToggleFullscreen={fullscreen.toggle}

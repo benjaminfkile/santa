@@ -1,11 +1,15 @@
-// docs/site.md section 8.9. The route map's display settings, landmark
-// markers, and gestures, with MapLibre and pmtiles mocked:
-//  - Each of the four display values (time label interval, arrows, arrow
-//    size, route width) resolves from the section's `display`, then the
-//    site settings' `routeMap` block, then the default (15, true, medium,
-//    normal), and reaches the style: the labels at the interval's
-//    interior multiples (none at 0), the arrow layer and its scale, and
-//    the route line width.
+// docs/site.md section 8.9. The route map's config, landmark markers,
+// and gestures, with MapLibre and pmtiles mocked:
+//  - Every input comes from the event's `routeMapConfig`: each of the
+//    four display values (time label interval, arrows, arrow size, route
+//    width) resolves from the config's `display`, then the default (15,
+//    true, medium, normal), and reaches the style: the labels at the
+//    interval's interior multiples (none at 0), the arrow layer and its
+//    scale, and the route line width. The controls default to true and
+//    the landmarks and POI kinds to none.
+//  - A null or absent config renders the default map. Display, controls,
+//    landmarks, or POI kinds in the section data or in the site settings
+//    change nothing.
 //  - The named sizes map to scales through one table.
 //  - A landmark with an icon stands a badge marker (a library icon
 //    inline, a media icon through an image) and has no style dot; a
@@ -27,8 +31,9 @@ import { RoutePreview } from "../../../../src/content/sections/RoutePreview/Rout
 import {
   DISPLAY_DEFAULTS,
   DISPLAY_SCALES,
+  resolveRouteMapConfig,
   resolveRouteMapDisplay,
-} from "../../../../src/content/sections/RoutePreview/routeMapDisplay";
+} from "../../../../src/content/sections/RoutePreview/routeMapConfig";
 import { routeTimeLabels } from "../../../../src/content/sections/RoutePreview/routeTimelineData";
 
 type Handler = (event: unknown) => void;
@@ -148,14 +153,14 @@ const TIMELINE = [
 const mutableEnv = env as unknown as { ROUTE_BASEMAP_URL: string };
 const originalBasemap = mutableEnv.ROUTE_BASEMAP_URL;
 
-type Display = Record<string, unknown>;
+type Config = Record<string, unknown>;
 
-function buildBundle(routeMap?: Display): ContentBundle {
+function buildBundle(settings: Record<string, unknown> = {}): ContentBundle {
   return {
     content: {
       pages: [],
       nav: [],
-      settings: routeMap === undefined ? {} : { routeMap },
+      settings,
     } as unknown as ContentDocument,
     media: {
       "11111111-1111-4111-8111-111111111111": {
@@ -168,7 +173,7 @@ function buildBundle(routeMap?: Display): ContentBundle {
   } as unknown as ContentBundle;
 }
 
-function setEvent(): void {
+function setEvent(routeMapConfig?: Config | null): void {
   store.setState((s) => ({
     ...s,
     snapshot: {
@@ -178,6 +183,7 @@ function setEvent(): void {
         scheduledAt: null,
         routeImageMediaId: null,
         routeMap: { path: PATH, timeline: TIMELINE, durationMinutes: 93, timed: true },
+        ...(routeMapConfig === undefined ? {} : { routeMapConfig }),
       },
     } as unknown as Snapshot,
   }));
@@ -190,10 +196,17 @@ async function settle(): Promise<void> {
   });
 }
 
-async function renderSection(data: Record<string, unknown> = {}, sitewide?: Display) {
+// Renders a `map` section with `config` as the event's `routeMapConfig`
+// (left out of the event when undefined), `data` added to the section
+// data, and `settings` as the content document's site settings.
+async function renderSection(
+  config?: Config | null,
+  { data = {}, settings = {} }: { data?: Record<string, unknown>; settings?: Record<string, unknown> } = {},
+) {
+  setEvent(config);
   const result = render(
     <MemoryRouter>
-      <RoutePreview data={{ style: "map", ...data }} items={[]} bundle={buildBundle(sitewide)} />
+      <RoutePreview data={{ style: "map", ...data }} items={[]} bundle={buildBundle(settings)} />
     </MemoryRouter>,
   );
   await settle();
@@ -253,9 +266,8 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("route map display resolution", () => {
-  const settings = (routeMap: Display | undefined) =>
-    ({ routeMap }) as unknown as Parameters<typeof resolveRouteMapDisplay>[1];
+describe("route map config resolution", () => {
+  const DEFAULT_DISPLAY = { timeLabelIntervalMinutes: 15, arrows: true, arrowScale: 1, routeWidthScale: 1 };
 
   it("maps the named sizes to scales in one table", () => {
     expect(DISPLAY_SCALES).toEqual({
@@ -269,59 +281,90 @@ describe("route map display resolution", () => {
       routeWidth: "normal",
     });
     for (const [name, scale] of Object.entries(DISPLAY_SCALES.arrowSize)) {
-      const size = name as keyof typeof DISPLAY_SCALES.arrowSize;
-      expect(resolveRouteMapDisplay({ arrowSize: size }, null).arrowScale).toBe(scale);
+      expect(resolveRouteMapDisplay({ arrowSize: name }).arrowScale).toBe(scale);
     }
     for (const [name, scale] of Object.entries(DISPLAY_SCALES.routeWidth)) {
-      const width = name as keyof typeof DISPLAY_SCALES.routeWidth;
-      expect(resolveRouteMapDisplay({ routeWidth: width }, null).routeWidthScale).toBe(scale);
+      expect(resolveRouteMapDisplay({ routeWidth: name }).routeWidthScale).toBe(scale);
     }
   });
 
-  it("resolves every value from the section, then the site settings, then the default", () => {
-    const section = { timeLabelIntervalMinutes: 5, arrows: false, arrowSize: "small", routeWidth: "thin" } as const;
-    const sitewide = { timeLabelIntervalMinutes: 30, arrows: true, arrowSize: "xlarge", routeWidth: "xthick" } as const;
-    expect(resolveRouteMapDisplay(section, settings(sitewide))).toEqual({
-      timeLabelIntervalMinutes: 5,
-      arrows: false,
-      arrowScale: 0.75,
-      routeWidthScale: 0.75,
-    });
-    expect(resolveRouteMapDisplay({}, settings(sitewide))).toEqual({
-      timeLabelIntervalMinutes: 30,
-      arrows: true,
-      arrowScale: 2,
-      routeWidthScale: 2,
-    });
-    expect(resolveRouteMapDisplay(null, settings({ ...sitewide, arrows: false }))).toMatchObject({
-      arrows: false,
-    });
-    for (const level of [undefined, {}]) {
-      expect(resolveRouteMapDisplay(undefined, settings(level))).toEqual({
-        timeLabelIntervalMinutes: 15,
-        arrows: true,
-        arrowScale: 1,
-        routeWidthScale: 1,
-      });
+  it("resolves every display value from the config, then the default", () => {
+    expect(
+      resolveRouteMapDisplay({ timeLabelIntervalMinutes: 5, arrows: false, arrowSize: "small", routeWidth: "thin" }),
+    ).toEqual({ timeLabelIntervalMinutes: 5, arrows: false, arrowScale: 0.75, routeWidthScale: 0.75 });
+    expect(resolveRouteMapDisplay({ timeLabelIntervalMinutes: 0 }).timeLabelIntervalMinutes).toBe(0);
+    for (const display of [undefined, null, {}]) {
+      expect(resolveRouteMapDisplay(display)).toEqual(DEFAULT_DISPLAY);
     }
-    expect(resolveRouteMapDisplay(null, null)).toEqual(resolveRouteMapDisplay(undefined, settings(undefined)));
+    expect(
+      resolveRouteMapDisplay({ timeLabelIntervalMinutes: null, arrows: null, arrowSize: null, routeWidth: null }),
+    ).toEqual(DEFAULT_DISPLAY);
   });
 
-  it("resolves each value on its own, a mixed section falling through key by key", () => {
-    const resolved = resolveRouteMapDisplay(
-      { arrowSize: "large" },
-      settings({ timeLabelIntervalMinutes: 10, routeWidth: "thick" }),
-    );
-    expect(resolved).toEqual({
-      timeLabelIntervalMinutes: 10,
+  it("resolves each display value on its own, a value outside its contract set reading as absent", () => {
+    expect(resolveRouteMapDisplay({ arrowSize: "large", routeWidth: "thick" })).toEqual({
+      timeLabelIntervalMinutes: 15,
       arrows: true,
       arrowScale: 1.5,
       routeWidthScale: 1.5,
     });
     expect(
-      resolveRouteMapDisplay({ timeLabelIntervalMinutes: 0 }, settings({ timeLabelIntervalMinutes: 30 }))
-        .timeLabelIntervalMinutes,
-    ).toBe(0);
+      resolveRouteMapDisplay({ timeLabelIntervalMinutes: 7, arrowSize: "huge", routeWidth: "wide" }),
+    ).toEqual(DEFAULT_DISPLAY);
+  });
+
+  it("resolves a null or absent config to every default", () => {
+    const defaults = {
+      display: DEFAULT_DISPLAY,
+      controls: { fullscreen: true, terrain: true },
+      landmarks: undefined,
+      poiKinds: undefined,
+    };
+    expect(resolveRouteMapConfig(null)).toEqual(defaults);
+    expect(resolveRouteMapConfig(undefined)).toEqual(defaults);
+    expect(resolveRouteMapConfig({})).toEqual(defaults);
+    expect(resolveRouteMapConfig({ display: null, controls: null, landmarks: null, pois: null })).toEqual(defaults);
+  });
+
+  it("resolves the controls from the config, each true unless false", () => {
+    expect(resolveRouteMapConfig({ controls: {} }).controls).toEqual({ fullscreen: true, terrain: true });
+    expect(resolveRouteMapConfig({ controls: { fullscreen: null, terrain: null } }).controls).toEqual({
+      fullscreen: true,
+      terrain: true,
+    });
+    expect(resolveRouteMapConfig({ controls: { fullscreen: false } }).controls).toEqual({
+      fullscreen: false,
+      terrain: true,
+    });
+    expect(resolveRouteMapConfig({ controls: { terrain: false } }).controls).toEqual({
+      fullscreen: true,
+      terrain: false,
+    });
+  });
+
+  it("resolves the landmarks and POI kinds from the config, keeping only well formed entries", () => {
+    const resolved = resolveRouteMapConfig({
+      landmarks: [
+        { name: "Caras Park", lat: 46.87, lng: -113.99, icon: null, description: null },
+        { name: "Mount Jumbo", lat: 46.88, lng: -113.96, icon: { source: "library", id: "tree" } },
+        { name: "The Oval", lat: 46.86, lng: -113.98, description: "Where the reindeer rest." },
+        { name: "Bad icon", lat: 46.8, lng: -113.9, icon: { source: "elsewhere", id: "x" } },
+        { lat: 46.8, lng: -113.9 },
+        { name: "No coordinates" },
+      ],
+      pois: { kinds: ["peak", "museum"] },
+    });
+    expect(resolved.landmarks).toEqual([
+      { name: "Caras Park", lat: 46.87, lng: -113.99 },
+      { name: "Mount Jumbo", lat: 46.88, lng: -113.96, icon: { source: "library", id: "tree" } },
+      { name: "The Oval", lat: 46.86, lng: -113.98, description: "Where the reindeer rest." },
+      { name: "Bad icon", lat: 46.8, lng: -113.9 },
+    ]);
+    expect(resolved.poiKinds).toEqual(["peak", "museum"]);
+    expect(resolveRouteMapConfig({ landmarks: [], pois: { kinds: [] } })).toMatchObject({
+      landmarks: [],
+      poiKinds: [],
+    });
   });
 
   it("keeps labels on the interior multiples of the interval, and none at 0", () => {
@@ -342,9 +385,8 @@ describe("route map display resolution", () => {
   });
 });
 
-describe("route map display reaching the style", () => {
-  it("uses the defaults with neither level set: labels every 15, medium arrows, normal width", async () => {
-    await renderSection();
+describe("route map config reaching the style", () => {
+  function expectDefaultStyle(): void {
     const style = currentStyle();
     expect(labelsOf(style)).toEqual(["15m", "30m", "45m", "1h 0m", "1h 15m", "1h 30m"]);
     const arrows = layerOf(style, "route-arrows");
@@ -352,60 +394,93 @@ describe("route map display reaching the style", () => {
     expect(arrows?.layout?.["icon-size"]).toBe(1);
     expect(arrows?.layout?.["symbol-spacing"]).toBe(140);
     expect(lineWidth(style)).toEqual(widthAt(1));
+    expect(layerOf(style, "pois")).toBeUndefined();
+    expect(style.sources["route-landmarks"]).toBeUndefined();
+  }
+
+  function expectDefaultControls(container: HTMLElement): void {
+    expect(q(container, "route-map-fullscreen")).not.toBeNull();
+  }
+
+  it("uses the defaults with no config: labels every 15, medium arrows, normal width", async () => {
+    const { container } = await renderSection();
+    expect(q(container, "route-map-frame")).not.toBeNull();
+    expectDefaultStyle();
+    expectDefaultControls(container);
   });
 
-  it("uses the site settings where the section is silent", async () => {
-    await renderSection(
-      { display: {} },
-      { timeLabelIntervalMinutes: 30, arrows: true, arrowSize: "xlarge", routeWidth: "thick" },
-    );
-    const style = currentStyle();
+  it("renders the default map for a null config", async () => {
+    const { container } = await renderSection(null);
+    expect(q(container, "route-map-frame")).not.toBeNull();
+    expect(mocks.maps).toHaveLength(1);
+    expectDefaultStyle();
+    expectDefaultControls(container);
+    expect(landmarkMarkers()).toHaveLength(0);
+  });
+
+  it("renders the default map for a config with every block null", async () => {
+    await renderSection({ display: null, controls: null, landmarks: null, pois: null });
+    expectDefaultStyle();
+  });
+
+  it("uses the config's display values", async () => {
+    await renderSection({
+      display: { timeLabelIntervalMinutes: 30, arrows: true, arrowSize: "xlarge", routeWidth: "thick" },
+    });
+    let style = currentStyle();
     expect(labelsOf(style)).toEqual(["30m", "1h 0m", "1h 30m"]);
     expect(layerOf(style, "route-arrows")?.layout?.["icon-size"]).toBe(2);
     expect(layerOf(style, "route-arrows")?.layout?.["symbol-spacing"]).toBe(280);
     expect(lineWidth(style)).toEqual(widthAt(1.5));
-  });
-
-  it("uses the section over the site settings", async () => {
-    await renderSection(
-      { display: { timeLabelIntervalMinutes: 10, arrowSize: "small", routeWidth: "xthick" } },
-      { timeLabelIntervalMinutes: 30, arrows: true, arrowSize: "xlarge", routeWidth: "thin" },
-    );
-    const style = currentStyle();
+    cleanup();
+    mocks.maps.length = 0;
+    await renderSection({ display: { timeLabelIntervalMinutes: 10, arrowSize: "small", routeWidth: "xthick" } });
+    style = currentStyle();
     expect(labelsOf(style)[0]).toBe("10m");
     expect(labelsOf(style)).toHaveLength(9);
     expect(layerOf(style, "route-arrows")?.layout?.["icon-size"]).toBe(0.75);
     expect(lineWidth(style)).toEqual(widthAt(2));
   });
 
-  it("turns the arrows off from either level, and on from the section over the site", async () => {
+  it("turns the arrows off from the config", async () => {
     await renderSection({ display: { arrows: false } });
     expect(layerOf(currentStyle(), "route-arrows")).toBeUndefined();
-    cleanup();
-    mocks.maps.length = 0;
-    await renderSection({}, { arrows: false });
-    expect(layerOf(currentStyle(), "route-arrows")).toBeUndefined();
-    cleanup();
-    mocks.maps.length = 0;
-    await renderSection({ display: { arrows: true } }, { arrows: false });
-    expect(layerOf(currentStyle(), "route-arrows")).toBeDefined();
   });
 
-  it("removes the time labels at an interval of 0, from either level", async () => {
-    await renderSection({ display: { timeLabelIntervalMinutes: 0 } }, { timeLabelIntervalMinutes: 30 });
-    let style = currentStyle();
+  it("removes the time labels at an interval of 0", async () => {
+    await renderSection({ display: { timeLabelIntervalMinutes: 0 } });
+    const style = currentStyle();
     expect(style.sources["route-time-labels"]).toBeUndefined();
     expect(style.layers.some((l) => l.id.startsWith("route-time-label"))).toBe(false);
     expect(layerOf(style, "route-marks")).toBeDefined();
-    cleanup();
-    mocks.maps.length = 0;
-    await renderSection({}, { timeLabelIntervalMinutes: 0 });
-    style = currentStyle();
-    expect(style.sources["route-time-labels"]).toBeUndefined();
-    cleanup();
-    mocks.maps.length = 0;
-    await renderSection({ display: { timeLabelIntervalMinutes: 15 } }, { timeLabelIntervalMinutes: 0 });
-    expect(labelsOf(currentStyle())).toHaveLength(6);
+  });
+
+  it("follows the config's controls", async () => {
+    const { container } = await renderSection({ controls: { fullscreen: false } });
+    expect(q(container, "route-map-fullscreen")).toBeNull();
+  });
+
+  it("ignores display, controls, landmarks, and POI kinds in the section data", async () => {
+    const { container } = await renderSection(null, {
+      data: {
+        display: { timeLabelIntervalMinutes: 30, arrows: false, arrowSize: "xlarge", routeWidth: "thick" },
+        controls: { fullscreen: false, terrain: false },
+        landmarks: [TOLD, LIBRARY],
+        pois: { kinds: ["peak"] },
+      },
+    });
+    expectDefaultStyle();
+    expectDefaultControls(container);
+    expect(landmarkMarkers()).toHaveLength(0);
+  });
+
+  it("ignores a routeMap block in the site settings", async () => {
+    await renderSection(null, {
+      settings: {
+        routeMap: { timeLabelIntervalMinutes: 30, arrows: false, arrowSize: "xlarge", routeWidth: "thick" },
+      },
+    });
+    expectDefaultStyle();
   });
 
   it("adds the arrowhead image when the style asks for it", async () => {
