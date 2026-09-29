@@ -12,8 +12,9 @@
 //  - The pin eases between entries, and moves at once under reduced motion.
 //  - A timeline of fewer than two entries keeps the path and shows no
 //    marks, slider, or pin.
-//  - The section's `pois.kinds` and `landmarks` reach the style as its POI
-//    kind filter and its landmark labels; without them the style has
+//  - The event's `routeMapConfig.pois.kinds` and `routeMapConfig.landmarks`
+//    reach the style as its POI kind filter and its landmark labels;
+//    without them, or with them in the section data only, the style has
 //    neither.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -180,7 +181,11 @@ function buildBundle(): ContentBundle {
   } as unknown as ContentBundle;
 }
 
-function setEvent(scheduledAt: string | null, timeline: unknown[]): void {
+function setEvent(
+  scheduledAt: string | null,
+  timeline: unknown[],
+  routeMapConfig: Record<string, unknown> | null = null,
+): void {
   store.setState((s) => ({
     ...s,
     snapshot: {
@@ -190,6 +195,7 @@ function setEvent(scheduledAt: string | null, timeline: unknown[]): void {
         scheduledAt,
         routeImageMediaId: null,
         routeMap: { path: PATH, timeline, durationMinutes: 72, timed: true },
+        routeMapConfig,
       },
     } as unknown as Snapshot,
   }));
@@ -524,16 +530,15 @@ describe("route map timeline", () => {
 });
 
 describe("route map POI kinds and landmarks", () => {
-  it("passes the section's POI kinds and landmarks into the style", async () => {
-    setEvent(null, TIMELINE);
-    renderSection({
-      style: "map",
+  it("passes the config's POI kinds and landmarks into the style", async () => {
+    setEvent(null, TIMELINE, {
       pois: { kinds: ["peak", "museum"] },
       landmarks: [
         { name: "Mount Jumbo", lat: 46.88, lng: -113.96 },
         { name: "Caras Park", lat: 46.87, lng: -113.99 },
       ],
     });
+    renderSection();
     await settle();
     expect(mocks.maps).toHaveLength(1);
     for (const style of [mocks.maps[0].options.style as StyleShape, currentStyle()]) {
@@ -552,13 +557,13 @@ describe("route map POI kinds and landmarks", () => {
   });
 
   it("drops the POI layers for an empty kind list", async () => {
-    setEvent(null, TIMELINE);
-    renderSection({ style: "map", pois: { kinds: [] } });
+    setEvent(null, TIMELINE, { pois: { kinds: [] } });
+    renderSection();
     await settle();
     expect(currentStyle().layers.some((l) => l.id === "pois")).toBe(false);
   });
 
-  it("passes neither without them in the section", async () => {
+  it("passes neither without them in the config", async () => {
     setEvent(null, TIMELINE);
     renderSection();
     await settle();
@@ -566,5 +571,18 @@ describe("route map POI kinds and landmarks", () => {
     expect(style.layers.some((l) => l.id === "pois")).toBe(false);
     expect(style.sources["route-landmarks"]).toBeUndefined();
     expect(style.layers.some((l) => l.id.startsWith("route-landmark"))).toBe(false);
+  });
+
+  it("passes neither with them in the section data only", async () => {
+    setEvent(null, TIMELINE);
+    renderSection({
+      style: "map",
+      pois: { kinds: ["peak"] },
+      landmarks: [{ name: "Mount Jumbo", lat: 46.88, lng: -113.96 }],
+    });
+    await settle();
+    const style = currentStyle();
+    expect(style.layers.some((l) => l.id === "pois")).toBe(false);
+    expect(style.sources["route-landmarks"]).toBeUndefined();
   });
 });

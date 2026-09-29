@@ -1,7 +1,9 @@
 // docs/site.md sections 8.9, 22.1. The route map's control stack with
 // MapLibre and pmtiles mocked:
 //  - The fullscreen button and the terrain toggle render by default and
-//    hide when `controls.fullscreen` or `controls.terrain` is false; the
+//    hide when the event's `routeMapConfig.controls.fullscreen` or
+//    `routeMapConfig.controls.terrain` is false, and a null config shows
+//    both; the same switches in the section data change nothing; the
 //    terrain toggle also hides when the terrain archive probe rejects.
 //  - Fullscreen enters and exits through the Fullscreen API and through
 //    the takeover, resizing the map and refitting the path on both edges;
@@ -129,7 +131,7 @@ function buildBundle(): ContentBundle {
   } as unknown as ContentBundle;
 }
 
-function setEvent(): void {
+function setEvent(routeMapConfig: Record<string, unknown> | null = null): void {
   store.setState((s) => ({
     ...s,
     snapshot: {
@@ -138,6 +140,7 @@ function setEvent(): void {
         id: 1,
         routeImageMediaId: null,
         routeMap: { path: PATH, timeline: TIMELINE, durationMinutes: 10, timed: true },
+        routeMapConfig,
       },
     } as unknown as Snapshot,
   }));
@@ -150,7 +153,10 @@ async function settle(): Promise<void> {
   });
 }
 
-async function renderSection(data: Record<string, unknown> = {}) {
+// Renders a `map` section with `config` as the event's `routeMapConfig`
+// and `data` added to the section data.
+async function renderSection(config: Record<string, unknown> | null = null, data: Record<string, unknown> = {}) {
+  setEvent(config);
   const result = render(
     <MemoryRouter>
       <RoutePreview data={{ style: "map", ...data }} items={[]} bundle={buildBundle()} />
@@ -257,6 +263,23 @@ describe("route map control stack", () => {
 
     const third = await renderSection({ controls: { fullscreen: false, terrain: false } });
     expect(q(third.container, "route-map-controls")).toBeNull();
+  });
+
+  it("shows both buttons for a null config or null switches", async () => {
+    const first = await renderSection(null);
+    expect(q(first.container, "route-map-fullscreen")).not.toBeNull();
+    expect(q(first.container, "route-map-terrain")).not.toBeNull();
+    cleanup();
+
+    const second = await renderSection({ controls: { fullscreen: null, terrain: null } });
+    expect(q(second.container, "route-map-fullscreen")).not.toBeNull();
+    expect(q(second.container, "route-map-terrain")).not.toBeNull();
+  });
+
+  it("ignores switches in the section data", async () => {
+    const { container } = await renderSection(null, { controls: { fullscreen: false, terrain: false } });
+    expect(q(container, "route-map-fullscreen")).not.toBeNull();
+    expect(q(container, "route-map-terrain")).not.toBeNull();
   });
 
   it("hides the terrain toggle and logs once when the terrain archive probe rejects", async () => {

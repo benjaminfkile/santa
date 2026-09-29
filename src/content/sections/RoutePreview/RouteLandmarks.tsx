@@ -1,5 +1,5 @@
-// docs/site.md section 8.9. The route map's landmarks from the section's
-// data. Each becomes a style landmark (its `name` the label). A landmark
+// docs/site.md section 8.9. The route map's landmarks from the event's
+// config. Each becomes a style landmark (its `name` the label). A landmark
 // whose `icon` draws gets `badge` in the style (no dot, the label further
 // out) and a marker element holding the icon on a small round badge:
 // library icons inline, media icons through an image element, through

@@ -37,6 +37,34 @@ export interface Snapshot {
       durationMinutes?: number;
       timed?: boolean;
     } | null;
+    routeMapConfig?: {
+      display?: {
+        timeLabelIntervalMinutes?: number | null;
+        arrows?: boolean | null;
+        arrowSize?: string | null;
+        routeWidth?: string | null;
+      } | null;
+      controls?: {
+        fullscreen?: boolean | null;
+        terrain?: boolean | null;
+      } | null;
+      landmarks?:
+        | {
+            name?: string;
+            lat?: number;
+            lng?: number;
+            icon?: {
+              source?: string;
+              id?: string;
+              display?: unknown;
+            } | null;
+            description?: string | null;
+          }[]
+        | null;
+      pois?: {
+        kinds?: string[];
+      } | null;
+    } | null;
     latestMessage?: {
       id?: number;
       body?: string;
