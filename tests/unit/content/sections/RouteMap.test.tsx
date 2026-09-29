@@ -3,8 +3,8 @@
 //  - The heading and disclaimer render around the map frame, as the
 //    viewer style renders them.
 //  - The route line source is fed `event.routeMap.path`; the map fits its
-//    bounds, has cooperative gestures, the archive's zoom range, and the
-//    OpenStreetMap attribution.
+//    bounds, takes gestures directly (no cooperativeGestures option), and
+//    has the archive's zoom range and the OpenStreetMap attribution.
 //  - The style follows the site appearance, including a live switch that
 //    diffs the style on the same map.
 //  - Every fallback (no route map, no basemap URL, an unreadable archive,
@@ -234,7 +234,7 @@ describe("route_preview style map", () => {
     expect(layer?.layout).toMatchObject({ "line-join": "round", "line-cap": "round" });
     expect(options.bounds).toEqual([[-114.0, 46.85], [-113.9, 46.9]]);
     expect(options.fitBoundsOptions).toHaveProperty("padding");
-    expect(options.cooperativeGestures).toBe(true);
+    expect(options).not.toHaveProperty("cooperativeGestures");
     expect(options.minZoom).toBe(0);
     expect(options.maxZoom).toBe(15);
     expect(JSON.stringify(options.attributionControl)).toContain("© OpenStreetMap contributors");

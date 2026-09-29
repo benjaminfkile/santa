@@ -4,7 +4,9 @@
 // image, `timeLabels` adds one labelled dot per entry, `details` drops
 // the basemap's landmark, place name, and road name label layers,
 // `poiKinds` filters the POI layers to the listed kinds, and `landmarks`
-// adds one smaller labelled dot per entry.
+// adds one smaller labelled dot per entry (no dot and a wider label
+// offset for a `badge` landmark), and `routeWidthScale` scales the route
+// line's width.
 
 import { describe, it, expect } from "vitest";
 import { layers as basemapLayers, namedFlavor } from "@protomaps/basemaps";
@@ -70,6 +72,12 @@ describe("route map style options", () => {
         expect(JSON.stringify(noExtras)).toBe(JSON.stringify(plain));
         const noLandmarks = buildStyle(appearance, BASE, PATH, MARKS, terrain, { landmarks: [] });
         expect(JSON.stringify(noLandmarks)).toBe(JSON.stringify(plain));
+        const unitWidth = buildStyle(appearance, BASE, PATH, MARKS, terrain, { routeWidthScale: 1 });
+        expect(JSON.stringify(unitWidth)).toBe(JSON.stringify(plain));
+        for (const routeWidthScale of [undefined, 0, -1]) {
+          const unsetWidth = buildStyle(appearance, BASE, PATH, MARKS, terrain, { routeWidthScale });
+          expect(JSON.stringify(unsetWidth)).toBe(JSON.stringify(plain));
+        }
       }
     }
   });
@@ -125,6 +133,19 @@ describe("route map style options", () => {
     expect(scaled?.["symbol-spacing"]).toBe(spacing * 1.5);
     expect(arrowsAt(0)).toEqual(defaults);
     expect(arrowsAt(-2)).toEqual(defaults);
+  });
+
+  it("scales the route line width at every zoom stop", () => {
+    const widthAt = (routeWidthScale?: number) =>
+      layer<LineLayerSpecification>(
+        buildStyle("light", BASE, PATH, MARKS, false, { routeWidthScale }),
+        "route-line",
+      ).paint?.["line-width"];
+    expect(widthAt()).toEqual(["interpolate", ["linear"], ["zoom"], 8, 3, 14, 5]);
+    expect(widthAt(0.75)).toEqual(["interpolate", ["linear"], ["zoom"], 8, 2.25, 14, 3.75]);
+    expect(widthAt(2)).toEqual(["interpolate", ["linear"], ["zoom"], 8, 6, 14, 10]);
+    expect(widthAt(0)).toEqual(widthAt());
+    expect(widthAt(-3)).toEqual(widthAt());
   });
 
   it("makes an SDF arrowhead image of a sane size", () => {
@@ -361,5 +382,40 @@ describe("route map style options", () => {
     }
     expect(ROUTE_PALETTES.light).toMatchObject({ landmarkFill: "#5f6368", landmarkStroke: "#ffffff" });
     expect(ROUTE_PALETTES.dark).toMatchObject({ landmarkFill: "#8fa3c2", landmarkStroke: "#0f1a2b" });
+  });
+
+  it("leaves the dot off a badge landmark and sets its label further out", () => {
+    const plainLandmarks = [
+      { lat: 46.87, lng: -114.0, label: "Missoula Airport" },
+      { lat: 46.9, lng: -113.95, label: "Mount Jumbo" },
+    ];
+    const plain = buildStyle("light", BASE, PATH, MARKS, false, { landmarks: plainLandmarks });
+    expect(layer<CircleLayerSpecification>(plain, LANDMARK_DOTS_LAYER).filter).toBeUndefined();
+    expect(layer<SymbolLayerSpecification>(plain, LANDMARKS_LAYER).layout?.["text-radial-offset"]).toBe(0.5);
+    const explicit = buildStyle("light", BASE, PATH, MARKS, false, {
+      landmarks: plainLandmarks.map((l) => ({ ...l, badge: false })),
+    });
+    expect(JSON.stringify(explicit)).toBe(JSON.stringify(plain));
+
+    const style = buildStyle("light", BASE, PATH, MARKS, false, {
+      landmarks: [plainLandmarks[0], { ...plainLandmarks[1], badge: true }],
+    });
+    const source = style.sources[LANDMARKS_SOURCE] as {
+      data: { features: { properties: Record<string, unknown> }[] };
+    };
+    expect(source.data.features.map((f) => f.properties)).toEqual([
+      { label: "Missoula Airport" },
+      { label: "Mount Jumbo", badge: true },
+    ]);
+    expect(layer<CircleLayerSpecification>(style, LANDMARK_DOTS_LAYER).filter).toEqual([
+      "!",
+      ["has", "badge"],
+    ]);
+    expect(layer<SymbolLayerSpecification>(style, LANDMARKS_LAYER).layout?.["text-radial-offset"]).toEqual([
+      "case",
+      ["has", "badge"],
+      1.3,
+      0.5,
+    ]);
   });
 });

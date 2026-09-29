@@ -14,8 +14,8 @@
 //     or fewer than two points), no VITE_ROUTE_BASEMAP_URL, or a failed
 //     load, the section renders exactly what `image` renders. With two or
 //     more `event.routeMap.timeline` entries the map also carries a dot at
-//     every entry, a labelled dot at every interior 15 minute multiple,
-//     and the Santa pin on the selected one, and a time slider over the
+//     every entry, a labelled dot at every interior multiple of the time
+//     label interval, and the Santa pin on the selected one, and a time slider over the
 //     entries (starting at the first, labelled with the elapsed flight
 //     time) sits under the frame; with
 //     fewer, only the path is drawn. The frame and the slider share one
@@ -24,12 +24,18 @@
 //     `data.controls.fullscreen` or `data.controls.terrain` is false.
 //     `data.pois.kinds` reaches the style as its POI kind list and
 //     `data.landmarks` as its landmarks, each name the label; without
-//     them the style gets neither.
+//     them the style gets neither. A landmark with an icon or a
+//     description also gets a marker and its popover (RouteLandmarks).
+//     The four display values (time label interval, arrows, arrow size,
+//     route width) resolve from `data.display`, then the site settings'
+//     `routeMap` block, then the defaults (routeMapDisplay), and reach
+//     the style as the label interval, `arrows`, `arrowScale`, and
+//     `routeWidthScale`.
 
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { SectionComponent } from "../../registry";
-import type { ContentDocument, MediaRef } from "../../../contracts";
+import type { ContentDocument, MediaRef, RouteMapDisplay } from "../../../contracts";
 import { Inline } from "../../inline/Inline";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
@@ -45,6 +51,8 @@ import {
   type TimelineLabel,
 } from "./routeTimelineData";
 import { RouteTimeSlider } from "./RouteTimeSlider";
+import { useRouteLandmarks, type LandmarkData } from "./RouteLandmarks";
+import { resolveRouteMapDisplay } from "./routeMapDisplay";
 import { useRouteMapFullscreen } from "./useRouteMapFullscreen";
 import { SantaIcon } from "../../icons/generated/santa";
 import { useReducedMotion } from "../../../lib/motion";
@@ -58,7 +66,11 @@ type RouteMapProps = {
   marks?: readonly LatLng[];
   timeLabels?: readonly TimelineLabel[];
   poiKinds?: readonly string[];
-  landmarks?: readonly { lat: number; lng: number; label: string }[];
+  landmarks?: readonly { lat: number; lng: number; label: string; badge?: boolean }[];
+  landmarkMarkers?: readonly { lat: number; lng: number; element: HTMLElement }[];
+  arrows?: boolean;
+  arrowScale?: number;
+  routeWidthScale?: number;
   pin?: LatLng | null;
   pinElement?: HTMLElement;
   reducedMotion?: boolean;
@@ -98,7 +110,8 @@ type RoutePreviewData = {
   disclaimer?: string | null;
   controls?: { fullscreen?: boolean; terrain?: boolean } | null;
   pois?: { kinds?: string[] | null } | null;
-  landmarks?: { name: string; lat: number; lng: number }[] | null;
+  landmarks?: LandmarkData[] | null;
+  display?: RouteMapDisplay | null;
 };
 
 // The Santa pin's element, handed to the route map as its marker; the
@@ -142,19 +155,14 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
     () => (timeline === null ? NO_MARKS : timeline.map(({ lat, lng }) => ({ lat, lng }))),
     [timeline],
   );
+  const display = resolveRouteMapDisplay(d.display, content?.settings);
+  const labelEvery = display.timeLabelIntervalMinutes;
   const timeLabels = useMemo(
-    () => (timeline === null ? NO_LABELS : routeTimeLabels(timeline)),
-    [timeline],
+    () => (timeline === null ? NO_LABELS : routeTimeLabels(timeline, labelEvery)),
+    [timeline, labelEvery],
   );
   const poiKinds = d.pois?.kinds ?? undefined;
-  const landmarkData = d.landmarks;
-  const landmarks = useMemo(
-    () =>
-      landmarkData === null || landmarkData === undefined
-        ? undefined
-        : landmarkData.map(({ name, lat, lng }) => ({ lat, lng, label: name })),
-    [landmarkData],
-  );
+  const landmarks = useRouteLandmarks(d.landmarks, bundle);
   const [selected, setSelected] = useState(0);
   const reducedMotion = useReducedMotion();
   const [pinElement] = useState(createPinElement);
@@ -204,7 +212,11 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
                 marks={marks}
                 timeLabels={timeLabels}
                 poiKinds={poiKinds}
-                landmarks={landmarks}
+                landmarks={landmarks.styleLandmarks}
+                landmarkMarkers={landmarks.markers}
+                arrows={display.arrows}
+                arrowScale={display.arrowScale}
+                routeWidthScale={display.routeWidthScale}
                 pin={pin}
                 pinElement={pinElement}
                 reducedMotion={reducedMotion}
@@ -217,6 +229,7 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
                 onFail={onMapFail}
               />
             </Suspense>
+            {landmarks.popover}
           </div>
           {timeline !== null && stop !== null ? (
             <RouteTimeSlider
@@ -233,6 +246,7 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
           </span>,
           pinElement,
         )}
+        {landmarks.portals}
       </div>
     );
   }

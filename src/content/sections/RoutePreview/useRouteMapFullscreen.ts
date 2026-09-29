@@ -3,7 +3,8 @@
 // through the Fullscreen API where it is available and through the
 // takeover (the same element fixed over the viewport, see
 // `.routeMapStageTakeover`) where it is not or where the request is
-// refused, and leaves whichever is up. Escape leaves both. While the
+// refused, and leaves whichever is up. Escape leaves both, unless
+// something inside (a landmark popover) already handled it. While the
 // takeover is up the body does not scroll. The mode is "api" only while
 // the document's fullscreen element is the wrapper, so leaving through
 // the browser's own controls turns it off too.
@@ -70,7 +71,7 @@ export function useRouteMapFullscreen(ref: RefObject<HTMLElement | null>): Route
   useEffect(() => {
     if (mode === "off") return;
     function onKeyDown(event: KeyboardEvent): void {
-      if (event.key !== "Escape") return;
+      if (event.key !== "Escape" || event.defaultPrevented) return;
       event.preventDefault();
       exit();
     }

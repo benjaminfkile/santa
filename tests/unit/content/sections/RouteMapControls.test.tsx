@@ -6,7 +6,8 @@
 //  - Fullscreen enters and exits through the Fullscreen API and through
 //    the takeover, resizing the map and refitting the path on both edges;
 //    Escape exits both; the takeover alone locks the body scroll; the
-//    slider still works in fullscreen.
+//    slider still works in fullscreen, and the same map, with no
+//    cooperativeGestures option, stays up.
 //  - The terrain view starts on with no remembered choice and off with a
 //    remembered off; the toggle adds and removes the hillshade layer, the
 //    choice is stored, restores on the next mount, and survives an
@@ -357,6 +358,8 @@ describe("route map fullscreen", () => {
     await settle();
     expect(stage.getAttribute("data-fullscreen")).toBe("takeover");
     expect(document.body.style.overflow).toBe("hidden");
+    expect(mocks.maps).toHaveLength(1);
+    expect(map.options).not.toHaveProperty("cooperativeGestures");
     expect(map.resize).toHaveBeenCalledTimes(1);
     expect(map.fitBounds).toHaveBeenCalledTimes(1);
     expect(q(container, "route-map-fullscreen")?.getAttribute("aria-label")).toBe("Exit fullscreen");

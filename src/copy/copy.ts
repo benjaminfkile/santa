@@ -60,6 +60,8 @@ export const copy = {
       fullscreen: "Show the route map fullscreen",
       exitFullscreen: "Exit fullscreen",
       terrain: "Terrain view",
+      landmark: (name: string) => `About ${name}`,
+      closeLandmark: "Close",
     },
     poster: {
       zoomIn: "Zoom in",
