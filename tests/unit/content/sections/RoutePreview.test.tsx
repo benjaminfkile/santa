@@ -14,7 +14,9 @@
 //    frame horizontally.
 //  - Destroyed on unmount, rebuilt on a new media id.
 //  - The fullscreen button calls `requestFullscreen` and falls back to a
-//    fixed frame when the API is missing.
+//    fixed frame when the API is missing; a document with only the webkit
+//    flag (iPhone Safari) gets the same takeover, mounted under
+//    document.body with the body scroll locked until Escape.
 //  - The osd chunk is imported only when the section mounts.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -458,6 +460,33 @@ describe("PosterViewer", () => {
     fireEvent.click(getByTestId("poster-fullscreen"));
     expect(frame.dataset.fullscreen).toBe("off");
     expect(frame.className).toBe(before);
+  });
+
+  it("takes over under document.body with only the webkit flag, releasing the lock on Escape", async () => {
+    const webkitRequest = vi.fn();
+    Object.defineProperty(document, "webkitFullscreenEnabled", { configurable: true, value: true });
+    (HTMLElement.prototype as unknown as { webkitRequestFullscreen: unknown }).webkitRequestFullscreen = webkitRequest;
+    const { getByTestId, container } = render(
+      <PosterViewer
+        mediaId="poster-1"
+        url="https://cdn.example/poster.jpg"
+        dzi="https://cdn.example/poster/poster.dzi"
+        alt="Route poster"
+      />,
+    );
+    await flushMicrotasks();
+    const frame = getByTestId("poster-viewer");
+    expect(container.contains(frame)).toBe(true);
+    fireEvent.click(getByTestId("poster-fullscreen"));
+    expect(webkitRequest).not.toHaveBeenCalled();
+    expect(frame.dataset.fullscreen).toBe("on");
+    expect(frame.parentElement?.parentElement).toBe(document.body);
+    expect(container.contains(frame)).toBe(false);
+    expect(document.body.style.overflow).toBe("hidden");
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(frame.dataset.fullscreen).toBe("off");
+    expect(container.contains(frame)).toBe(true);
+    expect(document.body.style.overflow).toBe("");
   });
 
   it("F on the focused frame toggles fullscreen via the same handler as the button", async () => {

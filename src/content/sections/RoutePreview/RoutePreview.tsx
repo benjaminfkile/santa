@@ -19,8 +19,9 @@
 //     entries (starting at the first, labelled with the elapsed flight
 //     time) sits under the frame; with
 //     fewer, only the path is drawn. The frame and the slider share one
-//     wrapper, the fullscreen target (useRouteMapFullscreen). Every map
-//     input comes from `event.routeMapConfig` (routeMapConfig), each
+//     wrapper, the fullscreen target (useRouteMapFullscreen), rendered
+//     through TakeoverPortal so the takeover sits under document.body.
+//     Every map input comes from `event.routeMapConfig` (routeMapConfig), each
 //     value falling back to its default; a null config draws the default
 //     map. The map carries a fullscreen button and a terrain toggle
 //     unless `controls.fullscreen` or `controls.terrain` is false.
@@ -55,6 +56,7 @@ import { RouteTimeSlider } from "./RouteTimeSlider";
 import { useRouteLandmarks } from "./RouteLandmarks";
 import { resolveRouteMapConfig } from "./routeMapConfig";
 import { useRouteMapFullscreen } from "./useRouteMapFullscreen";
+import { TakeoverPortal } from "../../../lib/TakeoverPortal";
 import { SantaIcon } from "../../icons/generated/santa";
 import { useReducedMotion } from "../../../lib/motion";
 import { env } from "../../../config/env";
@@ -194,52 +196,54 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
             </p>
           </div>
         ) : null}
-        <div
-          ref={stageRef}
-          className={
-            fullscreen.mode === "takeover"
-              ? `${styles.routeMapStage} ${styles.routeMapStageTakeover}`
-              : styles.routeMapStage
-          }
-          data-testid="route-map-stage"
-          data-fullscreen={fullscreen.mode}
-        >
-          <div className={styles.routeMap} data-testid="route-map-frame">
-            <Suspense fallback={null}>
-              <LazyRouteMap
-                path={path}
-                marks={marks}
-                timeLabels={timeLabels}
-                poiKinds={config.poiKinds}
-                landmarks={landmarks.styleLandmarks}
-                landmarkMarkers={landmarks.markers}
-                arrows={display.arrows}
-                arrowScale={display.arrowScale}
-                routeWidthScale={display.routeWidthScale}
-                labelScale={display.labelScale}
-                pin={pin}
-                pinElement={pinElement}
-                reducedMotion={reducedMotion}
-                ariaLabel={d.heading ?? undefined}
-                fullscreenControl={config.controls.fullscreen}
-                terrainControl={config.controls.terrain}
-                controlClassName={ibtn.ibtn}
-                fullscreen={fullscreen.mode !== "off"}
-                onToggleFullscreen={fullscreen.toggle}
-                onFail={onMapFail}
+        <TakeoverPortal active={fullscreen.mode === "takeover"}>
+          <div
+            ref={stageRef}
+            className={
+              fullscreen.mode === "takeover"
+                ? `${styles.routeMapStage} ${styles.routeMapStageTakeover}`
+                : styles.routeMapStage
+            }
+            data-testid="route-map-stage"
+            data-fullscreen={fullscreen.mode}
+          >
+            <div className={styles.routeMap} data-testid="route-map-frame">
+              <Suspense fallback={null}>
+                <LazyRouteMap
+                  path={path}
+                  marks={marks}
+                  timeLabels={timeLabels}
+                  poiKinds={config.poiKinds}
+                  landmarks={landmarks.styleLandmarks}
+                  landmarkMarkers={landmarks.markers}
+                  arrows={display.arrows}
+                  arrowScale={display.arrowScale}
+                  routeWidthScale={display.routeWidthScale}
+                  labelScale={display.labelScale}
+                  pin={pin}
+                  pinElement={pinElement}
+                  reducedMotion={reducedMotion}
+                  ariaLabel={d.heading ?? undefined}
+                  fullscreenControl={config.controls.fullscreen}
+                  terrainControl={config.controls.terrain}
+                  controlClassName={ibtn.ibtn}
+                  fullscreen={fullscreen.mode !== "off"}
+                  onToggleFullscreen={fullscreen.toggle}
+                  onFail={onMapFail}
+                />
+              </Suspense>
+              {landmarks.popover}
+            </div>
+            {timeline !== null && stop !== null ? (
+              <RouteTimeSlider
+                timeline={timeline}
+                index={timeline.indexOf(stop)}
+                label={routeTimeLabel(stop.minutes)}
+                onSelect={setSelected}
               />
-            </Suspense>
-            {landmarks.popover}
+            ) : null}
           </div>
-          {timeline !== null && stop !== null ? (
-            <RouteTimeSlider
-              timeline={timeline}
-              index={timeline.indexOf(stop)}
-              label={routeTimeLabel(stop.minutes)}
-              onSelect={setSelected}
-            />
-          ) : null}
-        </div>
+        </TakeoverPortal>
         {createPortal(
           <span className={styles.routePinBadge}>
             <SantaIcon className={styles.routePinIcon} />
