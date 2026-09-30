@@ -345,8 +345,26 @@ describe("Shell brand logo", () => {
   });
 });
 
-describe("Shell menu drawer", () => {
-  function drawerOf(getByLabelText: (t: string) => HTMLElement): HTMLElement {
+describe("Shell sticky header", () => {
+  it("pins the header to the top of the viewport while the page scrolls", () => {
+    const css = readFileSync(resolve(__dirname, "..", "..", "..", "src", "app", "Shell.module.css"), "utf8");
+    const rule = /\.siteHeader \{([^}]*)\}/.exec(css)![1].replace(/\/\*[\s\S]*?\*\//g, "");
+    expect(rule).toMatch(/position: sticky;/);
+    expect(rule).toMatch(/top: 0;/);
+    expect(rule).toMatch(/z-index: 10;/);
+    // A transform or filter would make the header the fixed panel's
+    // containing block and pull the panel out of the viewport corner.
+    expect(rule).not.toMatch(/transform|filter|contain:/);
+    expect(rule).not.toMatch(/position: (fixed|absolute)/);
+  });
+
+});
+
+describe("Shell menu panel", () => {
+  const css = (): string =>
+    readFileSync(resolve(__dirname, "..", "..", "..", "src", "app", "Shell.module.css"), "utf8");
+
+  function panelOf(getByLabelText: (t: string) => HTMLElement): HTMLElement {
     return document.getElementById(getByLabelText("Menu").getAttribute("aria-controls")!)!;
   }
 
@@ -371,27 +389,59 @@ describe("Shell menu drawer", () => {
     vi.useRealTimers();
   });
 
-  it("slides in from the left on open and out to the right on close, then hides", () => {
+  it("anchors the panel to the top right corner, capped in width and scrollable", () => {
+    const rule = /\.panel \{([^}]*)\}/.exec(css())![1];
+    expect(rule).toMatch(/position: fixed;/);
+    expect(rule).toMatch(/top: var\(--space-2\);/);
+    expect(rule).toMatch(/right: var\(--space-2\);/);
+    expect(rule).not.toMatch(/left:/);
+    expect(rule).toMatch(/width: 180px;/);
+    expect(rule).toMatch(/max-width: calc\(100vw - /);
+    expect(rule).toMatch(/max-height: calc\(100dvh - /);
+    expect(rule).toMatch(/overflow-y: auto;/);
+    expect(rule).toMatch(/border-radius: var\(--radius-md\);/);
+    expect(rule).toMatch(/box-shadow: var\(--shadow-raised\);/);
+    const row = /\.row \{([^}]*)\}/.exec(css())![1];
+    expect(row).toMatch(/min-height: 65px;/);
+    expect(row).toMatch(/background: var\(--panel-2\);/);
+    expect(row).toMatch(/border-radius: var\(--radius-md\);/);
+  });
+
+  it("hides the menu button while the panel is open and shows it again on close", () => {
+    stubReducedMotion(true);
+    seed(makeContent());
+    const { getByLabelText } = renderShell();
+    const button = getByLabelText("Menu");
+    expect(button.getAttribute("data-panel-open")).toBeNull();
+    fireEvent.click(button);
+    expect(button.getAttribute("data-panel-open")).toBe("true");
+    expect(button.getAttribute("aria-expanded")).toBe("true");
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(button.getAttribute("data-panel-open")).toBeNull();
+    expect(css()).toMatch(/\.menuButton\[data-panel-open="true"\] \{ visibility: hidden; \}/);
+  });
+
+  it("slides in from the right on open and out to the right on close, then hides", () => {
     stubReducedMotion(false);
     seed(makeContent());
     const { getByLabelText } = renderShell();
-    const nav = drawerOf(getByLabelText);
+    const nav = panelOf(getByLabelText);
     expect(nav.hidden).toBe(true);
     expect(nav.getAttribute("data-motion")).toBe("none");
 
     fireEvent.click(getByLabelText("Menu"));
     expect(nav.hidden).toBe(false);
-    expect(nav.getAttribute("data-drawer")).toBe("open");
+    expect(nav.getAttribute("data-panel")).toBe("open");
     expect(nav.getAttribute("data-motion")).toBe("in");
 
-    fireEvent.click(getByLabelText("Menu"));
-    expect(nav.getAttribute("data-drawer")).toBe("closing");
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(nav.getAttribute("data-panel")).toBe("closing");
     expect(nav.hidden).toBe(false);
     expect(nav.getAttribute("data-motion")).toBe("out");
 
     fireEvent.animationEnd(nav);
     expect(nav.hidden).toBe(true);
-    expect(nav.getAttribute("data-drawer")).toBe("closed");
+    expect(nav.getAttribute("data-panel")).toBe("closed");
   });
 
   it("finishes the close on a timer when no animationend arrives", () => {
@@ -399,54 +449,60 @@ describe("Shell menu drawer", () => {
     stubReducedMotion(false);
     seed(makeContent());
     const { getByLabelText } = renderShell();
-    const nav = drawerOf(getByLabelText);
+    const nav = panelOf(getByLabelText);
     fireEvent.click(getByLabelText("Menu"));
-    fireEvent.click(getByLabelText("Menu"));
-    expect(nav.hidden).toBe(false);
+    fireEvent.keyDown(document, { key: "Escape" });
     act(() => {
       vi.advanceTimersByTime(500);
+    });
+    expect(nav.hidden).toBe(false);
+    act(() => {
+      vi.advanceTimersByTime(100);
     });
     expect(nav.hidden).toBe(true);
   });
 
-  it("maps the in and out slides to distinct classes and keyframes, removed under reduced motion", () => {
-    const css = readFileSync(resolve(__dirname, "..", "..", "..", "src", "app", "Shell.module.css"), "utf8");
-    expect(css).toMatch(/\.navIn \{ animation: drawerIn /);
-    expect(css).toMatch(/\.navOut \{ animation: drawerOut /);
-    expect(css).toMatch(/@keyframes drawerIn \{\s*from \{ transform: translateX\(-/);
-    expect(css).toMatch(/@keyframes drawerOut \{\s*from \{ transform: translateX\(0\);[^}]*\}\s*to \{ transform: translateX\(\d/);
-    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.navIn,\s*\.navOut \{ animation: none; \}/);
+  it("slides from the right with the legacy 0.5 s ease both ways, removed under reduced motion", () => {
+    const ease = "500ms cubic-bezier\\(0\\.25, 0\\.46, 0\\.45, 0\\.94\\) both";
+    expect(css()).toMatch(new RegExp(`\\.panelIn \\{ animation: panelIn ${ease}; \\}`));
+    expect(css()).toMatch(new RegExp(`\\.panelOut \\{ animation: panelOut ${ease}; \\}`));
+    expect(css()).toMatch(/@keyframes panelIn \{\s*from \{ transform: translateX\(calc\(100% \+ var\(--space-2\)\)\); \}\s*to \{ transform: translateX\(0\); \}/);
+    expect(css()).toMatch(/@keyframes panelOut \{\s*from \{ transform: translateX\(0\); \}\s*to \{ transform: translateX\(calc\(100% \+ var\(--space-2\)\)\); \}/);
+    expect(css()).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.panelIn,\s*\.panelOut \{ animation: none; \}/);
   });
 
-  it("collapses the transition classes under reduced motion and closes at once", () => {
+  it("collapses the slide under reduced motion: opening and closing are instant", () => {
     stubReducedMotion(true);
     seed(makeContent());
     const { getByLabelText } = renderShell();
-    const nav = drawerOf(getByLabelText);
+    const nav = panelOf(getByLabelText);
     fireEvent.click(getByLabelText("Menu"));
     expect(nav.hidden).toBe(false);
     expect(nav.getAttribute("data-motion")).toBe("none");
-    fireEvent.click(getByLabelText("Menu"));
+    fireEvent.keyDown(document, { key: "Escape" });
     expect(nav.hidden).toBe(true);
-    expect(nav.getAttribute("data-drawer")).toBe("closed");
+    expect(nav.getAttribute("data-panel")).toBe("closed");
     expect(nav.getAttribute("data-motion")).toBe("none");
   });
 
-  it("closes on a tap or click outside the open drawer", () => {
+  it("closes on a tap or click outside the open panel and returns focus to the menu button", () => {
     stubReducedMotion(true);
     seed(makeContent());
     const { getByLabelText, getByTestId } = renderShell();
-    const nav = drawerOf(getByLabelText);
-    fireEvent.click(getByLabelText("Menu"));
+    const nav = panelOf(getByLabelText);
+    const button = getByLabelText("Menu");
+    fireEvent.click(button);
     fireEvent.mouseDown(nav);
     expect(nav.hidden).toBe(false);
     fireEvent.mouseDown(getByTestId("site-footer"));
     expect(nav.hidden).toBe(true);
+    expect(document.activeElement).toBe(button);
 
-    fireEvent.click(getByLabelText("Menu"));
+    fireEvent.click(button);
     expect(nav.hidden).toBe(false);
     fireEvent.touchStart(document.body);
     expect(nav.hidden).toBe(true);
+    expect(document.activeElement).toBe(button);
   });
 
   it("registers its outside touch listener as passive", () => {
@@ -460,19 +516,21 @@ describe("Shell menu drawer", () => {
     for (const call of touch) expect(call[2]).toMatchObject({ passive: true });
   });
 
-  it("closes when any menu item is chosen", () => {
+  it("closes when any row is chosen and returns focus to the menu button", () => {
     stubReducedMotion(true);
     seed(makeContent());
     const { getByLabelText } = renderShell();
-    const nav = drawerOf(getByLabelText);
+    const nav = panelOf(getByLabelText);
+    const button = getByLabelText("Menu");
     const count = nav.querySelectorAll("a, button").length;
     expect(count).toBeGreaterThan(1);
     for (let i = 0; i < count; i += 1) {
-      fireEvent.click(getByLabelText("Menu"));
+      fireEvent.click(button);
       expect(nav.hidden).toBe(false);
       const item = nav.querySelectorAll<HTMLElement>("a, button")[i];
       fireEvent.click(item);
       expect(nav.hidden).toBe(true);
+      expect(document.activeElement).toBe(button);
     }
   });
 
@@ -480,14 +538,42 @@ describe("Shell menu drawer", () => {
     stubReducedMotion(false);
     seed(makeContent());
     const { getByLabelText } = renderShell();
-    const nav = drawerOf(getByLabelText);
+    const nav = panelOf(getByLabelText);
     const button = getByLabelText("Menu");
     fireEvent.click(button);
     expect(nav.contains(document.activeElement)).toBe(true);
     fireEvent.keyDown(document, { key: "Escape" });
-    expect(nav.getAttribute("data-drawer")).toBe("closing");
+    expect(nav.getAttribute("data-panel")).toBe("closing");
     expect(document.activeElement).toBe(button);
     fireEvent.animationEnd(nav);
     expect(nav.hidden).toBe(true);
+  });
+
+  it("renders one row per destination with an icon slot, filled where the destination has an icon", () => {
+    stubReducedMotion(true);
+    const content = makeContent();
+    content.settings.navExtraLinks = [
+      { label: "Donate", href: "https://donate.example", icon: { source: "library", id: "gift" }, newTab: true },
+      { label: "Plain", href: "/plain", icon: null, newTab: false },
+    ] as typeof content.settings.navExtraLinks;
+    seed(content);
+    const { getByLabelText } = renderShell();
+    const nav = panelOf(getByLabelText);
+    const rows = Array.from(nav.querySelectorAll<HTMLElement>("li > a, li > button"));
+    // Home, the two extra links, and Sign in.
+    expect(rows.map((r) => r.textContent)).toEqual(["Track Santa", "Donate", "Plain", "Sign in"]);
+    for (const row of rows) {
+      const slot = row.querySelector('[data-testid="panel-row-icon"]');
+      expect(slot).not.toBeNull();
+      expect(row.firstElementChild).toBe(slot);
+    }
+    const [home, donate, plain] = rows;
+    expect(donate.querySelector('[data-testid="panel-row-icon"]')!.childElementCount).toBe(1);
+    expect(donate.querySelector('[data-testid="panel-row-icon"] svg, [data-testid="panel-row-icon"] img')).not.toBeNull();
+    expect(plain.querySelector('[data-testid="panel-row-icon"]')!.childElementCount).toBe(0);
+    expect(home.querySelector('[data-testid="panel-row-icon"]')!.childElementCount).toBe(0);
+    expect(donate.getAttribute("target")).toBe("_blank");
+    expect(plain.getAttribute("href")).toBe("/plain");
+    expect(css()).toMatch(/\.rowIcon \{[^}]*flex: none;[^}]*width: 24px;/);
   });
 });
