@@ -1,9 +1,11 @@
 // docs/site.md section 7.5. Media block: small 320 px, medium 640 px, or
-// the frame width, with an optional <figcaption>.
+// the frame width, with the entry's credit line directly under the image
+// and an optional <figcaption>.
 
 import type { MediaRef } from "../../contracts";
 import type { BlockComponent } from "../registry";
 import { Media } from "../primitives/Media";
+import { MediaCredit } from "../primitives/MediaCredit";
 import { Inline } from "../inline/Inline";
 import { useSnapshotEvent } from "./useSnapshotEvent";
 import * as styles from "../sections/RichText/RichText.module.css";
@@ -39,6 +41,7 @@ export const MediaBlock: BlockComponent = ({ data, bundle, frame }) => {
         frame={frame ?? "narrow"}
         sizeOverride={sizeOverride}
       />
+      <MediaCredit media={d.media} bundle={bundle} className={styles.blockMediaCredit} />
       {d.caption ? (
         <figcaption className={styles.blockMediaCaption}>
           <Inline text={d.caption} bundle={bundle} event={event} />

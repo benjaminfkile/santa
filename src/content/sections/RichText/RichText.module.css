@@ -27,6 +27,8 @@
 :global(section[data-align="end"]) .blockMedia { align-items: flex-end; margin-inline-start: auto; }
 :global(section[data-align="center"]) .blockMediaCaption { text-align: center; }
 :global(section[data-align="end"]) .blockMediaCaption { text-align: end; }
+:global(section[data-align="center"]) .blockMediaCredit { text-align: center; }
+:global(section[data-align="end"]) .blockMediaCredit { text-align: end; }
 :global(section[data-align="center"]) .blockQuote { width: fit-content; margin-inline: auto; text-align: center; }
 :global(section[data-align="end"]) .blockQuote { width: fit-content; margin-inline-start: auto; text-align: end; }
 :global(section[data-align="center"]) .blockList { width: fit-content; margin-inline: auto; text-align: start; }
@@ -76,6 +78,9 @@
 .blockMediaMedium img { max-width: 640px; }
 .blockMediaFull img { max-width: 100%; height: auto; }
 .blockMediaCaption { color: var(--text-dim); font-size: 0.875rem; }
+.blockMediaCredit { max-width: 100%; }
+.blockMediaSmall .blockMediaCredit { max-width: 320px; }
+.blockMediaMedium .blockMediaCredit { max-width: 640px; }
 
 .blockLinks { display: flex; gap: var(--space-3); flex-wrap: wrap; margin: 0; padding: 0; list-style: none; }
 .blockLinksList { flex-direction: column; }

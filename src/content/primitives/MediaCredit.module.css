@@ -1,0 +1,11 @@
+/* docs/site.md section 7.3. The credit line under a media figure: small,
+   muted with the dim text token (legible on the panel in both themes),
+   and wrapping when long. */
+
+.mediaCredit {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
