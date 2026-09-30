@@ -91,7 +91,12 @@
   overflow: hidden;
   transition: var(--hover-transition);
 }
-.rowToggle:hover { color: var(--accent); }
+/* Hover colours only under a pointer that hovers: a tap on a touch
+   screen leaves :hover on the button, which would keep a toggle coloured
+   after it is turned off. */
+@media (hover: hover) {
+  .rowToggle:hover { color: var(--accent); }
+}
 .pill { composes: rowToggle; }
 .pillSelected { composes: onMark; }
 .toggle { composes: rowToggle; }
@@ -155,7 +160,9 @@
   overflow: hidden;
   transition: var(--hover-transition);
 }
-.footerBtn:hover { color: var(--accent); }
+@media (hover: hover) {
+  .footerBtn:hover { color: var(--accent); }
+}
 .footerBtn[aria-pressed="true"]::after {
   content: "";
   position: absolute;
