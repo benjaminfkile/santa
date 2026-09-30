@@ -1,4 +1,5 @@
 // docs/site.md section 7.4. Media gallery section: single, grid, carousel.
+// Each figure draws the entry's credit line directly under the image.
 
 import { useCallback, useState } from "react";
 import type { CSSProperties } from "react";
@@ -7,6 +8,7 @@ import type { ContentBundle } from "../../../store/types";
 import type { SectionComponent } from "../../registry";
 import type { FrameWidth } from "../../primitives/Media";
 import { Media } from "../../primitives/Media";
+import { MediaCredit } from "../../primitives/MediaCredit";
 import { LinkView } from "../../primitives/LinkView";
 import { Inline } from "../../inline/Inline";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
@@ -78,6 +80,7 @@ function MediaFigure({
   const inner = (
     <>
       <Media media={item.media} bundle={bundle} frame={frame} />
+      <MediaCredit media={item.media} bundle={bundle} />
       {item.caption ? (
         <figcaption className={styles.mediaGalleryCaption}>
           <Inline text={item.caption} bundle={bundle} event={event} />

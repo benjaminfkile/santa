@@ -21,6 +21,7 @@ export const blockListIconMark: string;
 export const blockListItem: string;
 export const blockMedia: string;
 export const blockMediaCaption: string;
+export const blockMediaCredit: string;
 export const blockMediaFull: string;
 export const blockMediaMedium: string;
 export const blockMediaSmall: string;

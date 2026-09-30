@@ -132,6 +132,7 @@ export interface Snapshot {
             invertInDark?: boolean;
           } | null;
           smallMediaId?: string | null;
+          credit?: string | null;
         }
       | undefined;
   };
