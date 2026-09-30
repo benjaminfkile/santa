@@ -3,6 +3,8 @@
 // miles above. State is per page load; nothing about location is
 // persisted. The dot rebuilds its icon from the tokens on every
 // colour-scheme change and renders nothing until the tokens resolve.
+// After `destroy` nothing starts a watch, draws, or reports a change, even
+// an `enable` whose permission query settles later.
 
 import { metresToFeet, metresToMiles } from "../lib/units";
 import { readCssVar } from "./cssVars";
@@ -80,6 +82,7 @@ export function createUserLocation(
   let watchId: number | null = null;
   let pulseTimer: number | null = null;
   let visible = true;
+  let destroyed = false;
 
   function computeDistance(): number | null {
     if (state.position === null || santa === null) return null;
@@ -188,6 +191,7 @@ export function createUserLocation(
   const unsubscribeScheme = subscribeScheme(refreshMarkerIcon);
 
   function publish() {
+    if (destroyed) return;
     state = { ...state, distanceMetres: computeDistance() };
     onChange(state);
   }
@@ -212,6 +216,7 @@ export function createUserLocation(
   }
 
   function onFix(pos: GeolocationPosition) {
+    if (destroyed) return;
     state = {
       enabled: true,
       position: { lat: pos.coords.latitude, lng: pos.coords.longitude },
@@ -224,12 +229,14 @@ export function createUserLocation(
   }
 
   function onError(err: GeolocationPositionError) {
+    if (destroyed) return;
     state = { enabled: false, position: null, error: err.code, distanceMetres: null };
     removeMarker();
     onChange(state);
   }
 
   async function enable() {
+    if (destroyed) return;
     if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
       state = {
         enabled: false,
@@ -246,6 +253,7 @@ export function createUserLocation(
       }).permissions;
       if (perms && typeof perms.query === "function") {
         const status = await perms.query({ name: "geolocation" as PermissionName });
+        if (destroyed) return;
         if (status.state === "denied") {
           state = {
             enabled: false,
@@ -260,6 +268,7 @@ export function createUserLocation(
     } catch {
       // Fall through and try the geolocation API directly.
     }
+    if (destroyed) return;
     state = { ...state, enabled: true };
     onChange(state);
     watchId = navigator.geolocation.watchPosition(onFix, onError, {
@@ -270,6 +279,7 @@ export function createUserLocation(
   }
 
   function disable() {
+    if (destroyed) return;
     clearWatch();
     removeMarker();
     state = { enabled: false, position: null, error: null, distanceMetres: null };
@@ -277,18 +287,22 @@ export function createUserLocation(
   }
 
   function setTheme(t: MapTheme) {
+    if (destroyed) return;
     theme = t;
     refreshMarkerIcon();
     redrawLine();
   }
 
   function setSanta(pos: google.maps.LatLngLiteral | null) {
+    if (destroyed) return;
     santa = pos;
     redrawLine();
     publish();
   }
 
   function destroy() {
+    if (destroyed) return;
+    destroyed = true;
     unsubscribeScheme();
     clearWatch();
     removeMarker();

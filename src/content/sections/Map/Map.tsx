@@ -35,10 +35,11 @@ import { MapControls } from "./MapControls";
 import { RouteDisclaimer } from "./RouteDisclaimer";
 import { TrackerMenu } from "./TrackerMenu";
 import { LocationPrompt } from "./LocationPrompt";
+import { MapUnavailable } from "./MapUnavailable";
+import { readTrackerToggle, writeTrackerToggle } from "./trackerToggles";
 import { ChevronGlyph, TrackerMenuGlyph } from "./glyphs";
 import * as styles from "./Map.module.css";
 import * as ibtn from "../../../ui/IconButton.module.css";
-import * as btn from "../../../ui/Button.module.css";
 
 const THEME_STORAGE_KEY = "wmsfo.tracker.theme";
 
@@ -144,8 +145,22 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const [theme, setTheme] = useState<MapTheme>(initialTheme);
   const [mapType, setMapType] = useState<"terrain" | "roadmap">("terrain");
   const snow = useSnowEnabled(false);
-  const [flightHistoryOn, setFlightHistoryOn] = useState<boolean>(flightHistoryDefault);
-  const [timeLabels, setTimeLabels] = useState<boolean>(true);
+  // The viewer's choice outlives a remount; the content default applies
+  // until the viewer has toggled (trackerToggles.ts).
+  const [flightHistoryOn, setFlightHistoryOnState] = useState<boolean>(() =>
+    readTrackerToggle("flightHistory", flightHistoryDefault),
+  );
+  const [timeLabels, setTimeLabelsState] = useState<boolean>(() =>
+    readTrackerToggle("timeLabels", true),
+  );
+  const setFlightHistoryOn = useCallback((v: boolean) => {
+    writeTrackerToggle("flightHistory", v);
+    setFlightHistoryOnState(v);
+  }, []);
+  const setTimeLabels = useCallback((v: boolean) => {
+    writeTrackerToggle("timeLabels", v);
+    setTimeLabelsState(v);
+  }, []);
   const [following, setFollowing] = useState<boolean>(true);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState<boolean>(() => !isPhoneWidth());
@@ -433,19 +448,4 @@ function MarkerSeqHost() {
   );
   if (!hasFix || seq === null) return null;
   return <div data-testid="marker-seq" data-seq={seq} hidden aria-hidden />;
-}
-
-function MapUnavailable({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div
-      className={styles.unavailable}
-      role="alert"
-      data-testid="map-unavailable"
-    >
-      <p>{copy.map.unavailable}</p>
-      <button type="button" className={btn.btn} onClick={onRetry}>
-        {copy.map.retry}
-      </button>
-    </div>
-  );
 }

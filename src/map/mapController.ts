@@ -1,7 +1,9 @@
 // docs/site.md section 8.3. Owns the `google.maps.Map`, the Santa marker,
 // the flight history overlay, and the user location. Subscribes to the
 // store once and moves the marker imperatively; React never re-renders on
-// a fix.
+// a fix. `destroy` removes the map listeners and pending timers, and every
+// method is a no-op afterwards, so a late call or a late map event on a
+// disposed controller draws nothing and calls back into nothing.
 
 import type { LiveState } from "../store/liveState";
 import { createSantaMarker, type SantaMarker } from "./santaMarker";
@@ -55,9 +57,9 @@ export function createMapController(
   let toggles = { flightHistory: false, timeLabels: true };
   let following = true;
   let santa: SantaMarker | null = null;
-  let overlay: FlightHistoryOverlay;
   let userLoc: UserLocation | null = null;
   let zoomDebounce: number | null = null;
+  let disposed = false;
 
   const map = new libs.maps.Map(container, {
     center: opts.defaultCenter,
@@ -71,74 +73,98 @@ export function createMapController(
     styles: theme.styles,
   });
 
-  overlay = createFlightHistoryOverlay(libs, map, null);
+  let overlay: FlightHistoryOverlay = createFlightHistoryOverlay(libs, map, null);
 
-  if (opts.showSantaMarker) {
-    santa = createSantaMarker(libs, map);
+  // A build that fails part way detaches what it already put on the map
+  // before the error reaches MapView's retry.
+  try {
+    if (opts.showSantaMarker) {
+      santa = createSantaMarker(libs, map);
+    }
+
+    if (opts.showUserLocation) {
+      userLoc = createUserLocation(libs, map, theme, (s) => {
+        opts.onUserLocationChange?.(s);
+      });
+    }
+  } catch (err) {
+    overlay.destroy();
+    santa?.destroy();
+    userLoc?.destroy();
+    throw err;
   }
 
-  if (opts.showUserLocation) {
-    userLoc = createUserLocation(libs, map, theme, (s) => {
-      opts.onUserLocationChange?.(s);
-    });
-  }
+  const listeners: google.maps.MapsEventListener[] = [];
 
-  map.addListener("dragstart", () => {
+  listeners.push(map.addListener("dragstart", () => {
+    if (disposed) return;
     if (following) {
       following = false;
       opts.onFollowChange?.(false);
     }
-  });
+  }));
 
-  map.addListener("zoom_changed", () => {
+  listeners.push(map.addListener("zoom_changed", () => {
+    if (disposed) return;
     if (zoomDebounce !== null) window.clearTimeout(zoomDebounce);
     zoomDebounce = window.setTimeout(() => {
+      zoomDebounce = null;
+      if (disposed) return;
       overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
     }, 150);
-  });
+  }));
 
   overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
 
   return {
     map,
     setTheme(t) {
+      if (disposed) return;
       theme = t;
       map.setOptions({ styles: theme.styles });
       overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
       userLoc?.setTheme(theme);
     },
     setMapType(type) {
+      if (disposed) return;
       map.setMapTypeId(type);
     },
     setFlightHistory(p) {
+      if (disposed) return;
       points = p;
       overlay.destroy();
       overlay = createFlightHistoryOverlay(libs, map, points);
       overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
     },
     setToggles(t) {
+      if (disposed) return;
       toggles = { ...toggles, ...t };
       overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
     },
     setLiveFix(state, pos, seqChanged) {
+      if (disposed) return;
       santa?.setState(state, pos);
       userLoc?.setSanta(pos);
       if (following && seqChanged && pos !== null) map.panTo(pos);
     },
     follow(on) {
+      if (disposed) return;
       following = on;
       opts.onFollowChange?.(on);
     },
     recenter(pos) {
+      if (disposed) return;
       if (pos !== null) map.panTo(pos);
       following = true;
       opts.onFollowChange?.(true);
     },
     zoomBy(delta) {
+      if (disposed) return;
       const z = map.getZoom() ?? opts.defaultZoom;
       map.setZoom(z + delta);
     },
     fitHistory() {
+      if (disposed) return;
       const pts = (points ?? []).filter(
         (p) => typeof p.lat === "number" && typeof p.lng === "number",
       );
@@ -151,6 +177,10 @@ export function createMapController(
     disableUserLocation: () => userLoc?.disable(),
     getUserLocation: () => userLoc?.getState() ?? null,
     destroy() {
+      if (disposed) return;
+      disposed = true;
+      for (const l of listeners) l.remove();
+      listeners.length = 0;
       overlay.destroy();
       santa?.destroy();
       santa = null;
