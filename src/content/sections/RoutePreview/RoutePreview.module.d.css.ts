@@ -18,8 +18,6 @@ export const routeMap: string;
 export const routeMapStage: string;
 export const routeMapStageTakeover: string;
 export const routePin: string;
-export const routePinBadge: string;
-export const routePinIcon: string;
 export const routePoster: string;
 export const routePosterControls: string;
 export const routePosterFullscreen: string;

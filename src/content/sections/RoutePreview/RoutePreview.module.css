@@ -239,27 +239,10 @@
   border: 2px solid var(--panel);
 }
 
-/* The Santa pin, the route map's marker element: the library santa icon
-   on a round badge in the panel colour with an accent ring and a shadow,
-   so it reads over the light and the dark basemap alike. */
+/* The Santa pin, the route map's marker element: the legacy pin image
+   (src/map/santa-pin.png) with its tip on the point. */
 .routePin {
   pointer-events: none;
-}
-.routePinBadge {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--panel);
-  color: var(--text-bright);
-  border: 2px solid var(--accent);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
-}
-.routePinIcon {
-  display: block;
-  width: 24px;
-  height: 24px;
 }
 
 /* The landmark markers: an icon on a 28 px round badge in the panel colour

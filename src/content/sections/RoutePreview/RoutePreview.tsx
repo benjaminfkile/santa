@@ -35,7 +35,6 @@
 //     style, the disclaimer, and the empty text.
 
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import type { SectionComponent } from "../../registry";
 import type { ContentDocument, MediaRef } from "../../../contracts";
 import { Inline } from "../../inline/Inline";
@@ -57,7 +56,7 @@ import { useRouteLandmarks } from "./RouteLandmarks";
 import { resolveRouteMapConfig } from "./routeMapConfig";
 import { useRouteMapFullscreen } from "./useRouteMapFullscreen";
 import { TakeoverPortal } from "../../../lib/TakeoverPortal";
-import { SantaIcon } from "../../icons/generated/santa";
+import { createSantaPinImage } from "../../../map/santaPin";
 import { useReducedMotion } from "../../../lib/motion";
 import { env } from "../../../config/env";
 import { copy } from "../../../copy/copy";
@@ -114,13 +113,15 @@ type RoutePreviewData = {
   disclaimer?: string | null;
 };
 
-// The Santa pin's element, handed to the route map as its marker; the
-// badge and icon are portalled into it.
+// The Santa pin's element, handed to the route map as its marker: the
+// legacy pin image, ROUTE_PIN_HEIGHT css px tall, anchored at its bottom
+// centre (the pin tip) by the route map.
+const ROUTE_PIN_HEIGHT = 40;
+
 function createPinElement(): HTMLElement {
-  const el = document.createElement("div");
+  const el = createSantaPinImage(ROUTE_PIN_HEIGHT);
   el.className = styles.routePin;
   el.setAttribute("data-testid", "route-map-pin");
-  el.setAttribute("aria-hidden", "true");
   return el;
 }
 
@@ -244,12 +245,6 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
             ) : null}
           </div>
         </TakeoverPortal>
-        {createPortal(
-          <span className={styles.routePinBadge}>
-            <SantaIcon className={styles.routePinIcon} />
-          </span>,
-          pinElement,
-        )}
         {landmarks.portals}
       </div>
     );
