@@ -47,11 +47,11 @@ function makeContent(label: string): ContentDocument {
     },
     pages: [
       {
-        id: 1, slug: "planned", title: "Planned", navLabel: null, navPosition: 0, role: "planned",
+        id: 1, slug: "planned", title: "Planned", navLabel: null, icon: null, navPosition: 0, role: "planned",
         sections: [{ id: 1, kind: "hero", presentation, data: { title: `${label} home`, tagline: null, icon: null, links: [], height: "tall" }, items: [] }],
       },
       {
-        id: 2, slug: "about", title: "About", navLabel: `${label} About`, navPosition: 1, role: "none",
+        id: 2, slug: "about", title: "About", navLabel: `${label} About`, icon: null, navPosition: 1, role: "none",
         sections: [{ id: 2, kind: "hero", presentation, data: { title: `${label} about`, tagline: null, icon: null, links: [], height: "tall" }, items: [] }],
       },
     ],

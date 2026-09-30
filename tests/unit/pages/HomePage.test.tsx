@@ -16,6 +16,7 @@ function makePage(id: number, role: ContentDocument["pages"][number]["role"], sl
     slug,
     title: slug,
     navLabel: null,
+    icon: null,
     navPosition: 0,
     role,
     sections: [

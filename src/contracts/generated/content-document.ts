@@ -14,6 +14,20 @@ export interface ContentDocument {
     slug: string;
     title: string;
     navLabel: string | null;
+    icon:
+      | (
+          | {
+              source: "library";
+              id: string;
+              display?: Display | null;
+            }
+          | {
+              source: "media";
+              id: string;
+              display?: Display | null;
+            }
+        )
+      | null;
     navPosition: number;
     role: "none" | "no_event" | "planned" | "scheduled" | "live" | "ended" | "cancelled";
     sections: {

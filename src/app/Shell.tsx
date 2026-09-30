@@ -5,7 +5,10 @@
 // button, which hides while the panel is open; the panel slides in from the
 // right on open and out to the right on close (instant under reduced
 // motion), and a press outside it, the choice of any row, or Escape closes
-// it and returns focus to the menu button.
+// it and returns focus to the menu button. Crossing into the desktop
+// breakpoint (wider than 760 px) closes the panel at once, with no slide,
+// and releases everything an open panel holds: the focus trap, the
+// outside press listeners, and the hidden menu button.
 // While the event is live the shell steps aside: the live screen owns the
 // viewport and nothing else on the site renders or scrolls.
 
@@ -20,7 +23,7 @@ import {
 } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useStore } from "../store/useStore";
-import { selectBundle, selectTakeover } from "../content/selectPage";
+import { selectBundle, selectRole, selectTakeover } from "../content/selectPage";
 import { buildNav, type NavEntry } from "../content/nav";
 import { copy } from "../copy/copy";
 import { ReloadPrompt } from "../pages/ReloadPrompt";
@@ -31,6 +34,7 @@ import { useAuth } from "../auth/AuthProvider";
 import { useThemeChoice } from "../content/theme/colorScheme";
 import { LightsLayer } from "../content/theme/seasonalLayers";
 import { useReducedMotion } from "../lib/motion";
+import type { IconRef } from "../contracts";
 import type { ContentBundle } from "../store/types";
 import { usePreviewLive } from "../pages/previewLive";
 import {
@@ -111,6 +115,10 @@ type PanelPhase = "closed" | "open" | "closing";
 // A timer ends the phase in case `animationend` never fires.
 const PANEL_CLOSE_MS = 500;
 
+// The desktop breakpoint: the inline nav shows and the menu button hides
+// (Shell.module.css, `max-width: 760px`).
+const DESKTOP_QUERY = "(min-width: 761px)";
+
 function Header({ bundle }: { bundle: ContentBundle | null }) {
   const [phase, setPhase] = useState<PanelPhase>("closed");
   const open = phase === "open";
@@ -148,6 +156,7 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
   const hasLogo = (settings?.logoMedia ?? null) !== null;
   const showName = !hasLogo || settings?.headerShowsSiteName !== false;
   const { state: authState, signIn, signOut } = useAuth();
+  const homeRole = useStore(selectRole);
   const location = useLocation();
 
   const finishClose = useCallback(() => {
@@ -167,6 +176,28 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
     if (phase === "open" || !restoreFocusRef.current) return;
     restoreFocusRef.current = false;
     buttonRef.current?.focus();
+  }, [phase]);
+
+  // While the panel is open or closing, crossing into the desktop
+  // breakpoint closes it immediately: no exit slide, and no focus hand
+  // back, since the menu button is not displayed there.
+  useEffect(() => {
+    if (phase === "closed") return;
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    const closeNow = (): void => {
+      restoreFocusRef.current = false;
+      setPhase("closed");
+    };
+    if (mq.matches) {
+      closeNow();
+      return;
+    }
+    const onChange = (e: MediaQueryListEvent): void => {
+      if (e.matches) closeNow();
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
   }, [phase]);
 
   useEffect(() => {
@@ -248,6 +279,7 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
         signedIn: authState.status === "signedIn",
         signInLabel: copy.signIn.button,
         signOutLabel: copy.signIn.signOut,
+        homeRole,
       })
     : [];
 
@@ -538,7 +570,12 @@ function renderEntry(
   if (entry.kind === "home") return <Link to="/">{entry.label}</Link>;
   if (entry.kind === "page") return <Link to={entry.href}>{entry.label}</Link>;
   if (entry.kind === "extra") {
-    return bundle !== null ? <ContentLink link={entry.link} bundle={bundle} /> : null;
+    // The inline nav and its More menu are text only: no link icon.
+    return bundle !== null ? (
+      <LinkView href={entry.link.href} bundle={bundle} newTab={entry.link.newTab}>
+        {entry.link.label}
+      </LinkView>
+    ) : null;
   }
   return (
     <button
@@ -552,18 +589,27 @@ function renderEntry(
   );
 }
 
-// One panel row: a leading icon slot (empty when the destination has no
-// icon, so every label starts at the same inset) and the label, the whole
-// row one tap target.
+// The panel row's icon size; matches `.rowIcon` in Shell.module.css.
+const ROW_ICON_PX = 24;
+
+// One panel row: a leading icon slot and the label, the whole row one
+// tap target. The slot draws the destination's icon (a page's `icon`, the
+// home page's for home, a nav extra link's `link.icon`, the bundled
+// library icon of the sign in and sign out rows) at the slot's 24 px,
+// without the icon's display box, so every row's icon is the same size; a
+// destination without an icon, or one that resolves to nothing, leaves
+// the slot empty, so every label starts at the same inset.
 function renderRow(
   entry: NavEntry,
   bundle: ContentBundle | null,
   actions: { onSignIn: () => void; onSignOut: () => void },
 ) {
-  const body = (icon: ReactNode, label: string) => (
+  const body = (icon: IconRef | null, label: string) => (
     <>
       <span className={styles.rowIcon} aria-hidden data-testid="panel-row-icon">
-        {icon}
+        {icon !== null && bundle !== null ? (
+          <Icon icon={{ source: icon.source, id: icon.id }} bundle={bundle} alt="" decorative size={ROW_ICON_PX} />
+        ) : null}
       </span>
       <span className={styles.rowLabel}>{label}</span>
     </>
@@ -571,17 +617,15 @@ function renderRow(
   if (entry.kind === "home" || entry.kind === "page") {
     return (
       <Link to={entry.href} className={styles.row}>
-        {body(null, entry.label)}
+        {body(entry.icon, entry.label)}
       </Link>
     );
   }
   if (entry.kind === "extra") {
     if (bundle === null) return null;
-    const icon =
-      entry.link.icon !== null ? <Icon icon={entry.link.icon} bundle={bundle} alt="" decorative /> : null;
     return (
       <LinkView href={entry.link.href} bundle={bundle} newTab={entry.link.newTab} className={styles.row}>
-        {body(icon, entry.link.label)}
+        {body(entry.link.icon, entry.link.label)}
       </LinkView>
     );
   }
@@ -592,7 +636,7 @@ function renderRow(
       onClick={entry.kind === "signIn" ? actions.onSignIn : actions.onSignOut}
       data-testid={entry.kind === "signIn" ? "menu-sign-in" : undefined}
     >
-      {body(null, entry.label)}
+      {body(entry.icon, entry.label)}
     </button>
   );
 }

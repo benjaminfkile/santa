@@ -12,6 +12,7 @@ function makePage(id: number, role: PageRole, slug: string, navLabel: string | n
     slug,
     title: slug,
     navLabel,
+    icon: null,
     navPosition,
     role,
     sections: [

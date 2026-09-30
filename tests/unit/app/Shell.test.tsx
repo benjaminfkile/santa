@@ -39,6 +39,7 @@ function makeContent(): ContentDocument {
         slug: "planned",
         title: "planned",
         navLabel: null,
+        icon: null,
         navPosition: 0,
         role: "planned",
         sections: [
@@ -575,5 +576,222 @@ describe("Shell menu panel", () => {
     expect(donate.getAttribute("target")).toBe("_blank");
     expect(plain.getAttribute("href")).toBe("/plain");
     expect(css()).toMatch(/\.rowIcon \{[^}]*flex: none;[^}]*width: 24px;/);
+  });
+});
+
+describe("Shell menu panel at the desktop breakpoint", () => {
+  // A matchMedia stub whose desktop query can be flipped, calling the
+  // listeners the shell registered on it.
+  function stubViewport(initialDesktop: boolean) {
+    let desktop = initialDesktop;
+    const listeners = new Set<(e: MediaQueryListEvent) => void>();
+    vi.spyOn(window, "matchMedia").mockImplementation((query: string) => {
+      const isDesktop = query === "(min-width: 761px)";
+      return {
+        get matches() {
+          return isDesktop ? desktop : false;
+        },
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: (_: string, fn: (e: MediaQueryListEvent) => void) => {
+          if (isDesktop) listeners.add(fn);
+        },
+        removeEventListener: (_: string, fn: (e: MediaQueryListEvent) => void) => {
+          if (isDesktop) listeners.delete(fn);
+        },
+        dispatchEvent: () => false,
+      } as unknown as MediaQueryList;
+    });
+    return {
+      listeners,
+      widen() {
+        desktop = true;
+        act(() => {
+          for (const fn of Array.from(listeners)) fn({ matches: true } as MediaQueryListEvent);
+        });
+      },
+    };
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("closes the open panel at once when the viewport crosses into desktop and releases the lock", () => {
+    const viewport = stubViewport(false);
+    seed(makeContent());
+    const { getByLabelText } = renderShell();
+    const button = getByLabelText("Menu");
+    const nav = document.getElementById(button.getAttribute("aria-controls")!)!;
+    const overflowBefore = document.body.style.overflow;
+    fireEvent.click(button);
+    expect(nav.getAttribute("data-panel")).toBe("open");
+    expect(nav.getAttribute("data-motion")).toBe("in");
+    expect(button.getAttribute("data-panel-open")).toBe("true");
+    expect(viewport.listeners.size).toBe(1);
+
+    viewport.widen();
+    // Closed with no exit slide.
+    expect(nav.hidden).toBe(true);
+    expect(nav.getAttribute("data-panel")).toBe("closed");
+    expect(nav.getAttribute("data-motion")).toBe("none");
+    // Nothing the open panel held survives: the button is no longer hidden,
+    // the listener is gone, Tab is not trapped, the body scroll is untouched.
+    expect(button.getAttribute("aria-expanded")).toBe("false");
+    expect(button.getAttribute("data-panel-open")).toBeNull();
+    expect(viewport.listeners.size).toBe(0);
+    const tab = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    document.dispatchEvent(tab);
+    expect(tab.defaultPrevented).toBe(false);
+    expect(document.body.style.overflow).toBe(overflowBefore);
+    // An outside press after the crossing does nothing.
+    fireEvent.mouseDown(document.body);
+    expect(nav.getAttribute("data-panel")).toBe("closed");
+  });
+
+  it("cuts a closing slide short when the viewport crosses into desktop", () => {
+    const viewport = stubViewport(false);
+    seed(makeContent());
+    const { getByLabelText } = renderShell();
+    const button = getByLabelText("Menu");
+    const nav = document.getElementById(button.getAttribute("aria-controls")!)!;
+    fireEvent.click(button);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(nav.getAttribute("data-panel")).toBe("closing");
+    viewport.widen();
+    expect(nav.hidden).toBe(true);
+    expect(nav.getAttribute("data-panel")).toBe("closed");
+  });
+
+  it("listens for the breakpoint only while the panel is open", () => {
+    const viewport = stubViewport(false);
+    seed(makeContent());
+    const { getByLabelText } = renderShell();
+    expect(viewport.listeners.size).toBe(0);
+    fireEvent.click(getByLabelText("Menu"));
+    expect(viewport.listeners.size).toBe(1);
+  });
+});
+
+describe("Shell menu panel row icons", () => {
+  function stubReducedMotion(): void {
+    vi.spyOn(window, "matchMedia").mockImplementation(
+      (query: string) =>
+        ({
+          matches: query.includes("prefers-reduced-motion"),
+          media: query,
+          onchange: null,
+          addListener: () => {},
+          removeListener: () => {},
+          addEventListener: () => {},
+          removeEventListener: () => {},
+          dispatchEvent: () => false,
+        }) as unknown as MediaQueryList,
+    );
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function withDestinations(): ContentDocument {
+    const content = makeContent();
+    content.pages[0].icon = { source: "library", id: "sleigh" };
+    content.pages.push(
+      { ...content.pages[0], id: 2, slug: "about", title: "About", navLabel: "About", navPosition: 1, role: "none", icon: { source: "media", id: "m-about", display: { sizePx: 96 } } },
+      { ...content.pages[0], id: 3, slug: "faq", title: "FAQ", navLabel: "FAQ", navPosition: 2, role: "none", icon: null },
+    );
+    content.settings.navExtraLinks = [
+      { label: "Donate", href: "https://donate.example", icon: { source: "library", id: "gift" }, newTab: true },
+      { label: "Plain", href: "/plain", icon: null, newTab: false },
+    ] as typeof content.settings.navExtraLinks;
+    return content;
+  }
+
+  const media = { "m-about": { url: "https://cdn/about.svg", kind: "svg" } };
+
+  function rowsOf(button: HTMLElement): HTMLElement[] {
+    const nav = document.getElementById(button.getAttribute("aria-controls")!)!;
+    return Array.from(nav.querySelectorAll<HTMLElement>("li > a, li > button"));
+  }
+
+  const slot = (row: HTMLElement): HTMLElement =>
+    row.querySelector<HTMLElement>('[data-testid="panel-row-icon"]')!;
+
+  it("draws library icons inline and media icons through <img>, at the slot size", () => {
+    stubReducedMotion();
+    seed(withDestinations(), false, media);
+    const { getByLabelText } = renderShell();
+    const rows = rowsOf(getByLabelText("Menu"));
+    expect(rows.map((r) => r.textContent)).toEqual(["Track Santa", "About", "FAQ", "Donate", "Plain", "Sign in"]);
+    const [home, about, , donate] = rows;
+
+    const homeIcon = slot(home).querySelector("svg")!;
+    expect(homeIcon.getAttribute("data-icon-id")).toBe("sleigh");
+    expect(homeIcon.getAttribute("width")).toBe("24");
+    expect(slot(donate).querySelector("svg")!.getAttribute("data-icon-id")).toBe("gift");
+
+    const img = slot(about).querySelector("img")!;
+    expect(img.getAttribute("src")).toBe("https://cdn/about.svg");
+    expect(img.getAttribute("alt")).toBe("");
+    // The display size is not applied: every row icon is 24 px.
+    expect(img.getAttribute("width")).toBe("24");
+    expect(slot(about).querySelector('[data-display="icon"]')).toBeNull();
+  });
+
+  it("keeps an empty slot first in rows without an icon, so every label aligns", () => {
+    stubReducedMotion();
+    seed(withDestinations(), false, media);
+    const { getByLabelText } = renderShell();
+    const rows = rowsOf(getByLabelText("Menu"));
+    for (const row of rows) expect(row.firstElementChild).toBe(slot(row));
+    const faq = rows[2];
+    const plain = rows[4];
+    expect(slot(faq).childElementCount).toBe(0);
+    expect(slot(plain).childElementCount).toBe(0);
+  });
+
+  it("leaves the slot empty when a media icon does not resolve", () => {
+    stubReducedMotion();
+    seed(withDestinations());
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { getByLabelText } = renderShell();
+    const about = rowsOf(getByLabelText("Menu"))[1];
+    expect(slot(about).childElementCount).toBe(0);
+    expect(about.firstElementChild).toBe(slot(about));
+    warn.mockRestore();
+  });
+
+  it("draws a bundled library icon on the sign in row", () => {
+    stubReducedMotion();
+    seed(makeContent());
+    const { getByLabelText } = renderShell();
+    const signIn = rowsOf(getByLabelText("Menu")).at(-1)!;
+    expect(signIn.textContent).toBe("Sign in");
+    const icon = slot(signIn).querySelector("svg")!;
+    expect(icon).not.toBeNull();
+    expect(icon.getAttribute("data-icon-source")).toBe("library");
+    expect(icon.getAttribute("data-icon-id")).toBe("gift-tag");
+    expect(icon.getAttribute("width")).toBe("24");
+  });
+
+  it("sizes every row icon to the 24 px slot in the stylesheet", () => {
+    const css = readFileSync(resolve(__dirname, "..", "..", "..", "src", "app", "Shell.module.css"), "utf8");
+    expect(css).toMatch(/\.rowIcon svg,\s*\.rowIcon img \{[^}]*width: 24px;[^}]*height: 24px;[^}]*object-fit: contain;/);
+  });
+
+  it("keeps the desktop nav and its measuring copy text only", () => {
+    stubReducedMotion();
+    seed(withDestinations(), false, media);
+    const { getByRole, getByTestId } = renderShell();
+    const inline = getByRole("navigation", { name: "Pages" });
+    expect(inline.textContent).toContain("About");
+    expect(inline.textContent).toContain("Donate");
+    expect(inline.querySelectorAll("a svg, a img")).toHaveLength(0);
+    expect(getByTestId("nav-measure").querySelectorAll("a svg, a img")).toHaveLength(0);
+    const links = Array.from(inline.querySelectorAll("a")).map((a) => a.textContent);
+    expect(links).toContain("Track Santa");
   });
 });
