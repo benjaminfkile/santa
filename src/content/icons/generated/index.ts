@@ -7,6 +7,7 @@ import { AngelIcon } from "./angel";
 import { BaubleIcon } from "./bauble";
 import { BeanieIcon } from "./beanie";
 import { BellIcon } from "./bell";
+import { BinocularsIcon } from "./binoculars";
 import { BowIcon } from "./bow";
 import { CalendarIcon } from "./calendar";
 import { CandyCaneIcon } from "./candy-cane";
@@ -31,6 +32,7 @@ import { HollyIcon } from "./holly";
 import { InstagramIcon } from "./instagram";
 import { JingleBellsIcon } from "./jingle-bells";
 import { LollipopIcon } from "./lollipop";
+import { MailbagIcon } from "./mailbag";
 import { MapPinIcon } from "./map-pin";
 import { MistletoeIcon } from "./mistletoe";
 import { MittenIcon } from "./mitten";
@@ -43,6 +45,7 @@ import { PeppermintIcon } from "./peppermint";
 import { PhoneIcon } from "./phone";
 import { PineBranchIcon } from "./pine-branch";
 import { PineconeIcon } from "./pinecone";
+import { QuestionIcon } from "./question";
 import { ReindeerIcon } from "./reindeer";
 import { ReindeerFaceIcon } from "./reindeer-face";
 import { RibbonIcon } from "./ribbon";
@@ -71,6 +74,7 @@ export const LIBRARY_ICONS: Record<string, IconComponent> = {
   "bauble": BaubleIcon,
   "beanie": BeanieIcon,
   "bell": BellIcon,
+  "binoculars": BinocularsIcon,
   "bow": BowIcon,
   "calendar": CalendarIcon,
   "candy-cane": CandyCaneIcon,
@@ -95,6 +99,7 @@ export const LIBRARY_ICONS: Record<string, IconComponent> = {
   "instagram": InstagramIcon,
   "jingle-bells": JingleBellsIcon,
   "lollipop": LollipopIcon,
+  "mailbag": MailbagIcon,
   "map-pin": MapPinIcon,
   "mistletoe": MistletoeIcon,
   "mitten": MittenIcon,
@@ -107,6 +112,7 @@ export const LIBRARY_ICONS: Record<string, IconComponent> = {
   "phone": PhoneIcon,
   "pine-branch": PineBranchIcon,
   "pinecone": PineconeIcon,
+  "question": QuestionIcon,
   "reindeer": ReindeerIcon,
   "reindeer-face": ReindeerFaceIcon,
   "ribbon": RibbonIcon,
