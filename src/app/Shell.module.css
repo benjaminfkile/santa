@@ -1,5 +1,5 @@
 /* docs/site.md section 7.7. Site shell recipes: header, brand mark, theme
-   toggle, nav drawer, banners, footer, skip link, snow canvas, string of
+   toggle, menu panel, banners, footer, skip link, snow canvas, string of
    lights. All classes are scoped through this module (no :global rules). */
 
 .skipLink {
@@ -26,7 +26,12 @@
   background: var(--panel);
   color: var(--text);
   border-bottom: 1px solid var(--line);
-  position: relative;
+  /* Sticky: the header keeps its place in the flow (no layout jump) and
+     stays pinned to the viewport top above the content and the ornaments
+     while the page scrolls. No transform or filter here, so the fixed
+     menu panel inside stays anchored to the viewport. */
+  position: sticky;
+  top: 0;
   z-index: 10;
 }
 .brand {
@@ -237,53 +242,70 @@
 .themeOption:hover { background: var(--accent-soft); color: var(--accent); }
 .themeOption[aria-checked="true"] { color: var(--accent); }
 .themeOption[aria-checked="true"]::after { content: "\2713"; font-size: 0.875rem; }
-.nav {
-  position: absolute;
-  top: calc(100% + var(--space-2));
-  right: var(--space-6);
-  min-width: 280px;
+/* The menu panel: a compact card fixed in the viewport's top right corner,
+   over the menu button (which hides while the panel is open). One chunky
+   row per destination; the panel never spans the viewport and scrolls
+   within itself when the rows outgrow the height. */
+.panel {
+  position: fixed;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 20;
+  box-sizing: border-box;
+  width: 180px;
+  max-width: calc(100vw - 2 * var(--space-5));
+  max-height: calc(100vh - 2 * var(--space-2));
+  max-height: calc(100dvh - 2 * var(--space-2));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--space-2);
   background: var(--panel);
   color: var(--text);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  padding: var(--space-3) 0;
-  z-index: 20;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-raised);
 }
-/* Opening slides the drawer in from the left; closing slides it out to the
-   right. Under reduced motion neither class is applied, so the drawer
-   appears and disappears at once. */
-.navIn { animation: drawerIn 180ms ease-out both; }
-.navOut { animation: drawerOut 180ms ease-in both; }
-@keyframes drawerIn {
-  from { transform: translateX(-24px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+/* Opening slides the panel in from the right; closing slides it out to
+   the right, both 0.5 s on the same ease. Under reduced motion neither
+   class is applied, so the panel appears and disappears at once. */
+.panelIn { animation: panelIn 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+.panelOut { animation: panelOut 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+@keyframes panelIn {
+  from { transform: translateX(calc(100% + var(--space-2))); }
+  to { transform: translateX(0); }
 }
-@keyframes drawerOut {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(24px); opacity: 0; }
+@keyframes panelOut {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(100% + var(--space-2))); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .navIn,
-  .navOut { animation: none; }
+  .panelIn,
+  .panelOut { animation: none; }
 }
-.nav ul {
+.panelList {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
+  gap: var(--space-2);
 }
-.nav li { display: block; }
-.nav a,
-.nav button.authButton {
-  display: block;
-  padding: var(--space-3) var(--space-5);
-  color: var(--text);
-  text-decoration: none;
-  background: transparent;
-  border: 0;
+.panelList > li { display: block; }
+.row {
+  appearance: none;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   width: 100%;
+  min-height: 65px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--panel-2);
+  color: var(--text-bright);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  text-decoration: none;
   text-align: start;
   cursor: pointer;
   font-family: var(--font-sans);
@@ -291,11 +313,23 @@
   font-size: 1rem;
   transition: var(--hover-transition);
 }
-.nav a:hover,
-.nav button.authButton:hover {
+.row:hover {
   background: var(--accent-soft);
+  border-color: var(--accent);
   color: var(--accent);
 }
+/* The leading icon slot keeps its width with or without an icon, so every
+   label starts at the same inset. */
+.rowIcon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+.rowLabel { min-width: 0; overflow-wrap: anywhere; }
 .authButton {
   display: block;
   padding: var(--space-3) var(--space-5);
@@ -392,11 +426,14 @@
   font-size: 0.9rem;
   margin: 0;
 }
-/* The drawer and its button exist for phones; the inline nav covers wider screens. */
+/* The panel and its button exist for phones; the inline nav covers wider
+   screens. While the panel is open the button keeps its box (so the header
+   does not shift) but is hidden: the panel occupies its corner. */
 .menuButton { display: none; }
 @media (max-width: 760px) {
   .menuButton { display: inline-flex; }
 }
+.menuButton[data-panel-open="true"] { visibility: hidden; }
 
 .mainFallback:focus { outline: none; }
 .mainFallback > h1 { padding: var(--space-6); }

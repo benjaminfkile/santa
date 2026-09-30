@@ -1,8 +1,11 @@
 // docs/site.md section 7.7. Wraps every route: skip link, header with
 // brand (the site logo or the built-in mark), sign-in, theme toggle and
-// menu, nav drawer, banners, footer. The drawer slides in from the left on
-// open and out to the right on close (instant under reduced motion), and a
-// tap outside it or the choice of any item closes it.
+// menu, the menu panel, banners, footer. The header is sticky at the top of
+// the viewport. The menu panel sits in the top right corner over the menu
+// button, which hides while the panel is open; the panel slides in from the
+// right on open and out to the right on close (instant under reduced
+// motion), and a press outside it, the choice of any row, or Escape closes
+// it and returns focus to the menu button.
 // While the event is live the shell steps aside: the live screen owns the
 // viewport and nothing else on the site renders or scrolls.
 
@@ -21,7 +24,8 @@ import { selectBundle, selectTakeover } from "../content/selectPage";
 import { buildNav, type NavEntry } from "../content/nav";
 import { copy } from "../copy/copy";
 import { ReloadPrompt } from "../pages/ReloadPrompt";
-import { ContentLink } from "../content/primitives/LinkView";
+import { ContentLink, LinkView } from "../content/primitives/LinkView";
+import { Icon } from "../content/primitives/Icon";
 import { Logo } from "../content/Logo";
 import { useAuth } from "../auth/AuthProvider";
 import { useThemeChoice } from "../content/theme/colorScheme";
@@ -99,22 +103,25 @@ function bundleEqual(a: ContentBundle | null, b: ContentBundle | null): boolean 
   return a.content === b.content && a.media === b.media && a.icons === b.icons;
 }
 
-// The drawer's phases: closed (hidden), open (sliding in from the left or
+// The panel's phases: closed (hidden), open (sliding in from the right or
 // at rest), closing (sliding out to the right, then closed).
-type DrawerPhase = "closed" | "open" | "closing";
+type PanelPhase = "closed" | "open" | "closing";
 
-// The close slide's length in ms; matches `drawerOut` in Shell.module.css.
+// The close slide's length in ms; matches `panelOut` in Shell.module.css.
 // A timer ends the phase in case `animationend` never fires.
-const DRAWER_CLOSE_MS = 180;
+const PANEL_CLOSE_MS = 500;
 
 function Header({ bundle }: { bundle: ContentBundle | null }) {
-  const [phase, setPhase] = useState<DrawerPhase>("closed");
+  const [phase, setPhase] = useState<PanelPhase>("closed");
   const open = phase === "open";
   const reducedMotion = useReducedMotion();
   const panelId = useId();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLElement | null>(null);
   const headerRef = useRef<HTMLElement | null>(null);
+  // Set when a close should hand focus back to the menu button; the button
+  // is hidden while the panel is open, so focus moves once it shows again.
+  const restoreFocusRef = useRef(false);
 
   useLayoutEffect(() => {
     const el = headerRef.current;
@@ -152,9 +159,15 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
   }, [reducedMotion]);
 
   const close = useCallback(() => {
+    restoreFocusRef.current = true;
     dismiss();
-    buttonRef.current?.focus();
   }, [dismiss]);
+
+  useLayoutEffect(() => {
+    if (phase === "open" || !restoreFocusRef.current) return;
+    restoreFocusRef.current = false;
+    buttonRef.current?.focus();
+  }, [phase]);
 
   useEffect(() => {
     if (phase !== "closing") return;
@@ -163,15 +176,16 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
       if (e.target === panel) finishClose();
     }
     panel?.addEventListener("animationend", onEnd);
-    const t = window.setTimeout(finishClose, DRAWER_CLOSE_MS + 50);
+    const t = window.setTimeout(finishClose, PANEL_CLOSE_MS + 50);
     return () => {
       panel?.removeEventListener("animationend", onEnd);
       window.clearTimeout(t);
     };
   }, [phase, finishClose]);
 
-  // A pointer press outside the drawer and its button closes it. The
-  // touch listener is passive: it never cancels the touch or the scroll.
+  // A pointer press outside the panel and its button closes it and returns
+  // focus to the button. The touch listener is passive: it never cancels
+  // the touch or the scroll.
   useEffect(() => {
     if (!open) return;
     function onDown(e: PointerEvent | MouseEvent | TouchEvent) {
@@ -179,7 +193,7 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
       if (target === null) return;
       if (panelRef.current?.contains(target)) return;
       if (buttonRef.current?.contains(target)) return;
-      dismiss();
+      close();
     }
     document.addEventListener("mousedown", onDown);
     document.addEventListener("touchstart", onDown, { passive: true });
@@ -187,7 +201,7 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("touchstart", onDown);
     };
-  }, [open, dismiss]);
+  }, [open, close]);
 
   useEffect(() => {
     if (!open) return;
@@ -301,6 +315,7 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
           aria-controls={panelId}
           aria-label="Menu"
           className={styles.menuButton}
+          data-panel-open={open ? "true" : undefined}
           onClick={() => setPhase((p) => (p === "open" ? (reducedMotion ? "closed" : "closing") : "open"))}
         >
           <MenuGlyph />
@@ -313,19 +328,20 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
         }}
         aria-label="Site"
         hidden={phase === "closed"}
-        data-drawer={phase}
-        data-motion={drawerMotion(phase, reducedMotion)}
-        className={drawerClass(phase, reducedMotion)}
+        data-panel={phase}
+        data-motion={panelMotion(phase, reducedMotion)}
+        className={panelClass(phase, reducedMotion)}
         onClick={(e) => {
-          // Choosing any item (a link or a button) closes the drawer as it acts.
+          // Choosing any row (a link or a button) closes the panel as it
+          // acts and returns focus to the menu button.
           const item = (e.target as Element).closest("a, button");
-          if (item !== null && e.currentTarget.contains(item)) dismiss();
+          if (item !== null && e.currentTarget.contains(item)) close();
         }}
       >
-        <ul>
+        <ul className={styles.panelList}>
           {entries.map((entry, i) => (
             <li key={i}>
-              {renderEntry(entry, bundle, {
+              {renderRow(entry, bundle, {
                 onSignIn: onSignInClick,
                 onSignOut: () => void signOut(),
               })}
@@ -338,17 +354,17 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
   );
 }
 
-// The drawer's slide: "in" from the left while open, "out" to the right
+// The panel's slide: "in" from the right while open, "out" to the right
 // while closing, "none" when closed or under reduced motion.
-function drawerMotion(phase: DrawerPhase, reducedMotion: boolean): "in" | "out" | "none" {
+function panelMotion(phase: PanelPhase, reducedMotion: boolean): "in" | "out" | "none" {
   if (reducedMotion || phase === "closed") return "none";
   return phase === "open" ? "in" : "out";
 }
 
-function drawerClass(phase: DrawerPhase, reducedMotion: boolean): string {
-  const motion = drawerMotion(phase, reducedMotion);
-  if (motion === "none") return styles.nav;
-  return `${styles.nav} ${motion === "in" ? styles.navIn : styles.navOut}`;
+function panelClass(phase: PanelPhase, reducedMotion: boolean): string {
+  const motion = panelMotion(phase, reducedMotion);
+  if (motion === "none") return styles.panel;
+  return `${styles.panel} ${motion === "in" ? styles.panelIn : styles.panelOut}`;
 }
 
 function BrandMark() {
@@ -532,6 +548,51 @@ function renderEntry(
       data-testid={entry.kind === "signIn" ? "menu-sign-in" : undefined}
     >
       {entry.label}
+    </button>
+  );
+}
+
+// One panel row: a leading icon slot (empty when the destination has no
+// icon, so every label starts at the same inset) and the label, the whole
+// row one tap target.
+function renderRow(
+  entry: NavEntry,
+  bundle: ContentBundle | null,
+  actions: { onSignIn: () => void; onSignOut: () => void },
+) {
+  const body = (icon: ReactNode, label: string) => (
+    <>
+      <span className={styles.rowIcon} aria-hidden data-testid="panel-row-icon">
+        {icon}
+      </span>
+      <span className={styles.rowLabel}>{label}</span>
+    </>
+  );
+  if (entry.kind === "home" || entry.kind === "page") {
+    return (
+      <Link to={entry.href} className={styles.row}>
+        {body(null, entry.label)}
+      </Link>
+    );
+  }
+  if (entry.kind === "extra") {
+    if (bundle === null) return null;
+    const icon =
+      entry.link.icon !== null ? <Icon icon={entry.link.icon} bundle={bundle} alt="" decorative /> : null;
+    return (
+      <LinkView href={entry.link.href} bundle={bundle} newTab={entry.link.newTab} className={styles.row}>
+        {body(icon, entry.link.label)}
+      </LinkView>
+    );
+  }
+  return (
+    <button
+      type="button"
+      className={styles.row}
+      onClick={entry.kind === "signIn" ? actions.onSignIn : actions.onSignOut}
+      data-testid={entry.kind === "signIn" ? "menu-sign-in" : undefined}
+    >
+      {body(null, entry.label)}
     </button>
   );
 }
