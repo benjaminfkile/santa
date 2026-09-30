@@ -5429,6 +5429,7 @@ export interface components {
             slug?: string;
             title?: string;
             navLabel?: null | string;
+            icon?: components["schemas"]["JsonElement"];
             /** Format: int32 */
             navPosition?: number | string;
             isHidden?: boolean;
@@ -5970,6 +5971,7 @@ export interface components {
             slug?: string;
             title?: string;
             navLabel?: null | string;
+            icon?: null | components["schemas"]["IconValue"];
             /** Format: int32 */
             navPosition?: number | string;
             isHidden?: boolean;
@@ -5992,6 +5994,7 @@ export interface components {
             slug?: string;
             title?: string;
             navLabel?: null | string;
+            icon?: null | components["schemas"]["IconValue"];
             /** Format: int32 */
             navPosition?: number | string;
             isHidden?: boolean;
@@ -6072,6 +6075,7 @@ export interface components {
             slug?: null | string;
             title?: null | string;
             navLabel?: null | string;
+            icon?: components["schemas"]["JsonElement"];
             /** Format: int32 */
             navPosition?: null | number | string;
             isHidden?: null | boolean;

@@ -42,11 +42,11 @@ function makeContent(): ContentDocument {
     },
     pages: [
       {
-        id: 1, slug: "planned", title: "Planned", navLabel: null, navPosition: 0, role: "planned",
+        id: 1, slug: "planned", title: "Planned", navLabel: null, icon: null, navPosition: 0, role: "planned",
         sections: [{ id: 1, kind: "hero", presentation: { width: "wide", align: "center", background: { kind: "none" }, spacing: "normal", iconBefore: null, iconAfter: null, anchor: null }, data: { title: "Planned page", tagline: null, icon: null, links: [], height: "tall" }, items: [] }],
       },
       {
-        id: 2, slug: "ended", title: "Ended", navLabel: null, navPosition: 0, role: "ended",
+        id: 2, slug: "ended", title: "Ended", navLabel: null, icon: null, navPosition: 0, role: "ended",
         sections: [{ id: 2, kind: "hero", presentation: { width: "wide", align: "center", background: { kind: "none" }, spacing: "normal", iconBefore: null, iconAfter: null, anchor: null }, data: { title: "Ended page", tagline: null, icon: null, links: [], height: "tall" }, items: [] }],
       },
     ],

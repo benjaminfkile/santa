@@ -329,6 +329,14 @@
   justify-content: center;
   color: var(--accent);
 }
+/* Every icon fills the slot's 24 px box, inline SVG and <img> alike; a
+   raster keeps its proportions inside it. */
+.rowIcon svg,
+.rowIcon img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
 .rowLabel { min-width: 0; overflow-wrap: anywhere; }
 .authButton {
   display: block;
