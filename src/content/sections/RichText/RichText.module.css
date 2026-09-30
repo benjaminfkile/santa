@@ -7,6 +7,30 @@
    or content box, so the centred lines sit in the middle of the section on
    any width. A section aligned to the start keeps the column at the start. */
 :global(section[data-align="center"]) .richText { margin-inline: auto; }
+/* A section aligned to the end puts the column at the end and sets its
+   lines to the end. */
+:global(section[data-align="end"]) .richText { margin-inline-start: auto; text-align: end; }
+
+/* Every block kind follows a centre or end section align. The heading
+   row and the links row are flex rows, so they justify to the align; a
+   media block moves its image and caption; a quote and a list move as a
+   box (fit to content) while a list's items keep their start alignment
+   so bullets stay readable. A start section keeps every block at the
+   start. */
+:global(section[data-align="center"]) .blockHeading { justify-content: center; }
+:global(section[data-align="end"]) .blockHeading { justify-content: flex-end; }
+:global(section[data-align="center"]) .blockLinksButtons { justify-content: center; }
+:global(section[data-align="end"]) .blockLinksButtons { justify-content: flex-end; }
+:global(section[data-align="center"]) .blockLinksList { align-items: center; }
+:global(section[data-align="end"]) .blockLinksList { align-items: flex-end; }
+:global(section[data-align="center"]) .blockMedia { align-items: center; margin-inline: auto; }
+:global(section[data-align="end"]) .blockMedia { align-items: flex-end; margin-inline-start: auto; }
+:global(section[data-align="center"]) .blockMediaCaption { text-align: center; }
+:global(section[data-align="end"]) .blockMediaCaption { text-align: end; }
+:global(section[data-align="center"]) .blockQuote { width: fit-content; margin-inline: auto; text-align: center; }
+:global(section[data-align="end"]) .blockQuote { width: fit-content; margin-inline-start: auto; text-align: end; }
+:global(section[data-align="center"]) .blockList { width: fit-content; margin-inline: auto; text-align: start; }
+:global(section[data-align="end"]) .blockList { width: fit-content; margin-inline-start: auto; text-align: start; }
 
 .blockHeading {
   font-family: var(--font-display);
