@@ -3,7 +3,9 @@
    positioned surface: cards, header, footer) and the string of bulbs on a
    wire under the header. A canvas is a replaced element, so inset alone
    leaves it at its intrinsic 300 x 150; the size is explicit. On the live
-   screen the canvas sits over the map. */
+   screen the canvas sits over the map. The canvas is its own compositor
+   layer (translateZ) with strict containment, so page scroll and
+   navigation never repaint it; the lights contain their own paint. */
 
 .snow {
   position: fixed;
@@ -12,6 +14,8 @@
   height: 100%;
   z-index: 0;
   pointer-events: none;
+  transform: translateZ(0);
+  contain: strict;
 }
 :global(html[data-takeover="live"]) .snow { z-index: 31; }
 
@@ -26,6 +30,7 @@
   right: 0;
   bottom: 0;
   z-index: 8;
+  contain: strict;
 }
 .lightsWire {
   position: absolute;

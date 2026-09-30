@@ -95,14 +95,12 @@
 }
 .sponsorCarouselDotOn { background: var(--accent); }
 
-/* The live screen's tile. */
+/* The live screen's tile: a pre-blended fill with no backdrop filter. */
 .sponsorCarouselTile .sponsorCarouselBar { gap: 0; }
 .sponsorCarouselTile .sponsorCarouselSlide {
   padding: 5px;
   border-radius: 5px;
-  background: color-mix(in srgb, var(--panel) 86%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
 }

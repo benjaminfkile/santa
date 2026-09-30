@@ -2,7 +2,7 @@
 // choice held for the live takeover only, and live-screen detection
 // through `live.eventStatusId === 3` at `/`.
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { act, cleanup, render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import {
@@ -227,5 +227,82 @@ describe("LightsLayer live-screen detection", () => {
       </MemoryRouter>,
     );
     expect(container.querySelector('[data-testid="site-lights"]')).not.toBeNull();
+  });
+});
+
+describe("the snow canvas on a high density screen", () => {
+  let frames: Map<number, FrameRequestCallback>;
+  let visibility: DocumentVisibilityState;
+
+  beforeEach(() => {
+    frames = new Map();
+    visibility = "visible";
+    let nextId = 1;
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
+      const id = nextId++;
+      frames.set(id, cb);
+      return id;
+    });
+    vi.spyOn(window, "cancelAnimationFrame").mockImplementation((id) => {
+      frames.delete(id);
+    });
+    vi.spyOn(document, "visibilityState", "get").mockImplementation(() => visibility);
+    const ctx = {
+      setTransform: vi.fn(),
+      clearRect: vi.fn(),
+      beginPath: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
+      fillStyle: "",
+    };
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
+      () => ctx as unknown as CanvasRenderingContext2D,
+    );
+    vi.spyOn(HTMLCanvasElement.prototype, "clientWidth", "get").mockReturnValue(390);
+    vi.spyOn(HTMLCanvasElement.prototype, "clientHeight", "get").mockReturnValue(844);
+    Object.defineProperty(window, "devicePixelRatio", { configurable: true, value: 3 });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    Object.defineProperty(window, "devicePixelRatio", { configurable: true, value: 1 });
+  });
+
+  function renderSnow(): HTMLCanvasElement {
+    seedLive(1);
+    const { container } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <SnowLayer bundle={bundleWithDefaults(true, false)} />
+      </MemoryRouter>,
+    );
+    return container.querySelector('[data-testid="snow-canvas"]') as HTMLCanvasElement;
+  }
+
+  it("sizes the backing store at a device pixel ratio of 2, not 3", () => {
+    const canvas = renderSnow();
+    expect(canvas.width).toBe(780);
+    expect(canvas.height).toBe(1688);
+  });
+
+  it("pauses its frame loop while the tab is hidden and resumes when shown", () => {
+    renderSnow();
+    expect(frames.size).toBe(1);
+    act(() => {
+      visibility = "hidden";
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(frames.size).toBe(0);
+    act(() => {
+      visibility = "visible";
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(frames.size).toBe(1);
+  });
+
+  it("cancels its frame when it unmounts", () => {
+    renderSnow();
+    expect(frames.size).toBe(1);
+    cleanup();
+    expect(frames.size).toBe(0);
   });
 });

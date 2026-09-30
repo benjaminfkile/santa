@@ -1,6 +1,7 @@
 /* docs/site.md section 7.7. Shared frost recipe (the studio's liftoff
-   card): an aurora halo blurred just outside the panel, a translucent
-   glass layer with a backdrop blur over it, and an accent-tinted border.
+   card): an aurora halo blurred just outside the panel, a glass layer of
+   --panel at 90 percent over it (pre-blended, no backdrop filter), and an
+   accent-tinted border.
    The halo and the glass are the two pseudo-elements so a composing
    class only sets its own padding and layout; the element paints no
    background of its own. */
@@ -30,8 +31,6 @@
   border-radius: inherit;
   box-sizing: border-box;
   border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
-  background: color-mix(in srgb, var(--panel) 78%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--panel) 90%, transparent);
   pointer-events: none;
 }

@@ -8,7 +8,9 @@
    below 640 px the whole layer shrinks by 0.5 so the header and the
    first card stay clear. Reduced motion is handled by the global rule
    in tokens.css: the sway class stays on the element but its animation
-   duration is zeroed. */
+   duration is zeroed. The layer is its own compositor layer (translateZ)
+   with strict containment, so page scroll and navigation never repaint
+   it. */
 
 .layer {
   position: fixed;
@@ -19,6 +21,8 @@
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+  transform: translateZ(0);
+  contain: strict;
 }
 
 .ornament {

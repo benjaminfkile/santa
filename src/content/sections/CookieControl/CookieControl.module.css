@@ -35,7 +35,8 @@
 }
 .cookieControlOpen { align-self: flex-start; }
 
-/* The live screen's pill: 34 px, glass, the cookie glyph and one line. */
+/* The live screen's pill: 34 px, glass, the cookie glyph and one line.
+   The glass is a pre-blended fill with no backdrop filter. */
 .cookiePill {
   display: inline-flex;
   align-items: center;
@@ -43,9 +44,7 @@
   height: 34px;
   padding: 0 12px 0 8px;
   border-radius: 8px;
-  background: color-mix(in srgb, var(--panel) 86%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
   color: var(--text-bright);

@@ -449,6 +449,17 @@ describe("Shell menu drawer", () => {
     expect(nav.hidden).toBe(true);
   });
 
+  it("registers its outside touch listener as passive", () => {
+    stubReducedMotion(true);
+    seed(makeContent());
+    const add = vi.spyOn(document, "addEventListener");
+    const { getByLabelText } = renderShell();
+    fireEvent.click(getByLabelText("Menu"));
+    const touch = add.mock.calls.filter(([type]) => type === "touchstart");
+    expect(touch.length).toBeGreaterThan(0);
+    for (const call of touch) expect(call[2]).toMatchObject({ passive: true });
+  });
+
   it("closes when any menu item is chosen", () => {
     stubReducedMotion(true);
     seed(makeContent());
