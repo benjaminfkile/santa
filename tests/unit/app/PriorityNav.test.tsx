@@ -153,6 +153,16 @@ describe("PriorityNav More menu", () => {
     expect(screen.queryByTestId("nav-more-menu")).toBeNull();
   });
 
+  it("registers its outside touch listener as passive", () => {
+    const add = vi.spyOn(document, "addEventListener");
+    renderNav();
+    fireEvent.click(screen.getByTestId("nav-more"));
+    const touch = add.mock.calls.filter(([type]) => type === "touchstart");
+    expect(touch.length).toBeGreaterThan(0);
+    for (const call of touch) expect(call[2]).toMatchObject({ passive: true });
+    add.mockRestore();
+  });
+
   it("closes when an item in it is chosen", () => {
     renderNav();
     fireEvent.click(screen.getByTestId("nav-more"));

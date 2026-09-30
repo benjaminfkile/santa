@@ -170,7 +170,8 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
     };
   }, [phase, finishClose]);
 
-  // A pointer press outside the drawer and its button closes it.
+  // A pointer press outside the drawer and its button closes it. The
+  // touch listener is passive: it never cancels the touch or the scroll.
   useEffect(() => {
     if (!open) return;
     function onDown(e: PointerEvent | MouseEvent | TouchEvent) {
@@ -181,7 +182,7 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
       dismiss();
     }
     document.addEventListener("mousedown", onDown);
-    document.addEventListener("touchstart", onDown);
+    document.addEventListener("touchstart", onDown, { passive: true });
     return () => {
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("touchstart", onDown);

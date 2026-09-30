@@ -10,6 +10,7 @@
 // the lights are not rendered over the map.
 
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { decorativeDpr, startDecorativeLoop } from "../../lib/decorativeLoop";
 import { storageRemove } from "../../lib/storage";
 import type { ContentBundle } from "../../store/types";
 import { useStore } from "../../store/useStore";
@@ -92,8 +93,6 @@ export function SnowLayer({ bundle }: { bundle: ContentBundle | null }) {
     const flakes: { x: number; y: number; r: number; v: number; d: number }[] = [];
     let width = 0;
     let height = 0;
-    let running = true;
-    let raf = 0;
     let snowColor: string | null = null;
 
     function readSnowColor(): void {
@@ -107,7 +106,7 @@ export function SnowLayer({ bundle }: { bundle: ContentBundle | null }) {
       const c = canvas!;
       width = c.clientWidth;
       height = c.clientHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = decorativeDpr();
       c.width = Math.floor(width * dpr);
       c.height = Math.floor(height * dpr);
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -125,7 +124,6 @@ export function SnowLayer({ bundle }: { bundle: ContentBundle | null }) {
     }
 
     function step() {
-      if (!running) return;
       ctx!.clearRect(0, 0, width, height);
       if (snowColor !== null) {
         ctx!.fillStyle = snowColor;
@@ -143,16 +141,16 @@ export function SnowLayer({ bundle }: { bundle: ContentBundle | null }) {
           ctx!.fill();
         }
       }
-      raf = window.requestAnimationFrame(step);
     }
 
     resize();
-    step();
+    // The frame loop pauses while the tab is hidden or the canvas is off
+    // screen and resumes when both hold again.
+    const loop = startDecorativeLoop(canvas, step);
     const onResize = () => resize();
-    window.addEventListener("resize", onResize);
+    window.addEventListener("resize", onResize, { passive: true });
     return () => {
-      running = false;
-      if (raf !== 0) window.cancelAnimationFrame(raf);
+      loop.stop();
       window.removeEventListener("resize", onResize);
       unsubscribeScheme();
     };

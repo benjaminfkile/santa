@@ -104,8 +104,9 @@ export function PriorityNav({ items }: PriorityNavProps) {
       e.preventDefault();
       close(true);
     }
+    // The touch listener is passive: it never cancels the touch or the scroll.
     document.addEventListener("mousedown", onDown);
-    document.addEventListener("touchstart", onDown);
+    document.addEventListener("touchstart", onDown, { passive: true });
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("mousedown", onDown);

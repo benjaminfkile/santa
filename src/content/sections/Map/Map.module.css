@@ -29,11 +29,10 @@
   justify-content: center;
 }
 
-/* The translucent surface every pill and button on the map shares. */
+/* The translucent surface every pill and button on the map shares: a
+   pre-blended fill with no backdrop filter. */
 .glass {
-  background: color-mix(in srgb, var(--panel) 86%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
   color: var(--text);
