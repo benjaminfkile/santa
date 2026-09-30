@@ -2,9 +2,9 @@
 // `routeMapConfig` in the snapshot. Each value resolves on its own: the
 // config's value, else the default. A null or absent config, block, or
 // key reads as absent, and so does a value outside its contract set.
-//  - `display`: the four display values, defaulting to labels every 15
-//    minutes, arrows on, medium arrows, and normal width. The named sizes
-//    become the style's scales through DISPLAY_SCALES.
+//  - `display`: the five display values, defaulting to labels every 15
+//    minutes, arrows on, medium arrows, normal width, and medium labels.
+//    The named sizes become the style's scales through DISPLAY_SCALES.
 //  - `controls`: the fullscreen and terrain switches, each true unless
 //    the config says false.
 //  - `landmarks`: the entries with a name and numeric coordinates, each
@@ -19,14 +19,17 @@ export type RouteMapConfig = NonNullable<NonNullable<Snapshot["event"]>["routeMa
 
 type ArrowSize = "small" | "medium" | "large" | "xlarge";
 type RouteWidth = "thin" | "normal" | "thick" | "xthick";
+type LabelSize = "small" | "medium" | "large";
 type TimeLabelInterval = 0 | 5 | 10 | 15 | 30;
 
 export const DISPLAY_SCALES: {
   arrowSize: Readonly<Record<ArrowSize, number>>;
   routeWidth: Readonly<Record<RouteWidth, number>>;
+  labelSize: Readonly<Record<LabelSize, number>>;
 } = {
   arrowSize: { small: 0.75, medium: 1, large: 1.5, xlarge: 2 },
   routeWidth: { thin: 0.75, normal: 1, thick: 1.5, xthick: 2 },
+  labelSize: { small: 0.8, medium: 1, large: 1.3 },
 };
 
 export const DISPLAY_DEFAULTS: {
@@ -34,11 +37,13 @@ export const DISPLAY_DEFAULTS: {
   arrows: boolean;
   arrowSize: ArrowSize;
   routeWidth: RouteWidth;
+  labelSize: LabelSize;
 } = {
   timeLabelIntervalMinutes: 15,
   arrows: true,
   arrowSize: "medium",
   routeWidth: "normal",
+  labelSize: "medium",
 };
 
 const INTERVALS: readonly number[] = [0, 5, 10, 15, 30];
@@ -48,6 +53,7 @@ export type ResolvedRouteMapDisplay = {
   arrows: boolean;
   arrowScale: number;
   routeWidthScale: number;
+  labelScale: number;
 };
 
 export type ResolvedRouteMapConfig = {
@@ -67,6 +73,10 @@ function isArrowSize(v: unknown): v is ArrowSize {
 
 function isRouteWidth(v: unknown): v is RouteWidth {
   return typeof v === "string" && Object.hasOwn(DISPLAY_SCALES.routeWidth, v);
+}
+
+function isLabelSize(v: unknown): v is LabelSize {
+  return typeof v === "string" && Object.hasOwn(DISPLAY_SCALES.labelSize, v);
 }
 
 function isCoordinate(v: unknown): v is number {
@@ -106,6 +116,7 @@ export function resolveRouteMapDisplay(display: RouteMapConfig["display"]): Reso
   const d = display ?? {};
   const arrowSize = isArrowSize(d.arrowSize) ? d.arrowSize : DISPLAY_DEFAULTS.arrowSize;
   const routeWidth = isRouteWidth(d.routeWidth) ? d.routeWidth : DISPLAY_DEFAULTS.routeWidth;
+  const labelSize = isLabelSize(d.labelSize) ? d.labelSize : DISPLAY_DEFAULTS.labelSize;
   return {
     timeLabelIntervalMinutes: isInterval(d.timeLabelIntervalMinutes)
       ? d.timeLabelIntervalMinutes
@@ -113,6 +124,7 @@ export function resolveRouteMapDisplay(display: RouteMapConfig["display"]): Reso
     arrows: typeof d.arrows === "boolean" ? d.arrows : DISPLAY_DEFAULTS.arrows,
     arrowScale: DISPLAY_SCALES.arrowSize[arrowSize],
     routeWidthScale: DISPLAY_SCALES.routeWidth[routeWidth],
+    labelScale: DISPLAY_SCALES.labelSize[labelSize],
   };
 }
 

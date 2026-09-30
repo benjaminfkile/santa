@@ -1,0 +1,716 @@
+{
+  "light": {
+    "sources": {
+      "route": {
+        "type": "geojson",
+        "data": {
+          "type": "Feature",
+          "properties": {},
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                -114.02,
+                46.87
+              ],
+              [
+                -114.01,
+                46.88
+              ],
+              [
+                -114,
+                46.89
+              ]
+            ]
+          }
+        }
+      },
+      "route-marks": {
+        "type": "geojson",
+        "data": {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "properties": {},
+              "geometry": {
+                "type": "Point",
+                "coordinates": [
+                  -114.015,
+                  46.875
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "route-ends": {
+        "type": "geojson",
+        "data": {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "properties": {
+                "end": "start"
+              },
+              "geometry": {
+                "type": "Point",
+                "coordinates": [
+                  -114.02,
+                  46.87
+                ]
+              }
+            },
+            {
+              "type": "Feature",
+              "properties": {
+                "end": "end"
+              },
+              "geometry": {
+                "type": "Point",
+                "coordinates": [
+                  -114,
+                  46.89
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "route-time-labels": {
+        "type": "geojson",
+        "data": {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "properties": {
+                "label": "15m"
+              },
+              "geometry": {
+                "type": "Point",
+                "coordinates": [
+                  -114.015,
+                  46.875
+                ]
+              }
+            },
+            {
+              "type": "Feature",
+              "properties": {
+                "label": "30m"
+              },
+              "geometry": {
+                "type": "Point",
+                "coordinates": [
+                  -114.005,
+                  46.885
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "route-landmarks": {
+        "type": "geojson",
+        "data": {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "properties": {
+                "label": "Caras Park"
+              },
+              "geometry": {
+                "type": "Point",
+                "coordinates": [
+                  -114.012,
+                  46.872
+                ]
+              }
+            },
+            {
+              "type": "Feature",
+              "properties": {
+                "label": "Depot",
+                "badge": true
+              },
+              "geometry": {
+                "type": "Point",
+                "coordinates": [
+                  -114.008,
+                  46.882
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "layers": [
+      {
+        "id": "route-line",
+        "type": "line",
+        "source": "route",
+        "layout": {
+          "line-join": "round",
+          "line-cap": "round"
+        },
+        "paint": {
+          "line-color": "#c62828",
+          "line-opacity": 0.9,
+          "line-width": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            6,
+            14,
+            10
+          ]
+        }
+      },
+      {
+        "id": "route-arrows",
+        "type": "symbol",
+        "source": "route",
+        "layout": {
+          "symbol-placement": "line",
+          "symbol-spacing": 210,
+          "icon-image": "route-arrow",
+          "icon-size": 1.5,
+          "icon-rotation-alignment": "map",
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true
+        },
+        "paint": {
+          "icon-color": "#c62828",
+          "icon-opacity": 0.9
+        }
+      },
+      {
+        "id": "route-marks",
+        "type": "circle",
+        "source": "route-marks",
+        "paint": {
+          "circle-radius": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            2,
+            14,
+            3
+          ],
+          "circle-color": "#ffffff",
+          "circle-opacity": 0.9,
+          "circle-stroke-color": "#c62828",
+          "circle-stroke-width": 1
+        }
+      },
+      {
+        "id": "route-ends",
+        "type": "circle",
+        "source": "route-ends",
+        "paint": {
+          "circle-radius": 6,
+          "circle-color": [
+            "match",
+            [
+              "get",
+              "end"
+            ],
+            "start",
+            "#c62828",
+            "#202124"
+          ],
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 2
+        }
+      },
+      {
+        "id": "route-landmark-dots",
+        "type": "circle",
+        "source": "route-landmarks",
+        "filter": [
+          "!",
+          [
+            "has",
+            "badge"
+          ]
+        ],
+        "paint": {
+          "circle-radius": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            2.5,
+            14,
+            3.5
+          ],
+          "circle-color": "#5f6368",
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 1
+        }
+      },
+      {
+        "id": "route-landmarks",
+        "type": "symbol",
+        "source": "route-landmarks",
+        "layout": {
+          "text-field": [
+            "get",
+            "label"
+          ],
+          "text-font": [
+            "Noto Sans Medium"
+          ],
+          "text-size": 14,
+          "text-variable-anchor": [
+            "left",
+            "right",
+            "top",
+            "bottom"
+          ],
+          "text-radial-offset": [
+            "case",
+            [
+              "has",
+              "badge"
+            ],
+            1.3,
+            0.5
+          ],
+          "text-justify": "auto"
+        },
+        "paint": {
+          "text-color": "#202124",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 3
+        }
+      },
+      {
+        "id": "route-time-label-dots",
+        "type": "circle",
+        "source": "route-time-labels",
+        "paint": {
+          "circle-radius": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            3.5,
+            14,
+            4.5
+          ],
+          "circle-color": "#c62828",
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 1.5
+        }
+      },
+      {
+        "id": "route-time-labels",
+        "type": "symbol",
+        "source": "route-time-labels",
+        "layout": {
+          "text-field": [
+            "get",
+            "label"
+          ],
+          "text-font": [
+            "Noto Sans Medium"
+          ],
+          "text-size": 20,
+          "text-variable-anchor": [
+            "left",
+            "right",
+            "top",
+            "bottom"
+          ],
+          "text-radial-offset": 0.6,
+          "text-justify": "auto"
+        },
+        "paint": {
+          "text-color": "#202124",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 3
+        }
+      }
+    ]
+  },
+  "dark": {
+    "sources": {
+      "route": {
+        "type": "geojson",
+        "data": {
+          "type": "Feature",
+          "properties": {},
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                -114.02,
+                46.87
+              ],
+              [
+                -114.01,
+                46.88
+              ],
+              [
+                -114,
+                46.89
+              ]
+            ]
+          }
+        }
+      },
+      "route-marks": {
+        "type": "geojson",
+        "data": {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "properties": {},
+              "geometry": {
+                "type": "Point",
+                "coordinates": [
+                  -114.015,
+                  46.875
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "route-ends": {
+        "type": "geojson",
+        "data": {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "properties": {
+                "end": "start"
+              },
+              "geometry": {
+                "type": "Point",
+                "coordinates": [
+                  -114.02,
+                  46.87
+                ]
+              }
+            },
+            {
+              "type": "Feature",
+              "properties": {
+                "end": "end"
+              },
+              "geometry": {
+                "type": "Point",
+                "coordinates": [
+                  -114,
+                  46.89
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "route-time-labels": {
+        "type": "geojson",
+        "data": {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "properties": {
+                "label": "15m"
+              },
+              "geometry": {
+                "type": "Point",
+                "coordinates": [
+                  -114.015,
+                  46.875
+                ]
+              }
+            },
+            {
+              "type": "Feature",
+              "properties": {
+                "label": "30m"
+              },
+              "geometry": {
+                "type": "Point",
+                "coordinates": [
+                  -114.005,
+                  46.885
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "route-landmarks": {
+        "type": "geojson",
+        "data": {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "properties": {
+                "label": "Caras Park"
+              },
+              "geometry": {
+                "type": "Point",
+                "coordinates": [
+                  -114.012,
+                  46.872
+                ]
+              }
+            },
+            {
+              "type": "Feature",
+              "properties": {
+                "label": "Depot",
+                "badge": true
+              },
+              "geometry": {
+                "type": "Point",
+                "coordinates": [
+                  -114.008,
+                  46.882
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "layers": [
+      {
+        "id": "route-line",
+        "type": "line",
+        "source": "route",
+        "layout": {
+          "line-join": "round",
+          "line-cap": "round"
+        },
+        "paint": {
+          "line-color": "#c62828",
+          "line-opacity": 0.85,
+          "line-width": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            6,
+            14,
+            10
+          ]
+        }
+      },
+      {
+        "id": "route-arrows",
+        "type": "symbol",
+        "source": "route",
+        "layout": {
+          "symbol-placement": "line",
+          "symbol-spacing": 210,
+          "icon-image": "route-arrow",
+          "icon-size": 1.5,
+          "icon-rotation-alignment": "map",
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true
+        },
+        "paint": {
+          "icon-color": "#c62828",
+          "icon-opacity": 0.85
+        }
+      },
+      {
+        "id": "route-marks",
+        "type": "circle",
+        "source": "route-marks",
+        "paint": {
+          "circle-radius": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            2,
+            14,
+            3
+          ],
+          "circle-color": "#0f1a2b",
+          "circle-opacity": 0.9,
+          "circle-stroke-color": "#c62828",
+          "circle-stroke-width": 1
+        }
+      },
+      {
+        "id": "route-ends",
+        "type": "circle",
+        "source": "route-ends",
+        "paint": {
+          "circle-radius": 6,
+          "circle-color": [
+            "match",
+            [
+              "get",
+              "end"
+            ],
+            "start",
+            "#c62828",
+            "#f2f6ff"
+          ],
+          "circle-stroke-color": "#0f1a2b",
+          "circle-stroke-width": 2
+        }
+      },
+      {
+        "id": "route-landmark-dots",
+        "type": "circle",
+        "source": "route-landmarks",
+        "filter": [
+          "!",
+          [
+            "has",
+            "badge"
+          ]
+        ],
+        "paint": {
+          "circle-radius": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            2.5,
+            14,
+            3.5
+          ],
+          "circle-color": "#8fa3c2",
+          "circle-stroke-color": "#0f1a2b",
+          "circle-stroke-width": 1
+        }
+      },
+      {
+        "id": "route-landmarks",
+        "type": "symbol",
+        "source": "route-landmarks",
+        "layout": {
+          "text-field": [
+            "get",
+            "label"
+          ],
+          "text-font": [
+            "Noto Sans Medium"
+          ],
+          "text-size": 14,
+          "text-variable-anchor": [
+            "left",
+            "right",
+            "top",
+            "bottom"
+          ],
+          "text-radial-offset": [
+            "case",
+            [
+              "has",
+              "badge"
+            ],
+            1.3,
+            0.5
+          ],
+          "text-justify": "auto"
+        },
+        "paint": {
+          "text-color": "#f2f6ff",
+          "text-halo-color": "#0f1a2b",
+          "text-halo-width": 3
+        }
+      },
+      {
+        "id": "route-time-label-dots",
+        "type": "circle",
+        "source": "route-time-labels",
+        "paint": {
+          "circle-radius": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            3.5,
+            14,
+            4.5
+          ],
+          "circle-color": "#c62828",
+          "circle-stroke-color": "#0f1a2b",
+          "circle-stroke-width": 1.5
+        }
+      },
+      {
+        "id": "route-time-labels",
+        "type": "symbol",
+        "source": "route-time-labels",
+        "layout": {
+          "text-field": [
+            "get",
+            "label"
+          ],
+          "text-font": [
+            "Noto Sans Medium"
+          ],
+          "text-size": 20,
+          "text-variable-anchor": [
+            "left",
+            "right",
+            "top",
+            "bottom"
+          ],
+          "text-radial-offset": 0.6,
+          "text-justify": "auto"
+        },
+        "paint": {
+          "text-color": "#f2f6ff",
+          "text-halo-color": "#0f1a2b",
+          "text-halo-width": 3
+        }
+      }
+    ]
+  }
+}

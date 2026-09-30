@@ -354,3 +354,6 @@
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
+.routeLandmarkDirections {
+  margin-top: var(--space-3);
+}

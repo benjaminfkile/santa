@@ -6441,6 +6441,7 @@ export interface components {
             arrows?: null | boolean;
             arrowSize?: null | string;
             routeWidth?: null | string;
+            labelSize?: null | string;
         };
         RouteMapLandmark: {
             name?: string;

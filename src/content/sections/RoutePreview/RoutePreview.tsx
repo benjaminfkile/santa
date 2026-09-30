@@ -27,10 +27,10 @@
 //     `pois.kinds` reaches the style as its POI kind list and `landmarks`
 //     as its landmarks, each name the label; without them the style gets
 //     neither. A landmark with an icon or a description also gets a
-//     marker and its popover (RouteLandmarks). The four display values
-//     (time label interval, arrows, arrow size, route width) reach the
-//     style as the label interval, `arrows`, `arrowScale`, and
-//     `routeWidthScale`. The section data carries only the heading, the
+//     marker and its popover (RouteLandmarks). The five display values
+//     (time label interval, arrows, arrow size, route width, label size)
+//     reach the style as the label interval, `arrows`, `arrowScale`,
+//     `routeWidthScale`, and `labelScale`. The section data carries only the heading, the
 //     style, the disclaimer, and the empty text.
 
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -72,6 +72,7 @@ type RouteMapProps = {
   arrows?: boolean;
   arrowScale?: number;
   routeWidthScale?: number;
+  labelScale?: number;
   pin?: LatLng | null;
   pinElement?: HTMLElement;
   reducedMotion?: boolean;
@@ -215,6 +216,7 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
                 arrows={display.arrows}
                 arrowScale={display.arrowScale}
                 routeWidthScale={display.routeWidthScale}
+                labelScale={display.labelScale}
                 pin={pin}
                 pinElement={pinElement}
                 reducedMotion={reducedMotion}

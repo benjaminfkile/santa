@@ -8,6 +8,7 @@ export const routeDisclaimer: string;
 export const routeLandmark: string;
 export const routeLandmarkBadge: string;
 export const routeLandmarkButton: string;
+export const routeLandmarkDirections: string;
 export const routeLandmarkDotButton: string;
 export const routeLandmarkPopover: string;
 export const routeLandmarkPopoverHead: string;
