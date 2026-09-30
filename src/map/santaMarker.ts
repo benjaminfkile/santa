@@ -1,53 +1,17 @@
-// docs/site.md sections 7.6, 8.2, and 8.7. Santa marker: the studio's pin
-// with a Santa hat drawn inline. The body takes the site's accent, the
-// hat the `--err` token, and the brim `--text-bright`. Hidden while
-// waiting for a fix; swapped to the signal-lost variant when a fix has
-// gone stale. Rebuilds its icon from the tokens on every colour-scheme
-// change and renders nothing until the tokens resolve.
+// docs/site.md sections 7.6, 8.2, and 8.7. Santa marker: the legacy Santa
+// pin image (santaPin.ts) in a Google Maps `OverlayView`, about 52 css px
+// tall, its bottom centre (the pin tip) on the fix. Hidden while waiting
+// for a fix; the signal-lost variant is the same image desaturated and
+// dimmed through a CSS filter. The image is theme neutral, so a colour
+// scheme change does not touch it.
 
 import type { LiveState } from "../store/liveState";
-import { readCssVar } from "./cssVars";
-import { subscribeScheme } from "../content/theme/colorScheme";
+import { createSantaPinImage } from "./santaPin";
 
 export type MarkerVariant = "tracking" | "signalLost";
 
-type Palette = {
-  body: string;
-  hat: string;
-  ground: string;
-  brim: string;
-};
-
-function readPalette(variant: MarkerVariant): Palette | null {
-  const accent = readCssVar("--accent");
-  const err = readCssVar("--err");
-  const dim = readCssVar("--text-dim");
-  const ground = readCssVar("--ground");
-  const brim = readCssVar("--text-bright");
-  if (accent === null || err === null || dim === null || ground === null || brim === null) return null;
-  return {
-    body: variant === "signalLost" ? dim : accent,
-    hat: variant === "signalLost" ? dim : err,
-    ground,
-    brim,
-  };
-}
-
-function pinSvg(palette: Palette): string {
-  return (
-    `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">` +
-    `<path d="M18 43s14-13 14-25A14 14 0 0 0 4 18c0 12 14 25 14 25z" fill="${palette.body}" stroke="${palette.ground}" stroke-width="1.5"/>` +
-    `<circle cx="18" cy="18" r="5.5" fill="${palette.ground}"/>` +
-    `<path d="M6 10c3-8 14-11 22-6l-2 3H8z" fill="${palette.hat}" stroke="${palette.ground}" stroke-width="1"/>` +
-    `<circle cx="27.5" cy="4" r="2.5" fill="${palette.brim}"/>` +
-    `<rect x="5" y="8" width="24" height="3.5" rx="1.75" fill="${palette.brim}"/>` +
-    `</svg>`
-  );
-}
-
-function svgDataUri(palette: Palette): string {
-  return `data:image/svg+xml;utf8,${encodeURIComponent(pinSvg(palette))}`;
-}
+export const SANTA_MARKER_HEIGHT = 52;
+export const SIGNAL_LOST_FILTER = "grayscale(1) opacity(0.55)";
 
 export type SantaMarker = {
   setPosition(pos: google.maps.LatLngLiteral | null): void;
@@ -58,34 +22,47 @@ export type SantaMarker = {
 };
 
 export function createSantaMarker(
-  libs: { marker: google.maps.MarkerLibrary },
+  libs: { maps: google.maps.MapsLibrary },
   map: google.maps.Map,
 ): SantaMarker {
   let variant: MarkerVariant = "tracking";
   let position: google.maps.LatLngLiteral | null = null;
-  const marker = new libs.marker.Marker({
-    map: null,
-    position: null as unknown as google.maps.LatLngLiteral,
-    optimized: false,
-    clickable: false,
-  });
+
+  const img = createSantaPinImage(SANTA_MARKER_HEIGHT);
+  img.setAttribute("data-testid", "santa-marker");
+  img.style.position = "absolute";
+  // The pin tip, the image's bottom centre, sits on the overlay point.
+  img.style.transform = "translate(-50%, -100%)";
+
+  class SantaOverlay extends libs.maps.OverlayView {
+    onAdd() {
+      this.getPanes()?.markerLayer.appendChild(img);
+    }
+    draw() {
+      const projection = this.getProjection();
+      if (position === null || !projection) return;
+      const point = projection.fromLatLngToDivPixel(position);
+      if (point === null) return;
+      img.style.left = `${point.x}px`;
+      img.style.top = `${point.y}px`;
+    }
+    onRemove() {
+      img.remove();
+    }
+  }
+
+  const overlay = new SantaOverlay();
 
   function apply() {
     if (position === null) {
-      marker.setMap(null);
+      if (overlay.getMap()) overlay.setMap(null);
       return;
     }
-    const palette = readPalette(variant);
-    if (palette === null) {
-      marker.setMap(null);
-      return;
-    }
-    marker.setIcon({ url: svgDataUri(palette), anchor: new google.maps.Point(18, 44) });
-    marker.setPosition(position);
-    if (marker.getMap() === null) marker.setMap(map);
+    img.style.filter = variant === "signalLost" ? SIGNAL_LOST_FILTER : "";
+    img.setAttribute("data-variant", variant);
+    if (overlay.getMap()) overlay.draw();
+    else overlay.setMap(map);
   }
-
-  const unsubscribe = subscribeScheme(apply);
 
   apply();
 
@@ -112,8 +89,7 @@ export function createSantaMarker(
       return position;
     },
     destroy() {
-      unsubscribe();
-      marker.setMap(null);
+      overlay.setMap(null);
     },
   };
 }

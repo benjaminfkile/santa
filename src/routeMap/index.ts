@@ -9,8 +9,9 @@
 // every container resize. `update` swaps the style as a diff: a new
 // appearance changes paint properties only, so the basemap tiles stay on
 // screen. `setPin` stands the Santa pin (a MapLibre marker around the
-// caller's element) on a point, eased over PIN_TRANSITION_MS when asked
-// to animate and placed at once otherwise; null removes it. `terrain`
+// caller's element, anchored at its bottom centre) on a point, eased
+// over PIN_TRANSITION_MS when asked to animate and placed at once
+// otherwise; null removes it. `terrain`
 // adds the hillshade over the terrain archive to the style, through the
 // same diff, so an appearance switch keeps it. `refit` resizes the map to
 // its container and fits the path again (the fullscreen edges call it).
@@ -343,7 +344,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
         return;
       }
       if (pin === null) {
-        pin = new Marker({ element: options.pinElement, anchor: "center" })
+        pin = new Marker({ element: options.pinElement, anchor: "bottom" })
           .setLngLat([point.lng, point.lat])
           .addTo(map);
         pinAt = point;

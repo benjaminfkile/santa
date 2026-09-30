@@ -68,11 +68,11 @@ export default defineConfig({
           groups: [
             { name: "signalr", test: /@microsoft[\\/]signalr/, priority: 20 },
             { name: "auth", test: /amazon-cognito-identity-js|[\\/]src[\\/]auth[\\/]cognito|[\\/]src[\\/]pages[\\/]Auth[\\/]/, priority: 20 },
-            // Pin the colour-scheme module (and its inputs) to a shared
-            // "theme" chunk so both the map chunk and the index chunk
-            // import from it rather than each other. Priority higher than
-            // the map rule.
-            { name: "theme", test: /[\\/]src[\\/]content[\\/]theme[\\/]colorScheme|[\\/]src[\\/]lib[\\/]storage/, priority: 30 },
+            // Pin the colour-scheme module (and its inputs) and the shared
+            // Santa pin image module to a shared "theme" chunk so both the
+            // map chunk and the index chunk import from it rather than
+            // each other. Priority higher than the map rule.
+            { name: "theme", test: /[\\/]src[\\/]content[\\/]theme[\\/]colorScheme|[\\/]src[\\/]lib[\\/]storage|[\\/]src[\\/]map[\\/]santa(Pin\.ts|-pin\.png)/, priority: 30 },
             { name: "map", test: /@googlemaps[\\/]js-api-loader|[\\/]src[\\/]map[\\/]/, priority: 20 },
             { name: "alerts", test: /[\\/]src[\\/]pages[\\/]Alerts[\\/]/, priority: 20 },
             { name: "routemap", test: /[\\/]maplibre-gl[\\/]|[\\/]pmtiles[\\/]|@protomaps[\\/]basemaps|[\\/]src[\\/]routeMap[\\/]/, priority: 20 },

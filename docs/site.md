@@ -107,11 +107,13 @@ santa/
       Auth/                       SignInPage, SignUpPage, ConfirmPage, ForgotPasswordPage, ResetPasswordPage (section 11), each a themed form in AuthCard on the site's own shell; returnTo.ts, pendingSignUp.ts
     ui/                           the shared recipes as CSS modules: Button, IconButton, Field, Dialog
 
-    map/                          imported only by sections/Map (the poster viewer never touches Maps)
+    map/                          imported only by sections/Map (the poster viewer never touches Maps), except santaPin.ts
       loadMaps.ts                 Loader singleton, importLibrary("maps" | "marker" | "geometry")
       MapView.tsx                 React host for the map element
       mapController.ts            imperative controller: follow, recenter, zoom, mapType, theme
-      santaMarker.ts              the marker artwork as an inline SVG in the theme's colours, with the signal-lost variant
+      santa-pin.png               the legacy Santa pin (100 x 192, tip at the bottom centre), shared with the route map
+      santaPin.ts                 the pin asset's URL and its img element, shared with the route map (in the `theme` chunk)
+      santaMarker.ts              the Santa marker: the pin image in an OverlayView, with the signal-lost filter
       flightHistoryOverlay.ts     polyline, arrows, time labels (the previous flight from the snapshot)
       userLocation.ts             watchPosition, user marker, dotted line, distance
       themes/                     index.ts plus one file per theme
@@ -677,7 +679,7 @@ Full-viewport map with overlays, each switched by `data.overlays` and each contr
 | Component | Reads | Behaviour |
 |---|---|---|
 | `MapView` + `mapController` (`Map.tsx`) | `live.lat`, `live.lng`, `snapshot.event.flightHistory`, theme, map type, `data.defaultCenter`, `data.defaultZoom`, `data.themes`, `data.defaultTheme`, `data.flightHistoryDefault` | Section 8. The map shows one marker at Santa's current position and nothing about where he has been |
-| `santaMarker` | `live.lat/lng`, `selectLiveState` | Position on each applied object; `waitingForFix` shows no marker at the default view; `signalLost` swaps to the signal-lost icon variant and the marker stays put. The marker is the legacy idea kept: a map pin wearing a Santa hat, drawn inline in the accent |
+| `santaMarker` | `live.lat/lng`, `selectLiveState` | Position on each applied object; `waitingForFix` shows no marker at the default view; `signalLost` desaturates and dims the same image and the marker stays put. The marker is the legacy red pin with the Santa hat, the bundled `src/map/santa-pin.png` (8.7) |
 | `LiveIndicator` | `hub`, `lastPollOkAt`, `live.pollIntervalMs`, `live.publishedAt` | A pill: the dot and label by `transport` (5.2): "Live" in `--ok`, "Polling" in `--warn`, "Offline" in `--err`; then "Updated N s ago" from `publishedAt` on the device clock only once the feed has gone quiet for the 30 s signal-lost threshold, in `--warn`; while fixes are flowing the pill is the label alone, so a normal cadence never churns the text, so a stalled beacon shows here as well as on the marker |
 | `WatchingPill` | `live.onlineCount`, `data.overlays.onlineCount` | A pill under the live indicator: "<n> watching" with a thousands separator ("1 watching", "12,345 watching"), updated in place as live objects arrive; on by default (`overlays.onlineCount` absent means on); absent entirely while the count is null (sockets off or the hub unhealthy) or the overlay is off |
 | `FixStatus` | `selectLiveState`, `lastSeqChangeAt` | A pill under the live indicator only while waiting for the first fix or after the signal is lost (in `--err`) |
@@ -730,7 +732,7 @@ Data row units: speed as mph from `speedMps`, heading as degrees plus cardinal f
 | `--link` | `#9cc7ff` | `#0b6bb5` | prose links |
 | `--ok` | `#56d29a` | `#1f7f4f` | status good, live dot |
 | `--warn` | `#f0c05a` | `#8a6210` | status degraded, disclaimer |
-| `--err` | `#ff7a70` | `#c2362c` | status down, validation errors, the Santa hat on the pin |
+| `--err` | `#ff7a70` | `#c2362c` | status down, validation errors |
 | `--shadow` | `none` | `0 1px 3px rgba(15,26,48,.08)` | panels (dark has no shadows) |
 | `--shadow-raised` | `0 10px 28px rgba(0,0,0,.5)` | `0 10px 28px rgba(15,26,48,.18)` | the elevated menu panel |
 | `--snow` | `rgba(255,255,255,.85)` | `rgba(140,165,205,.55)` | snow flakes |
@@ -874,10 +876,12 @@ export function createUserLocation(map, theme, onChange: (s: UserLocationState) 
 | State | Marker | Chip |
 |---|---|---|
 | `waitingForFix` | none; map at `data.defaultCenter` and `data.defaultZoom` | "Waiting for the first fix" |
-| `tracking` | Santa icon anchored bottom-centre at `live.lat/lng` | none |
-| `signalLost` | Same position, signal-lost icon variant | "No update for N s" from `lastSeqChangeAt` |
+| `tracking` | The Santa pin, its tip (bottom centre) at `live.lat/lng` | none |
+| `signalLost` | Same position, the same image desaturated and dimmed (`filter: grayscale(1) opacity(0.55)`) | "No update for N s" from `lastSeqChangeAt` |
 
 The marker never interpolates or predicts; it moves when an applied object carries a new `seq`.
+
+The marker is the legacy red pin with the Santa hat, the bundled asset `src/map/santa-pin.png` (100 x 192 with the transparent padding trimmed, the pin tip at the bottom centre, sharp to about 64 css px), the same asset as the route map's Santa pin (8.9). `src/map/santaPin.ts` holds its URL and builds its `img` (empty `alt`, `aria-hidden`, no pointer events); the build places that module and the asset in the shared `theme` chunk, so the route map uses it without loading the tracker's `map` chunk. On the tracker the image is 52 css px tall (crisp at retina from the 192 px source) in a Google Maps `OverlayView` on the marker pane, translated by (-50%, -100%) so the tip sits exactly on the fix. The image is theme neutral, so a colour scheme change does not rebuild it; the signal-lost variant is a CSS filter on the same image, never a second asset.
 
 ### 8.8 Wake lock
 
@@ -910,7 +914,7 @@ The `map` style of `route_preview` (7.4) draws `event.routeMap.path` (contracts 
 - *Time labels*: the site passes `buildStyle`'s `timeLabels` option (see Poster capabilities below) with one label at every interior entry whose minutes are a multiple of the time label interval (15 by default, see Display settings below; an interval of 0 passes no labels, so the style has no time label source or layers; never minute 0 and never the final entry, where the start and end markers already stand), each a dot a little larger than the marks with its elapsed time beside it in the "1h 15m" form of the time label below ("15m", "45m", "1h 0m", "1h 15m"). The 5 minute marks stay as they are. MapLibre's collision handling stays on, so where labels crowd some are dropped rather than overlapping. A new timeline rebuilds them through the same `setStyle` diff.
 - *Slider*: a native `<input type="range">` under the map frame, inside the card, at the card's full width, whose steps are exactly the entries (`min` 0, `max` the last index, `step` 1; it starts at 0, minute 0). The track is a 44 px touch target with a 24 px thumb in the accent colour. The arrow keys step one entry (right and up forward, left and down back) and Home and End jump to the first and last entry. Its accessible name is "Time along the route" (`copy.map.routeTime`) and its `aria-valuetext` is the visible time label.
 - *Time label*: beside the slider (above it, at the card's start edge), the elapsed flight time of the selected entry, `copy.map.routeElapsed`: "0m into the flight", "45m into the flight", "1h 15m into the flight". The elapsed form is minutes only under an hour and hours plus minutes from one hour, with no zero padding and no plus sign. No wall clock time appears in this view, whether or not the event has a `scheduledAt`.
-- *Santa pin*: a MapLibre `Marker` whose element is the library `santa` icon on a 36 px round badge (the panel colour, an accent ring, and a dark shadow, readable over both basemaps), above the canvas and so above the path and the marks. It stands on the selected entry: placed at once when the map mounts, then moved to each new selection with a 300 ms ease-out interpolation of its position (`requestAnimationFrame`, so panning never lags behind it); under reduced motion (17) it moves at once. The pin is `aria-hidden`; the slider carries its meaning.
+- *Santa pin*: a MapLibre `Marker` whose element is the legacy Santa pin image, the shared asset `src/map/santa-pin.png` (8.7) at 40 css px tall, anchored `bottom` so the pin tip sits on the point, above the canvas and so above the path and the marks. It stands on the selected entry: placed at once when the map mounts, then moved to each new selection with a 300 ms ease-out interpolation of its position (`requestAnimationFrame`, so panning never lags behind it); under reduced motion (17) it moves at once. The pin is `aria-hidden`; the slider carries its meaning.
 
 **Controls.** A control stack sits at the top right of the map frame, above the canvas and the attribution, in the icon button recipe (`src/ui/IconButton.module.css`: 44 px touch targets on the panel colour with a line border, the accent on hover and when pressed, the same in both appearances). It appears once the map has mounted and holds, top to bottom:
 - *Fullscreen*, unless `routeMapConfig.controls.fullscreen` is false. Its accessible name is "Show the route map fullscreen" (`copy.map.routeMap.fullscreen`) and, while fullscreen, "Exit fullscreen" (`copy.map.routeMap.exitFullscreen`), with `aria-pressed` following the state.

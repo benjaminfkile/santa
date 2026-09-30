@@ -7,8 +7,9 @@
 //    has a scheduledAt.
 //  - The style's time labels are exactly the interior multiples of 15
 //    minutes, in the "1h 15m" form.
-//  - The marks source holds every timeline entry; the Santa pin starts on
-//    the first entry and follows the slider.
+//  - The marks source holds every timeline entry; the Santa pin (the
+//    legacy pin image, anchored at its bottom) starts on the first entry
+//    and follows the slider.
 //  - The pin eases between entries, and moves at once under reduced motion.
 //  - A timeline of fewer than two entries keeps the path and shows no
 //    marks, slider, or pin.
@@ -33,6 +34,7 @@ import {
   routeTimeLabels,
 } from "../../../../src/content/sections/RoutePreview/routeTimelineData";
 import { PIN_TRANSITION_MS } from "../../../../src/routeMap";
+import { SANTA_PIN_URL } from "../../../../src/map/santaPin";
 
 type FakeMapInstance = {
   options: Record<string, unknown>;
@@ -41,6 +43,7 @@ type FakeMapInstance = {
 
 type FakeMarkerInstance = {
   element: HTMLElement | undefined;
+  anchor: string | undefined;
   lngLats: [number, number][];
   added: boolean;
   removed: boolean;
@@ -74,8 +77,10 @@ vi.mock("maplibre-gl", () => {
     lngLats: [number, number][] = [];
     added = false;
     removed = false;
-    constructor(options: { element?: HTMLElement }) {
+    anchor: string | undefined;
+    constructor(options: { element?: HTMLElement; anchor?: string }) {
       this.element = options.element;
+      this.anchor = options.anchor;
       mocks.markers.push(this);
     }
     setLngLat(lngLat: [number, number]) {
@@ -462,7 +467,11 @@ describe("route map timeline", () => {
     const marker = mocks.markers[0];
     expect(marker.added).toBe(true);
     expect(marker.element?.getAttribute("data-testid")).toBe("route-map-pin");
-    expect(marker.element?.querySelector("svg")).not.toBeNull();
+    expect(marker.element?.tagName).toBe("IMG");
+    expect(marker.element?.getAttribute("src")).toBe(SANTA_PIN_URL);
+    expect(marker.element?.style.height).toBe("40px");
+    expect(marker.element?.getAttribute("aria-hidden")).toBe("true");
+    expect(marker.anchor).toBe("bottom");
     expect(lastLngLat()).toEqual([TIMELINE[0].lng, TIMELINE[0].lat]);
 
     fireEvent.keyDown(slider(container), { key: "ArrowRight" });
