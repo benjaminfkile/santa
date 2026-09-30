@@ -35,6 +35,7 @@ import {
   type PreviewSessionState,
 } from "../pages/previewSession";
 import { formatClock } from "../lib/time";
+import { PriorityNav } from "./PriorityNav";
 import * as styles from "./Shell.module.css";
 
 export type ShellProps = { children: ReactNode };
@@ -259,20 +260,17 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
         </Link>
       ) : null}
       {entries.length > 0 ? (
-        <nav aria-label="Pages" className={styles.inlineNav}>
-          <ul>
-            {entries
-              .filter((entry) => entry.kind === "home" || entry.kind === "page" || entry.kind === "extra")
-              .map((entry, i) => (
-                <li key={i}>
-                  {renderEntry(entry, bundle, {
-                    onSignIn: onSignInClick,
-                    onSignOut: () => void signOut(),
-                  })}
-                </li>
-              ))}
-          </ul>
-        </nav>
+        <PriorityNav
+          items={entries
+            .filter((entry) => entry.kind === "home" || entry.kind === "page" || entry.kind === "extra")
+            .map((entry, i) => ({
+              key: navKey(entry, i),
+              node: renderEntry(entry, bundle, {
+                onSignIn: onSignInClick,
+                onSignOut: () => void signOut(),
+              }),
+            }))}
+        />
       ) : null}
       <div className={styles.actions}>
         {authState.status === "signedIn" ? (
@@ -507,6 +505,12 @@ function MoonGlyph() {
       <path d="M21 12.7A9 9 0 0 1 11.3 3 A7 7 0 1 0 21 12.7 Z" />
     </svg>
   );
+}
+
+function navKey(entry: NavEntry, index: number): string {
+  if (entry.kind === "extra") return `${index}:extra:${entry.link.href}:${entry.link.label}`;
+  if (entry.kind === "home" || entry.kind === "page") return `${index}:${entry.kind}:${entry.href}:${entry.label}`;
+  return `${index}:${entry.kind}:${entry.label}`;
 }
 
 function renderEntry(

@@ -103,6 +103,9 @@ export const copy = {
     dark: "Dark",
     system: "System",
   },
+  nav: {
+    more: "More",
+  },
   auth: {
     signIn: {
       title: "Sign in",

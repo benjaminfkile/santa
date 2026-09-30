@@ -39,9 +39,17 @@
   font-weight: 600;
   font-size: 0.9375rem;
   letter-spacing: -0.005em;
-  white-space: nowrap;
+  min-width: 0;
+  flex: 0 1 auto;
 }
+/* The brand is the one header part that gives up width: the logo scales
+   down inside its box and the name wraps, so the actions never leave the
+   viewport. */
+.brand > span { min-width: 0; overflow-wrap: anywhere; }
 .brandLogo { height: 32px; }
+/* Doubled to outrank the Logo module's own `flex: none`. */
+.brandLogo.brandLogo { min-width: 0; max-width: 100%; flex: 0 1 auto; }
+.brandLogo img { max-width: 100%; }
 .brandMark {
   color: var(--accent);
   width: 30px;
@@ -55,15 +63,21 @@
   fill: var(--gold);
   stroke: none;
 }
+/* Above 760 px the inline nav is a priority-plus row (PriorityNav.tsx):
+   the items that fit stay on one line and the rest sit in the More menu at
+   its end. The row never wraps, and the measuring copy is clipped by its
+   own box so it never adds to the page's width. */
 .inlineNav { display: none; }
-.inlineNav ul {
+.inlineNavList {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   align-items: center;
   gap: var(--space-5);
+  white-space: nowrap;
 }
+.inlineNavList > li { flex: none; }
 .inlineNav a {
   color: var(--text-dim);
   text-decoration: none;
@@ -73,20 +87,82 @@
   min-height: 44px;
   display: inline-flex;
   align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
   transition: var(--hover-transition);
 }
 .inlineNav a:hover,
 .inlineNav a[aria-current="page"] { color: var(--accent); }
+.inlineNavMeasure {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+.inlineNavMeasure > .inlineNavList { width: max-content; }
+.moreItem { position: relative; }
+.moreButton {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: var(--hover-transition);
+}
+.moreButton:hover,
+.moreButton[aria-expanded="true"] { color: var(--accent); }
+.moreMenu {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  min-width: 180px;
+  max-width: calc(100vw - 2 * var(--space-5));
+  list-style: none;
+  margin: 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) 0;
+  z-index: 20;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+}
+.moreMenu > li { display: block; }
+.inlineNav .moreMenu a {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  color: var(--text);
+  font-size: 0.9375rem;
+  text-align: start;
+}
+.inlineNav .moreMenu a:hover { background: var(--accent-soft); color: var(--accent); }
 @media (min-width: 761px) {
   .inlineNav {
     display: flex;
+    position: relative;
     flex: 1;
     margin-inline-start: var(--space-4);
-    min-width: 0;
-    overflow-x: auto;
+    /* Room for the More button at least; the brand gives way first. */
+    min-width: 4rem;
   }
 }
 .actions {
+  flex: none;
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
@@ -335,7 +411,7 @@
 
 @media (max-width: 760px) {
   .siteHeader { padding: var(--space-3) var(--space-4); }
-  .brand { font-size: 0.9375rem; white-space: normal; }
+  .brand { font-size: 0.9375rem; }
   .signIn { display: none; }
   .footer {
     flex-direction: column;
