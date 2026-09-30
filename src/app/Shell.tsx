@@ -1,6 +1,8 @@
 // docs/site.md section 7.7. Wraps every route: skip link, header with
 // brand (the site logo or the built-in mark), sign-in, theme toggle and
-// menu, nav drawer, banners, footer.
+// menu, nav drawer, banners, footer. The drawer slides in from the left on
+// open and out to the right on close (instant under reduced motion), and a
+// tap outside it or the choice of any item closes it.
 // While the event is live the shell steps aside: the live screen owns the
 // viewport and nothing else on the site renders or scrolls.
 
@@ -23,7 +25,8 @@ import { ContentLink } from "../content/primitives/LinkView";
 import { Logo } from "../content/Logo";
 import { useAuth } from "../auth/AuthProvider";
 import { useThemeChoice } from "../content/theme/colorScheme";
-import { LightsLayer, useSnowEnabled, setSnowOverride } from "../content/theme/seasonalLayers";
+import { LightsLayer } from "../content/theme/seasonalLayers";
+import { useReducedMotion } from "../lib/motion";
 import type { ContentBundle } from "../store/types";
 import { usePreviewLive } from "../pages/previewLive";
 import {
@@ -95,8 +98,18 @@ function bundleEqual(a: ContentBundle | null, b: ContentBundle | null): boolean 
   return a.content === b.content && a.media === b.media && a.icons === b.icons;
 }
 
+// The drawer's phases: closed (hidden), open (sliding in from the left or
+// at rest), closing (sliding out to the right, then closed).
+type DrawerPhase = "closed" | "open" | "closing";
+
+// The close slide's length in ms; matches `drawerOut` in Shell.module.css.
+// A timer ends the phase in case `animationend` never fires.
+const DRAWER_CLOSE_MS = 180;
+
 function Header({ bundle }: { bundle: ContentBundle | null }) {
-  const [open, setOpen] = useState(false);
+  const [phase, setPhase] = useState<DrawerPhase>("closed");
+  const open = phase === "open";
+  const reducedMotion = useReducedMotion();
   const panelId = useId();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLElement | null>(null);
@@ -129,10 +142,50 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
   const { state: authState, signIn, signOut } = useAuth();
   const location = useLocation();
 
-  const close = useCallback(() => {
-    setOpen(false);
-    buttonRef.current?.focus();
+  const finishClose = useCallback(() => {
+    setPhase((p) => (p === "closing" ? "closed" : p));
   }, []);
+
+  const dismiss = useCallback(() => {
+    setPhase((p) => (p === "open" ? (reducedMotion ? "closed" : "closing") : p));
+  }, [reducedMotion]);
+
+  const close = useCallback(() => {
+    dismiss();
+    buttonRef.current?.focus();
+  }, [dismiss]);
+
+  useEffect(() => {
+    if (phase !== "closing") return;
+    const panel = panelRef.current;
+    function onEnd(e: Event) {
+      if (e.target === panel) finishClose();
+    }
+    panel?.addEventListener("animationend", onEnd);
+    const t = window.setTimeout(finishClose, DRAWER_CLOSE_MS + 50);
+    return () => {
+      panel?.removeEventListener("animationend", onEnd);
+      window.clearTimeout(t);
+    };
+  }, [phase, finishClose]);
+
+  // A pointer press outside the drawer and its button closes it.
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: PointerEvent | MouseEvent | TouchEvent) {
+      const target = e.target as Node | null;
+      if (target === null) return;
+      if (panelRef.current?.contains(target)) return;
+      if (buttonRef.current?.contains(target)) return;
+      dismiss();
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
+    };
+  }, [open, dismiss]);
 
   useEffect(() => {
     if (!open) return;
@@ -249,7 +302,7 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
           aria-controls={panelId}
           aria-label="Menu"
           className={styles.menuButton}
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setPhase((p) => (p === "open" ? (reducedMotion ? "closed" : "closing") : "open"))}
         >
           <MenuGlyph />
         </button>
@@ -260,8 +313,15 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
           panelRef.current = el;
         }}
         aria-label="Site"
-        hidden={!open}
-        className={styles.nav}
+        hidden={phase === "closed"}
+        data-drawer={phase}
+        data-motion={drawerMotion(phase, reducedMotion)}
+        className={drawerClass(phase, reducedMotion)}
+        onClick={(e) => {
+          // Choosing any item (a link or a button) closes the drawer as it acts.
+          const item = (e.target as Element).closest("a, button");
+          if (item !== null && e.currentTarget.contains(item)) dismiss();
+        }}
       >
         <ul>
           {entries.map((entry, i) => (
@@ -272,14 +332,24 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
               })}
             </li>
           ))}
-          <li>
-            <SnowSwitch bundle={bundle} />
-          </li>
         </ul>
       </nav>
       <LightsLayer bundle={bundle} />
     </header>
   );
+}
+
+// The drawer's slide: "in" from the left while open, "out" to the right
+// while closing, "none" when closed or under reduced motion.
+function drawerMotion(phase: DrawerPhase, reducedMotion: boolean): "in" | "out" | "none" {
+  if (reducedMotion || phase === "closed") return "none";
+  return phase === "open" ? "in" : "out";
+}
+
+function drawerClass(phase: DrawerPhase, reducedMotion: boolean): string {
+  const motion = drawerMotion(phase, reducedMotion);
+  if (motion === "none") return styles.nav;
+  return `${styles.nav} ${motion === "in" ? styles.navIn : styles.navOut}`;
 }
 
 function BrandMark() {
@@ -392,22 +462,6 @@ function ThemePicker() {
         </div>
       ) : null}
     </div>
-  );
-}
-
-function SnowSwitch({ bundle, compact = false }: { bundle: ContentBundle | null; compact?: boolean }) {
-  const defaultOn = bundle?.content?.settings.theme.snowDefault ?? false;
-  const enabled = useSnowEnabled(defaultOn);
-  return (
-    <button
-      type="button"
-      className={compact ? styles.displayChip : styles.systemButton}
-      aria-pressed={enabled}
-      data-testid={compact ? "footer-snow-toggle" : "menu-snow-toggle"}
-      onClick={() => setSnowOverride(!enabled)}
-    >
-      Snow
-    </button>
   );
 }
 
@@ -555,9 +609,6 @@ function Footer({ bundle }: { bundle: ContentBundle | null }) {
       {settings.footerText !== null ? (
         <p className={styles.footerText}>{settings.footerText}</p>
       ) : null}
-      <div className={styles.footerDisplay} data-testid="footer-display">
-        <SnowSwitch bundle={bundle} compact />
-      </div>
     </footer>
   );
 }

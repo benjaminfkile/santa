@@ -3,8 +3,8 @@
 // conversion the class names are hashed, so this test addresses each
 // element by role, test id, or aria attribute.
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { act, cleanup, render } from "@testing-library/react";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { act, cleanup, fireEvent, render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -191,9 +191,9 @@ describe("Shell structure", () => {
     expect(container.querySelector('[data-testid="theme-controls"]')).toBeNull();
   });
 
-  it("shows the Snow switch in the menu drawer with aria-pressed, and no Lights switch", () => {
+  it("renders no snow control in the menu drawer or the footer, and no Lights switch", () => {
     seed(makeContent());
-    const { getByTestId, queryByTestId } = render(
+    const { getByLabelText, getByTestId, queryByTestId } = render(
       <MemoryRouter>
         <AuthProvider>
           <Shell>
@@ -202,11 +202,15 @@ describe("Shell structure", () => {
         </AuthProvider>
       </MemoryRouter>,
     );
-    const snow = getByTestId("menu-snow-toggle");
-    expect(snow.tagName).toBe("BUTTON");
-    expect(snow.getAttribute("aria-pressed")).toBe("false");
-    expect(snow.textContent).toBe("Snow");
+    fireEvent.click(getByLabelText("Menu"));
+    const drawer = getByLabelText("Menu").getAttribute("aria-controls")!;
+    const nav = document.getElementById(drawer)!;
+    expect(nav.hidden).toBe(false);
+    expect(queryByTestId("menu-snow-toggle")).toBeNull();
+    expect(queryByTestId("footer-snow-toggle")).toBeNull();
     expect(queryByTestId("menu-lights-toggle")).toBeNull();
+    expect(nav.textContent).not.toMatch(/snow/i);
+    expect(getByTestId("site-footer").textContent).not.toMatch(/snow/i);
   });
 
   it("renders the LightsLayer inside the <header> element", () => {
@@ -338,5 +342,141 @@ describe("Shell brand logo", () => {
     const css = readFileSync(resolve(__dirname, "..", "..", "..", "src", "app", "Shell.module.css"), "utf8");
     expect(css).toMatch(/\.brandLogo \{ height: 32px; \}/);
     expect(css).toMatch(/@media \(max-width: 639px\) \{\s*\.brandLogo \{ height: 28px; \}/);
+  });
+});
+
+describe("Shell menu drawer", () => {
+  function drawerOf(getByLabelText: (t: string) => HTMLElement): HTMLElement {
+    return document.getElementById(getByLabelText("Menu").getAttribute("aria-controls")!)!;
+  }
+
+  function stubReducedMotion(reduce: boolean): void {
+    vi.spyOn(window, "matchMedia").mockImplementation(
+      (query: string) =>
+        ({
+          matches: reduce && query.includes("prefers-reduced-motion"),
+          media: query,
+          onchange: null,
+          addListener: () => {},
+          removeListener: () => {},
+          addEventListener: () => {},
+          removeEventListener: () => {},
+          dispatchEvent: () => false,
+        }) as unknown as MediaQueryList,
+    );
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it("slides in from the left on open and out to the right on close, then hides", () => {
+    stubReducedMotion(false);
+    seed(makeContent());
+    const { getByLabelText } = renderShell();
+    const nav = drawerOf(getByLabelText);
+    expect(nav.hidden).toBe(true);
+    expect(nav.getAttribute("data-motion")).toBe("none");
+
+    fireEvent.click(getByLabelText("Menu"));
+    expect(nav.hidden).toBe(false);
+    expect(nav.getAttribute("data-drawer")).toBe("open");
+    expect(nav.getAttribute("data-motion")).toBe("in");
+
+    fireEvent.click(getByLabelText("Menu"));
+    expect(nav.getAttribute("data-drawer")).toBe("closing");
+    expect(nav.hidden).toBe(false);
+    expect(nav.getAttribute("data-motion")).toBe("out");
+
+    fireEvent.animationEnd(nav);
+    expect(nav.hidden).toBe(true);
+    expect(nav.getAttribute("data-drawer")).toBe("closed");
+  });
+
+  it("finishes the close on a timer when no animationend arrives", () => {
+    vi.useFakeTimers();
+    stubReducedMotion(false);
+    seed(makeContent());
+    const { getByLabelText } = renderShell();
+    const nav = drawerOf(getByLabelText);
+    fireEvent.click(getByLabelText("Menu"));
+    fireEvent.click(getByLabelText("Menu"));
+    expect(nav.hidden).toBe(false);
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(nav.hidden).toBe(true);
+  });
+
+  it("maps the in and out slides to distinct classes and keyframes, removed under reduced motion", () => {
+    const css = readFileSync(resolve(__dirname, "..", "..", "..", "src", "app", "Shell.module.css"), "utf8");
+    expect(css).toMatch(/\.navIn \{ animation: drawerIn /);
+    expect(css).toMatch(/\.navOut \{ animation: drawerOut /);
+    expect(css).toMatch(/@keyframes drawerIn \{\s*from \{ transform: translateX\(-/);
+    expect(css).toMatch(/@keyframes drawerOut \{\s*from \{ transform: translateX\(0\);[^}]*\}\s*to \{ transform: translateX\(\d/);
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.navIn,\s*\.navOut \{ animation: none; \}/);
+  });
+
+  it("collapses the transition classes under reduced motion and closes at once", () => {
+    stubReducedMotion(true);
+    seed(makeContent());
+    const { getByLabelText } = renderShell();
+    const nav = drawerOf(getByLabelText);
+    fireEvent.click(getByLabelText("Menu"));
+    expect(nav.hidden).toBe(false);
+    expect(nav.getAttribute("data-motion")).toBe("none");
+    fireEvent.click(getByLabelText("Menu"));
+    expect(nav.hidden).toBe(true);
+    expect(nav.getAttribute("data-drawer")).toBe("closed");
+    expect(nav.getAttribute("data-motion")).toBe("none");
+  });
+
+  it("closes on a tap or click outside the open drawer", () => {
+    stubReducedMotion(true);
+    seed(makeContent());
+    const { getByLabelText, getByTestId } = renderShell();
+    const nav = drawerOf(getByLabelText);
+    fireEvent.click(getByLabelText("Menu"));
+    fireEvent.mouseDown(nav);
+    expect(nav.hidden).toBe(false);
+    fireEvent.mouseDown(getByTestId("site-footer"));
+    expect(nav.hidden).toBe(true);
+
+    fireEvent.click(getByLabelText("Menu"));
+    expect(nav.hidden).toBe(false);
+    fireEvent.touchStart(document.body);
+    expect(nav.hidden).toBe(true);
+  });
+
+  it("closes when any menu item is chosen", () => {
+    stubReducedMotion(true);
+    seed(makeContent());
+    const { getByLabelText } = renderShell();
+    const nav = drawerOf(getByLabelText);
+    const count = nav.querySelectorAll("a, button").length;
+    expect(count).toBeGreaterThan(1);
+    for (let i = 0; i < count; i += 1) {
+      fireEvent.click(getByLabelText("Menu"));
+      expect(nav.hidden).toBe(false);
+      const item = nav.querySelectorAll<HTMLElement>("a, button")[i];
+      fireEvent.click(item);
+      expect(nav.hidden).toBe(true);
+    }
+  });
+
+  it("closes on Escape and returns focus to the menu button", () => {
+    stubReducedMotion(false);
+    seed(makeContent());
+    const { getByLabelText } = renderShell();
+    const nav = drawerOf(getByLabelText);
+    const button = getByLabelText("Menu");
+    fireEvent.click(button);
+    expect(nav.contains(document.activeElement)).toBe(true);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(nav.getAttribute("data-drawer")).toBe("closing");
+    expect(document.activeElement).toBe(button);
+    fireEvent.animationEnd(nav);
+    expect(nav.hidden).toBe(true);
   });
 });

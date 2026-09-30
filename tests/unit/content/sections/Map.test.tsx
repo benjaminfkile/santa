@@ -8,7 +8,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { describe, it, expect, vi } from "vitest";
-import { render, cleanup } from "@testing-library/react";
+import { render, cleanup, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -107,6 +107,32 @@ describe("Map section class coverage", () => {
     trackerButton?.click();
     expect(utils.queryByTestId("tracker-menu-flight-history")).toBeNull();
     cleanup();
+  });
+
+  it("the tracker menu's Snow button still toggles, without writing the choice to storage", async () => {
+    const { Map } = await import("../../../../src/content/sections/Map/Map");
+    const { clearSnowOverride, SNOW_KEY } = await import("../../../../src/content/theme/seasonalLayers");
+    clearSnowOverride();
+    const bundle = {
+      content: null as unknown,
+      media: {},
+      icons: {},
+    } as import("../../../../src/store/types").ContentBundle;
+    const utils = render(
+      <MemoryRouter>
+        <Map data={{ controls: { snow: true } }} items={[]} bundle={bundle} />
+      </MemoryRouter>,
+    );
+    fireEvent.click(utils.container.querySelector('button[aria-label="Tracker menu"]')!);
+    const snow = utils.getByTestId("tracker-menu-snow");
+    expect(snow.getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(snow);
+    expect(utils.getByTestId("tracker-menu-snow").getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(utils.getByTestId("tracker-menu-snow"));
+    expect(utils.getByTestId("tracker-menu-snow").getAttribute("aria-pressed")).toBe("false");
+    expect(window.localStorage.getItem(SNOW_KEY)).toBeNull();
+    cleanup();
+    clearSnowOverride();
   });
 
   it("map and tracker-menu modules carry the recipes the section uses", () => {

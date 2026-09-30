@@ -1,5 +1,5 @@
-// docs/site.md section 7.7 and S17f. Nine test surfaces for the seasonal
-// layers, the tracker's snow button wiring, and live-screen detection
+// docs/site.md section 7.7. The seasonal layers, the tracker's snow
+// choice held for the live takeover only, and live-screen detection
 // through `live.eventStatusId === 3` at `/`.
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
@@ -10,6 +10,7 @@ import {
   LightsLayer,
   SNOW_KEY,
   setSnowOverride,
+  clearSnowOverride,
   useSnowEnabled,
 } from "../../../../src/content/theme/seasonalLayers";
 import { store } from "../../../../src/store/useStore";
@@ -71,6 +72,7 @@ function bundleWithDefaults(snowDefault: boolean, lightsDefault: boolean): Conte
 
 beforeEach(() => {
   window.localStorage.clear();
+  clearSnowOverride();
   act(() => {
     store.setState({ ...initialStore });
   });
@@ -79,47 +81,37 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   window.localStorage.clear();
+  clearSnowOverride();
   act(() => {
     store.setState({ ...initialStore });
   });
 });
 
-describe("seasonal layer storage keys and defaults", () => {
-  it("stores the snow override under wmsfo.snow", () => {
+describe("the live snow choice", () => {
+  it("is held in memory and never written to localStorage", () => {
     setSnowOverride(true);
-    expect(window.localStorage.getItem(SNOW_KEY)).toBe("on");
+    expect(window.localStorage.getItem(SNOW_KEY)).toBeNull();
     setSnowOverride(false);
-    expect(window.localStorage.getItem(SNOW_KEY)).toBe("off");
+    expect(window.localStorage.getItem(SNOW_KEY)).toBeNull();
   });
 
-  it("useSnowEnabled prefers the stored value over the site default", () => {
-    setSnowOverride(true);
+  it("useSnowEnabled prefers the choice over the default until it is cleared", () => {
     let seen: boolean | null = null;
-    function Probe() {
-      seen = useSnowEnabled(false);
+    function Probe({ defaultOn }: { defaultOn: boolean }) {
+      seen = useSnowEnabled(defaultOn);
       return null;
     }
-    render(
-      <MemoryRouter>
-        <Probe />
-      </MemoryRouter>,
-    );
+    render(<Probe defaultOn={false} />);
+    expect(seen).toBe(false);
+    act(() => setSnowOverride(true));
     expect(seen).toBe(true);
     cleanup();
-    setSnowOverride(false);
-    let seen2: boolean | null = null;
-    function Probe2() {
-      seen2 = useSnowEnabled(true);
-      return null;
-    }
-    render(
-      <MemoryRouter>
-        <Probe2 />
-      </MemoryRouter>,
-    );
-    expect(seen2).toBe(false);
+    render(<Probe defaultOn={true} />);
+    act(() => setSnowOverride(false));
+    expect(seen).toBe(false);
+    act(() => clearSnowOverride());
+    expect(seen).toBe(true);
   });
-
 });
 
 describe("SnowLayer live-screen detection", () => {
@@ -155,6 +147,62 @@ describe("SnowLayer live-screen detection", () => {
       </MemoryRouter>,
     );
     expect(container.querySelector('[data-testid="snow-canvas"]')).not.toBeNull();
+  });
+});
+
+describe("the snow choice ends with the live takeover", () => {
+  function canvasIn(container: HTMLElement): Element | null {
+    return container.querySelector('[data-testid="snow-canvas"]');
+  }
+
+  it("renders snowDefault once the event is not live, whatever was chosen on the tracker", () => {
+    seedLive(3);
+    const bundle = bundleWithDefaults(true, false);
+    const { container } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <SnowLayer bundle={bundle} />
+      </MemoryRouter>,
+    );
+    act(() => setSnowOverride(true));
+    expect(canvasIn(container)).not.toBeNull();
+    act(() => setSnowOverride(false));
+    expect(canvasIn(container)).toBeNull();
+
+    act(() => {
+      store.setState({ live: { ...store.getState().live!, eventStatusId: 4 } });
+    });
+    expect(canvasIn(container)).not.toBeNull();
+
+    // A later takeover starts from the live default again, not the old choice.
+    act(() => {
+      store.setState({ live: { ...store.getState().live!, eventStatusId: 3 } });
+    });
+    expect(canvasIn(container)).toBeNull();
+  });
+
+  it("ignores and removes a stored off outside live, rendering snowDefault", () => {
+    window.localStorage.setItem(SNOW_KEY, "off");
+    seedLive(1);
+    const bundle = bundleWithDefaults(true, false);
+    const { container } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <SnowLayer bundle={bundle} />
+      </MemoryRouter>,
+    );
+    expect(canvasIn(container)).not.toBeNull();
+    expect(window.localStorage.getItem(SNOW_KEY)).toBeNull();
+  });
+
+  it("keeps snow off outside live when snowDefault is off, whatever was stored", () => {
+    window.localStorage.setItem(SNOW_KEY, "on");
+    seedLive(1);
+    const bundle = bundleWithDefaults(false, false);
+    const { container } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <SnowLayer bundle={bundle} />
+      </MemoryRouter>,
+    );
+    expect(canvasIn(container)).toBeNull();
   });
 });
 

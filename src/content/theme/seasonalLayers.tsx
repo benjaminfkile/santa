@@ -1,20 +1,26 @@
 // docs/site.md section 7.7. Two seasonal layers: a canvas of small, slow,
 // translucent flakes coloured by --snow behind the page's cards, and a
-// string of 7 px bulbs on a 1 px wire under the header. Snow has a settings
-// default and a per-visitor override in localStorage; the lights follow the
-// site setting alone. The live screen is detected
-// through `live.eventStatusId === 3` (docs 24), whatever the path, since
-// every path renders the tracker then: snow is off by default there and
+// string of 7 px bulbs on a 1 px wire under the header. Off the live
+// screen snow follows the published `snowDefault` alone. On the live screen
+// snow is off by default and the tracker menu's Snow button sets a choice
+// held in memory only; the choice is cleared when the takeover ends, so the
+// site then follows `snowDefault` again. The lights follow the site setting
+// alone. The live screen is detected through `live.eventStatusId === 3`
+// (docs 24), whatever the path, since every path renders the tracker then;
 // the lights are not rendered over the map.
 
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
-import { storageGet, storageSet } from "../../lib/storage";
+import { storageRemove } from "../../lib/storage";
 import type { ContentBundle } from "../../store/types";
 import { useStore } from "../../store/useStore";
 import { subscribeScheme } from "./colorScheme";
 import * as styles from "./SeasonalLayers.module.css";
 
+// A leftover key from builds that stored the choice; it is removed and
+// never read.
 export const SNOW_KEY = "wmsfo.snow";
+
+let liveChoice: boolean | null = null;
 
 const overrideListeners = new Set<() => void>();
 
@@ -29,20 +35,30 @@ export function subscribeOverrides(l: () => void): () => void {
   };
 }
 
+// The tracker's Snow button: sets the visitor's choice for the current
+// live takeover, in memory only.
 export function setSnowOverride(next: boolean): void {
-  storageSet(SNOW_KEY, next ? "on" : "off");
+  liveChoice = next;
   notifyOverrides();
 }
 
-function getSnowSnapshot(): string {
-  return storageGet(SNOW_KEY) ?? "";
+// Drops the live choice; called when the takeover ends.
+export function clearSnowOverride(): void {
+  storageRemove(SNOW_KEY);
+  if (liveChoice === null) return;
+  liveChoice = null;
+  notifyOverrides();
 }
 
+function getSnowSnapshot(): boolean | null {
+  return liveChoice;
+}
+
+// The live screen's snow state: the visitor's choice for this takeover,
+// else `defaultOn`.
 export function useSnowEnabled(defaultOn: boolean): boolean {
-  const stored = useSyncExternalStore(subscribeOverrides, getSnowSnapshot, () => "");
-  if (stored === "on") return true;
-  if (stored === "off") return false;
-  return defaultOn;
+  const chosen = useSyncExternalStore(subscribeOverrides, getSnowSnapshot, () => null);
+  return chosen ?? defaultOn;
 }
 
 function useIsLiveScreen(): boolean {
@@ -54,13 +70,17 @@ export function SnowLayer({ bundle }: { bundle: ContentBundle | null }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isLive = useIsLiveScreen();
   const settingsDefault = bundle?.content?.settings.theme.snowDefault ?? false;
-  const defaultOn = isLive ? false : settingsDefault;
-  const chosen = useSnowEnabled(defaultOn);
+  const liveOn = useSnowEnabled(false);
+  const chosen = isLive ? liveOn : settingsDefault;
   const prefersReduced =
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const enabled = chosen && !prefersReduced;
+
+  useEffect(() => {
+    if (!isLive) clearSnowOverride();
+  }, [isLive]);
 
   useEffect(() => {
     if (!enabled) return;
