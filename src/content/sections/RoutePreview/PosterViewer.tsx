@@ -5,21 +5,19 @@
 // frame horizontally and a portrait poster is pannable up and down from
 // the start (`viewport.goHome`, called by the `fit` control, fills the
 // viewer). Site's own controls in the .ibtn recipe: zoom in, zoom out,
-// fit (viewport.goHome), and fullscreen (Fullscreen API on the frame, with
-// a fixed-frame fallback where the API is missing). Keyboard: arrows pan,
-// +/- zoom, 0 fits, F toggles fullscreen. Destroyed on unmount, rebuilt on
-// a new media id. animationTime 0 under reduced motion.
+// fit (viewport.goHome), and fullscreen through the shared `useFullscreen`
+// (the Fullscreen API on the frame where the frame takes it, else the
+// takeover: the frame fixed over the viewport in `TakeoverPortal`).
+// Keyboard: arrows pan, +/- zoom, 0 fits, F toggles fullscreen, Escape
+// leaves it. Destroyed on unmount, rebuilt on a new media id.
+// animationTime 0 under reduced motion.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import type OpenSeadragon from "openseadragon";
 import { copy } from "../../../copy/copy";
 import { useReducedMotion } from "../../../lib/motion";
-import {
-  currentFullscreenElement,
-  exitFullscreenNow,
-  fullscreenSupported,
-  requestFullscreenOn,
-} from "../../../lib/fullscreen";
+import { useFullscreen } from "../../../lib/useFullscreen";
+import { TakeoverPortal } from "../../../lib/TakeoverPortal";
 import * as styles from "./RoutePreview.module.css";
 import * as ibtn from "../../../ui/IconButton.module.css";
 
@@ -43,8 +41,7 @@ export function PosterViewer({ mediaId, url, dzi, alt, ariaLabel }: PosterViewer
   const viewerRef = useRef<Viewer | null>(null);
   const osdRef = useRef<OSDModule | null>(null);
   const reducedMotion = useReducedMotion();
-  const [fullscreen, setFullscreen] = useState<boolean>(false);
-  const [fallbackFullscreen, setFallbackFullscreen] = useState<boolean>(false);
+  const fullscreen = useFullscreen(frameRef);
 
   useEffect(() => {
     let cancelled = false;
@@ -82,30 +79,13 @@ export function PosterViewer({ mediaId, url, dzi, alt, ariaLabel }: PosterViewer
     };
   }, [mediaId, url, dzi, reducedMotion]);
 
+  // OpenSeadragon resizes to the frame on both edges of fullscreen.
   useEffect(() => {
-    const frame = frameRef.current;
-    if (frame === null) return;
-    function onChange() {
-      const el = currentFullscreenElement();
-      const inFullscreen = el === frame;
-      setFullscreen(inFullscreen);
-      viewerRef.current?.forceResize();
-    }
-    document.addEventListener("fullscreenchange", onChange);
-    document.addEventListener("webkitfullscreenchange", onChange);
-    return () => {
-      document.removeEventListener("fullscreenchange", onChange);
-      document.removeEventListener("webkitfullscreenchange", onChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!fallbackFullscreen) return;
     const id = window.setTimeout(() => {
       viewerRef.current?.forceResize();
     }, 0);
     return () => window.clearTimeout(id);
-  }, [fallbackFullscreen]);
+  }, [fullscreen.mode]);
 
   function makePoint(x: number, y: number): OpenSeadragon.Point {
     const mod = osdRef.current;
@@ -131,17 +111,7 @@ export function PosterViewer({ mediaId, url, dzi, alt, ariaLabel }: PosterViewer
     viewerRef.current?.viewport.goHome();
   }
   function toggleFullscreen() {
-    const frame = frameRef.current;
-    if (frame === null) return;
-    if (fullscreenSupported()) {
-      if (currentFullscreenElement() === frame) {
-        exitFullscreenNow();
-      } else {
-        void requestFullscreenOn(frame);
-      }
-    } else {
-      setFallbackFullscreen((v) => !v);
-    }
+    fullscreen.toggle();
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
@@ -185,66 +155,68 @@ export function PosterViewer({ mediaId, url, dzi, alt, ariaLabel }: PosterViewer
     }
   }
 
-  const inFullscreen = fullscreen || fallbackFullscreen;
-  const frameClass = fallbackFullscreen
+  const inFullscreen = fullscreen.mode !== "off";
+  const frameClass = fullscreen.mode === "takeover"
     ? `${styles.routePoster} ${styles.routePosterFullscreen}`
     : styles.routePoster;
 
   const label = ariaLabel ?? alt;
 
   return (
-    <div
-      ref={frameRef}
-      key={mediaId}
-      className={frameClass}
-      data-testid="poster-viewer"
-      data-fullscreen={inFullscreen ? "on" : "off"}
-      tabIndex={0}
-      role="region"
-      aria-label={label}
-      onKeyDown={onKeyDown}
-    >
-      <div ref={hostRef} className={styles.routePosterHost} data-testid="poster-viewer-host" />
-      <div className={styles.routePosterControls}>
-        <button
-          type="button"
-          className={ibtn.ibtn}
-          aria-label={copy.map.poster.zoomIn}
-          onClick={zoomIn}
-          data-testid="poster-zoom-in"
-        >
-          <PlusIcon />
-        </button>
-        <button
-          type="button"
-          className={ibtn.ibtn}
-          aria-label={copy.map.poster.zoomOut}
-          onClick={zoomOut}
-          data-testid="poster-zoom-out"
-        >
-          <MinusIcon />
-        </button>
-        <button
-          type="button"
-          className={ibtn.ibtn}
-          aria-label={copy.map.poster.fit}
-          onClick={fit}
-          data-testid="poster-fit"
-        >
-          <TargetIcon />
-        </button>
-        <button
-          type="button"
-          className={ibtn.ibtn}
-          aria-label={inFullscreen ? copy.map.poster.exitFullscreen : copy.map.poster.fullscreen}
-          aria-pressed={inFullscreen}
-          onClick={toggleFullscreen}
-          data-testid="poster-fullscreen"
-        >
-          {inFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
-        </button>
+    <TakeoverPortal active={fullscreen.mode === "takeover"}>
+      <div
+        ref={frameRef}
+        key={mediaId}
+        className={frameClass}
+        data-testid="poster-viewer"
+        data-fullscreen={inFullscreen ? "on" : "off"}
+        tabIndex={0}
+        role="region"
+        aria-label={label}
+        onKeyDown={onKeyDown}
+      >
+        <div ref={hostRef} className={styles.routePosterHost} data-testid="poster-viewer-host" />
+        <div className={styles.routePosterControls}>
+          <button
+            type="button"
+            className={ibtn.ibtn}
+            aria-label={copy.map.poster.zoomIn}
+            onClick={zoomIn}
+            data-testid="poster-zoom-in"
+          >
+            <PlusIcon />
+          </button>
+          <button
+            type="button"
+            className={ibtn.ibtn}
+            aria-label={copy.map.poster.zoomOut}
+            onClick={zoomOut}
+            data-testid="poster-zoom-out"
+          >
+            <MinusIcon />
+          </button>
+          <button
+            type="button"
+            className={ibtn.ibtn}
+            aria-label={copy.map.poster.fit}
+            onClick={fit}
+            data-testid="poster-fit"
+          >
+            <TargetIcon />
+          </button>
+          <button
+            type="button"
+            className={ibtn.ibtn}
+            aria-label={inFullscreen ? copy.map.poster.exitFullscreen : copy.map.poster.fullscreen}
+            aria-pressed={inFullscreen}
+            onClick={toggleFullscreen}
+            data-testid="poster-fullscreen"
+          >
+            {inFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
+          </button>
+        </div>
       </div>
-    </div>
+    </TakeoverPortal>
   );
 }
 

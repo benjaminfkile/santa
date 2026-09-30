@@ -10,6 +10,11 @@
 //    Escape exits both; the takeover alone locks the body scroll; the
 //    slider still works in fullscreen, and the same map, with no
 //    cooperativeGestures option, stays up.
+//  - A document with only the webkit flag (iPhone Safari) goes straight
+//    to the takeover, which mounts under document.body; the API path
+//    changes state only on a fullscreenchange, and a rejected or
+//    unconfirmed request falls back to the takeover; a route change
+//    releases the body scroll like every other exit.
 //  - The terrain view starts on with no remembered choice and off with a
 //    remembered off; the toggle adds and removes the hillshade layer, the
 //    choice is stored, restores on the next mount, and survives an
@@ -20,7 +25,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, cleanup, act, fireEvent } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useNavigate } from "react-router-dom";
 import type { ComponentType } from "react";
 import type { ContentBundle } from "../../../../src/store/types";
 import type { ContentDocument, Snapshot } from "../../../../src/contracts";
@@ -166,7 +171,7 @@ async function renderSection(config: Record<string, unknown> | null = null, data
   return result;
 }
 
-function q(container: HTMLElement, testId: string): HTMLElement | null {
+function q(container: ParentNode, testId: string): HTMLElement | null {
   return container.querySelector(`[data-testid="${testId}"]`);
 }
 
@@ -370,7 +375,8 @@ describe("route map fullscreen", () => {
   });
 
   it("takes over the viewport where the API is missing, locking the body scroll only while up", async () => {
-    const { container } = await renderSection();
+    const { container: section } = await renderSection();
+    const container = document.body;
     const stage = q(container, "route-map-stage")!;
     const map = mocks.maps[0];
     expect(document.body.style.overflow).toBe("");
@@ -381,6 +387,8 @@ describe("route map fullscreen", () => {
     await settle();
     expect(stage.getAttribute("data-fullscreen")).toBe("takeover");
     expect(document.body.style.overflow).toBe("hidden");
+    expect(stage.parentElement?.parentElement).toBe(document.body);
+    expect(section.contains(stage)).toBe(false);
     expect(mocks.maps).toHaveLength(1);
     expect(map.options).not.toHaveProperty("cooperativeGestures");
     expect(map.resize).toHaveBeenCalledTimes(1);
@@ -401,6 +409,7 @@ describe("route map fullscreen", () => {
     await settle();
     expect(stage.getAttribute("data-fullscreen")).toBe("off");
     expect(document.body.style.overflow).toBe("");
+    expect(section.contains(stage)).toBe(true);
     expect(map.resize).toHaveBeenCalledTimes(2);
     expect(map.fitBounds).toHaveBeenCalledTimes(2);
   });
@@ -433,6 +442,139 @@ describe("route map fullscreen", () => {
     expect(document.body.style.overflow).toBe("hidden");
     unmount();
     expect(document.body.style.overflow).toBe("");
+  });
+});
+
+describe("route map fullscreen on a phone and on a refused request", () => {
+  // iPhone Safari: the webkit flag and the prefixed element call, and no
+  // unprefixed element API.
+  function installIphoneApi() {
+    const webkitRequest = vi.fn();
+    Object.defineProperty(document, "webkitFullscreenEnabled", { configurable: true, get: () => true });
+    Object.defineProperty(HTMLElement.prototype, "webkitRequestFullscreen", {
+      configurable: true,
+      value: webkitRequest,
+    });
+    return webkitRequest;
+  }
+
+  afterEach(() => {
+    vi.useRealTimers();
+    delete (document as unknown as Record<string, unknown>).webkitFullscreenEnabled;
+    delete (HTMLElement.prototype as unknown as Record<string, unknown>).webkitRequestFullscreen;
+  });
+
+  it("goes straight to the takeover under document.body with only the webkit flag", async () => {
+    const webkitRequest = installIphoneApi();
+    const { container } = await renderSection();
+    const stage = q(container, "route-map-stage")!;
+    await act(async () => {
+      fireEvent.click(q(container, "route-map-fullscreen")!);
+    });
+    await settle();
+    expect(webkitRequest).not.toHaveBeenCalled();
+    expect(stage.getAttribute("data-fullscreen")).toBe("takeover");
+    expect(stage.parentElement?.parentElement).toBe(document.body);
+    expect(container.contains(stage)).toBe(false);
+    expect(document.body.style.overflow).toBe("hidden");
+  });
+
+  it("changes nothing until a fullscreenchange arrives", async () => {
+    const api = installFullscreenApi();
+    let confirm: () => void = () => {};
+    api.request.mockImplementation(async function (this: Element) {
+      confirm = () => {
+        Object.defineProperty(document, "fullscreenElement", { configurable: true, get: () => this });
+        document.dispatchEvent(new Event("fullscreenchange"));
+      };
+    });
+    const { container } = await renderSection();
+    const stage = q(container, "route-map-stage")!;
+    await act(async () => {
+      fireEvent.click(q(container, "route-map-fullscreen")!);
+    });
+    await settle();
+    expect(api.request).toHaveBeenCalledTimes(1);
+    expect(stage.getAttribute("data-fullscreen")).toBe("off");
+    expect(mocks.maps[0].resize).not.toHaveBeenCalled();
+    expect(document.body.style.overflow).toBe("");
+
+    await act(async () => {
+      confirm();
+    });
+    await settle();
+    expect(stage.getAttribute("data-fullscreen")).toBe("api");
+    expect(container.contains(stage)).toBe(true);
+    expect(document.body.style.overflow).toBe("");
+    expect(mocks.maps[0].resize).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to the takeover when the request rejects", async () => {
+    const api = installFullscreenApi();
+    api.request.mockImplementation(async () => {
+      throw new TypeError("not allowed");
+    });
+    const { container } = await renderSection();
+    const stage = q(container, "route-map-stage")!;
+    await act(async () => {
+      fireEvent.click(q(container, "route-map-fullscreen")!);
+    });
+    await settle();
+    expect(api.request).toHaveBeenCalledTimes(1);
+    expect(stage.getAttribute("data-fullscreen")).toBe("takeover");
+    expect(stage.parentElement?.parentElement).toBe(document.body);
+    expect(document.body.style.overflow).toBe("hidden");
+  });
+
+  it("falls back to the takeover when the request never brings a fullscreenchange", async () => {
+    const api = installFullscreenApi();
+    api.request.mockImplementation(async () => {});
+    const { container } = await renderSection();
+    const stage = q(container, "route-map-stage")!;
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    await act(async () => {
+      fireEvent.click(q(container, "route-map-fullscreen")!);
+      await Promise.resolve();
+    });
+    expect(stage.getAttribute("data-fullscreen")).toBe("off");
+    expect(document.body.style.overflow).toBe("");
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(stage.getAttribute("data-fullscreen")).toBe("takeover");
+    expect(document.body.style.overflow).toBe("hidden");
+  });
+
+  it("releases the body scroll on a route change", async () => {
+    let go: (path: string) => void = () => {};
+    function Navigator() {
+      const navigate = useNavigate();
+      go = (path) => void navigate(path);
+      return null;
+    }
+    setEvent(null);
+    const { container } = render(
+      <MemoryRouter>
+        <Navigator />
+        <RoutePreview data={{ style: "map" }} items={[]} bundle={buildBundle()} />
+      </MemoryRouter>,
+    );
+    await settle();
+    const stage = q(container, "route-map-stage")!;
+    await act(async () => {
+      fireEvent.click(q(container, "route-map-fullscreen")!);
+    });
+    await settle();
+    expect(stage.getAttribute("data-fullscreen")).toBe("takeover");
+    expect(document.body.style.overflow).toBe("hidden");
+
+    await act(async () => {
+      go("/elsewhere");
+    });
+    await settle();
+    expect(stage.getAttribute("data-fullscreen")).toBe("off");
+    expect(document.body.style.overflow).toBe("");
+    expect(container.contains(stage)).toBe(true);
   });
 });
 

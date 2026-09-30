@@ -1,8 +1,12 @@
-// docs/site.md sections 8.5 and 8.9. Fullscreen API helpers with the
-// webkit prefixed names as a second choice. `fullscreenSupported` is false
-// where the API is missing (iPhone Safari), where callers use their own
-// fixed-over-the-viewport fallback. Requests and exits never throw; a
-// rejected request resolves false.
+// docs/site.md sections 8.5 and 8.9. Fullscreen API helpers.
+// `fullscreenSupported` is true only for the unprefixed element API:
+// `document.fullscreenEnabled === true` and a `requestFullscreen` function
+// on the target. iPhone Safari reports `webkitFullscreenEnabled` but only
+// takes video fullscreen, so it reads as unsupported and callers use the
+// takeover (`useFullscreen`, `TakeoverPortal`). The webkit prefixed names
+// are only the call fallback once that check has passed. Requests and
+// exits never throw; a rejected request resolves false. `lockBodyScroll`
+// stops the body scrolling until every lock it handed out is released.
 
 type FullscreenDocument = Document & {
   fullscreenEnabled?: boolean;
@@ -20,10 +24,14 @@ type FullscreenElement = HTMLElement & {
 
 export const FULLSCREEN_EVENTS = ["fullscreenchange", "webkitfullscreenchange"] as const;
 
-export function fullscreenSupported(): boolean {
+// How long a request may take to produce a `fullscreenchange` before the
+// caller treats it as refused.
+export const FULLSCREEN_CONFIRM_MS = 1000;
+
+export function fullscreenSupported(element: HTMLElement): boolean {
   if (typeof document === "undefined") return false;
   const d = document as FullscreenDocument;
-  return d.fullscreenEnabled === true || d.webkitFullscreenEnabled === true;
+  return d.fullscreenEnabled === true && typeof (element as FullscreenElement).requestFullscreen === "function";
 }
 
 export function currentFullscreenElement(): Element | null {
@@ -60,4 +68,23 @@ export function exitFullscreenNow(): void {
   } catch {
     // already out of fullscreen
   }
+}
+
+let locks = 0;
+let lockedFrom = "";
+
+export function lockBodyScroll(): () => void {
+  const body = document.body;
+  if (locks === 0) {
+    lockedFrom = body.style.overflow;
+    body.style.overflow = "hidden";
+  }
+  locks += 1;
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    locks -= 1;
+    if (locks === 0) body.style.overflow = lockedFrom;
+  };
 }
