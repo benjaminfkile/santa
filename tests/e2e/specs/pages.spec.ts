@@ -2,7 +2,9 @@
 // the published document renders its first section; the route-preview
 // page loads the map and draws a polyline; /preview of the ended page
 // starts a preview session on / with the banner and Exit; /alerts/verify and /alerts/unsubscribe
-// with invalid tokens render the invalid copy; the CSP meta is present.
+// with invalid tokens render the invalid copy; the CSP meta is present; no
+// published page scrolls sideways at 320, 375, or 390 px; the header nav
+// holds one line and overflows into More.
 
 import { test, expect } from "@playwright/test";
 import {
@@ -37,6 +39,60 @@ test("published pages render their first section", async ({ page }) => {
     await goto(page, `/${p.slug}`);
     await expect(page.locator('main[data-page-role="none"]')).toBeVisible({ timeout: 15_000 });
     await expect(page.locator("main section, main [data-testid^='section-']").first()).toBeVisible();
+  }
+});
+
+test("no published page scrolls sideways at the phone widths", async ({ page }) => {
+  // docs/site.md section 7.7: from 320 px up the document is never wider
+  // than the viewport. Walks / and every ordinary page at 320, 375, and 390.
+  const adminSnap = await getAdminSnapshot();
+  const snap = (await fetchCdnSnapshot(adminSnap.url)) as { content?: { pages?: PublishedPage[] } };
+  const paths = ["/", ...(snap.content?.pages ?? []).filter((p) => p.role === "none").map((p) => `/${p.slug}`)];
+  for (const width of [320, 375, 390]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const path of paths) {
+      await goto(page, path);
+      await expect(page.locator("main").first()).toBeVisible({ timeout: 15_000 });
+      await page.waitForTimeout(500);
+      const widths = await page.evaluate(() => ({
+        scroll: document.documentElement.scrollWidth,
+        viewport: document.documentElement.clientWidth,
+      }));
+      expect(widths.scroll, `${path} at ${width} px`).toBeLessThanOrEqual(widths.viewport);
+    }
+  }
+});
+
+test("the header nav keeps its items on one line and moves the rest into More", async ({ page }) => {
+  // docs/site.md section 7.7: between the phone breakpoint and a wide
+  // screen the inline nav never wraps, clips, or scrolls.
+  for (const width of [800, 1024, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+    await goto(page, "/");
+    const nav = page.locator('nav[aria-label="Pages"]');
+    await expect(nav).toBeVisible({ timeout: 15_000 });
+    const layout = await nav.evaluate((el) => {
+      const box = el.getBoundingClientRect();
+      const items = Array.from(el.querySelectorAll(":scope > ul > li")).map((li) => li.getBoundingClientRect());
+      return {
+        right: box.right,
+        scroll: el.scrollWidth,
+        client: el.clientWidth,
+        tops: items.map((r) => Math.round(r.top)),
+        rights: items.map((r) => r.right),
+      };
+    });
+    expect(layout.scroll).toBeLessThanOrEqual(layout.client);
+    expect(new Set(layout.tops).size).toBeLessThanOrEqual(1);
+    for (const r of layout.rights) expect(r).toBeLessThanOrEqual(layout.right + 0.5);
+    const more = page.locator('[data-testid="nav-more"]');
+    if ((await more.count()) > 0) {
+      await more.click();
+      await expect(page.locator('[data-testid="nav-more-menu"]')).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(page.locator('[data-testid="nav-more-menu"]')).toHaveCount(0);
+      await expect(more).toBeFocused();
+    }
   }
 });
 

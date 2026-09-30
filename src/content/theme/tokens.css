@@ -122,7 +122,10 @@ html, body {
   display: flex;
   flex-direction: column;
 }
-#root > main { flex: 1 0 auto; position: relative; z-index: 1; }
+#root > main { flex: 1 0 auto; position: relative; z-index: 1; min-width: 0; }
+/* A word or address longer than its line breaks instead of running past
+   its card on a narrow screen. */
+#root > main { overflow-wrap: break-word; }
 /* The live screen owns the viewport: nothing scrolls behind the map. */
 html[data-takeover="live"],
 html[data-takeover="live"] body { overflow: hidden; height: 100%; }
