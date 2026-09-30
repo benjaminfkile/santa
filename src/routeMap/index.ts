@@ -18,9 +18,9 @@
 // made labels; a new set rebuilds the style through the same diff.
 // `poiKinds` and `landmarks` reach the style's options of the same names
 // only when given, and a changed list rebuilds the style the same way.
-// `arrows`, `arrowScale`, and `routeWidthScale` reach the style's options
-// of the same names; a change rebuilds the style the same way. The
-// arrowhead image is added under ROUTE_ARROW_ICON whenever the style asks
+// `arrows`, `arrowScale`, `routeWidthScale`, and `labelScale` reach the
+// style's options of the same names; a change rebuilds the style the
+// same way. The arrowhead image is added under ROUTE_ARROW_ICON whenever the style asks
 // for it. `landmarkMarkers` stands one MapLibre marker around each
 // caller's element on its point (the badges and buttons of the landmarks
 // with an icon or a description); a changed list replaces them. The map
@@ -68,6 +68,7 @@ export type RouteMapOptions = {
   arrows?: boolean;
   arrowScale?: number;
   routeWidthScale?: number;
+  labelScale?: number;
   pinElement?: HTMLElement;
   onError: (error: unknown) => void;
 };
@@ -84,6 +85,7 @@ export type RouteMapUpdate = {
   arrows?: boolean;
   arrowScale?: number;
   routeWidthScale?: number;
+  labelScale?: number;
 };
 
 export type RouteMapHandle = {
@@ -194,6 +196,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
   let arrows = options.arrows ?? false;
   let arrowScale = options.arrowScale;
   let routeWidthScale = options.routeWidthScale;
+  let labelScale = options.labelScale;
 
   function styleOptions(): StyleOptions {
     return {
@@ -203,6 +206,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
       ...(arrows ? { arrows } : {}),
       ...(arrowScale !== undefined ? { arrowScale } : {}),
       ...(routeWidthScale !== undefined ? { routeWidthScale } : {}),
+      ...(labelScale !== undefined ? { labelScale } : {}),
     };
   }
 
@@ -308,7 +312,8 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
         nextTerrain === terrain &&
         nextArrows === arrows &&
         next.arrowScale === arrowScale &&
-        next.routeWidthScale === routeWidthScale
+        next.routeWidthScale === routeWidthScale &&
+        next.labelScale === labelScale
       ) {
         return;
       }
@@ -322,6 +327,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
       arrows = nextArrows;
       arrowScale = next.arrowScale;
       routeWidthScale = next.routeWidthScale;
+      labelScale = next.labelScale;
       map.setStyle(buildStyle(appearance, base, path, marks, terrain, styleOptions()), {
         diff: true,
       });

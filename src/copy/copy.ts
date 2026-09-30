@@ -62,6 +62,7 @@ export const copy = {
       terrain: "Terrain view",
       landmark: (name: string) => `About ${name}`,
       closeLandmark: "Close",
+      directions: "Get directions",
     },
     poster: {
       zoomIn: "Zoom in",

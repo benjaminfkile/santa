@@ -6,8 +6,8 @@
 // `onFail`, which hands the section back to the image rendering. The map
 // is destroyed on unmount. `marks` are drawn as dots on the path and
 // `timeLabels` as labelled dots beside them; `poiKinds`, `landmarks`,
-// `arrows`, `arrowScale`, and `routeWidthScale` pass through to the style
-// options of the same names; `landmarkMarkers` stands each caller's
+// `arrows`, `arrowScale`, `routeWidthScale`, and `labelScale` pass
+// through to the style options of the same names; `landmarkMarkers` stands each caller's
 // element on its point as a marker (the caller renders the landmark
 // badges and buttons into them); `pin`
 // stands the Santa pin (the caller's `pinElement`) on a point, placed at
@@ -63,6 +63,7 @@ export type RouteMapProps = {
   arrows?: boolean;
   arrowScale?: number;
   routeWidthScale?: number;
+  labelScale?: number;
   pin?: LatLng | null;
   pinElement?: HTMLElement;
   reducedMotion?: boolean;
@@ -85,6 +86,7 @@ export function RouteMap({
   arrows = false,
   arrowScale,
   routeWidthScale,
+  labelScale,
   pin = null,
   pinElement,
   reducedMotion = false,
@@ -114,6 +116,7 @@ export function RouteMap({
     arrows,
     arrowScale,
     routeWidthScale,
+    labelScale,
     pin,
     pinElement,
     appearance,
@@ -133,6 +136,7 @@ export function RouteMap({
     arrows,
     arrowScale,
     routeWidthScale,
+    labelScale,
     pin,
     pinElement,
     appearance,
@@ -164,6 +168,7 @@ export function RouteMap({
       arrows: latest.current.arrows,
       arrowScale: latest.current.arrowScale,
       routeWidthScale: latest.current.routeWidthScale,
+      labelScale: latest.current.labelScale,
       appearance: latest.current.appearance,
       terrain: latest.current.terrain,
       pinElement: latest.current.pinElement,
@@ -186,6 +191,7 @@ export function RouteMap({
           arrows: now.arrows,
           arrowScale: now.arrowScale,
           routeWidthScale: now.routeWidthScale,
+          labelScale: now.labelScale,
           appearance: now.appearance,
           terrain: now.terrain,
         });
@@ -222,6 +228,7 @@ export function RouteMap({
       arrows,
       arrowScale,
       routeWidthScale,
+      labelScale,
       appearance,
       terrain,
     });
@@ -235,6 +242,7 @@ export function RouteMap({
     arrows,
     arrowScale,
     routeWidthScale,
+    labelScale,
     appearance,
     terrain,
   ]);

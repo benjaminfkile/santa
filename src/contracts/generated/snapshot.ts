@@ -43,6 +43,7 @@ export interface Snapshot {
         arrows?: boolean | null;
         arrowSize?: string | null;
         routeWidth?: string | null;
+        labelSize?: string | null;
       } | null;
       controls?: {
         fullscreen?: boolean | null;

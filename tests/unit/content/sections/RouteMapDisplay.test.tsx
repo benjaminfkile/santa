@@ -1,11 +1,12 @@
 // docs/site.md section 8.9. The route map's config, landmark markers,
 // and gestures, with MapLibre and pmtiles mocked:
 //  - Every input comes from the event's `routeMapConfig`: each of the
-//    four display values (time label interval, arrows, arrow size, route
-//    width) resolves from the config's `display`, then the default (15,
-//    true, medium, normal), and reaches the style: the labels at the
-//    interval's interior multiples (none at 0), the arrow layer and its
-//    scale, and the route line width. The controls default to true and
+//    five display values (time label interval, arrows, arrow size, route
+//    width, label size) resolves from the config's `display`, then the
+//    default (15, true, medium, normal, medium), and reaches the style:
+//    the labels at the interval's interior multiples (none at 0), the
+//    arrow layer and its scale, the route line width, and the label
+//    sizes. The controls default to true and
 //    the landmarks and POI kinds to none.
 //  - A null or absent config renders the default map. Display, controls,
 //    landmarks, or POI kinds in the section data or in the site settings
@@ -16,7 +17,9 @@
 //    landmark with a description stands a button that opens its popover,
 //    one at a time, closed by its close button, Escape, a tap elsewhere,
 //    and its own button again; plain landmarks get no marker and stay as
-//    the style draws them.
+//    the style draws them. The popover holds a "Get directions" link to
+//    the landmark's point in a new tab: Apple Maps on an Apple touch
+//    device, Google Maps everywhere else.
 //  - The map is created without cooperativeGestures.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -237,6 +240,17 @@ function lineWidth(style: StyleShape): unknown {
   return layerOf(style, "route-line")?.paint?.["line-width"];
 }
 
+function timeLabelSize(style: StyleShape): unknown {
+  return layerOf(style, "route-time-labels")?.layout?.["text-size"];
+}
+
+// The time label text size at a label scale: two thirds of 20 px at zoom
+// 12 and under, 20 px at zoom 16 and over, times the scale.
+function labelSizeAt(scale: number): unknown[] {
+  const round = (v: number) => Math.round(v * 1000) / 1000;
+  return ["interpolate", ["linear"], ["zoom"], 12, round((20 * 2 * scale) / 3), 16, round(20 * scale)];
+}
+
 function widthAt(scale: number): unknown[] {
   return ["interpolate", ["linear"], ["zoom"], 8, 3 * scale, 14, 5 * scale];
 }
@@ -267,18 +281,26 @@ afterEach(() => {
 });
 
 describe("route map config resolution", () => {
-  const DEFAULT_DISPLAY = { timeLabelIntervalMinutes: 15, arrows: true, arrowScale: 1, routeWidthScale: 1 };
+  const DEFAULT_DISPLAY = {
+    timeLabelIntervalMinutes: 15,
+    arrows: true,
+    arrowScale: 1,
+    routeWidthScale: 1,
+    labelScale: 1,
+  };
 
   it("maps the named sizes to scales in one table", () => {
     expect(DISPLAY_SCALES).toEqual({
       arrowSize: { small: 0.75, medium: 1, large: 1.5, xlarge: 2 },
       routeWidth: { thin: 0.75, normal: 1, thick: 1.5, xthick: 2 },
+      labelSize: { small: 0.8, medium: 1, large: 1.3 },
     });
     expect(DISPLAY_DEFAULTS).toEqual({
       timeLabelIntervalMinutes: 15,
       arrows: true,
       arrowSize: "medium",
       routeWidth: "normal",
+      labelSize: "medium",
     });
     for (const [name, scale] of Object.entries(DISPLAY_SCALES.arrowSize)) {
       expect(resolveRouteMapDisplay({ arrowSize: name }).arrowScale).toBe(scale);
@@ -286,18 +308,39 @@ describe("route map config resolution", () => {
     for (const [name, scale] of Object.entries(DISPLAY_SCALES.routeWidth)) {
       expect(resolveRouteMapDisplay({ routeWidth: name }).routeWidthScale).toBe(scale);
     }
+    expect(resolveRouteMapDisplay({ labelSize: "small" }).labelScale).toBe(0.8);
+    expect(resolveRouteMapDisplay({ labelSize: "medium" }).labelScale).toBe(1);
+    expect(resolveRouteMapDisplay({ labelSize: "large" }).labelScale).toBe(1.3);
   });
 
   it("resolves every display value from the config, then the default", () => {
     expect(
-      resolveRouteMapDisplay({ timeLabelIntervalMinutes: 5, arrows: false, arrowSize: "small", routeWidth: "thin" }),
-    ).toEqual({ timeLabelIntervalMinutes: 5, arrows: false, arrowScale: 0.75, routeWidthScale: 0.75 });
+      resolveRouteMapDisplay({
+        timeLabelIntervalMinutes: 5,
+        arrows: false,
+        arrowSize: "small",
+        routeWidth: "thin",
+        labelSize: "small",
+      }),
+    ).toEqual({
+      timeLabelIntervalMinutes: 5,
+      arrows: false,
+      arrowScale: 0.75,
+      routeWidthScale: 0.75,
+      labelScale: 0.8,
+    });
     expect(resolveRouteMapDisplay({ timeLabelIntervalMinutes: 0 }).timeLabelIntervalMinutes).toBe(0);
     for (const display of [undefined, null, {}]) {
       expect(resolveRouteMapDisplay(display)).toEqual(DEFAULT_DISPLAY);
     }
     expect(
-      resolveRouteMapDisplay({ timeLabelIntervalMinutes: null, arrows: null, arrowSize: null, routeWidth: null }),
+      resolveRouteMapDisplay({
+        timeLabelIntervalMinutes: null,
+        arrows: null,
+        arrowSize: null,
+        routeWidth: null,
+        labelSize: null,
+      }),
     ).toEqual(DEFAULT_DISPLAY);
   });
 
@@ -307,9 +350,16 @@ describe("route map config resolution", () => {
       arrows: true,
       arrowScale: 1.5,
       routeWidthScale: 1.5,
+      labelScale: 1,
     });
+    expect(resolveRouteMapDisplay({ labelSize: "large" })).toEqual({ ...DEFAULT_DISPLAY, labelScale: 1.3 });
     expect(
-      resolveRouteMapDisplay({ timeLabelIntervalMinutes: 7, arrowSize: "huge", routeWidth: "wide" }),
+      resolveRouteMapDisplay({
+        timeLabelIntervalMinutes: 7,
+        arrowSize: "huge",
+        routeWidth: "wide",
+        labelSize: "xlarge",
+      }),
     ).toEqual(DEFAULT_DISPLAY);
   });
 
@@ -396,6 +446,7 @@ describe("route map config reaching the style", () => {
     expect(lineWidth(style)).toEqual(widthAt(1));
     expect(layerOf(style, "pois")).toBeUndefined();
     expect(style.sources["route-landmarks"]).toBeUndefined();
+    expect(timeLabelSize(style)).toEqual(labelSizeAt(1));
   }
 
   function expectDefaultControls(container: HTMLElement): void {
@@ -440,6 +491,23 @@ describe("route map config reaching the style", () => {
     expect(labelsOf(style)).toHaveLength(9);
     expect(layerOf(style, "route-arrows")?.layout?.["icon-size"]).toBe(0.75);
     expect(lineWidth(style)).toEqual(widthAt(2));
+  });
+
+  it("scales the label sizes by the config's label size", async () => {
+    for (const [labelSize, scale] of [
+      ["small", 0.8],
+      ["medium", 1],
+      ["large", 1.3],
+    ] as const) {
+      cleanup();
+      mocks.maps.length = 0;
+      await renderSection({ display: { labelSize }, landmarks: [PLAIN] });
+      const style = currentStyle();
+      expect(timeLabelSize(style)).toEqual(labelSizeAt(scale));
+      const landmarkSize = layerOf(style, "route-landmarks")?.layout?.["text-size"] as unknown[];
+      expect(landmarkSize.slice(0, 3)).toEqual(["interpolate", ["linear"], ["zoom"]]);
+      expect(landmarkSize[landmarkSize.length - 1]).toBeCloseTo(14 * scale, 3);
+    }
   });
 
   it("turns the arrows off from the config", async () => {
@@ -687,6 +755,39 @@ describe("route map landmarks", () => {
     expect(popover()).not.toBeNull();
     await open("The Oval");
     expect(popover()).toBeNull();
+  });
+
+  it("puts a Get directions link under the description, to Google Maps off Apple touch devices", async () => {
+    vi.spyOn(window.navigator, "userAgent", "get").mockReturnValue(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
+    );
+    await renderSection({ landmarks: [TOLD, TOLD_ICON] });
+    for (const landmark of [TOLD, TOLD_ICON]) {
+      await open(landmark.name);
+      const panel = popover()!;
+      const link = q(panel, "route-landmark-directions") as HTMLAnchorElement;
+      expect(link.tagName).toBe("A");
+      expect(link.textContent).toBe("Get directions");
+      expect(link.getAttribute("href")).toBe(
+        `https://www.google.com/maps/dir/?api=1&destination=${landmark.lat},${landmark.lng}`,
+      );
+      expect(link.getAttribute("target")).toBe("_blank");
+      expect(link.getAttribute("rel")).toBe("noopener");
+      const text = Array.from(panel.querySelectorAll("p")).find((p) => p.textContent === landmark.description)!;
+      expect(text.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+  });
+
+  it("points the Get directions link at Apple Maps on an Apple touch device", async () => {
+    vi.spyOn(window.navigator, "userAgent", "get").mockReturnValue(
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+    );
+    await renderSection({ landmarks: [TOLD] });
+    await open(TOLD.name);
+    const link = q(popover()!, "route-landmark-directions")!;
+    expect(link.getAttribute("href")).toBe(`https://maps.apple.com/?daddr=${TOLD.lat},${TOLD.lng}`);
+    expect(link.getAttribute("target")).toBe("_blank");
+    expect(link.getAttribute("rel")).toBe("noopener");
   });
 
   it("keeps one popover open at a time", async () => {

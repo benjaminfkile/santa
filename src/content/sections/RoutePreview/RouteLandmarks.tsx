@@ -6,8 +6,9 @@
 // the Icon primitive. A landmark with a `description` gets a marker
 // element holding a button, over its badge or, without one, over its dot;
 // the button's accessible name is "About <name>". The button opens the
-// landmark's popover (the name and the description) in the map frame;
-// its button closes an open one. One popover is open at a time; its close
+// landmark's popover (the name, the description, and a "Get directions"
+// link to the landmark's point, see directionsHref, opening in a new tab)
+// in the map frame; its button closes an open one. One popover is open at a time; its close
 // button, Escape, and a tap anywhere outside the popover and the open
 // landmark's button close it, the first two returning focus to that
 // button. Escape here is marked handled, so a fullscreen map stays
@@ -20,8 +21,10 @@ import type { IconRef } from "../../../contracts";
 import type { ContentBundle } from "../../../store/types";
 import { Icon, iconResolves } from "../../primitives/Icon";
 import { copy } from "../../../copy/copy";
+import { directionsHref } from "../../../lib/directions";
 import * as styles from "./RoutePreview.module.css";
 import * as ibtn from "../../../ui/IconButton.module.css";
+import * as btn from "../../../ui/Button.module.css";
 
 export type LandmarkData = {
   name: string;
@@ -199,6 +202,15 @@ export function useRouteLandmarks(
           </button>
         </div>
         <p className={styles.routeLandmarkPopoverText}>{openEntry.description}</p>
+        <a
+          className={`${btn.btn} ${btn.btnSm} ${styles.routeLandmarkDirections}`}
+          href={directionsHref(openEntry.landmark.lat, openEntry.landmark.lng)}
+          target="_blank"
+          rel="noopener"
+          data-testid="route-landmark-directions"
+        >
+          {copy.map.routeMap.directions}
+        </a>
       </div>
     );
 
