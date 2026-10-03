@@ -115,6 +115,18 @@ export const copy = {
   nav: {
     more: "More",
   },
+  alerts: {
+    bell: "Alerts",
+    bellNew: (n: number) => `Alerts, ${n} new`,
+    badge: (n: number) => (n > 9 ? "9+" : String(n)),
+    title: "Your alerts",
+    empty: "No alerts have been sent to you yet",
+    newMarker: "New",
+    kindStatus: "status",
+    kindUpdate: "update",
+    manage: "Manage alerts",
+    close: "Close",
+  },
   auth: {
     signIn: {
       title: "Sign in",

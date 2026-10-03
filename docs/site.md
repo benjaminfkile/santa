@@ -70,6 +70,12 @@ santa/
       getIdToken.ts               re-exports the bearer for API calls (section 11.4)
       errors.ts                   Cognito error names to site copy
       AuthProvider.tsx            auth state for React, sign-out
+    alerts/
+      AlertsProvider.tsx          useAlerts: the signed-in visitor's subscriptions and alerts, the unread count, markSeen (section 7.7)
+      AlertsBell.tsx              the header's alerts bell, its badge and swing, SleighBellGlyph
+      AlertsDialog.tsx            the alerts dialog on the shared dialog recipe
+      alertId.ts                  an alert's id as a number
+      Alerts.module.css           the bell's badge and swing, the dialog's rows
     api/
       client.ts                   fetch wrapper: bearer, error shape, timeouts
       errors.ts                   ApiRequestError, code to copy mapping
@@ -126,7 +132,7 @@ santa/
       flavors.ts                  the light and dark basemap flavors derived from the standard and night tracker themes
       maplibre.css                the part of MapLibre's stylesheet the route map uses, on the site's tokens
     copy/
-      copy.ts                     the few site-coded strings (loading, errors, sign-in hint, not found); everything else is content
+      copy.ts                     the few site-coded strings (loading, errors, sign-in hint, not found, the alerts bell and its dialog under `alerts`); everything else is content
     lib/
       time.ts                     formatCountdown, formatElapsed, formatEventTime, formatClock
       useNow.ts                   a ticking clock for React
@@ -706,6 +712,8 @@ Data row units: speed as mph from `speedMps`, heading as degrees plus cardinal f
 
 **No sideways scroll.** From 320 px up no page scrolls horizontally, without an `overflow-x` rule on `html` or `body`: the header's actions never shrink and the brand is the part that gives up width; the page's `<main>` breaks a word longer than its line (`overflow-wrap: break-word`), and the flex rows of the rich text and links blocks (headings with an icon, icon list items, link buttons, list links) let a long word break inside the row (`min-width: 0`, `overflow-wrap: anywhere`) rather than run past the card. The e2e suite checks `scrollWidth` against the viewport at 320, 375, and 390 px on every ordinary page (22.2).
 
+**Alerts bell.** `AlertsProvider` (`src/alerts/AlertsProvider.tsx`, mounted by `App` inside `AuthProvider` around the shell) exposes `useAlerts()` with `{ alerts, subscribed, unreadCount, markSeen }`. While `useAuth()` is `signedIn` it fetches `GET /me/subscriptions` and `GET /me/alerts` in parallel: once per sign-in, again when the document becomes visible after at least five minutes hidden, and once 60 seconds after the store's `snapshotUrl` changes (a status change or a posted message is what produces alerts, and the outbox sends within a minute; a further change inside the wait restarts it). A live poll or any other store update never fetches. Nothing is fetched while signed out, and signing out clears both lists. A failure or `SignInRequired` never throws: the lists stay as they were, empty until a fetch succeeds. `subscribed` is true when a subscription has `verifiedAt` set and `unsubscribedAt` null. Unread alerts are those with an id greater than the number stored under `localStorage["wmsfo.alerts.seen"]` (read through `storageGet`; absent means every alert is unread), and `markSeen` stores the newest alert id there. The `alerts_signup` section (13.1) keeps its own fetches. `AlertsBell` sits in the header actions between the sign-in control and the `ThemePicker`, at every width, and renders only while signed in and when `subscribed` is true or `alerts` is not empty. It is a 44 px icon button on the `.themeToggle` recipe (`data-testid="alerts-bell"`, `aria-label` "Alerts", or "Alerts, 2 new" while there are unread alerts) drawing `SleighBellGlyph`, a sleigh bell (a round bell with its slot and a small bow at the top) in the house stroke (24 px grid, 1.75 px, round caps and joins, `currentColor`) at 20 px. While `unreadCount` is above zero a red ornament badge hangs at the glyph's top right: a 16 px circle filled `--err` with a small `--gold` cap, the count in white through the `--icon-snow` fill variable (defined in the token file), "9+" past nine. When `unreadCount` rises while the bell is on screen it swings once (the `bellSwing` keyframe, a 700 ms rotation about the glyph's top; no swing under reduced motion, section 17). The bell never opens on its own; pressing it opens `AlertsDialog` on the shared dialog recipe (`<dialog>` with `showModal`, closing on a backdrop press, Escape, and Close): the title "Your alerts", the alerts newest first, each with `sentAt` in the viewer's timezone, the event name, the subject line, the kind label of 13.1, and a "New" marker on each one unread when the dialog opened; "No alerts have been sent to you yet" when there are none; and a footer with "Manage alerts", linking to the first page in the document carrying an `alerts_signup` section that a visitor can reach (`/<slug>` for a page without a role, `/` for the role page served there now; absent when there is none), and Close. Opening calls `markSeen`, so the badge clears at once, while the "New" markers stay until the dialog closes. At 320 px the actions row holds the bell, the theme toggle, and the menu button (the Sign in and Sign out buttons hide at 760 px and below); the brand gives way as above, so no page scrolls sideways. Email is unchanged: subscribers keep receiving status alerts and event messages by email, and the bell lists exactly the alerts `GET /me/alerts` reports as sent.
+
 **Brand.** When `settings.logoMedia` is set the brand link shows the Logo (7.3, `data-testid="brand-logo"`) 32 px tall, 28 px below 640 px, in place of the built-in mark, followed by `settings.siteName` unless `settings.headerShowsSiteName` is `false` (absent or `null` means true). With the name hidden the link carries `aria-label` set to the site name, so its accessible name stays the site name. When `logoMedia` is absent or `null` the link shows the built-in `BrandMark` (the Montana outline with the gold star) and the site name, whatever `headerShowsSiteName` says. `settings.logo` is not drawn in the header.
 
 **Ornaments.** `OrnamentsLayer` (`src/content/theme/OrnamentsLayer.tsx` with `OrnamentsLayer.module.css`, rendered by `App` beside the snow layer) draws five Christmas ornaments hanging behind every page except the live screen, when `settings.theme.ornaments` is true. The layer is `position: fixed; right: 0; bottom: 0; left: 0; pointer-events: none; aria-hidden`, below `main` and above the page background in the stacking order (`z-index: 0` with `main` at 1), so it never takes a click and never moves layout. The whole layer is a backdrop: it is dimmed to `var(--orn-opacity)` (0.55 in light, 0.4 in dark) and its top offset follows `var(--header-height)`, a variable the shell sets on the document root from the header's measured height on mount and through a `ResizeObserver`, so the strings start below the header band rather than at the viewport top. Each ornament is inline SVG: a thin string from the top edge, a small metal cap, and a sphere with one soft highlight. Positions are fixed viewport percentages spread across the width (left 6 %, 22 %, 58 %, 78 %, 93 %); the cards in front of the layer are opaque, so the ornaments show in the hero band and in the gaps between cards. String lengths are 96, 64, 36, 72, 110 px (the blue one hangs short so its sphere clears the hero title) and spheres are 64 to 84 px. Colours come from the token file, the same hues the header lights use: `--orn-red`, `--orn-green`, `--orn-blue`, `--orn-gold`, `--orn-frost`, defined for both schemes (10 % darker in light so they sit on the pale ground); no hex values in the component. Below 640 px the module scales the whole layer by 0.5 and the token file drops `--orn-opacity` to 0.3, so the header and the first card stay clear on phones. Each ornament sways about its string by ±3° on a `transform: rotate` keyframe of 7 to 11 s, staggered per ornament, and the keyframe is removed under reduced motion (section 17). Tests: renders five ornaments when the setting is on and the page is not live, none otherwise; each sphere carries one of the five token classes; the layer carries `opacity: var(--orn-opacity)` and `top: var(--header-height, 0px)`; the module scales the layer to 0.5 below 640 px.
@@ -1102,7 +1110,8 @@ Endpoints the site calls, and nothing else:
 | Call | Auth | Used by |
 |---|---|---|
 | `GET /me` | bearer | Alerts page (email shown as the account) |
-| `GET /me/subscriptions` | bearer | Alerts page |
+| `GET /me/subscriptions` | bearer | Alerts page; the shell's alerts bell (7.7) |
+| `GET /me/alerts` | bearer | Alerts page; the shell's alerts bell (7.7) |
 | `POST /me/subscriptions` | bearer | Alerts page |
 | `POST /me/subscriptions/{id}/resend-verification` | bearer | Alerts page |
 | `DELETE /me/subscriptions/{id}` | bearer | Alerts page |
@@ -1233,6 +1242,7 @@ export function useReducedMotion() { /* useSyncExternalStore on mq change */ }
 | Sponsor carousel | Rotation continues (it is content), crossfade removed |
 | Leaderboard reorder, funds ring fill, countdown digits | Instant |
 | Menu and sheet transitions | Instant |
+| Alerts bell swing | None: the bell stays still when the unread count rises |
 
 CSS also carries a global `@media (prefers-reduced-motion: reduce)` rule zeroing transition and animation durations.
 
