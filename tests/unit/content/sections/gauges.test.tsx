@@ -1,6 +1,7 @@
 // docs/site.md section 7.6. The shared gauge recipe of the flight data
 // dock: the 270 degree arc helper, the gauge frame, the speed dial on its
-// 0 to 120 mph scale, and the altitude dial on its 0 to 10,000 ft scale.
+// 0 to 120 mph scale, the altitude dial on its 0 to 10,000 ft scale, and
+// the heading compass with its short-way needle.
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -10,6 +11,11 @@ import { arcLength, arcPath } from "../../../../src/content/sections/Map/gauges/
 import { GaugeFrame, GAUGE_RADIUS } from "../../../../src/content/sections/Map/gauges/GaugeFrame";
 import { SpeedDial } from "../../../../src/content/sections/Map/gauges/SpeedDial";
 import { AltitudeDial } from "../../../../src/content/sections/Map/gauges/AltitudeDial";
+import {
+  HeadingCompass,
+  NEEDLE_LENGTH,
+  shortestRotation,
+} from "../../../../src/content/sections/Map/gauges/HeadingCompass";
 
 const gaugesDir = resolve(__dirname, "../../../../src/content/sections/Map/gauges");
 
@@ -82,6 +88,12 @@ describe("GaugeFrame", () => {
     const length = arcLength(GAUGE_RADIUS);
     expect(arc.getAttribute("d")).toBe(arcPath(1, GAUGE_RADIUS, 27, 27));
     expect(Number(arc.getAttribute("stroke-dashoffset"))).toBeCloseTo(length * 0.75, 6);
+  });
+
+  it("leaves out the track with track={false}", () => {
+    const utils = render(<GaugeFrame value="1" unit="" label="L" track={false} testId="g" />);
+    expect(utils.queryByTestId("g-track")).toBeNull();
+    expect(utils.getByTestId("g").getAttribute("aria-label")).toBe("L 1");
   });
 
   it("renders extra marks as children", () => {
@@ -206,5 +218,123 @@ describe("AltitudeDial", () => {
     expect(d.value).toBe("N/A");
     expect(d.arc).toBeNull();
     expect(d.utils.getByTestId("flight-dock-altitude-track")).toBeInTheDocument();
+  });
+});
+
+describe("HeadingCompass", () => {
+  function compass(headingDeg: number | null) {
+    const utils = render(<HeadingCompass headingDeg={headingDeg} />);
+    const line = utils.queryByTestId("flight-dock-heading-needle-line");
+    return {
+      utils,
+      value: utils.getByTestId("flight-dock-heading-value").textContent,
+      line,
+      rotation: line ? line.style.transform : null,
+      label: utils.getByTestId("flight-dock-heading").getAttribute("aria-label"),
+    };
+  }
+
+  // The needle tip after rotating the drawn endpoint (straight up) by deg.
+  function tip(deg: number) {
+    const rad = (deg * Math.PI) / 180;
+    return { x: 27 + NEEDLE_LENGTH * Math.sin(rad), y: 27 - NEEDLE_LENGTH * Math.cos(rad) };
+  }
+
+  it("draws the rose, four ticks, and the N, with no track or value arc", () => {
+    const c = compass(0);
+    const svg = c.utils.getByTestId("flight-dock-heading");
+    expect(c.utils.queryByTestId("flight-dock-heading-track")).toBeNull();
+    expect(c.utils.queryByTestId("flight-dock-heading-arc")).toBeNull();
+    const rose = c.utils.getByTestId("flight-dock-heading-rose");
+    expect(rose.getAttribute("r")).toBe(String(GAUGE_RADIUS));
+    const ticks = Array.from(svg.querySelectorAll("line")).filter((l) => !l.hasAttribute("data-testid"));
+    expect(ticks).toHaveLength(4);
+    for (const t of ticks) {
+      const dx = Number(t.getAttribute("x2")) - Number(t.getAttribute("x1"));
+      const dy = Number(t.getAttribute("y2")) - Number(t.getAttribute("y1"));
+      expect(Math.hypot(dx, dy)).toBe(3);
+    }
+    expect(Array.from(svg.querySelectorAll("text")).some((t) => t.textContent === "N")).toBe(true);
+    expect(c.utils.getByTestId("flight-dock-heading-label").textContent).toBe("HEADING");
+    expect(c.utils.getByTestId("flight-dock-heading-unit").textContent).toBe("");
+  });
+
+  it("at 0 points the needle straight up and reads 0° N", () => {
+    const c = compass(0);
+    expect(c.value).toBe("0° N");
+    expect(c.label).toBe("Heading 0° N");
+    expect(c.line!.getAttribute("x1")).toBe("27");
+    expect(c.line!.getAttribute("y1")).toBe("27");
+    expect(c.line!.getAttribute("x2")).toBe("27");
+    expect(c.line!.getAttribute("y2")).toBe(String(27 - NEEDLE_LENGTH));
+    expect(c.rotation).toBe("rotate(0deg)");
+  });
+
+  it("at 90 turns the needle a quarter clockwise, east", () => {
+    const c = compass(90);
+    expect(c.value).toBe("90° E");
+    expect(c.rotation).toBe("rotate(90deg)");
+    const p = tip(90);
+    expect(p.x).toBeCloseTo(42, 6);
+    expect(p.y).toBeCloseTo(27, 6);
+  });
+
+  it("at 312 reads 312° NW with the needle at 312 degrees", () => {
+    const c = compass(312);
+    expect(c.value).toBe("312° NW");
+    expect(c.label).toBe("Heading 312° NW");
+    expect(c.rotation).toBe("rotate(312deg)");
+    const p = tip(312);
+    expect(p.x).toBeLessThan(27);
+    expect(p.y).toBeLessThan(27);
+  });
+
+  it("at 359.6 rounds to 0 and reads N", () => {
+    const c = compass(359.6);
+    expect(c.value).toBe("0° N");
+  });
+
+  it("null draws the rose with no needle and the placeholder", () => {
+    const c = compass(null);
+    expect(c.value).toBe("N/A");
+    expect(c.line).toBeNull();
+    expect(c.utils.queryByTestId("flight-dock-heading-needle")).toBeNull();
+    expect(c.utils.getByTestId("flight-dock-heading-rose")).toBeInTheDocument();
+  });
+
+  it("turns the short way from 350 to 10", () => {
+    const utils = render(<HeadingCompass headingDeg={350} />);
+    const line = () => utils.getByTestId("flight-dock-heading-needle-line");
+    expect(line().style.transform).toBe("rotate(350deg)");
+    utils.rerender(<HeadingCompass headingDeg={10} />);
+    expect(line().style.transform).toBe("rotate(370deg)");
+    utils.rerender(<HeadingCompass headingDeg={350} />);
+    expect(line().style.transform).toBe("rotate(350deg)");
+  });
+
+  it("keeps its rotation across a null and turns the short way after", () => {
+    const utils = render(<HeadingCompass headingDeg={350} />);
+    utils.rerender(<HeadingCompass headingDeg={null} />);
+    expect(utils.queryByTestId("flight-dock-heading-needle-line")).toBeNull();
+    utils.rerender(<HeadingCompass headingDeg={10} />);
+    expect(utils.getByTestId("flight-dock-heading-needle-line").style.transform).toBe("rotate(370deg)");
+  });
+
+  it("shortestRotation moves at most half a turn either way", () => {
+    expect(shortestRotation(350, 10)).toBe(370);
+    expect(shortestRotation(10, 350)).toBe(-10);
+    expect(shortestRotation(370, 20)).toBe(380);
+    expect(shortestRotation(720, 90)).toBe(810);
+    expect(Math.abs(shortestRotation(0, 180))).toBe(180);
+    expect(shortestRotation(-30, 300)).toBe(-60);
+  });
+
+  it("the stylesheet turns the needle over 300 ms, not at all under reduced motion", () => {
+    const css = readFileSync(resolve(gaugesDir, "HeadingCompass.module.css"), "utf8");
+    expect(css).toMatch(/\.needle \{[^}]*transition: transform 300ms/);
+    expect(css).toMatch(/\.needle \{[^}]*stroke: var\(--accent\);[^}]*stroke-linecap: round;/);
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.needle \{ transition: none; \}/);
+    expect(css).toMatch(/\.rose \{[^}]*stroke: var\(--panel-2\);[^}]*stroke-width: 1\.5;/);
+    expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgb\(/);
   });
 });

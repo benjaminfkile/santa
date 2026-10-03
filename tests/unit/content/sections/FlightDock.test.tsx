@@ -1,5 +1,5 @@
 // docs/site.md sections 7.6 and 8.5. The flight data dock: the speed and
-// altitude dials and the two text instruments with converted units, the airborne slot's blank and flag
+// altitude dials, the heading compass, and the airborne text instrument with converted units, the airborne slot's blank and flag
 // states, the foot line, collapse and expand with the handle pill, the
 // first state by width, the dock height lifting the bottom stacks, the
 // tracker menu's hide toggle, and hiding while the menu is open.
@@ -135,25 +135,33 @@ describe("the flight data dock", () => {
     expect(utils.getByTestId("flight-dock-speed").textContent).toContain("mph");
     expect(value(utils, "altitude")).toBe("5,000");
     expect(utils.getByTestId("flight-dock-altitude").textContent).toContain("ft");
-    expect(value(utils, "heading")).toBe("92°");
-    expect(utils.getByTestId("flight-dock-heading").textContent).toContain("E");
+    expect(value(utils, "heading")).toBe("92° E");
     expect(value(utils, "airborne")).toBe(formatElapsed(72.5 * 60 * 1000));
     expect(value(utils, "airborne")).toBe("1h 12m");
     expect(utils.getByTestId("flight-dock-airborne").textContent).toMatch(/Airborne/i);
   });
 
-  it("the speed slot is the dial and heading and airborne are text", async () => {
+  it("the speed slot is the dial and airborne is text", async () => {
     seed(FULL);
     const utils = await renderMap();
     const speed = utils.getByTestId("flight-dock-speed");
     expect(speed.tagName.toLowerCase()).toBe("svg");
     expect(speed.getAttribute("aria-label")).toBe("Speed 100 mph");
     expect(utils.getByTestId("flight-dock-speed-arc")).toBeInTheDocument();
-    for (const slot of ["heading", "airborne"]) {
-      const el = utils.getByTestId(`flight-dock-${slot}`);
-      expect(el.tagName.toLowerCase()).toBe("div");
-      expect(el.querySelector("svg")).toBeNull();
-    }
+    const airborne = utils.getByTestId("flight-dock-airborne");
+    expect(airborne.tagName.toLowerCase()).toBe("div");
+    expect(airborne.querySelector("svg")).toBeNull();
+  });
+
+  it("the heading slot is the compass", async () => {
+    seed(FULL);
+    const utils = await renderMap();
+    const heading = utils.getByTestId("flight-dock-heading");
+    expect(heading.tagName.toLowerCase()).toBe("svg");
+    expect(heading.getAttribute("aria-label")).toBe("Heading 92° E");
+    expect(utils.getByTestId("flight-dock-heading-rose")).toBeInTheDocument();
+    expect(utils.getByTestId("flight-dock-heading-needle-line").style.transform).toBe("rotate(92.4deg)");
+    expect(utils.getByTestId("flight-dock-heading-label").textContent).toBe("HEADING");
   });
 
   it("the altitude slot is the dial", async () => {

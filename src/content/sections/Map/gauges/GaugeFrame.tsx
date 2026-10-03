@@ -1,5 +1,6 @@
 // docs/site.md section 7.6. The frame every dial in the flight data dock
-// draws on: a 270 degree track arc, an optional value arc filled to
+// draws on: a 270 degree track arc (absent with `track={false}`), an
+// optional value arc filled to
 // `fraction`, the value and unit in the middle, the label under the dial,
 // and children for extra marks drawn in the 54 by 54 viewBox. The value
 // arc is the full arc dashed to its fraction, so a new fraction sweeps
@@ -20,6 +21,8 @@ export type GaugeFrameProps = {
   // 0 to 1, clamped; null or absent draws no value arc.
   fraction?: number | null;
   testId: string;
+  // false leaves out the 270 degree track, for a dial that draws its own.
+  track?: boolean;
   children?: ReactNode;
 };
 
@@ -27,7 +30,7 @@ function clamp01(n: number): number {
   return Math.min(1, Math.max(0, n));
 }
 
-export function GaugeFrame({ value, unit, label, fraction = null, testId, children }: GaugeFrameProps) {
+export function GaugeFrame({ value, unit, label, fraction = null, testId, track = true, children }: GaugeFrameProps) {
   const length = arcLength(GAUGE_RADIUS);
   const full = arcPath(1, GAUGE_RADIUS, GAUGE_CENTER, GAUGE_CENTER);
   const hasArc = fraction !== null && Number.isFinite(fraction);
@@ -41,7 +44,7 @@ export function GaugeFrame({ value, unit, label, fraction = null, testId, childr
       aria-label={ariaLabel}
       data-testid={testId}
     >
-      <path className={styles.track} d={full} data-testid={`${testId}-track`} />
+      {track ? <path className={styles.track} d={full} data-testid={`${testId}-track`} /> : null}
       {hasArc ? (
         <path
           className={styles.arc}
