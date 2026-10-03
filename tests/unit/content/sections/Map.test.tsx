@@ -65,7 +65,7 @@ describe("Map section class coverage", () => {
               sponsorCarousel: true,
               cookieControl: true,
               distanceChip: true,
-              liveStrip: true,
+              flightDock: true,
             },
           }}
           items={[]}
@@ -96,7 +96,7 @@ describe("Map section class coverage", () => {
               location: true,
               dataRow: true,
             },
-            overlays: { liveStrip: true },
+            overlays: { flightDock: true },
           }}
           items={[]}
           bundle={bundle}
@@ -147,9 +147,8 @@ describe("Map section class coverage", () => {
       ".bottomLeft",
       ".bottomRight",
       ".messageOverlay",
-      ".liveStrip",
+      ".lifted",
       ".liveIndicator",
-      ".liftoffTimer",
       ".mapControls",
       ".menuButton",
       ".cookieTally",

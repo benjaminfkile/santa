@@ -54,6 +54,10 @@ export const FitGlyph = (p: GlyphProps) => (
 export const SpeedGlyph = (p: GlyphProps) => (
   <Glyph {...p}><path d="M4 16a8 8 0 1 1 16 0" /><path d="M12 16l4-5" /><circle cx="12" cy="16" r="1.5" /></Glyph>
 );
+// A dial: an open arc with ticks and a needle from its hub.
+export const GaugeGlyph = (p: GlyphProps) => (
+  <Glyph {...p}><path d="M3.5 17a8.5 8.5 0 0 1 17 0" /><path d="M6 10.5l1 1M12 8v1.5M18 10.5l-1 1" /><path d="M12 17l3.5-4.5" /><circle cx="12" cy="17" r="1.25" /></Glyph>
+);
 export const CompassGlyph = (p: GlyphProps) => (
   <Glyph {...p}><circle cx="12" cy="12" r="9" /><path d="M15.5 8.5l-2 5-5 2 2-5z" /></Glyph>
 );

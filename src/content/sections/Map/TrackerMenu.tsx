@@ -2,8 +2,9 @@
 // top-right corner. Map styles as the legacy round thumbnails (three by two)
 // with a nickname and an accent underline on the active one, then Terrain, Road, and Snow, then
 // the data row (a glyph and a value per item), then the footer row: the
-// account button (sign in or sign out) alone on the left, and location,
-// flight history, time labels, fit, and close as square buttons on the right.
+// account button (sign in or sign out) alone on the left, and flight data,
+// location, flight history, time labels, fit, and close as square buttons on
+// the right.
 
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
@@ -21,6 +22,7 @@ import {
   CloseGlyph,
   CompassGlyph,
   FitGlyph,
+  GaugeGlyph,
   HistoryGlyph,
   InboxGlyph,
   LocationGlyph,
@@ -62,6 +64,9 @@ export type TrackerMenuProps = {
   onFlightHistoryChange: (v: boolean) => void;
   timeLabels: boolean;
   onTimeLabelsChange: (v: boolean) => void;
+  flightDockAvailable: boolean;
+  flightDock: boolean;
+  onFlightDockChange: (v: boolean) => void;
   onFitHistory: () => void;
   onOpenLocation: () => void;
   distanceMetres: number | null;
@@ -256,6 +261,18 @@ export function TrackerMenu(props: TrackerMenuProps) {
             ) : null}
           </div>
           <div className={styles.footerEnd} data-testid="tracker-menu-toggles">
+            {props.flightDockAvailable ? (
+              <button
+                type="button"
+                className={styles.footerBtn}
+                aria-pressed={props.flightDock}
+                aria-label="Flight data"
+                onClick={() => props.onFlightDockChange(!props.flightDock)}
+                data-testid="tracker-menu-flight-dock"
+              >
+                <GaugeGlyph size={22} />
+              </button>
+            ) : null}
             {props.controls.location ? (
               <button type="button" className={styles.footerBtn} onClick={props.onOpenLocation} aria-label="Your location">
                 <LocationGlyph size={22} />

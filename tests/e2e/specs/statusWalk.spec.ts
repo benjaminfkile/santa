@@ -135,6 +135,26 @@ test("status walk", async ({ page }) => {
       console.warn("hub did not reach connected within 20 s; polling only");
     }
 
+    // The flight data dock (site.md 7.6) starts open above 760 px, so the
+    // desktop page shows the dock; a phone-width page in the same context
+    // starts with the dock collapsed to its handle pill above the sponsor tile.
+    await expect(page.locator('[data-testid="flight-dock"]')).toBeVisible();
+    await expect(page.locator('[data-testid="flight-dock-handle"]')).toHaveCount(0);
+    const phone = await page.context().newPage();
+    try {
+      await phone.addLocatorHandler(phone.getByRole("button", { name: /i understand/i }), async (button) => {
+        await button.click();
+      });
+      await phone.setViewportSize({ width: 390, height: 844 });
+      await goto(phone, "/");
+      await expect(phone.locator('[data-testid="map"]')).toBeVisible({ timeout: POLL_PLUS * 3 });
+      await expect(phone.locator('[data-testid="flight-dock-handle"]')).toBeVisible();
+      await expect(phone.locator('[data-testid="flight-dock-handle"]')).toHaveAttribute("aria-expanded", "false");
+      await expect(phone.locator('[data-testid="flight-dock"]')).toHaveCount(0);
+    } finally {
+      await phone.close();
+    }
+
     // 5. Replay 60 points from the embedded flight history; seq must
     //    increase; speed shows. Turn the flight history toggle on and
     //    assert one polyline is drawn (the flight history overlay) and

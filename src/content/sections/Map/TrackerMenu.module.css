@@ -3,8 +3,8 @@
    phone), the six map styles as round thumbnails with a nickname and an
    accent underline on the active one, a row of Terrain, Road, and Snow
    toggles, the data row, and the footer row of square buttons: the account
-   button alone on the left, and location, history, time labels, fit, and
-   close on the right. */
+   button alone on the left, and flight data, location, history, time
+   labels, fit, and close on the right. */
 
 .trackerMenu {
   position: absolute;
@@ -152,11 +152,16 @@
   display: flex;
   flex-wrap: nowrap;
   gap: 4px;
+  min-width: 0;
 }
+/* 44 px squares; when all seven buttons show they shrink evenly in width
+   to fit the 301 px card, keeping their 44 px height. */
 .footerBtn {
   appearance: none;
   position: relative;
   width: 44px;
+  flex: 0 1 44px;
+  min-width: 0;
   height: 44px;
   border: 0;
   border-radius: 4px;

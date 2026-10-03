@@ -123,6 +123,9 @@ describe("TrackerMenu data row", () => {
       onFlightHistoryChange: () => {},
       timeLabels: false,
       onTimeLabelsChange: () => {},
+      flightDockAvailable: false,
+      flightDock: false,
+      onFlightDockChange: () => {},
       onFitHistory: () => {},
       onOpenLocation: () => {},
     };
@@ -171,6 +174,9 @@ describe("TrackerMenu data row", () => {
           onFlightHistoryChange={() => {}}
           timeLabels={false}
           onTimeLabelsChange={() => {}}
+          flightDockAvailable={false}
+          flightDock={false}
+          onFlightDockChange={() => {}}
           onFitHistory={() => {}}
           onOpenLocation={() => {}}
           distanceMetres={null}
@@ -214,6 +220,9 @@ function footerProps(onClose: () => void) {
     onFlightHistoryChange: () => {},
     timeLabels: false,
     onTimeLabelsChange: () => {},
+    flightDockAvailable: true,
+    flightDock: true,
+    onFlightDockChange: () => {},
     onFitHistory: () => {},
     onOpenLocation: () => {},
     distanceMetres: null,
@@ -239,6 +248,7 @@ function renderMenu(state: AuthState, onClose: () => void = () => {}) {
 }
 
 const rightTestIds = [
+  "tracker-menu-flight-dock",
   "tracker-menu-flight-history",
   "tracker-menu-time-labels",
   "tracker-menu-fit-history",
@@ -247,7 +257,7 @@ const rightTestIds = [
 function expectRightGroupUnchanged(getByTestId: (id: string) => HTMLElement): void {
   const right = getByTestId("tracker-menu-toggles");
   const labels = Array.from(right.querySelectorAll("button")).map((b) => b.getAttribute("aria-label"));
-  expect(labels).toEqual(["Your location", "Flight history", "Time labels", "Fit history", "Close menu"]);
+  expect(labels).toEqual(["Flight data", "Your location", "Flight history", "Time labels", "Fit history", "Close menu"]);
   for (const id of rightTestIds) expect(right.contains(getByTestId(id))).toBe(true);
 }
 
@@ -318,7 +328,7 @@ describe("TrackerMenu account button", () => {
     // Every button in both groups is the 44 px footerBtn square.
     const footerSrc = src.slice(src.indexOf("styles.footerStart"));
     const classes = [...footerSrc.matchAll(/<button[^>]*?className=\{styles\.(\w+)\}/g)].map((m) => m[1]);
-    expect(classes.length).toBe(7);
+    expect(classes.length).toBe(8);
     for (const c of classes) expect(["footerBtn", "close"]).toContain(c);
 
     const css = readFileSync(trackerModulePath, "utf8");
@@ -330,11 +340,15 @@ describe("TrackerMenu account button", () => {
     expect(css).toMatch(/\.close\s*\{\s*composes:\s*footerBtn/);
     expect(css).toMatch(/\.trackerMenu\s*\{[^}]*width:\s*min\(301px,\s*100%\)/);
     expect(css).toMatch(/\.panel\s*\{[^}]*padding:\s*6px/);
-    // Six 44 px buttons with the 4 px gaps between them, inside the 301 px
-    // card less its 6 px padding on each side.
+    // Seven buttons with the 4 px gaps between them, inside the 301 px card
+    // less its 6 px padding on each side: they shrink evenly from 44 px and
+    // stay at least 36 px wide.
     const buttons = left.querySelectorAll("button").length + right.querySelectorAll("button").length;
-    expect(buttons).toBe(6);
-    expect(buttons * 44 + (buttons - 1) * 4).toBeLessThanOrEqual(301 - 2 * 6);
+    expect(buttons).toBe(7);
+    expect(css).toMatch(/\.footerBtn\s*\{[^}]*flex:\s*0 1 44px;[^}]*min-width:\s*0/);
+    expect(css).toMatch(/\.footerStart,\s*\.footerEnd\s*\{[^}]*min-width:\s*0/);
+    expect((301 - 2 * 6 - (buttons - 1) * 4) / buttons).toBeGreaterThanOrEqual(36);
+    expect(6 * 44 + 5 * 4).toBeLessThanOrEqual(301 - 2 * 6);
   });
 });
 
