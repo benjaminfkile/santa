@@ -38,7 +38,7 @@ afterEach(() => {
 
 describe("Countdown", () => {
   it("renders nothing outside status 2", () => {
-    setState({ eventStatusId: 3 }, { statusId: 3, scheduledAt: "2026-12-22T01:00:00Z" });
+    setState({ eventStatusId: 3 }, { statusId: 3, scheduledAt: "2026-12-22T01:00:00Z", messages: [] });
     const { container } = render(
       <Countdown data={{ heading: "Countdown" }} items={[]} bundle={bundle} />,
     );
@@ -46,7 +46,7 @@ describe("Countdown", () => {
   });
 
   it("renders nothing when now >= scheduledAt", () => {
-    setState({ eventStatusId: 2 }, { statusId: 2, scheduledAt: "2026-12-14T00:00:00Z" });
+    setState({ eventStatusId: 2 }, { statusId: 2, scheduledAt: "2026-12-14T00:00:00Z", messages: [] });
     const { container } = render(
       <Countdown data={{ heading: "Countdown" }} items={[]} bundle={bundle} />,
     );
@@ -54,7 +54,7 @@ describe("Countdown", () => {
   });
 
   it("renders blank while !timeReady", () => {
-    setState({ eventStatusId: 2 }, { statusId: 3, scheduledAt: "2026-12-22T01:00:00Z" });
+    setState({ eventStatusId: 2 }, { statusId: 3, scheduledAt: "2026-12-22T01:00:00Z", messages: [] });
     const { getByTestId } = render(
       <Countdown data={{ heading: "Countdown" }} items={[]} bundle={bundle} />,
     );
@@ -69,7 +69,7 @@ describe("Countdown", () => {
   });
 
   it("renders X d X h X m X s when status is 2 and timeReady", () => {
-    setState({ eventStatusId: 2 }, { statusId: 2, scheduledAt: "2026-12-22T01:00:00Z" });
+    setState({ eventStatusId: 2 }, { statusId: 2, scheduledAt: "2026-12-22T01:00:00Z", messages: [] });
     const { getByTestId } = render(
       <Countdown data={{ heading: "Countdown to liftoff" }} items={[]} bundle={bundle} />,
     );
@@ -89,7 +89,7 @@ describe("Countdown", () => {
   });
 
   it("exposes a data-testid=countdown on the root when rendered", () => {
-    setState({ eventStatusId: 2 }, { statusId: 2, scheduledAt: "2026-12-22T01:00:00Z" });
+    setState({ eventStatusId: 2 }, { statusId: 2, scheduledAt: "2026-12-22T01:00:00Z", messages: [] });
     const { getByTestId } = render(
       <Countdown data={{ heading: "Countdown" }} items={[]} bundle={bundle} />,
     );

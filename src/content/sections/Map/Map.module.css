@@ -1,6 +1,6 @@
 /* docs/site.md sections 7.6 and 8. The live screen, laid out as the legacy
    tracker was: the map owns the viewport; small pills top-left (live state,
-   the fix status, the message ticker); the tracker menu button, the bare
+   the fix status, the messages); the tracker menu button, the bare
    cookie tally, and the leave-a-cookie glyph top-right; the flight data
    handle pill and the sponsor tile bottom-left; zoom or recenter
    bottom-right; the flight data dock (FlightDock.module.css) across the
@@ -115,12 +115,49 @@
 .infoOverlaysStatusSignalLost { color: var(--err); }
 .infoOverlaysStatusSignalLost svg { color: var(--err); }
 
-/* The message ticker under the pills. */
-.messageOverlay {
-  composes: glass;
-  border-radius: 8px;
-  max-width: min(360px, 100%);
-  font-size: 0.8125rem;
+/* The messages pill under the fix status: the pill recipe as a button,
+   the envelope with its unread dot, and the count. */
+.messagesPill {
+  composes: pill;
+  appearance: none;
+  cursor: pointer;
+  transition: var(--hover-transition);
+}
+.messagesPill:hover { border-color: var(--accent); }
+.messagesEnvelope {
+  position: relative;
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+/* A red ornament at the envelope's top right: an 8 px disc in --err,
+   ringed in the icon snow fill so it reads on every map style. */
+.messagesDot {
+  position: absolute;
+  top: -3px;
+  right: -4px;
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--err);
+  border: 1px solid var(--icon-snow);
+  pointer-events: none;
+}
+.messagesCount { color: var(--text-bright); }
+.messagesShake { animation: envelopeShake 600ms ease-in-out 1; }
+@keyframes envelopeShake {
+  0% { transform: rotate(0deg); }
+  15% { transform: rotate(-14deg); }
+  30% { transform: rotate(12deg); }
+  45% { transform: rotate(-9deg); }
+  60% { transform: rotate(6deg); }
+  75% { transform: rotate(-3deg); }
+  100% { transform: rotate(0deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .messagesShake { animation: none; }
 }
 
 /* Tracker menu button, 44 px, top-right. */
@@ -238,5 +275,4 @@
 
 @media (max-width: 760px) {
   .topLeft { max-width: calc(100% - 64px); }
-  .messageOverlay { max-width: min(300px, 100%); }
 }

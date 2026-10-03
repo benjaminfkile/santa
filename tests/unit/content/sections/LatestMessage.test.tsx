@@ -43,7 +43,7 @@ afterEach(() => {
 
 describe("LatestMessage inside a SectionFrame", () => {
   it("with no message: the frame's content div is empty so the CSS rule collapses the section", () => {
-    setSnapshot({ statusId: 4, latestMessage: null });
+    setSnapshot({ statusId: 4, latestMessage: null, messages: [] });
     const { container, getByTestId } = render(
       <SectionFrame presentation={presentation} bundle={bundle} kind="latest_message">
         <LatestMessage data={{}} items={[]} bundle={bundle} />

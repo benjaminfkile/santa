@@ -79,6 +79,10 @@ export const ClockGlyph = (p: GlyphProps) => (
 export const InboxGlyph = (p: GlyphProps) => (
   <Glyph {...p}><path d="M12 3v11M8 10l4 4 4-4M4 15v4h16v-4" /></Glyph>
 );
+// An envelope with its flap folded down: the event's messages.
+export const EnvelopeGlyph = (p: GlyphProps) => (
+  <Glyph {...p}><rect x="3" y="5.5" width="18" height="13" rx="2" /><path d="M3.5 7l8.5 6.5L20.5 7" /></Glyph>
+);
 export const ChevronGlyph = (p: GlyphProps) => <Glyph {...p}><path d="M6 9l6 6 6-6" /></Glyph>;
 export const CookieGlyph = (p: GlyphProps) => (
   <Glyph {...p}><path d="M12 3a9 9 0 1 0 9 9 4 4 0 0 1-4.5-4A4 4 0 0 1 12 3z" /><circle cx="9" cy="10" r="0.6" /><circle cx="14" cy="15" r="0.6" /><circle cx="8.5" cy="15" r="0.6" /></Glyph>

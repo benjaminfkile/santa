@@ -66,6 +66,15 @@ export interface Snapshot {
         kinds?: string[];
       } | null;
     } | null;
+    /**
+     * @maxItems 50
+     */
+    messages: {
+      id?: number;
+      body?: string;
+      eventTime?: string | null;
+      createdAt?: string;
+    }[];
     latestMessage?: {
       id?: number;
       body?: string;

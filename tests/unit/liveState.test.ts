@@ -49,12 +49,12 @@ describe("selectLiveState", () => {
 
 describe("selectTimeReady", () => {
   it("is false when the snapshot event.statusId differs from live.eventStatusId", () => {
-    const s: SiteStore = { ...stateWithSeq(1, 0), snapshot: { event: { statusId: 2 } } };
+    const s: SiteStore = { ...stateWithSeq(1, 0), snapshot: { event: { statusId: 2, messages: [] } } };
     expect(selectTimeReady(s)).toBe(false);
   });
 
   it("is true when the snapshot event.statusId matches live.eventStatusId", () => {
-    const s: SiteStore = { ...stateWithSeq(1, 0), snapshot: { event: { statusId: 3 } } };
+    const s: SiteStore = { ...stateWithSeq(1, 0), snapshot: { event: { statusId: 3, messages: [] } } };
     expect(selectTimeReady(s)).toBe(true);
   });
 
