@@ -1,5 +1,5 @@
-// docs/site.md sections 7.6 and 8.5. The flight data dock: the speed dial
-// and the three text instruments with converted units, the airborne slot's blank and flag
+// docs/site.md sections 7.6 and 8.5. The flight data dock: the speed and
+// altitude dials and the two text instruments with converted units, the airborne slot's blank and flag
 // states, the foot line, collapse and expand with the handle pill, the
 // first state by width, the dock height lifting the bottom stacks, the
 // tracker menu's hide toggle, and hiding while the menu is open.
@@ -142,18 +142,28 @@ describe("the flight data dock", () => {
     expect(utils.getByTestId("flight-dock-airborne").textContent).toMatch(/Airborne/i);
   });
 
-  it("the speed slot is the dial and the other slots are text", async () => {
+  it("the speed slot is the dial and heading and airborne are text", async () => {
     seed(FULL);
     const utils = await renderMap();
     const speed = utils.getByTestId("flight-dock-speed");
     expect(speed.tagName.toLowerCase()).toBe("svg");
     expect(speed.getAttribute("aria-label")).toBe("Speed 100 mph");
     expect(utils.getByTestId("flight-dock-speed-arc")).toBeInTheDocument();
-    for (const slot of ["altitude", "heading", "airborne"]) {
+    for (const slot of ["heading", "airborne"]) {
       const el = utils.getByTestId(`flight-dock-${slot}`);
       expect(el.tagName.toLowerCase()).toBe("div");
       expect(el.querySelector("svg")).toBeNull();
     }
+  });
+
+  it("the altitude slot is the dial", async () => {
+    seed(FULL);
+    const utils = await renderMap();
+    const altitude = utils.getByTestId("flight-dock-altitude");
+    expect(altitude.tagName.toLowerCase()).toBe("svg");
+    expect(altitude.getAttribute("aria-label")).toBe("Altitude 5,000 ft");
+    expect(utils.getByTestId("flight-dock-altitude-arc")).toBeInTheDocument();
+    expect(utils.getByTestId("flight-dock-altitude-label").textContent).toBe("ALTITUDE");
   });
 
   it("shows the placeholder for a null field", async () => {

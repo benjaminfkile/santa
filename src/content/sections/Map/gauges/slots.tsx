@@ -1,24 +1,16 @@
 // docs/site.md section 7.6. The four instruments the flight data dock
 // renders, in order speed, altitude, heading, airborne. Each entry meets
-// its contract in types.ts. Speed is a dial; altitude, heading, and
+// its contract in types.ts. Speed and altitude are dials; heading and
 // airborne are text instruments.
 
 import { copy } from "../../../../copy/copy";
 import { TextInstrument } from "./TextInstrument";
 import { SpeedInstrument } from "./SpeedDial";
-import { airborneText, feetText, headingText } from "./format";
-import type {
-  AirborneInstrumentProps,
-  AltitudeInstrumentProps,
-  HeadingInstrumentProps,
-  InstrumentSlots,
-} from "./types";
+import { AltitudeInstrument } from "./AltitudeDial";
+import { airborneText, headingText } from "./format";
+import type { AirborneInstrumentProps, HeadingInstrumentProps, InstrumentSlots } from "./types";
 
 const labels = copy.map.flightDock;
-
-function AltitudeInstrument({ feet }: AltitudeInstrumentProps) {
-  return <TextInstrument value={feetText(feet)} unit="ft" label={labels.altitude} testId="flight-dock-altitude" />;
-}
 
 function HeadingInstrument({ degrees, cardinal }: HeadingInstrumentProps) {
   return (
