@@ -1,6 +1,6 @@
 // docs/site.md section 7.6. The shared gauge recipe of the flight data
-// dock: the 270 degree arc helper, the gauge frame, and the speed dial on
-// its 0 to 120 mph scale.
+// dock: the 270 degree arc helper, the gauge frame, the speed dial on its
+// 0 to 120 mph scale, and the altitude dial on its 0 to 10,000 ft scale.
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -9,6 +9,7 @@ import { cleanup, render } from "@testing-library/react";
 import { arcLength, arcPath } from "../../../../src/content/sections/Map/gauges/arc";
 import { GaugeFrame, GAUGE_RADIUS } from "../../../../src/content/sections/Map/gauges/GaugeFrame";
 import { SpeedDial } from "../../../../src/content/sections/Map/gauges/SpeedDial";
+import { AltitudeDial } from "../../../../src/content/sections/Map/gauges/AltitudeDial";
 
 const gaugesDir = resolve(__dirname, "../../../../src/content/sections/Map/gauges");
 
@@ -149,5 +150,61 @@ describe("SpeedDial", () => {
     expect(d.value).toBe("N/A");
     expect(d.arc).toBeNull();
     expect(d.utils.getByTestId("flight-dock-speed-track")).toBeInTheDocument();
+  });
+});
+
+describe("AltitudeDial", () => {
+  const length = arcLength(GAUGE_RADIUS);
+  function dial(altitudeFt: number | null) {
+    const utils = render(<AltitudeDial altitudeFt={altitudeFt} />);
+    const arc = utils.queryByTestId("flight-dock-altitude-arc");
+    return {
+      utils,
+      value: utils.getByTestId("flight-dock-altitude-value").textContent,
+      arc,
+      offset: arc ? Number(arc.getAttribute("stroke-dashoffset")) : null,
+      label: utils.getByTestId("flight-dock-altitude").getAttribute("aria-label"),
+    };
+  }
+
+  it("at 0 shows 0 and an empty arc", () => {
+    const d = dial(0);
+    expect(d.value).toBe("0");
+    expect(d.offset).toBeCloseTo(length, 6);
+    expect(d.label).toBe("Altitude 0 ft");
+    expect(d.utils.getByTestId("flight-dock-altitude-unit").textContent).toBe("ft");
+    expect(d.utils.getByTestId("flight-dock-altitude-label").textContent).toBe("ALTITUDE");
+  });
+
+  it("at 4120 shows the thousands separator and fills 4120 of 10000", () => {
+    const d = dial(4120);
+    expect(d.value).toBe("4,120");
+    expect(d.offset).toBeCloseTo(length * (1 - 4120 / 10000), 6);
+    expect(d.label).toBe("Altitude 4,120 ft");
+  });
+
+  it("at 10000 fills the arc", () => {
+    const d = dial(10000);
+    expect(d.value).toBe("10,000");
+    expect(d.offset).toBeCloseTo(0, 6);
+  });
+
+  it("at 12500 keeps the arc full and the number exact", () => {
+    const d = dial(12500);
+    expect(d.value).toBe("12,500");
+    expect(d.offset).toBeCloseTo(0, 6);
+  });
+
+  it("at -30 shows the number over an empty arc", () => {
+    const d = dial(-30);
+    expect(d.value).toBe("-30");
+    expect(d.offset).toBeCloseTo(length, 6);
+  });
+
+  it("null shows the placeholder and no value arc", () => {
+    const d = dial(null);
+    expect(d.value).toBe("N/A");
+    expect(d.arc).toBeNull();
+    expect(d.utils.getByTestId("flight-dock-altitude-track")).toBeInTheDocument();
   });
 });
