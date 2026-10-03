@@ -1,5 +1,5 @@
 // docs/site.md section 7.6. The flight data readouts as text, shared by
-// the text instruments and the dock's collapsed handle pill.
+// the dials and the dock's collapsed handle pill.
 
 import { formatElapsed } from "../../../../lib/time";
 import { copy } from "../../../../copy/copy";
