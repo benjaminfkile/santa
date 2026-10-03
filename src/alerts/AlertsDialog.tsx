@@ -4,11 +4,9 @@
 // to the visitor newest first (the time in the viewer's timezone, the
 // event name, the subject line, and the kind label of section 13.1), with
 // a New marker on each alert whose id is above `seenId`, the seen mark
-// held when the dialog opened. The footer carries Manage alerts, linking
-// to the page with the alerts form when there is one, and Close.
+// held when the dialog opened. The footer carries Close.
 
 import { useEffect, useMemo, useRef } from "react";
-import { Link } from "react-router-dom";
 import type { AlertItem } from "../api/subscriptions";
 import { copy } from "../copy/copy";
 import { formatEventTime } from "../lib/time";
@@ -21,11 +19,10 @@ import * as styles from "./Alerts.module.css";
 export type AlertsDialogProps = {
   alerts: AlertItem[];
   seenId: number | null;
-  manageHref: string | null;
   onClose: () => void;
 };
 
-export function AlertsDialog({ alerts, seenId, manageHref, onClose }: AlertsDialogProps) {
+export function AlertsDialog({ alerts, seenId, onClose }: AlertsDialogProps) {
   const ref = useRef<HTMLDialogElement | null>(null);
 
   useEffect(() => {
@@ -100,11 +97,6 @@ export function AlertsDialog({ alerts, seenId, manageHref, onClose }: AlertsDial
           </ul>
         )}
         <div className={dlg.actions}>
-          {manageHref !== null ? (
-            <Link to={manageHref} className={btn.btnQuiet} onClick={close} data-testid="alerts-dialog-manage">
-              {copy.alerts.manage}
-            </Link>
-          ) : null}
           <button type="button" className={btn.btnFill} onClick={close} data-testid="alerts-dialog-close">
             {copy.alerts.close}
           </button>

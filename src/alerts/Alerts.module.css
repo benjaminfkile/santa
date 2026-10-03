@@ -1,5 +1,5 @@
 /* docs/site.md section 7.7, Alerts bell. The bell button's additions to
-   the header icon button recipe (`.themeToggle`), its ornament badge and
+   the header icon button recipe (`.themeToggle`), its count badge and
    swing, and the alerts dialog's rows. Colours come from the tokens. */
 
 .bell { position: relative; }
@@ -25,8 +25,8 @@
 @media (prefers-reduced-motion: reduce) {
   .swing { animation: none; }
 }
-/* A red ornament hanging at the glyph's top right: a 16 px circle in
-   --err with a small gold cap, the count in the icon snow fill. */
+/* A plain round badge overlapping the glyph's top right: 16 px at the
+   least, filled --err, the count in white through the icon snow fill. */
 .badge {
   position: absolute;
   top: -8px;
@@ -46,18 +46,6 @@
   font-variant-numeric: tabular-nums;
   pointer-events: none;
 }
-.badge::before {
-  content: "";
-  position: absolute;
-  top: -3px;
-  left: 50%;
-  width: 6px;
-  height: 3px;
-  margin-left: -3px;
-  border-radius: 1px 1px 0 0;
-  background: var(--gold);
-}
-
 .rows {
   list-style: none;
   margin: 0;

@@ -1,4 +1,4 @@
-// docs/site.md section 4 and 7.7. Nav entries computed from the content
+// docs/site.md section 4. Nav entries computed from the content
 // document. Each entry carries the icon the menu panel draws in its row:
 // a page's own `icon`, the home entry's the icon of the role page served
 // at `/`, a nav extra link's through its `link.icon`, and the sign in and
@@ -60,17 +60,4 @@ export function buildNav(content: ContentDocument, opts: NavOptions): NavEntry[]
   );
 
   return entries;
-}
-
-// The page the alerts dialog's Manage alerts link opens: the first page in
-// the document carrying an `alerts_signup` section that a visitor can
-// reach now (a page without a role at `/<slug>`, or the role page served
-// at `/`). Null when there is none.
-export function alertsPageHref(content: ContentDocument, homeRole: PageRole | null): string | null {
-  for (const p of content.pages) {
-    if (!p.sections.some((s) => s.kind === "alerts_signup")) continue;
-    if (p.role === "none") return `/${p.slug}`;
-    if (homeRole !== null && p.role === homeRole) return "/";
-  }
-  return null;
 }
