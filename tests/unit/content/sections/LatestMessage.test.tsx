@@ -2,6 +2,8 @@
 // message returns null; the frame's `.content` div is left empty so the
 // frame's CSS rule collapses the section (no card, no space taken). When
 // a message is present the same frame renders the card body around it.
+// Rendering a message marks it read under `wmsfo.messages.seen.<eventId>`
+// in both styles; a null message marks nothing.
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { act, cleanup, render } from "@testing-library/react";
@@ -33,17 +35,19 @@ function setSnapshot(event: Snapshot["event"]) {
 }
 
 beforeEach(() => {
+  window.localStorage.clear();
   act(() => store.setState({ ...initialStore }));
 });
 
 afterEach(() => {
   cleanup();
+  window.localStorage.clear();
   act(() => store.setState({ ...initialStore }));
 });
 
 describe("LatestMessage inside a SectionFrame", () => {
   it("with no message: the frame's content div is empty so the CSS rule collapses the section", () => {
-    setSnapshot({ statusId: 4, latestMessage: null, messages: [] });
+    setSnapshot({ statusId: 4, latestMessage: null });
     const { container, getByTestId } = render(
       <SectionFrame presentation={presentation} bundle={bundle} kind="latest_message">
         <LatestMessage data={{}} items={[]} bundle={bundle} />
@@ -79,5 +83,35 @@ describe("LatestMessage inside a SectionFrame", () => {
     expect(message.textContent).toContain("Weather report");
     const content = getByTestId("section-frame-content");
     expect(content.children.length).toBeGreaterThan(0);
+  });
+});
+
+describe("LatestMessage marks the message read", () => {
+  const message = { id: 12, body: "Over the valley", eventTime: null, createdAt: "2026-12-22T01:31:00Z" };
+
+  it("stores the id when the card renders", () => {
+    setSnapshot({ id: 7, statusId: 3, latestMessage: message });
+    render(<LatestMessage data={{ style: "card" }} items={[]} bundle={bundle} />);
+    expect(window.localStorage.getItem("wmsfo.messages.seen.7")).toBe("12");
+  });
+
+  it("stores the id when the ticker renders collapsed", () => {
+    setSnapshot({ id: 7, statusId: 3, latestMessage: message });
+    const { getByRole } = render(<LatestMessage data={{ style: "ticker" }} items={[]} bundle={bundle} />);
+    expect(getByRole("button").getAttribute("aria-expanded")).toBe("false");
+    expect(window.localStorage.getItem("wmsfo.messages.seen.7")).toBe("12");
+  });
+
+  it("stores the new id when the message changes", () => {
+    setSnapshot({ id: 7, statusId: 3, latestMessage: message });
+    render(<LatestMessage data={{}} items={[]} bundle={bundle} />);
+    setSnapshot({ id: 7, statusId: 3, latestMessage: { ...message, id: 13 } });
+    expect(window.localStorage.getItem("wmsfo.messages.seen.7")).toBe("13");
+  });
+
+  it("stores nothing for a null message", () => {
+    setSnapshot({ id: 7, statusId: 3, latestMessage: null });
+    render(<LatestMessage data={{}} items={[]} bundle={bundle} />);
+    expect(window.localStorage.getItem("wmsfo.messages.seen.7")).toBeNull();
   });
 });

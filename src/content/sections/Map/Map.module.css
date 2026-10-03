@@ -115,8 +115,8 @@
 .infoOverlaysStatusSignalLost { color: var(--err); }
 .infoOverlaysStatusSignalLost svg { color: var(--err); }
 
-/* The messages pill under the fix status: the pill recipe as a button,
-   the envelope with its unread dot, and the count. */
+/* The messages pill under the fix status: the pill recipe as a button
+   around the envelope with its unread dot. */
 .messagesPill {
   composes: pill;
   appearance: none;
@@ -145,7 +145,6 @@
   border: 1px solid var(--icon-snow);
   pointer-events: none;
 }
-.messagesCount { color: var(--text-bright); }
 .messagesShake { animation: envelopeShake 600ms ease-in-out 1; }
 @keyframes envelopeShake {
   0% { transform: rotate(0deg); }

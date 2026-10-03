@@ -43,7 +43,6 @@ describe("EventTimes", () => {
       { eventStatusId: 4 },
       {
         statusId: 4,
-        messages: [],
         scheduledAt: "2026-12-22T01:00:00Z",
         wentLiveAt: "2026-12-22T01:02:11Z",
         endedAt: "2026-12-22T03:14:00Z",
@@ -71,7 +70,6 @@ describe("EventTimes", () => {
       { eventStatusId: 4 },
       {
         statusId: 4,
-        messages: [],
         scheduledAt: "2026-12-22T01:00:00Z",
         wentLiveAt: null,
         endedAt: null,
@@ -94,7 +92,7 @@ describe("EventTimes", () => {
   it("shows airborneFor only while status is 3", () => {
     setState(
       { eventStatusId: 3 },
-      { statusId: 3, wentLiveAt: "2026-12-22T01:02:11Z", messages: [] },
+      { statusId: 3, wentLiveAt: "2026-12-22T01:02:11Z" },
     );
     const { container } = render(
       <EventTimes
@@ -110,7 +108,7 @@ describe("EventTimes", () => {
   it("omits airborneFor outside status 3", () => {
     setState(
       { eventStatusId: 4 },
-      { statusId: 4, wentLiveAt: "2026-12-22T01:02:11Z", messages: [] },
+      { statusId: 4, wentLiveAt: "2026-12-22T01:02:11Z" },
     );
     const { container } = render(
       <EventTimes
@@ -125,7 +123,7 @@ describe("EventTimes", () => {
   it("blanks while !timeReady", () => {
     setState(
       { eventStatusId: 4 },
-      { statusId: 3, wentLiveAt: "2026-12-22T01:02:11Z", messages: [] },
+      { statusId: 3, wentLiveAt: "2026-12-22T01:02:11Z" },
     );
     const { container } = render(
       <EventTimes

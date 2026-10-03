@@ -51,9 +51,8 @@ export const copy = {
     retry: "Retry",
     trackerMenu: "Tracker menu",
     messages: {
-      noun: (n: number) => (n === 1 ? "message" : "messages"),
-      pill: (n: number, fresh: number) =>
-        `${n} ${n === 1 ? "message" : "messages"}${fresh > 0 ? `, ${fresh} new` : ""}`,
+      label: "Latest message",
+      labelUnread: "Latest message, new",
       title: "Flight updates",
       newMarker: "New",
       close: "Close",

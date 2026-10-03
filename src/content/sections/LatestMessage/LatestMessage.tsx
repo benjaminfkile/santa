@@ -1,13 +1,16 @@
 // docs/site.md section 7.4. LatestMessage: `card`: body plus `eventTime`
 // (or `createdAt` when null); `ticker`: one collapsible line;
-// `aria-live="polite"`; nothing when null.
+// `aria-live="polite"`; nothing when null. Rendering a message with a
+// numeric id marks it read through lib/messageSeen, in both styles and
+// with the ticker collapsed, so the tracker's envelope pill clears its dot.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { SectionComponent } from "../../registry";
 import { Inline } from "../../inline/Inline";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
 import { formatEventTime } from "../../../lib/time";
+import { markMessageSeen } from "../../../lib/messageSeen";
 import * as styles from "./LatestMessage.module.css";
 
 type LatestMessageData = {
@@ -22,6 +25,12 @@ export const LatestMessage: SectionComponent = ({ data, bundle }) => {
   const snapshotStale = useStore((s) => s.diag.snapshotFetchFailing);
   const message = event?.latestMessage ?? null;
   const [expanded, setExpanded] = useState(false);
+  const eventId = typeof event?.id === "number" ? event.id : null;
+  const messageId = typeof message?.id === "number" ? message.id : null;
+
+  useEffect(() => {
+    if (eventId !== null && messageId !== null) markMessageSeen(eventId, messageId);
+  }, [eventId, messageId]);
 
   if (message === null || message === undefined) return null;
 
