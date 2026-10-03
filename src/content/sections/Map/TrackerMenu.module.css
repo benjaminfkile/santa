@@ -2,8 +2,9 @@
    tracker's: a card in the top-right corner (301 px, the full width on a
    phone), the six map styles as round thumbnails with a nickname and an
    accent underline on the active one, a row of Terrain, Road, and Snow
-   toggles, the data row, and a row of square buttons (location, history,
-   time labels, fit, close). */
+   toggles, the data row, and the footer row of square buttons: the account
+   button alone on the left, and location, history, time labels, fit, and
+   close on the right. */
 
 .trackerMenu {
   position: absolute;
@@ -142,7 +143,14 @@
 }
 .footer {
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  gap: 4px;
+}
+.footerStart,
+.footerEnd {
+  display: flex;
+  flex-wrap: nowrap;
   gap: 4px;
 }
 .footerBtn {

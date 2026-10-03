@@ -1,20 +1,24 @@
 // docs/site.md section 7.6 and S17f. Tracker menu data row units:
 // distance in feet under a mile / miles above; the viewer's timezone for the
 // liftoff, recorded, and received timestamps; every value in --font-mono
-// with tabular numerals through the co-located CSS module.
+// with tabular numerals through the co-located CSS module. The footer row:
+// the account button alone on the left, the other buttons on the right.
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { act, cleanup, render } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { formatEventTime } from "../../../../src/lib/time";
 
 import { TrackerMenu } from "../../../../src/content/sections/Map/TrackerMenu";
 import { store } from "../../../../src/store/useStore";
 import { initialStore } from "../../../../src/store/types";
 import type { MapTheme } from "../../../../src/map/themes";
+import { AuthProvider, type AuthState } from "../../../../src/auth/AuthProvider";
+import { session } from "../../../../src/auth/session";
+import { copy } from "../../../../src/copy/copy";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const trackerModulePath = resolve(here, "../../../../src/content/sections/Map/TrackerMenu.module.css");
@@ -184,3 +188,153 @@ describe("TrackerMenu data row", () => {
     expect(css).toMatch(/\.dataRow\s+dd\s*\{[^}]*font-variant-numeric:\s*tabular-nums/);
   });
 });
+
+function footerProps(onClose: () => void) {
+  return {
+    open: true,
+    onClose,
+    controls: {
+      themePicker: false,
+      terrain: false,
+      snow: false,
+      flightHistory: true,
+      timeLabels: true,
+      location: true,
+      dataRow: false,
+    },
+    themes,
+    themeKey: "standard",
+    onThemeChange: () => {},
+    mapType: "terrain" as const,
+    onMapTypeChange: () => {},
+    snow: false,
+    onSnowChange: () => {},
+    flightHistoryAvailable: true,
+    flightHistory: true,
+    onFlightHistoryChange: () => {},
+    timeLabels: false,
+    onTimeLabelsChange: () => {},
+    onFitHistory: () => {},
+    onOpenLocation: () => {},
+    distanceMetres: null,
+  };
+}
+
+function LocationProbe() {
+  const loc = useLocation();
+  return <output data-testid="probe-location">{loc.pathname + loc.search}</output>;
+}
+
+function renderMenu(state: AuthState, onClose: () => void = () => {}) {
+  return render(
+    <MemoryRouter initialEntries={["/live?theme=night"]}>
+      <AuthProvider initialState={state}>
+        <TrackerMenu {...footerProps(onClose)} />
+      </AuthProvider>
+      <Routes>
+        <Route path="*" element={<LocationProbe />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+const rightTestIds = [
+  "tracker-menu-flight-history",
+  "tracker-menu-time-labels",
+  "tracker-menu-fit-history",
+];
+
+function expectRightGroupUnchanged(getByTestId: (id: string) => HTMLElement): void {
+  const right = getByTestId("tracker-menu-toggles");
+  const labels = Array.from(right.querySelectorAll("button")).map((b) => b.getAttribute("aria-label"));
+  expect(labels).toEqual(["Your location", "Flight history", "Time labels", "Fit history", "Close menu"]);
+  for (const id of rightTestIds) expect(right.contains(getByTestId(id))).toBe(true);
+}
+
+describe("TrackerMenu account button", () => {
+  it("signed out renders the sign-in button alone on the left and the right group unchanged", () => {
+    const { getByTestId, queryByTestId } = renderMenu({ status: "signedOut" });
+    const left = getByTestId("tracker-menu-account");
+    const button = getByTestId("tracker-menu-sign-in");
+    expect(left.querySelectorAll("button")).toHaveLength(1);
+    expect(left.contains(button)).toBe(true);
+    expect(button.getAttribute("aria-label")).toBe(copy.signIn.button);
+    expect(queryByTestId("tracker-menu-sign-out")).toBeNull();
+    // The left group comes first in the footer row, the right group second.
+    const footer = left.parentElement as HTMLElement;
+    expect(Array.from(footer.children)).toEqual([left, getByTestId("tracker-menu-toggles")]);
+    expectRightGroupUnchanged(getByTestId);
+  });
+
+  it("a sign-in click closes the menu and navigates to /auth/sign-in with the encoded returnTo", () => {
+    const onClose = vi.fn();
+    const { getByTestId } = renderMenu({ status: "signedOut" }, onClose);
+    fireEvent.click(getByTestId("tracker-menu-sign-in"));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(getByTestId("probe-location").textContent).toBe(
+      `/auth/sign-in?returnTo=${encodeURIComponent("/live?theme=night")}`,
+    );
+  });
+
+  it("signed in renders sign-out, and a click calls signOut and leaves the menu open", async () => {
+    const onClose = vi.fn();
+    // With no stored session, AuthProvider's signOut goes straight to
+    // session.clear().
+    const clear = vi.spyOn(session, "clear");
+    const { getByTestId, queryByTestId } = renderMenu(
+      { status: "signedIn", email: "a@b.c", expired: false },
+      onClose,
+    );
+    const button = getByTestId("tracker-menu-sign-out");
+    expect(button.getAttribute("aria-label")).toBe(copy.signIn.signOut);
+    expect(queryByTestId("tracker-menu-sign-in")).toBeNull();
+    fireEvent.click(button);
+    await waitFor(() => expect(clear).toHaveBeenCalledTimes(1));
+    clear.mockRestore();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(getByTestId("tracker-menu")).toBeTruthy();
+    expectRightGroupUnchanged(getByTestId);
+  });
+
+  it("unknown auth renders neither button and an empty left group", () => {
+    const { getByTestId, queryByTestId } = renderMenu({ status: "unknown" });
+    expect(queryByTestId("tracker-menu-sign-in")).toBeNull();
+    expect(queryByTestId("tracker-menu-sign-out")).toBeNull();
+    expect(getByTestId("tracker-menu-account").children).toHaveLength(0);
+    expectRightGroupUnchanged(getByTestId);
+  });
+
+  it("the footer row splits into two non-wrapping groups of 44 px buttons that fit 301 px", () => {
+    const { getByTestId } = renderMenu({ status: "signedOut" });
+    const left = getByTestId("tracker-menu-account");
+    const right = getByTestId("tracker-menu-toggles");
+    expect(left.parentElement).toBe(right.parentElement);
+    expect(left.parentElement?.children).toHaveLength(2);
+
+    const src = readFileSync(resolve(here, "../../../../src/content/sections/Map/TrackerMenu.tsx"), "utf8");
+    expect(src).toMatch(/className=\{styles\.footer\}/);
+    expect(src).toMatch(/className=\{styles\.footerStart\} data-testid="tracker-menu-account"/);
+    expect(src).toMatch(/className=\{styles\.footerEnd\} data-testid="tracker-menu-toggles"/);
+    // Every button in both groups is the 44 px footerBtn square.
+    const footerSrc = src.slice(src.indexOf("styles.footerStart"));
+    const classes = [...footerSrc.matchAll(/<button[^>]*?className=\{styles\.(\w+)\}/g)].map((m) => m[1]);
+    expect(classes.length).toBe(7);
+    for (const c of classes) expect(["footerBtn", "close"]).toContain(c);
+
+    const css = readFileSync(trackerModulePath, "utf8");
+    expect(css).toMatch(/\.footer\s*\{[^}]*justify-content:\s*space-between/);
+    expect(css).toMatch(/\.footer\s*\{[^}]*flex-wrap:\s*nowrap/);
+    expect(css).toMatch(/\.footer\s*\{[^}]*gap:\s*4px/);
+    expect(css).toMatch(/\.footerStart,\s*\.footerEnd\s*\{[^}]*flex-wrap:\s*nowrap[^}]*gap:\s*4px/);
+    expect(css).toMatch(/\.footerBtn\s*\{[^}]*width:\s*44px/);
+    expect(css).toMatch(/\.close\s*\{\s*composes:\s*footerBtn/);
+    expect(css).toMatch(/\.trackerMenu\s*\{[^}]*width:\s*min\(301px,\s*100%\)/);
+    expect(css).toMatch(/\.panel\s*\{[^}]*padding:\s*6px/);
+    // Six 44 px buttons with the 4 px gaps between them, inside the 301 px
+    // card less its 6 px padding on each side.
+    const buttons = left.querySelectorAll("button").length + right.querySelectorAll("button").length;
+    expect(buttons).toBe(6);
+    expect(buttons * 44 + (buttons - 1) * 4).toBeLessThanOrEqual(301 - 2 * 6);
+  });
+});
+

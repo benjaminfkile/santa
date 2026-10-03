@@ -1,10 +1,13 @@
 // docs/site.md section 7.6. Tracker menu: the legacy tracker's card in the
 // top-right corner. Map styles as the legacy round thumbnails (three by two)
 // with a nickname and an accent underline on the active one, then Terrain, Road, and Snow, then
-// the data row (a glyph and a value per item), then location, flight
-// history, time labels, fit, and close as square buttons.
+// the data row (a glyph and a value per item), then the footer row: the
+// account button (sign in or sign out) alone on the left, and location,
+// flight history, time labels, fit, and close as square buttons on the right.
 
 import { useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
+import { useAuth } from "../../../auth/AuthProvider";
 import { useStore } from "../../../store/useStore";
 import { mpsToMph, metresToFeet, headingToCardinal } from "../../../lib/units";
 import { formatEventTime } from "../../../lib/time";
@@ -23,6 +26,8 @@ import {
   LocationGlyph,
   PersonPinGlyph,
   RoadGlyph,
+  SignInGlyph,
+  SignOutGlyph,
   SnowGlyph,
   SpeedGlyph,
   TakeoffGlyph,
@@ -76,6 +81,8 @@ export function TrackerMenu(props: TrackerMenuProps) {
   const wentLiveAt = useStore((s) => s.snapshot?.event?.wentLiveAt ?? null);
   const recordedAt = useStore((s) => s.live?.recordedAt ?? null);
   const receivedAt = useStore((s) => s.live?.receivedAt ?? null);
+  const { state: authState, signIn, signOut } = useAuth();
+  const location = useLocation();
 
   useEffect(() => {
     if (!props.open) return;
@@ -221,49 +228,78 @@ export function TrackerMenu(props: TrackerMenuProps) {
         ) : null}
 
         <div className={styles.footer}>
-          {props.controls.location ? (
-            <button type="button" className={styles.footerBtn} onClick={props.onOpenLocation} aria-label="Your location">
-              <LocationGlyph size={22} />
+          <div className={styles.footerStart} data-testid="tracker-menu-account">
+            {authState.status === "signedOut" ? (
+              <button
+                type="button"
+                className={styles.footerBtn}
+                aria-label={copy.signIn.button}
+                onClick={() => {
+                  props.onClose();
+                  void signIn(location.pathname + location.search);
+                }}
+                data-testid="tracker-menu-sign-in"
+              >
+                <SignInGlyph size={22} />
+              </button>
+            ) : null}
+            {authState.status === "signedIn" ? (
+              <button
+                type="button"
+                className={styles.footerBtn}
+                aria-label={copy.signIn.signOut}
+                onClick={() => void signOut()}
+                data-testid="tracker-menu-sign-out"
+              >
+                <SignOutGlyph size={22} />
+              </button>
+            ) : null}
+          </div>
+          <div className={styles.footerEnd} data-testid="tracker-menu-toggles">
+            {props.controls.location ? (
+              <button type="button" className={styles.footerBtn} onClick={props.onOpenLocation} aria-label="Your location">
+                <LocationGlyph size={22} />
+              </button>
+            ) : null}
+            {showFlightHistory ? (
+              <button
+                type="button"
+                className={styles.footerBtn}
+                aria-pressed={props.flightHistory}
+                aria-label="Flight history"
+                onClick={() => props.onFlightHistoryChange(!props.flightHistory)}
+                data-testid="tracker-menu-flight-history"
+              >
+                <HistoryGlyph size={22} />
+              </button>
+            ) : null}
+            {showFlightHistory && props.flightHistory ? (
+              <button
+                type="button"
+                className={styles.footerBtn}
+                aria-pressed={props.timeLabels}
+                aria-label="Time labels"
+                onClick={() => props.onTimeLabelsChange(!props.timeLabels)}
+                data-testid="tracker-menu-time-labels"
+              >
+                <TimesGlyph size={22} />
+              </button>
+            ) : null}
+            {showFlightHistory && props.flightHistory ? (
+              <button
+                type="button"
+                className={styles.footerBtn}
+                aria-label="Fit history"
+                onClick={props.onFitHistory}
+                data-testid="tracker-menu-fit-history"
+              >
+                <FitGlyph size={22} />
+              </button>
+            ) : null}
+            <button type="button" className={styles.close} onClick={props.onClose} aria-label="Close menu">
+              <CloseGlyph size={22} />
             </button>
-          ) : null}
-          {showFlightHistory ? (
-            <button
-              type="button"
-              className={styles.footerBtn}
-              aria-pressed={props.flightHistory}
-              aria-label="Flight history"
-              onClick={() => props.onFlightHistoryChange(!props.flightHistory)}
-              data-testid="tracker-menu-flight-history"
-            >
-              <HistoryGlyph size={22} />
-            </button>
-          ) : null}
-          {showFlightHistory && props.flightHistory ? (
-            <button
-              type="button"
-              className={styles.footerBtn}
-              aria-pressed={props.timeLabels}
-              aria-label="Time labels"
-              onClick={() => props.onTimeLabelsChange(!props.timeLabels)}
-              data-testid="tracker-menu-time-labels"
-            >
-              <TimesGlyph size={22} />
-            </button>
-          ) : null}
-          {showFlightHistory && props.flightHistory ? (
-            <button
-              type="button"
-              className={styles.footerBtn}
-              aria-label="Fit history"
-              onClick={props.onFitHistory}
-              data-testid="tracker-menu-fit-history"
-            >
-              <FitGlyph size={22} />
-            </button>
-          ) : null}
-          <button type="button" className={styles.close} onClick={props.onClose} aria-label="Close menu">
-            <CloseGlyph size={22} />
-          </button>
+          </div>
         </div>
       </div>
     </div>
