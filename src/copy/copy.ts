@@ -131,7 +131,6 @@ export const copy = {
     newMarker: "New",
     kindStatus: "status",
     kindUpdate: "update",
-    manage: "Manage alerts",
     close: "Close",
   },
   auth: {

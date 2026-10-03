@@ -1,7 +1,7 @@
 // docs/site.md section 7.7, Alerts bell. The header's alerts button,
 // shown only while signed in and when the visitor holds an active
-// subscription or has been sent an alert. A sleigh bell glyph with a red
-// ornament badge counting the unread alerts ("9+" past nine); the bell
+// subscription or has been sent an alert. A notification bell glyph with
+// a plain round red badge counting the unread alerts ("9+" past nine); the bell
 // swings once when the count rises while it is on screen (no swing under
 // reduced motion). It opens the alerts dialog only when pressed; opening
 // marks every alert seen, so the badge clears, while the dialog keeps its
@@ -9,9 +9,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
-import { useStore } from "../store/useStore";
-import { selectBundle, selectRole } from "../content/selectPage";
-import { alertsPageHref } from "../content/nav";
 import { useReducedMotion } from "../lib/motion";
 import { copy } from "../copy/copy";
 import { useAlerts } from "./AlertsProvider";
@@ -26,11 +23,6 @@ export function AlertsBell({ className }: { className?: string }) {
   const { state: auth } = useAuth();
   const { alerts, subscribed, unreadCount, seenId, markSeen } = useAlerts();
   const reducedMotion = useReducedMotion();
-  const homeRole = useStore(selectRole);
-  const manageHref = useStore((s) => {
-    const content = selectBundle(s)?.content ?? null;
-    return content === null ? null : alertsPageHref(content, homeRole);
-  });
   // The seen mark held when the dialog opened; null while it is closed.
   const [openedWith, setOpenedWith] = useState<{ seenId: number | null } | null>(null);
   const [swinging, setSwinging] = useState(false);
@@ -75,7 +67,7 @@ export function AlertsBell({ className }: { className?: string }) {
           data-testid="alerts-bell-body"
           onAnimationEnd={() => setSwinging(false)}
         >
-          <SleighBellGlyph />
+          <BellGlyph />
           {unreadCount > 0 ? (
             <span className={styles.badge} aria-hidden data-testid="alerts-badge">
               {copy.alerts.badge(unreadCount)}
@@ -87,7 +79,6 @@ export function AlertsBell({ className }: { className?: string }) {
         <AlertsDialog
           alerts={alerts}
           seenId={openedWith.seenId}
-          manageHref={manageHref}
           onClose={() => setOpenedWith(null)}
         />
       ) : null}
@@ -95,10 +86,10 @@ export function AlertsBell({ className }: { className?: string }) {
   );
 }
 
-// A sleigh bell: the round bell with its slot, a small bow at the top.
+// A notification bell: the dome with its lip, a small clapper below.
 // The house stroke (24 px grid, 1.75 px, round caps and joins) in
 // currentColor, drawn at 20 px.
-export function SleighBellGlyph({ size = 20 }: { size?: number }) {
+export function BellGlyph({ size = 20 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -111,12 +102,11 @@ export function SleighBellGlyph({ size = 20 }: { size?: number }) {
       strokeLinejoin="round"
       aria-hidden
       focusable={false}
+      data-testid="alerts-bell-glyph"
     >
-      <circle cx="12" cy="14.5" r="7" />
-      <path d="M8 16.5h8" />
-      <circle cx="12" cy="12" r="1" />
-      <path d="M12 7.5C10.2 4.6 7.2 4.8 7.8 6.6C8.3 7.8 10.4 7.8 12 7.5Z" />
-      <path d="M12 7.5C13.8 4.6 16.8 4.8 16.2 6.6C15.7 7.8 13.6 7.8 12 7.5Z" />
+      <path d="M12 3.5v1.25" />
+      <path d="M6.25 16.5V11a5.75 5.75 0 0 1 11.5 0v5.5l1.75 1.75h-15z" />
+      <path d="M10 20.5a2 2 0 0 0 4 0" />
     </svg>
   );
 }

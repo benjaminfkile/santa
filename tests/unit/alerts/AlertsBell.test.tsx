@@ -1,6 +1,7 @@
 // docs/site.md section 7.7, Alerts bell. The header bell's visibility, the
 // badge against `wmsfo.alerts.seen`, the dialog (newest first, the New
-// markers, the empty text, the Manage alerts link), the fetch cadence, and
+// markers, the empty text, the footer with Close alone), the glyph, the
+// fetch cadence, and
 // the swing under reduced motion. The e2e suite has no spec that drives a
 // verified subscription (signUp.spec stops at the emailed code), so the
 // bell is covered here and the e2e suite carries no bell assertion.
@@ -80,7 +81,7 @@ function section(id: number, kind: string) {
   };
 }
 
-function makeContent(withAlertsPage: boolean): ContentDocument {
+function makeContent(): ContentDocument {
   return {
     schemaVersion: 1,
     settings: {
@@ -108,7 +109,7 @@ function makeContent(withAlertsPage: boolean): ContentDocument {
         icon: null,
         navPosition: 2,
         role: "none",
-        sections: [section(30, withAlertsPage ? "alerts_signup" : "rich_text")],
+        sections: [section(30, "alerts_signup")],
       },
     ],
   } as unknown as ContentDocument;
@@ -188,7 +189,7 @@ beforeEach(() => {
   window.localStorage.clear();
   vi.mocked(subsApi.listMySubscriptions).mockReset();
   vi.mocked(subsApi.listAlerts).mockReset();
-  seed(makeContent(true));
+  seed(makeContent());
 });
 
 afterEach(() => {
@@ -239,6 +240,17 @@ describe("AlertsBell visibility", () => {
 });
 
 describe("AlertsBell badge", () => {
+  it("draws the notification bell glyph", async () => {
+    mockLists([ACTIVE], ALERTS);
+    const { findByTestId } = renderShell(SIGNED_IN);
+    const bell = await findByTestId("alerts-bell");
+    const glyph = bell.querySelector('[data-testid="alerts-bell-glyph"]');
+    expect(glyph?.tagName.toLowerCase()).toBe("svg");
+    expect(glyph?.getAttribute("stroke")).toBe("currentColor");
+    expect(glyph?.getAttribute("stroke-width")).toBe("1.75");
+    expect(glyph?.getAttribute("width")).toBe("20");
+  });
+
   it("counts every alert when the storage key is absent", async () => {
     mockLists([ACTIVE], ALERTS);
     const { findByTestId } = renderShell(SIGNED_IN);
@@ -332,20 +344,13 @@ describe("AlertsDialog", () => {
     expect(getByTestId("alerts-dialog-empty").textContent).toBe("No alerts have been sent to you yet");
   });
 
-  it("links Manage alerts to the first page carrying alerts_signup", async () => {
-    mockLists([ACTIVE], ALERTS);
-    const { findByTestId, getByTestId } = renderShell(SIGNED_IN);
-    fireEvent.click(await findByTestId("alerts-bell"));
-    expect(getByTestId("alerts-dialog-manage").getAttribute("href")).toBe("/alerts");
-  });
-
-  it("has no Manage alerts link when no page carries alerts_signup", async () => {
-    seed(makeContent(false));
+  it("has Close in the footer and no Manage alerts link, even with an alerts_signup page", async () => {
     mockLists([ACTIVE], ALERTS);
     const { findByTestId, getByTestId, queryByTestId } = renderShell(SIGNED_IN);
     fireEvent.click(await findByTestId("alerts-bell"));
-    expect(getByTestId("alerts-dialog-close")).not.toBeNull();
+    expect(getByTestId("alerts-dialog-close").textContent).toBe("Close");
     expect(queryByTestId("alerts-dialog-manage")).toBeNull();
+    expect(getByTestId("alerts-dialog").querySelector("a")).toBeNull();
   });
 });
 
@@ -359,7 +364,7 @@ describe("AlertsProvider cadence", () => {
     act(() => {
       store.setState({ diag: { ...store.getState().diag, consecutivePollFailures: 0 } } as never);
     });
-    seed(makeContent(true));
+    seed(makeContent());
     await act(async () => {});
     expect(subsApi.listAlerts).toHaveBeenCalledTimes(1);
     expect(subsApi.listMySubscriptions).toHaveBeenCalledTimes(1);
@@ -371,7 +376,7 @@ describe("AlertsProvider cadence", () => {
     renderShell(SIGNED_IN);
     await act(async () => {});
     expect(subsApi.listAlerts).toHaveBeenCalledTimes(1);
-    seed(makeContent(true), "https://cdn/snap-2.json");
+    seed(makeContent(), "https://cdn/snap-2.json");
     await act(async () => {
       vi.advanceTimersByTime(ALERTS_AFTER_SNAPSHOT_MS - 1000);
     });
@@ -393,7 +398,7 @@ describe("AlertsBell swing", () => {
     const body = view.getByTestId("alerts-bell-body");
     expect(body.className).not.toContain("swing");
     mockLists([ACTIVE], ALERTS);
-    seed(makeContent(true), "https://cdn/snap-2.json");
+    seed(makeContent(), "https://cdn/snap-2.json");
     await act(async () => {
       vi.advanceTimersByTime(ALERTS_AFTER_SNAPSHOT_MS);
     });
