@@ -2,7 +2,8 @@
 // dialog recipe: a native <dialog> opened with showModal that closes on a
 // backdrop press, Escape, and the Close button. It lists the alerts sent
 // to the visitor newest first (the time in the viewer's timezone, the
-// event name, the subject line, and the kind label of section 13.1), with
+// event name, the subject line, the message under it when the alert
+// carries one, and the kind label of section 13.1), with
 // a New marker on each alert whose id is above `seenId`, the seen mark
 // held when the dialog opened. The footer carries Close.
 
@@ -91,6 +92,9 @@ export function AlertsDialog({ alerts, seenId, onClose }: AlertsDialogProps) {
                   </div>
                   <div className={styles.event}>{row.eventName ?? ""}</div>
                   <div className={styles.subject}>{row.subject ?? ""}</div>
+                  {row.message != null ? (
+                    <div className={styles.message} data-testid="alerts-dialog-message">{row.message}</div>
+                  ) : null}
                 </li>
               );
             })}

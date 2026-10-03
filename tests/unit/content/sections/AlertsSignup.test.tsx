@@ -266,6 +266,31 @@ describe("AlertsSignup", () => {
     expect(queryByTestId("alert-address")).toBeNull();
   });
 
+  it("shows each alert's message under its subject, and no body element when the message is null", async () => {
+    vi.mocked(subsApi.getMe).mockResolvedValueOnce({ person: { email: "p@e.com" }, isAdmin: false } as never);
+    vi.mocked(subsApi.listMySubscriptions).mockResolvedValueOnce({
+      items: [{ id: 5, channel: "email", address: "p@e.com", verifiedAt: "2024-12-24T00:00:00Z", unsubscribedAt: null, createdAt: "" }],
+    } as never);
+    vi.mocked(subsApi.listAlerts).mockResolvedValueOnce({
+      items: [
+        { id: 1, subscriptionId: 5, address: "p@e.com", kind: "event_status", eventId: 10, eventName: "Walk", statusId: 4, messageId: 41, subject: "Postponed", message: "Fog over the bay.\nWe will walk tomorrow.", sentAt: "2024-12-24T18:00:00Z" },
+        { id: 2, subscriptionId: 5, address: "p@e.com", kind: "event_message", eventId: 10, eventName: "Walk", statusId: null, messageId: 42, subject: "Latest update", message: "Cocoa at the north gate.", sentAt: "2024-12-24T20:00:00Z" },
+        { id: 3, subscriptionId: 5, address: "p@e.com", kind: "event_status", eventId: 10, eventName: "Walk", statusId: 3, messageId: null, subject: "We are live", message: null, sentAt: "2024-12-24T22:00:00Z" },
+      ],
+    } as never);
+    const { findByTestId } = renderWith({ status: "signedIn", email: "p@e", expired: false });
+    await findByTestId("alerts-sent");
+    const status = await findByTestId("alert-1");
+    const body = status.querySelector('[data-testid="alert-message"]')!;
+    expect(body.textContent).toBe("Fog over the bay.\nWe will walk tomorrow.");
+    expect(body.previousElementSibling?.getAttribute("data-testid")).toBe("alert-subject");
+    const update = await findByTestId("alert-2");
+    expect(update.querySelector('[data-testid="alert-message"]')?.textContent).toBe("Cocoa at the north gate.");
+    const bare = await findByTestId("alert-3");
+    expect(bare.querySelector('[data-testid="alert-message"]')).toBeNull();
+    expect(bare.querySelector('[data-testid="alert-subject"]')?.textContent).toBe("We are live");
+  });
+
   it("shows the address column when the person has more than one subscription", async () => {
     vi.mocked(subsApi.getMe).mockResolvedValueOnce({ person: { email: "p@e.com" }, isAdmin: false } as never);
     vi.mocked(subsApi.listMySubscriptions).mockResolvedValueOnce({

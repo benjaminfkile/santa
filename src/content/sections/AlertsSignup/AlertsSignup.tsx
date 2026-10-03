@@ -3,7 +3,8 @@
 // shows an account line, a form (address prefilled with the account email;
 // hidden behind an "Add another address" link when any subscription is
 // already active), one row per subscription with resend/unsubscribe/
-// re-subscribe actions, and the alerts-sent-to-you list. Signed-out:
+// re-subscribe actions, and the alerts-sent-to-you list (each row shows
+// the alert's message under its subject when it carries one). Signed-out:
 // signedOutCopy plus a sign-in link.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -522,6 +523,11 @@ function AlertRow({
       <div className={styles.alertsSignupSentSubject} data-testid="alert-subject">
         {row.subject ?? ""}
       </div>
+      {row.message != null ? (
+        <div className={styles.alertsSignupSentMessage} data-testid="alert-message">
+          {row.message}
+        </div>
+      ) : null}
       {showAddress && row.address ? (
         <div className={styles.alertsSignupSentAddress} data-testid="alert-address">
           {row.address}

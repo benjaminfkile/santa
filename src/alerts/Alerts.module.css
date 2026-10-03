@@ -98,3 +98,9 @@
   font-size: 0.875rem;
   overflow-wrap: anywhere;
 }
+.message {
+  color: var(--text-dim);
+  font-size: 0.8125rem;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
