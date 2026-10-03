@@ -1,0 +1,40 @@
+/* docs/site.md section 7.6. The heading compass in the flight data dock:
+   the rose circle and its four ticks in --panel-2, the "N" in the micro
+   style, and the accent needle that turns over 300 ms (not at all under
+   reduced motion) about the dial's centre. */
+
+.rose {
+  fill: none;
+  stroke: var(--panel-2);
+  stroke-width: 1.5;
+}
+
+.ticks {
+  stroke: var(--panel-2);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.north {
+  font-family: var(--font-mono);
+  font-size: 5.5px;
+  text-transform: uppercase;
+  fill: var(--text-dim);
+}
+
+/* The needle rotates about the centre of the 54 by 54 viewBox. */
+.needle {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  transform-box: view-box;
+  transform-origin: 27px 27px;
+  transition: transform 300ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .needle { transition: none; }
+}
+
+.hub {
+  fill: var(--accent);
+}

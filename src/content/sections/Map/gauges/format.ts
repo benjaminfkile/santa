@@ -3,6 +3,7 @@
 
 import { formatElapsed } from "../../../../lib/time";
 import { copy } from "../../../../copy/copy";
+import { headingToCardinal } from "../../../../lib/units";
 
 function finite(n: number | null): n is number {
   return n !== null && Number.isFinite(n);
@@ -18,9 +19,12 @@ export function feetText(feet: number | null): string {
   return finite(feet) ? Math.round(feet).toLocaleString("en-US") : copy.live.unavailablePlaceholder;
 }
 
-// Rounded degrees with the degree sign.
+// Rounded degrees in 0 to 359 with the degree sign, then the cardinal of
+// the rounded heading: "312° NW", and 359.6 reads "0° N".
 export function headingText(degrees: number | null): string {
-  return finite(degrees) ? `${Math.round(degrees)}°` : copy.live.unavailablePlaceholder;
+  if (!finite(degrees)) return copy.live.unavailablePlaceholder;
+  const whole = ((Math.round(degrees) % 360) + 360) % 360;
+  return `${whole}° ${headingToCardinal(whole)}`;
 }
 
 // "1h 12m" via formatElapsed; empty while the time is not ready.
