@@ -1,5 +1,6 @@
 // docs/site.md section 4. App root: router, favicon, the tab's preview
-// session, shell, and the seasonal snow and lights overlays.
+// session, the alerts provider, shell, and the seasonal snow and lights
+// overlays.
 
 import { useEffect } from "react";
 import { BrowserRouter } from "react-router-dom";
@@ -10,6 +11,7 @@ import { PreviewSession } from "./PreviewSession";
 import { useStore } from "../store/useStore";
 import { selectBundle } from "../content/selectPage";
 import { AuthProvider } from "../auth/AuthProvider";
+import { AlertsProvider } from "../alerts/AlertsProvider";
 import { SnowLayer } from "../content/theme/seasonalLayers";
 import { OrnamentsLayer } from "../content/theme/OrnamentsLayer";
 import { applyFavicon } from "../content/theme/favicon";
@@ -28,9 +30,11 @@ export function App() {
         <PreviewSession />
         <OrnamentsLayer bundle={bundle} />
         <SnowLayer bundle={bundle} />
-        <Shell>
-          <AppRoutes />
-        </Shell>
+        <AlertsProvider>
+          <Shell>
+            <AppRoutes />
+          </Shell>
+        </AlertsProvider>
       </AuthProvider>
     </BrowserRouter>
   );

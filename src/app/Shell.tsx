@@ -1,7 +1,7 @@
 // docs/site.md section 7.7. Wraps every route: skip link, header with
-// brand (the site logo or the built-in mark), sign-in, theme toggle and
-// menu, the menu panel, banners, footer. The header is sticky at the top of
-// the viewport. The menu panel sits in the top right corner over the menu
+// brand (the site logo or the built-in mark), sign-in, the alerts bell,
+// theme toggle and menu, the menu panel, banners, footer. The header is
+// sticky at the top of the viewport. The menu panel sits in the top right corner over the menu
 // button, which hides while the panel is open; the panel slides in from the
 // right on open and out to the right on close (instant under reduced
 // motion), and a press outside it, the choice of any row, or Escape closes
@@ -44,6 +44,7 @@ import {
 } from "../pages/previewSession";
 import { formatClock } from "../lib/time";
 import { PriorityNav } from "./PriorityNav";
+import { AlertsBell } from "../alerts/AlertsBell";
 import * as styles from "./Shell.module.css";
 
 export type ShellProps = { children: ReactNode };
@@ -339,6 +340,7 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
             {copy.signIn.button}
           </button>
         )}
+        <AlertsBell className={styles.themeToggle} />
         <ThemePicker />
         <button
           ref={buttonRef}

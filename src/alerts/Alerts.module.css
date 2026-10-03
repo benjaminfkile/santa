@@ -1,0 +1,112 @@
+/* docs/site.md section 7.7, Alerts bell. The bell button's additions to
+   the header icon button recipe (`.themeToggle`), its ornament badge and
+   swing, and the alerts dialog's rows. Colours come from the tokens. */
+
+.bell { position: relative; }
+/* The glyph and its badge swing together about the bell's top. */
+.bellBody {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  transform-origin: 50% 0;
+}
+.swing { animation: bellSwing 700ms ease-in-out 1; }
+@keyframes bellSwing {
+  0% { transform: rotate(0deg); }
+  20% { transform: rotate(16deg); }
+  40% { transform: rotate(-12deg); }
+  60% { transform: rotate(8deg); }
+  80% { transform: rotate(-4deg); }
+  100% { transform: rotate(0deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .swing { animation: none; }
+}
+/* A red ornament hanging at the glyph's top right: a 16 px circle in
+   --err with a small gold cap, the count in the icon snow fill. */
+.badge {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  box-sizing: border-box;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 2px;
+  border-radius: 999px;
+  background: var(--err);
+  color: var(--icon-snow);
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.badge::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 6px;
+  height: 3px;
+  margin-left: -3px;
+  border-radius: 1px 1px 0 0;
+  background: var(--gold);
+}
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+}
+.row:first-child { border-top: 0; }
+.rowHead {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+.when {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.kind,
+.fresh {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+}
+.kindStatus { color: var(--accent); border-color: var(--accent); }
+.kindUpdate { color: var(--text); border-color: var(--line); }
+.fresh { color: var(--err); border-color: var(--err); }
+.event {
+  font-weight: 500;
+  color: var(--text-bright);
+  font-size: 0.9375rem;
+  overflow-wrap: anywhere;
+}
+.subject {
+  color: var(--text);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}

@@ -28,6 +28,7 @@
   --orn-gold: #f0c05a;
   --orn-frost: #9cc7ff;
   --orn-opacity: 0.4;
+  --icon-snow: #ffffff;
 }
 
 :root[data-theme="light"] {
@@ -57,6 +58,7 @@
   --orn-gold: #d8ad51;
   --orn-frost: #8cb3e6;
   --orn-opacity: 0.55;
+  --icon-snow: #ffffff;
 }
 
 @media (max-width: 640px) {
