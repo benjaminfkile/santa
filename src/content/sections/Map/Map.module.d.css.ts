@@ -17,6 +17,7 @@ export const liftoffTimerValue: string;
 export const liveIndicator: string;
 export const liveIndicatorAgo: string;
 export const liveIndicatorAgoStale: string;
+export const liveIndicatorCount: string;
 export const liveIndicatorDot: string;
 export const liveIndicatorLabel: string;
 export const liveIndicatorLive: string;
@@ -39,6 +40,6 @@ export const sponsorOverlay: string;
 export const topLeft: string;
 export const topRight: string;
 export const unavailable: string;
-export const watchingPill: string;
+export const visuallyHidden: string;
 export const zoomGroup: string;
 

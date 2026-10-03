@@ -3,13 +3,16 @@
 // it is not and the poll is still landing, "Offline" when neither has reached
 // us for a while. The beacon's own cadence never moves the label; a stalled
 // beacon shows in the "Updated N s ago" counter (amber past the signal-lost
-// threshold) and on the marker (FixStatus).
+// threshold) and on the marker (FixStatus). While live, the pill also carries
+// an eye and the count of connected viewers from `live.onlineCount`, when the
+// count is known and `showCount` is on.
 import { useEffect, useState } from "react";
 import { useStore } from "../../../store/useStore";
 import { useNow } from "../../../lib/useNow";
 import { DEFAULT_POLL_INTERVAL_MS } from "../../../store/cadence";
 import { copy } from "../../../copy/copy";
 import * as styles from "./Map.module.css";
+import { EyeGlyph } from "./glyphs";
 
 // The marker's signal-lost threshold (store/liveState.ts): the counter turns
 // amber at the same moment the marker does.
@@ -37,11 +40,12 @@ function usePerfTick(intervalMs = 1000): number {
   return tick;
 }
 
-export function LiveIndicator() {
+export function LiveIndicator({ showCount = true }: { showCount?: boolean }) {
   const hub = useStore((s) => s.hub);
   const lastPollOkAt = useStore((s) => s.diag.lastPollOkAt);
   const pollIntervalMs = useStore((s) => s.live?.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS);
   const publishedAt = useStore((s) => s.live?.publishedAt ?? null);
+  const onlineCount = useStore((s) => s.live?.onlineCount ?? null);
   const perfNow = usePerfTick(1000);
   const now = useNow(1000);
 
@@ -61,6 +65,10 @@ export function LiveIndicator() {
   // The counter is noise while updates are flowing: it appears only once the
   // feed has gone quiet for the marker's signal-lost threshold, and then it is
   // the warning (site.md 7.6). A normal cadence never churns the pill text.
+  const count =
+    showCount && state === "live" && typeof onlineCount === "number" && Number.isFinite(onlineCount)
+      ? onlineCount
+      : null;
   const stale = secondsAgo !== null && secondsAgo * 1000 >= STALE_AFTER_MS;
 
   return (
@@ -72,6 +80,15 @@ export function LiveIndicator() {
     >
       <span className={styles.liveIndicatorDot} aria-hidden />
       <span className={styles.liveIndicatorLabel}>{label}</span>
+      {count !== null ? (
+        <>
+          <EyeGlyph size={14} />
+          <span className={styles.liveIndicatorCount} data-testid="watching-count">
+            {count.toLocaleString("en-US")}
+            <span className={styles.visuallyHidden}>{copy.live.watchingSuffix}</span>
+          </span>
+        </>
+      ) : null}
       {stale ? (
         <span className={`${styles.liveIndicatorAgo} ${styles.liveIndicatorAgoStale}`}>
           {copy.live.updatedAgo(secondsAgo)}

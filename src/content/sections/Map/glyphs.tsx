@@ -85,3 +85,6 @@ export const SignalGlyph = (p: GlyphProps) => (
 export const TrackerMenuGlyph = (p: GlyphProps) => (
   <Glyph {...p}><path d="M4 7h10M4 12h4M12 12h8M4 17h10M18 17h2" /><circle cx="17" cy="7" r="2" /><circle cx="9" cy="12" r="2" /><circle cx="15" cy="17" r="2" /></Glyph>
 );
+export const EyeGlyph = (p: GlyphProps) => (
+  <Glyph {...p}><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></Glyph>
+);

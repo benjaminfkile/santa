@@ -29,7 +29,6 @@ import { FixStatus } from "./InfoOverlays";
 import { LiveIndicator } from "./LiveIndicator";
 import { LiftoffTimer } from "./LiftoffTimer";
 import { LiveStrip } from "./LiveStrip";
-import { WatchingPill } from "./WatchingPill";
 import { DistanceChip } from "./DistanceChip";
 import { MapControls } from "./MapControls";
 import { RouteDisclaimer } from "./RouteDisclaimer";
@@ -320,8 +319,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
           ) : (
             <>
               <div className={styles.topLeft}>
-                {overlays.liveIndicator ? <LiveIndicator /> : null}
-                {overlays.onlineCount ? <WatchingPill /> : null}
+                {overlays.liveIndicator ? <LiveIndicator showCount={overlays.onlineCount} /> : null}
                 <FixStatus />
                 {overlays.liftoffTimer ? <LiftoffTimer /> : null}
                 {overlays.distanceChip ? <DistanceChip distanceMetres={userState.distanceMetres} /> : null}
