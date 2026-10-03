@@ -55,11 +55,14 @@
 /* Doubled to outrank the Logo module's own `flex: none`. */
 .brandLogo.brandLogo { min-width: 0; max-width: 100%; flex: 0 1 auto; }
 .brandLogo img { max-width: 100%; }
+/* The mark keeps its 30 px until the header runs short of width, then
+   shrinks with the brand. */
 .brandMark {
   color: var(--accent);
   width: 30px;
   height: 18px;
-  flex: none;
+  flex: 0 1 30px;
+  min-width: 0;
 }
 @media (max-width: 639px) {
   .brandLogo { height: 28px; }
@@ -206,6 +209,62 @@
 }
 .menuButton:hover,
 .themeToggle:hover { color: var(--accent); border-color: var(--accent); }
+/* The header links (HeaderLinks.tsx): the theme toggle's 44 px recipe with
+   the accent border, so they stand out from the quiet controls beside
+   them. The icon draws at 22 px; a link without one shows its label's
+   first letter in a circle. At 760 px and below the button holds the icon
+   alone; from 761 px up the label sits beside the icon and the button
+   widens into a pill. */
+.headerLink {
+  flex: none;
+  gap: var(--space-2);
+  color: var(--accent);
+  border-color: var(--accent);
+  text-decoration: none;
+}
+.headerLink:hover { background: var(--accent-soft); }
+.headerLinkIcon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.headerLinkIcon svg,
+.headerLinkIcon img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+.headerLinkLetter {
+  box-sizing: border-box;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+.headerLinkLabel {
+  font-weight: 500;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+@media (min-width: 761px) {
+  .headerLink {
+    width: auto;
+    padding: 0 var(--space-4) 0 var(--space-3);
+    border-radius: 999px;
+  }
+}
+@media (max-width: 760px) {
+  .headerLinkLabel { display: none; }
+}
 .themePicker { position: relative; display: inline-flex; }
 .themeMenu {
   position: absolute;
@@ -454,6 +513,13 @@
   text-align: center;
 }
 
+/* On the narrowest phones the actions sit closer together, so three
+   header links, the theme toggle, and the menu button fit at 320 px
+   without widening the page. */
+@media (max-width: 399px) {
+  .siteHeader { gap: var(--space-2); }
+  .actions { gap: var(--space-2); }
+}
 @media (max-width: 760px) {
   .siteHeader { padding: var(--space-3) var(--space-4); }
   .brand { font-size: 0.9375rem; }

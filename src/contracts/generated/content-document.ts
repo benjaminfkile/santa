@@ -29,7 +29,7 @@ export interface ContentDocument {
         )
       | null;
     navPosition: number;
-    role: "none" | "no_event" | "planned" | "scheduled" | "live" | "ended" | "cancelled";
+    role: "none" | "no_event" | "planned" | "scheduled" | "live" | "ended" | "cancelled" | "postponed";
     sections: {
       id: number;
       kind: string;
@@ -112,6 +112,11 @@ export interface SiteSettings {
   analyticsEnabled: boolean;
   logoMedia?: MediaRef | null;
   headerShowsSiteName?: boolean | null;
+  /**
+   * @minItems 0
+   * @maxItems 3
+   */
+  headerLinks?: [] | [Link] | [Link, Link] | [Link, Link, Link];
 }
 export interface Display {
   sizePx?: number;
