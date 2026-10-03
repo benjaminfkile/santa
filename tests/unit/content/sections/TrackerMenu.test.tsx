@@ -20,6 +20,20 @@ import { AuthProvider, type AuthState } from "../../../../src/auth/AuthProvider"
 import { session } from "../../../../src/auth/session";
 import { copy } from "../../../../src/copy/copy";
 
+// CSS processing is off in unit tests, so the TrackerMenu module's classes
+// map to their own names here, with a composed class appended as CSS
+// modules do; the rules themselves are read from the file.
+vi.mock("../../../../src/content/sections/Map/TrackerMenu.module.css", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { resolve } = await import("node:path");
+  const css = readFileSync(resolve(__dirname, "../../../../src/content/sections/Map/TrackerMenu.module.css"), "utf8");
+  const names = new Set(Array.from(css.matchAll(/\.([a-zA-Z][a-zA-Z0-9]*)/g), (m) => m[1]));
+  const composed = new Map(Array.from(css.matchAll(/\.(\w+)\s*\{\s*composes:\s*(\w+)/g), (m) => [m[1], m[2]]));
+  return Object.fromEntries(
+    Array.from(names, (n) => [n, composed.has(n) ? `${n} ${composed.get(n)}` : n]),
+  );
+});
+
 const here = dirname(fileURLToPath(import.meta.url));
 const trackerModulePath = resolve(here, "../../../../src/content/sections/Map/TrackerMenu.module.css");
 
@@ -314,12 +328,17 @@ describe("TrackerMenu account button", () => {
     expectRightGroupUnchanged(getByTestId);
   });
 
-  it("the footer row splits into two non-wrapping groups of 44 px buttons that fit 301 px", () => {
+  it("with every control on and a flight history present the seven buttons are fixed 44 px squares and the right group wraps", () => {
     const { getByTestId } = renderMenu({ status: "signedOut" });
     const left = getByTestId("tracker-menu-account");
     const right = getByTestId("tracker-menu-toggles");
     expect(left.parentElement).toBe(right.parentElement);
     expect(left.parentElement?.children).toHaveLength(2);
+    const buttons = [...Array.from(left.querySelectorAll("button")), ...Array.from(right.querySelectorAll("button"))];
+    expect(buttons).toHaveLength(7);
+    for (const b of buttons) expect(b.className).toContain("footerBtn");
+    expect(right.className).toContain("footerEnd");
+    expectRightGroupUnchanged(getByTestId);
 
     const src = readFileSync(resolve(here, "../../../../src/content/sections/Map/TrackerMenu.tsx"), "utf8");
     expect(src).toMatch(/className=\{styles\.footer\}/);
@@ -333,22 +352,16 @@ describe("TrackerMenu account button", () => {
 
     const css = readFileSync(trackerModulePath, "utf8");
     expect(css).toMatch(/\.footer\s*\{[^}]*justify-content:\s*space-between/);
-    expect(css).toMatch(/\.footer\s*\{[^}]*flex-wrap:\s*nowrap/);
-    expect(css).toMatch(/\.footer\s*\{[^}]*gap:\s*4px/);
-    expect(css).toMatch(/\.footerStart,\s*\.footerEnd\s*\{[^}]*flex-wrap:\s*nowrap[^}]*gap:\s*4px/);
-    expect(css).toMatch(/\.footerBtn\s*\{[^}]*width:\s*44px/);
+    expect(css).toMatch(/\.footer\s*\{[^}]*align-items:\s*flex-start/);
+    expect(css).toMatch(/\.footerStart\s*\{[^}]*flex:\s*none/);
+    expect(css).toMatch(/\.footerEnd\s*\{[^}]*flex-wrap:\s*wrap/);
+    expect(css).toMatch(/\.footerEnd\s*\{[^}]*justify-content:\s*flex-end/);
+    expect(css).toMatch(/\.footerEnd\s*\{[^}]*gap:\s*6px 4px/);
+    expect(css).toMatch(/\.footerBtn\s*\{[^}]*flex:\s*none;[^}]*width:\s*44px;[^}]*height:\s*44px/);
+    expect(css).not.toMatch(/\.footerBtn\s*\{[^}]*min-width:\s*0/);
     expect(css).toMatch(/\.close\s*\{\s*composes:\s*footerBtn/);
     expect(css).toMatch(/\.trackerMenu\s*\{[^}]*width:\s*min\(301px,\s*100%\)/);
     expect(css).toMatch(/\.panel\s*\{[^}]*padding:\s*6px/);
-    // Seven buttons with the 4 px gaps between them, inside the 301 px card
-    // less its 6 px padding on each side: they shrink evenly from 44 px and
-    // stay at least 36 px wide.
-    const buttons = left.querySelectorAll("button").length + right.querySelectorAll("button").length;
-    expect(buttons).toBe(7);
-    expect(css).toMatch(/\.footerBtn\s*\{[^}]*flex:\s*0 1 44px;[^}]*min-width:\s*0/);
-    expect(css).toMatch(/\.footerStart,\s*\.footerEnd\s*\{[^}]*min-width:\s*0/);
-    expect((301 - 2 * 6 - (buttons - 1) * 4) / buttons).toBeGreaterThanOrEqual(36);
-    expect(6 * 44 + 5 * 4).toBeLessThanOrEqual(301 - 2 * 6);
   });
 });
 

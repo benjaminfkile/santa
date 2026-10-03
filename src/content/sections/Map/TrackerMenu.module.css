@@ -145,23 +145,31 @@
   display: flex;
   flex-wrap: nowrap;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 4px;
 }
-.footerStart,
+.footerStart {
+  display: flex;
+  flex: none;
+  gap: 4px;
+}
+/* The right group wraps: when one line cannot hold every button at 44 px
+   the overflow drops to the next line, right-aligned, so the close button
+   ends the last line. */
 .footerEnd {
   display: flex;
-  flex-wrap: nowrap;
-  gap: 4px;
+  flex: 1 1 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px 4px;
   min-width: 0;
 }
-/* 44 px squares; when all seven buttons show they shrink evenly in width
-   to fit the 301 px card, keeping their 44 px height. */
+/* Fixed 44 px squares that never shrink. */
 .footerBtn {
   appearance: none;
   position: relative;
+  flex: none;
   width: 44px;
-  flex: 0 1 44px;
-  min-width: 0;
   height: 44px;
   border: 0;
   border-radius: 4px;
