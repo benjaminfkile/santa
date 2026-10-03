@@ -1,0 +1,54 @@
+/* docs/site.md section 7.6. The round gauge in the flight data dock: a
+   60 px dial (54 px at 760 px and below) with the track arc, the value
+   arc, the value and unit in the middle, and the label under the dial.
+   Every colour is a chrome token the map section rebinds. */
+
+.gauge {
+  display: block;
+  flex: none;
+  width: 60px;
+  height: 60px;
+  overflow: visible;
+  user-select: none;
+}
+@media (max-width: 760px) {
+  .gauge { width: 54px; height: 54px; }
+}
+
+.track {
+  fill: none;
+  stroke: var(--panel-2);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+/* The value arc's length sweeps over 300 ms as stroke-dashoffset changes. */
+.arc {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 300ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .arc { transition: none; }
+}
+
+.value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  fill: var(--text-bright);
+}
+.unit {
+  font-family: var(--font-mono);
+  font-size: 6px;
+  fill: var(--text-dim);
+}
+.label {
+  font-family: var(--font-mono);
+  font-size: 6.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  fill: var(--text-dim);
+}

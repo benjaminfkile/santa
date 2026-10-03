@@ -1,5 +1,5 @@
-// docs/site.md sections 7.6 and 8.5. The flight data dock: the four text
-// instruments with converted units, the airborne slot's blank and flag
+// docs/site.md sections 7.6 and 8.5. The flight data dock: the speed dial
+// and the three text instruments with converted units, the airborne slot's blank and flag
 // states, the foot line, collapse and expand with the handle pill, the
 // first state by width, the dock height lifting the bottom stacks, the
 // tracker menu's hide toggle, and hiding while the menu is open.
@@ -118,7 +118,7 @@ afterEach(() => {
 });
 
 describe("the flight data dock", () => {
-  it("renders the four text instruments in order with the converted units", async () => {
+  it("renders the four instruments in order with the converted units", async () => {
     seed(FULL);
     const utils = await renderMap();
     const dock = utils.getByTestId("flight-dock");
@@ -140,6 +140,20 @@ describe("the flight data dock", () => {
     expect(value(utils, "airborne")).toBe(formatElapsed(72.5 * 60 * 1000));
     expect(value(utils, "airborne")).toBe("1h 12m");
     expect(utils.getByTestId("flight-dock-airborne").textContent).toMatch(/Airborne/i);
+  });
+
+  it("the speed slot is the dial and the other slots are text", async () => {
+    seed(FULL);
+    const utils = await renderMap();
+    const speed = utils.getByTestId("flight-dock-speed");
+    expect(speed.tagName.toLowerCase()).toBe("svg");
+    expect(speed.getAttribute("aria-label")).toBe("Speed 100 mph");
+    expect(utils.getByTestId("flight-dock-speed-arc")).toBeInTheDocument();
+    for (const slot of ["altitude", "heading", "airborne"]) {
+      const el = utils.getByTestId(`flight-dock-${slot}`);
+      expect(el.tagName.toLowerCase()).toBe("div");
+      expect(el.querySelector("svg")).toBeNull();
+    }
   });
 
   it("shows the placeholder for a null field", async () => {
