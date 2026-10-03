@@ -3474,6 +3474,12 @@
           "subject": {
             "type": "string"
           },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "sentAt": {
             "type": "string",
             "format": "date-time"
@@ -9280,6 +9286,15 @@
               "null",
               "string"
             ]
+          },
+          "messageId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
           },
           "sentCount": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",

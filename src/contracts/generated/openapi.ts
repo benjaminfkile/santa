@@ -5158,6 +5158,7 @@ export interface components {
             /** Format: int64 */
             messageId?: null | number | string;
             subject?: string;
+            message?: null | string;
             /** Format: date-time */
             sentAt?: string;
         };
@@ -6684,6 +6685,8 @@ export interface components {
             changedAt?: string;
             notify?: boolean;
             message?: null | string;
+            /** Format: int64 */
+            messageId?: null | number | string;
             /** Format: int32 */
             sentCount?: number | string;
         };
