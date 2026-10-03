@@ -1,5 +1,5 @@
 // docs/site.md section 22.1 HomePage status walk: apply live objects in
-// the order 1, 2, 3, 4, 5, null and assert the rendered role page changes
+// the order 1, 2, 3, 4, 5, 6, null and assert the rendered role page changes
 // without waiting for a new snapshot.
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
@@ -63,6 +63,7 @@ function makeContent(): ContentDocument {
       makePage(4, "live", "live"),
       makePage(5, "ended", "ended"),
       makePage(6, "cancelled", "cancelled"),
+      makePage(7, "postponed", "postponed"),
     ],
   };
 }
@@ -141,6 +142,7 @@ describe("HomePage status walk", () => {
       [3, "live"],
       [4, "ended"],
       [5, "cancelled"],
+      [6, "postponed"],
       [null, "no_event"],
     ];
     for (const [id, role] of walk) {

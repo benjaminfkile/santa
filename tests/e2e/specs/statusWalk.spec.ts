@@ -280,8 +280,20 @@ test("status walk", async ({ page }) => {
     await waitForState(page, (s) => s?.live?.eventStatusId === 5, POLL_PLUS);
     await expect(page.locator("body")).toContainText(messageBody);
     expect(await page.locator('[data-testid="countdown"]').count()).toBe(0);
+
+    // 11. status 6: the postponed page, or the planned page while the dev
+    // content has no published postponed page (site.md 5.4); the role in the
+    // document decides which heading is expected. No countdown.
+    await setEventStatus(walk.id, 6);
+    await waitForState(page, (s) => s?.live?.eventStatusId === 6, POLL_PLUS);
+    const pages = (await getState(page)).snapshot?.content?.pages ?? [];
+    const postponedRole = pages.some((p) => p.role === "postponed") ? "postponed" : "planned";
+    const main = page.locator(`main[data-page-role="${postponedRole}"]`);
+    await expect(main).toBeVisible({ timeout: POLL_PLUS });
+    await expect(main.getByRole("heading").first()).toBeVisible();
+    expect(await page.locator('[data-testid="countdown"]').count()).toBe(0);
   } finally {
-    // 11. Restore. The walk event is kept between runs; leave it at status 1.
+    // 12. Restore. The walk event is kept between runs; leave it at status 1.
     try {
       await setEventStatus(walk.id, 1);
     } catch {
