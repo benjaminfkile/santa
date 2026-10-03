@@ -1,6 +1,5 @@
 /* docs/site.md section 9. Leaderboard: full variant renders icon, name,
-   count, and a bar to the leader. Panel variant collapses to the top five
-   and is used inside the map overlay. */
+   count, and a bar to the leader. Panel variant collapses to the top five. */
 
 .leaderboard { display: flex; flex-direction: column; gap: var(--space-3); }
 .leaderboardHeading {
@@ -29,8 +28,7 @@
      of heading and the ordered list only. */
 }
 .leaderboardPanel {
-  /* The section frame supplies the card; the compact overlay use below
-     paints its own bare recipe inside the map's chrome. */
+  /* The section frame supplies the card. */
 }
 .leaderboardIcon { display: flex; align-items: center; justify-content: center; color: var(--accent); }
 .leaderboardIconPlaceholder { width: 24px; height: 24px; background: var(--panel-2); border-radius: 50%; }
@@ -77,24 +75,3 @@
 .leaderboardToggle:hover { color: var(--accent); border-color: var(--accent); }
 .leaderboardEmptyText { margin: 0; color: var(--text-dim); }
 .leaderboardEmpty { color: var(--text-dim); }
-
-/* The live screen's panel: no border or padding of its own (the map's
-   cookie panel supplies them), 24 px rows, small type. */
-.leaderboardCompact { gap: 0; }
-.leaderboardCompact .leaderboardList { gap: 0; }
-.leaderboardCompact .leaderboardRow {
-  grid-template-columns: 20px minmax(0, 1fr) auto;
-  gap: 0 6px;
-  padding: 3px 0;
-  min-height: 24px;
-}
-.leaderboardCompact .leaderboardIcon svg { width: 16px; height: 16px; }
-.leaderboardCompact .leaderboardIconPlaceholder { width: 16px; height: 16px; }
-.leaderboardCompact .leaderboardName,
-.leaderboardCompact .leaderboardCount { font-size: 0.78125rem; }
-.leaderboardCompact .leaderboardToggle {
-  min-height: 28px;
-  padding: 2px 8px;
-  font-size: 0.6875rem;
-  margin-top: 4px;
-}

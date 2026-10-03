@@ -1,8 +1,9 @@
 // docs/site.md section 10. The cookie_control section: closedCopy outside
 // status 3; signedOutCopy with a sign-in link when signed out; a button
-// (the pill on the live screen) that opens the cookie dialog, centred in
-// the viewport, where the visitor picks how many of each type to leave
-// (up to the remaining allowance) and the site posts them one by one.
+// that opens the cookie dialog, centred in the viewport, where the visitor
+// picks how many of each type to leave (up to the remaining allowance) and
+// the site posts them in one request. The dialog is exported for the live
+// screen, which opens it from its own glyph; signed out it offers Sign in.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -16,7 +17,7 @@ import { Icon } from "../../primitives/Icon";
 import { getMyCookies, leaveCookies } from "../../../api/cookies";
 import { ApiRequestError, SignInRequired, surfaceFor } from "../../../api/errors";
 import { copy } from "../../../copy/copy";
-import { CookieGlyph, MinusGlyph, PlusGlyph } from "../Map/glyphs";
+import { MinusGlyph, PlusGlyph } from "../Map/glyphs";
 import * as styles from "./CookieControl.module.css";
 import * as btn from "../../../ui/Button.module.css";
 import * as dlg from "../../../ui/Dialog.module.css";
@@ -27,7 +28,6 @@ export type CookieControlData = {
   copy?: string | null;
   signedOutCopy?: string | null;
   closedCopy?: string | null;
-  compact?: boolean;
 };
 
 function readData(data: unknown): CookieControlData {
@@ -38,7 +38,6 @@ function readData(data: unknown): CookieControlData {
     copy: d.copy ?? null,
     signedOutCopy: d.signedOutCopy ?? null,
     closedCopy: d.closedCopy ?? null,
-    compact: d.compact === true,
   };
 }
 
@@ -48,49 +47,21 @@ export type CookieControlProps = {
   bundle: ContentBundle;
 };
 
+// Sends the visitor to sign in with `returnTo` the current path and search.
+function useSignInHere(): () => void {
+  const { signIn } = useAuth();
+  const location = useLocation();
+  return useCallback(() => {
+    void signIn(location.pathname + location.search);
+  }, [signIn, location.pathname, location.search]);
+}
+
 export const CookieControl: SectionComponent = ({ data, bundle }: CookieControlProps) => {
   const d = readData(data);
   const eventStatusId = useStore((s) => s.live?.eventStatusId ?? null);
-  const cookieTypes = useStore(
-    (s) => (s.snapshot?.cookieTypes ?? []) as CookieType[],
-  );
-  const { state: auth, signIn } = useAuth();
-  const location = useLocation();
+  const { state: auth } = useAuth();
+  const onSignIn = useSignInHere();
   const [open, setOpen] = useState(false);
-  const onSignIn = () => {
-    void signIn(location.pathname + location.search);
-  };
-
-  const dialog = open ? (
-    <CookieDialog
-      bundle={bundle}
-      cookieTypes={cookieTypes}
-      onClose={() => setOpen(false)}
-      onSignInRequired={onSignIn}
-    />
-  ) : null;
-
-  // The live screen's pill: one button, the dialog on tap, nothing else.
-  if (d.compact === true) {
-    if (eventStatusId !== 3 || auth.status === "unknown") return null;
-    if (auth.status !== "signedIn") {
-      return (
-        <button type="button" className={styles.cookiePill} onClick={onSignIn} data-testid="cookie-control-sign-in">
-          <CookieGlyph />
-          {copy.cookies.signInToLeave}
-        </button>
-      );
-    }
-    return (
-      <>
-        <button type="button" className={styles.cookiePill} onClick={() => setOpen(true)} data-testid="cookie-control-open">
-          <CookieGlyph />
-          {copy.cookies.leave}
-        </button>
-        {dialog}
-      </>
-    );
-  }
 
   if (eventStatusId !== 3) {
     return (
@@ -126,7 +97,7 @@ export const CookieControl: SectionComponent = ({ data, bundle }: CookieControlP
       <button type="button" className={`${btn.btnFill} ${styles.cookieControlOpen}`} onClick={() => setOpen(true)} data-testid="cookie-control-open">
         {copy.cookies.leave}
       </button>
-      {dialog}
+      {open ? <CookieDialog bundle={bundle} onClose={() => setOpen(false)} /> : null}
     </div>
   );
 };
@@ -150,17 +121,22 @@ type DialogState =
 
 type Ready = Extract<DialogState, { kind: "ready" }>;
 
-function CookieDialog({
+// The cookie dialog. Signed in it loads `GET /me/cookies` and shows the
+// picker; signed out it shows the sign-in copy with Sign in and Close and
+// calls nothing; while auth is unknown it shows its loading state.
+export function CookieDialog({
   bundle,
-  cookieTypes,
   onClose,
-  onSignInRequired,
 }: {
   bundle: ContentBundle;
-  cookieTypes: CookieType[];
   onClose: () => void;
-  onSignInRequired: () => void;
 }) {
+  const cookieTypes = useStore(
+    (s) => (s.snapshot?.cookieTypes ?? []) as CookieType[],
+  );
+  const { state: auth } = useAuth();
+  const signedIn = auth.status === "signedIn";
+  const onSignInRequired = useSignInHere();
   const ref = useRef<HTMLDialogElement | null>(null);
   const [state, setState] = useState<DialogState>({ kind: "loading" });
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -212,8 +188,8 @@ function CookieDialog({
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (signedIn) void load();
+  }, [load, signedIn]);
 
   useEffect(() => {
     if (state.kind !== "ready" || state.cooldownUntil === null) return;
@@ -317,12 +293,31 @@ function CookieDialog({
   }, [state, setReady]);
 
   const close = () => {
-    ref.current?.close();
+    const el = ref.current;
+    if (el !== null && typeof el.close === "function") el.close();
     onClose();
   };
 
+  const signInFromDialog = () => {
+    onSignInRequired();
+    close();
+  };
+
   const body = (() => {
-    if (state.kind === "loading") {
+    if (auth.status !== "unknown" && !signedIn) {
+      return (
+        <>
+          <p className={dlg.copy} data-testid="cookie-dialog-signed-out">{copy.cookies.signInToLeave}</p>
+          <div className={dlg.actions}>
+            <button type="button" className={btn.btnQuiet} onClick={close}>{copy.cookies.close}</button>
+            <button type="button" className={btn.btnFill} onClick={signInFromDialog} data-testid="cookie-dialog-sign-in">
+              {copy.signIn.button}
+            </button>
+          </div>
+        </>
+      );
+    }
+    if (!signedIn || state.kind === "loading") {
       return (
         <>
           <p className={dlg.copy}>{copy.loading.initial}</p>
@@ -441,7 +436,7 @@ function CookieDialog({
       <div className={dlg.body}>
         <div className={dlg.head}>
           <h2 id="cookie-dialog-title" className={dlg.title}>{copy.cookies.title}</h2>
-          {state.kind === "ready" ? (
+          {signedIn && state.kind === "ready" ? (
             <span className={dlg.meta} data-testid="cookie-remaining">
               {copy.cookies.remaining(state.remaining, state.limit)}
             </span>

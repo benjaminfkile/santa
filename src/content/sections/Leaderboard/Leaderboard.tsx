@@ -15,7 +15,6 @@ type LeaderboardData = {
   heading?: string | null;
   variant?: "panel" | "full";
   emptyText?: string | null;
-  compact?: boolean;
 };
 
 export type RankedCookieType = CookieType & { count: number };
@@ -71,10 +70,9 @@ export const Leaderboard: SectionComponent = ({ data, bundle }) => {
     variant === "panel" && !expanded ? ranked.slice(0, PANEL_LIMIT) : ranked;
 
   const variantClass = variant === "full" ? styles.leaderboardFull : styles.leaderboardPanel;
-  const compactClass = d.compact === true ? ` ${styles.leaderboardCompact}` : "";
 
   return (
-    <div className={`${styles.leaderboard} ${variantClass}${compactClass}`} data-variant={variant}>
+    <div className={`${styles.leaderboard} ${variantClass}`} data-variant={variant}>
       {d.heading ? (
         <h2 className={styles.leaderboardHeading}>
           <Inline text={d.heading} bundle={bundle} event={event} />

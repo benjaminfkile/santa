@@ -184,9 +184,13 @@ test("status walk", async ({ page }) => {
     await expect(page.locator('[data-testid="data-row-speed"]')).toContainText(/\d/);
     await page.keyboard.press("Escape");
 
-    // 6. Sign in as the E2E person, drop a cookie, expect leaderboard tick.
+    // 6. The cookie tally rows sit under the tracker menu button with the
+    // leave-a-cookie glyph below them. Sign in as the E2E person through
+    // the glyph's dialog, drop a cookie, expect the tally to tick.
+    await expect(page.locator('[data-testid="cookie-tally-row"]').first()).toBeVisible();
+    await expect(page.locator('[data-testid="cookie-tally-leave"]')).toBeVisible();
     await personSignIn(page);
-    await page.locator('[data-testid="cookie-control-open"]').click();
+    await page.locator('[data-testid="cookie-tally-leave"]').click();
     const remainingText = await page.locator('[data-testid="cookie-remaining"]').textContent();
     // The control reads "9 of 10 left": the first number is what remains.
     const remaining = Number((remainingText ?? "").match(/\d+/)?.[0] ?? "0");
