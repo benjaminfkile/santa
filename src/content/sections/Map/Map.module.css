@@ -99,12 +99,20 @@
 .liveIndicatorLabel { color: var(--text-bright); }
 .liveIndicatorAgo { color: var(--text-dim); }
 .liveIndicatorAgoStale { color: var(--warn); }
+.liveIndicatorCount { color: var(--text-bright); }
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 .liftoffTimer { composes: pill; }
 .liftoffTimerBlank { display: none; }
 .liftoffTimerLabel { color: var(--text-dim); }
 .liftoffTimerValue { color: var(--text-bright); }
 .distanceChip { composes: pill; }
-.watchingPill { composes: pill; }
 .infoOverlaysStatus { composes: pill; color: var(--text-dim); }
 .infoOverlaysStatusSignalLost { color: var(--err); }
 .infoOverlaysStatusSignalLost svg { color: var(--err); }
