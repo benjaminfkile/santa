@@ -1,10 +1,10 @@
 /* docs/site.md sections 7.6 and 8. The live screen, laid out as the legacy
    tracker was: the map owns the viewport; small pills top-left (live state,
    airborne time, distance, the instrument line, the message ticker); the
-   tracker menu button and the cookie panel top-right; the cookie pill and
-   the sponsor tile bottom-left; zoom or recenter bottom-right. Every
-   overlay sits 8 px from its corner and nothing on the map is taller than
-   44 px except the two panels. */
+   tracker menu button, the bare cookie tally, and the leave-a-cookie glyph
+   top-right; the sponsor tile bottom-left; zoom or recenter bottom-right.
+   Every overlay sits 8 px from its corner and nothing on the map is taller
+   than 44 px except the tally column and the sponsor tile. */
 
 .mapSection {
   position: relative;
@@ -58,8 +58,7 @@
 .bottomLeft { bottom: 8px; left: 8px; align-items: flex-start; }
 .bottomRight { bottom: 8px; right: 8px; align-items: flex-end; }
 .menuOpen .topLeft,
-.menuOpen .bottomRight,
-.menuOpen .leaderboardOverlay { display: none; }
+.menuOpen .bottomRight { display: none; }
 
 /* Pills: 34 px, a glyph and a short line. */
 .pill {
@@ -138,36 +137,71 @@
 /* Tracker menu button, 44 px, top-right. */
 .menuButton { composes: glass; border-radius: 8px; }
 
-/* Cookie panel under the menu button. */
-.leaderboardOverlay {
-  composes: glass;
-  border-radius: 8px;
-  width: 200px;
+/* The cookie tally under the menu button: a bare column, no box. Each
+   row is the count then the icon, aligned to the right edge so a longer
+   count hangs further left and the icons stay in one column. The shadow
+   in the chrome's panel colour keeps both legible on every map style. */
+.cookieTally {
+  list-style: none;
+  margin: 0;
+  padding: 0 11px 0 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  align-items: flex-end;
+  gap: 4px;
+  user-select: none;
 }
-.leaderboardHead {
-  appearance: none;
+.cookieTallyRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  width: 100%;
-  height: 32px;
-  padding: 0 6px 0 10px;
+  justify-content: flex-end;
+  gap: 4px;
+  min-height: 24px;
+}
+.cookieTallyCount {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-bright);
+  text-shadow: 0 0 2px var(--panel), 0 0 6px var(--panel);
+  white-space: nowrap;
+}
+.cookieTallyIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  color: var(--accent);
+  filter: drop-shadow(0 0 1px var(--panel)) drop-shadow(0 0 3px var(--panel));
+}
+.cookieTallyPlaceholder::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--panel-2);
+}
+
+/* Leave a cookie: the bare cookie-plus glyph, 22 px inside a 44 px hit
+   area, under the tally with the same shadow and no box. */
+.cookieLeave {
+  appearance: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: 0;
   background: transparent;
-  color: var(--text-dim);
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  color: var(--text-bright);
+  display: inline-grid;
+  place-items: center;
   cursor: pointer;
+  filter: drop-shadow(0 0 1px var(--panel)) drop-shadow(0 0 3px var(--panel));
+  transition: var(--hover-transition);
 }
-.leaderboardHead svg { transition: transform 120ms ease-out; color: var(--text-dim); }
-.leaderboardHead[aria-expanded="true"] svg { transform: rotate(180deg); }
-.leaderboardBody { padding: 0 10px 8px; border-top: 1px solid var(--line); }
+.cookieLeave:hover { color: var(--accent); }
 
 /* Bottom-right: zoom in and out while following, recenter when not. */
 .mapControls { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
@@ -195,8 +229,7 @@
 .recenter { composes: glass; border-radius: 8px; }
 .recenter .ctrl { color: var(--accent); }
 
-/* Bottom-left: the cookie pill above the sponsor tile. */
-.cookieOverlay { display: flex; }
+/* Bottom-left: the sponsor tile. */
 .sponsorOverlay { display: flex; }
 
 .unavailable {
@@ -216,6 +249,5 @@
 
 @media (max-width: 760px) {
   .topLeft { max-width: calc(100% - 64px); }
-  .leaderboardOverlay { width: 180px; }
   .messageOverlay { max-width: min(300px, 100%); }
 }

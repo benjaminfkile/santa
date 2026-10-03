@@ -1,7 +1,7 @@
 /* docs/site.md section 10. The `cookie_control` section: the closed and
-   signed-out copy as a quiet panel; the live screen's pill; and the
-   cookie dialog, centred in the viewport, with one row per cookie type
-   carrying a stepper, the note, and the two actions. */
+   signed-out copy as a quiet panel; and the cookie dialog, centred in the
+   viewport, with one row per cookie type carrying a stepper, the note, and
+   the two actions. */
 
 .cookieControl {
   display: flex;
@@ -34,29 +34,6 @@
   font-size: 0.9375rem;
 }
 .cookieControlOpen { align-self: flex-start; }
-
-/* The live screen's pill: 34 px, glass, the cookie glyph and one line.
-   The glass is a pre-blended fill with no backdrop filter. */
-.cookiePill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 34px;
-  padding: 0 12px 0 8px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--panel) 94%, transparent);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow);
-  color: var(--text-bright);
-  font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: 0.8125rem;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: var(--hover-transition);
-}
-.cookiePill svg { color: var(--accent); flex: none; }
-.cookiePill:hover { border-color: var(--accent); color: var(--accent); }
 
 /* The dialog's rows. */
 .rows {

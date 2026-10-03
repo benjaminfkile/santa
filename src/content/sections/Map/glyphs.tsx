@@ -79,6 +79,10 @@ export const ChevronGlyph = (p: GlyphProps) => <Glyph {...p}><path d="M6 9l6 6 6
 export const CookieGlyph = (p: GlyphProps) => (
   <Glyph {...p}><path d="M12 3a9 9 0 1 0 9 9 4 4 0 0 1-4.5-4A4 4 0 0 1 12 3z" /><circle cx="9" cy="10" r="0.6" /><circle cx="14" cy="15" r="0.6" /><circle cx="8.5" cy="15" r="0.6" /></Glyph>
 );
+// The cookie with a small plus at its upper right: leave a cookie.
+export const CookiePlusGlyph = (p: GlyphProps) => (
+  <Glyph {...p}><path d="M11 4a8 8 0 1 0 9 9 3.5 3.5 0 0 1-4-3.5A3.5 3.5 0 0 1 11 4z" /><circle cx="8.5" cy="11" r="0.6" /><circle cx="13" cy="16" r="0.6" /><circle cx="8" cy="16" r="0.6" /><path d="M19 2v6M16 5h6" /></Glyph>
+);
 export const SignalGlyph = (p: GlyphProps) => (
   <Glyph {...p}><path d="M5 12.5a10 10 0 0 1 14 0M8 15.5a6 6 0 0 1 8 0" /><circle cx="12" cy="19" r="1" /></Glyph>
 );

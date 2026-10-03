@@ -152,7 +152,8 @@ describe("Map section class coverage", () => {
       ".liftoffTimer",
       ".mapControls",
       ".menuButton",
-      ".leaderboardOverlay",
+      ".cookieTally",
+      ".cookieLeave",
     ]) {
       expect(mapCss).toContain(name);
     }

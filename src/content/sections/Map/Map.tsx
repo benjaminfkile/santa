@@ -1,8 +1,8 @@
 // docs/site.md sections 7.6 and 8. The live screen, laid out as the legacy
 // tracker: the map fills the viewport; pills top-left (live state, viewers,
-// airborne time, distance, instruments, the message ticker); the tracker menu button
-// and the cookie panel top-right; the cookie pill and the sponsor tile
-// bottom-left; zoom while following and recenter after a drag bottom-right.
+// airborne time, distance, instruments, the message ticker); the tracker menu button,
+// the bare cookie tally, and the leave-a-cookie glyph top-right; the sponsor
+// tile bottom-left; zoom while following and recenter after a drag bottom-right.
 // While the event is live the section is fixed to the viewport and nothing
 // else on the site renders.
 
@@ -14,9 +14,8 @@ import { selectTakeover } from "../../selectPage";
 import { storageGet, storageSet } from "../../../lib/storage";
 import { setSnowOverride, useSnowEnabled } from "../../theme/seasonalLayers";
 import { LatestMessage } from "../LatestMessage/LatestMessage";
-import { Leaderboard } from "../Leaderboard/Leaderboard";
 import { SponsorCarousel } from "../SponsorCarousel/SponsorCarousel";
-import { CookieControl } from "../CookieControl/CookieControl";
+import { CookieDialog } from "../CookieControl/CookieControl";
 import { MapView } from "../../../map/MapView";
 import type { MapController } from "../../../map/mapController";
 import type { UserLocationState } from "../../../map/userLocation";
@@ -36,7 +35,8 @@ import { TrackerMenu } from "./TrackerMenu";
 import { LocationPrompt } from "./LocationPrompt";
 import { MapUnavailable } from "./MapUnavailable";
 import { readTrackerToggle, writeTrackerToggle } from "./trackerToggles";
-import { ChevronGlyph, TrackerMenuGlyph } from "./glyphs";
+import { CookieTally } from "./CookieTally";
+import { CookiePlusGlyph, TrackerMenuGlyph } from "./glyphs";
 import * as styles from "./Map.module.css";
 import * as ibtn from "../../../ui/IconButton.module.css";
 
@@ -87,12 +87,6 @@ function normalizePoints(fh: FlightHistory | null): { lat: number; lng: number; 
     }
   }
   return filtered;
-}
-
-function isPhoneWidth(): boolean {
-  return typeof window !== "undefined" && typeof window.matchMedia === "function"
-    ? window.matchMedia("(max-width: 760px)").matches
-    : false;
 }
 
 // The site's effective appearance: the root's `data-theme`, dark or light.
@@ -162,7 +156,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   }, []);
   const [following, setFollowing] = useState<boolean>(true);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
-  const [leaderboardOpen, setLeaderboardOpen] = useState<boolean>(() => !isPhoneWidth());
+  const [cookieOpen, setCookieOpen] = useState<boolean>(false);
   const [locationOpen, setLocationOpen] = useState<boolean>(false);
   const [controller, setController] = useState<MapController | null>(null);
   const [userState, setUserState] = useState<UserLocationState>({
@@ -175,6 +169,8 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const takeover = useStore(selectTakeover);
   const flightHistory = useStore((s) => s.snapshot?.event?.flightHistory ?? null);
   const hasMessage = useStore((s) => (s.snapshot?.event?.latestMessage ?? null) !== null);
+  const isLive = useStore((s) => s.live?.eventStatusId === 3);
+  const showLeave = overlays.cookieControl && isLive;
   const flightPoints = useMemo(() => normalizePoints(flightHistory as FlightHistory | null), [flightHistory]);
   const flightHistoryAvailable = flightPoints !== null;
 
@@ -345,36 +341,21 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 >
                   <TrackerMenuGlyph size={22} />
                 </button>
-                {overlays.leaderboardPanel ? (
-                  <div className={styles.leaderboardOverlay} data-testid="leaderboard-panel">
-                    <button
-                      type="button"
-                      className={styles.leaderboardHead}
-                      aria-expanded={leaderboardOpen}
-                      onClick={() => setLeaderboardOpen((v) => !v)}
-                    >
-                      <span>Cookies</span>
-                      <ChevronGlyph size={16} />
-                    </button>
-                    {leaderboardOpen ? (
-                      <div className={styles.leaderboardBody}>
-                        <Leaderboard
-                          data={{ variant: "panel", compact: true }}
-                          items={[]}
-                          bundle={bundle}
-                        />
-                      </div>
-                    ) : null}
-                  </div>
+                {overlays.leaderboardPanel && !menuOpen ? <CookieTally bundle={bundle} /> : null}
+                {showLeave && !menuOpen ? (
+                  <button
+                    type="button"
+                    className={styles.cookieLeave}
+                    aria-label={copy.cookies.leave}
+                    data-testid="cookie-tally-leave"
+                    onClick={() => setCookieOpen(true)}
+                  >
+                    <CookiePlusGlyph size={22} />
+                  </button>
                 ) : null}
               </div>
 
               <div className={styles.bottomLeft}>
-                {overlays.cookieControl ? (
-                  <div className={styles.cookieOverlay}>
-                    <CookieControl data={{ compact: true }} items={[]} bundle={bundle} />
-                  </div>
-                ) : null}
                 {overlays.sponsorCarousel ? (
                   <div className={styles.sponsorOverlay}>
                     <SponsorCarousel
@@ -430,6 +411,9 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 onEnable={onEnableLocation}
                 onDisable={onDisableLocation}
               />
+              {showLeave && cookieOpen ? (
+                <CookieDialog bundle={bundle} onClose={() => setCookieOpen(false)} />
+              ) : null}
               <RouteDisclaimer />
             </>
           )

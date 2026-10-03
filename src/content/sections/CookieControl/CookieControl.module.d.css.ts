@@ -4,7 +4,6 @@ export const cookieControlClosed: string;
 export const cookieControlOpen: string;
 export const cookieControlPending: string;
 export const cookieControlSignedOut: string;
-export const cookiePill: string;
 export const count: string;
 export const countOn: string;
 export const row: string;
