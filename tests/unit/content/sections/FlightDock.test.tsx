@@ -1,5 +1,5 @@
 // docs/site.md sections 7.6 and 8.5. The flight data dock: the speed and
-// altitude dials, the heading compass, and the airborne text instrument with converted units, the airborne slot's blank and flag
+// altitude dials, the heading compass, and the airborne ring with converted units, the airborne slot's blank and flag
 // states, the foot line, collapse and expand with the handle pill, the
 // first state by width, the dock height lifting the bottom stacks, the
 // tracker menu's hide toggle, and hiding while the menu is open.
@@ -141,16 +141,23 @@ describe("the flight data dock", () => {
     expect(utils.getByTestId("flight-dock-airborne").textContent).toMatch(/Airborne/i);
   });
 
-  it("the speed slot is the dial and airborne is text", async () => {
+  it("the speed slot is the dial", async () => {
     seed(FULL);
     const utils = await renderMap();
     const speed = utils.getByTestId("flight-dock-speed");
     expect(speed.tagName.toLowerCase()).toBe("svg");
     expect(speed.getAttribute("aria-label")).toBe("Speed 100 mph");
     expect(utils.getByTestId("flight-dock-speed-arc")).toBeInTheDocument();
+  });
+
+  it("the airborne slot is the ring", async () => {
+    seed(FULL);
+    const utils = await renderMap();
     const airborne = utils.getByTestId("flight-dock-airborne");
-    expect(airborne.tagName.toLowerCase()).toBe("div");
-    expect(airborne.querySelector("svg")).toBeNull();
+    expect(airborne.tagName.toLowerCase()).toBe("svg");
+    expect(airborne.getAttribute("aria-label")).toBe("Airborne 1h 12m");
+    expect(utils.getByTestId("flight-dock-airborne-arc")).toBeInTheDocument();
+    expect(utils.getByTestId("flight-dock-airborne-label").textContent).toBe("AIRBORNE");
   });
 
   it("the heading slot is the compass", async () => {
@@ -182,14 +189,20 @@ describe("the flight data dock", () => {
     expect(value(utils, "heading")).toBe("N/A");
   });
 
-  it("leaves the airborne slot blank until timeReady and while wentLiveAt is null", async () => {
+  it("passes null to the airborne ring until timeReady and while wentLiveAt is null or unparseable", async () => {
     seed(FULL, { timeReady: false });
     const utils = await renderMap();
-    expect(value(utils, "airborne")).toBe("");
+    expect(value(utils, "airborne")).toBe("N/A");
+    expect(utils.queryByTestId("flight-dock-airborne-arc")).toBeNull();
     seed(FULL, { wentLiveAt: null });
-    expect(value(utils, "airborne")).toBe("");
+    expect(value(utils, "airborne")).toBe("N/A");
+    expect(utils.queryByTestId("flight-dock-airborne-arc")).toBeNull();
+    seed(FULL, { wentLiveAt: "not a time" });
+    expect(value(utils, "airborne")).toBe("N/A");
+    expect(utils.queryByTestId("flight-dock-airborne-arc")).toBeNull();
     seed(FULL);
     expect(value(utils, "airborne")).toBe("1h 12m");
+    expect(utils.getByTestId("flight-dock-airborne-arc")).toBeInTheDocument();
   });
 
   it("removes the airborne slot with liftoffTimer off", async () => {
