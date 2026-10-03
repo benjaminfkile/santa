@@ -184,6 +184,18 @@ test("status walk", async ({ page }) => {
     await expect(page.locator('[data-testid="data-row-speed"]')).toContainText(/\d/);
     await page.keyboard.press("Escape");
 
+    // The tracker menu's account button opens the sign-in card as the auth
+    // dialog over the live map (site.md 11.5); going back closes it.
+    await page.getByRole("button", { name: /tracker menu/i }).click();
+    await page.locator('[data-testid="tracker-menu-sign-in"]').click();
+    await expect(page.locator('[data-testid="tracker-menu"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="auth-takeover"]')).toBeVisible();
+    await expect(page.locator('[data-testid="auth-takeover"] input[name="email"]')).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("data-takeover", "live");
+    await page.goBack();
+    await expect(page.locator('[data-testid="auth-takeover"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="map"]')).toBeVisible();
+
     // 6. The cookie tally rows sit under the tracker menu button with the
     // leave-a-cookie glyph below them. Sign in as the E2E person through
     // the glyph's dialog, drop a cookie, expect the tally to tick.

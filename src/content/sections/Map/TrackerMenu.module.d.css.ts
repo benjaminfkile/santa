@@ -3,6 +3,8 @@ export const close: string;
 export const dataRow: string;
 export const footer: string;
 export const footerBtn: string;
+export const footerEnd: string;
+export const footerStart: string;
 export const onMark: string;
 export const panel: string;
 export const pill: string;
