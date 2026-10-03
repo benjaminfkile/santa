@@ -16,6 +16,7 @@ const ROLE_BY_STATUS: Record<number, PageRole> = {
   3: "live",
   4: "ended",
   5: "cancelled",
+  6: "postponed",
 };
 
 export function selectBundle(s: SiteStore): ContentBundle | null {
@@ -43,7 +44,11 @@ export function selectHome(s: SiteStore): Surface {
     return { kind: "loading" };
   }
   if (role === null) return { kind: "reload" };
-  const page = bundle.content.pages.find((p) => p.role === role);
+  // A known status whose role page the published document lacks (an editor
+  // has not published it yet) renders the planned page; only an unknown
+  // status id prompts a reload.
+  const pages = bundle.content.pages;
+  const page = pages.find((p) => p.role === role) ?? pages.find((p) => p.role === "planned");
   return page ? { kind: "page", page } : { kind: "reload" };
 }
 

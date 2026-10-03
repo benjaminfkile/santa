@@ -20,7 +20,10 @@ type Locator = {
 
 export type SiteState = {
   live: { seq: number | null; eventStatusId: number | null; lat: number | null; lng: number | null; speedMps: number | null } | null;
-  snapshot: { event: { latestMessage?: { id?: number; body: string } | null } | null } | null;
+  snapshot: {
+    event: { latestMessage?: { id?: number; body: string } | null } | null;
+    content?: { pages: { role: string }[] } | null;
+  } | null;
   hub: string;
 };
 

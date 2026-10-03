@@ -310,12 +310,14 @@ The page at `/` is a pure function of the store. States and the events that move
                   [ loading ]  <----------------------------- (retry 1 s, 2 s, 3 s, then 5 s forever)
                         |  first live object applied
                         v
-        +---------------- role page for live.eventStatusId ---------------+
-        |          |            |          |          |            |
-   [ no_event ] [ planned ] [ scheduled ] [ live ]  [ ended ]  [ cancelled ]
-      null         1            2          3          4            5
-        ^          ^            ^          ^          ^            ^
-        +--------- every applied live object re-evaluates the switch ---------+
+        +---------------------- role page for live.eventStatusId ----------------------+
+        |          |            |          |          |            |              |
+   [ no_event ] [ planned ] [ scheduled ] [ live ]  [ ended ]  [ cancelled ]  [ postponed ]
+      null         1            2          3          4            5              6
+        ^          ^            ^          ^          ^            ^              ^
+        +--------------- every applied live object re-evaluates the switch -------------+
+
+   a known status whose role page is not in the published document ---> [ planned ]
 
    any state --- an object with schemaVersion !== 1 ---> [ reload ]   (terminal until location.reload())
 ```
@@ -375,7 +377,7 @@ export function applyLive(state: SiteStore, L: unknown, now: number): ApplyResul
 import type { ContentBundle, ContentPage, PageRole } from "../contracts";
 
 export type Surface = "loading" | "reload" | { page: ContentPage } | "notFound";
-const ROLE_BY_STATUS: Record<number, PageRole> = { 1: "planned", 2: "scheduled", 3: "live", 4: "ended", 5: "cancelled" };
+const ROLE_BY_STATUS: Record<number, PageRole> = { 1: "planned", 2: "scheduled", 3: "live", 4: "ended", 5: "cancelled", 6: "postponed" };
 
 export function selectBundle(s: SiteStore): ContentBundle | null {
   if (s.preview) return s.preview;
@@ -394,8 +396,9 @@ export function selectHome(s: SiteStore): Surface {
   const role = selectRole(s); const bundle = selectBundle(s);
   if (s.live === null || bundle === null) return "loading";
   if (role === null) return "reload";
-  const page = bundle.content.pages.find(p => p.role === role);
-  return page ? { page } : "reload";                                 // a published document always has every role page
+  const page = bundle.content.pages.find(p => p.role === role)
+    ?? bundle.content.pages.find(p => p.role === "planned");        // role page not published yet: the planned page
+  return page ? { page } : "reload";
 }
 
 export function selectSlug(s: SiteStore, slug: string): Surface {
@@ -419,6 +422,8 @@ export function selectTimeReady(s: SiteStore): boolean {
   return (s.snapshot?.event?.statusId ?? null) === (s.live?.eventStatusId ?? null);
 }
 ```
+
+Status 6 (`postponed`) has its own role page. A deployment whose editor has not yet published that page (contracts: the migration adds it unpublished) serves a document without it; `selectHome` then renders the `planned` page, the same fallback for any known status whose role page the document lacks. Only an unknown status id (`selectRole` returns null) renders the reload prompt. Nothing status-gated follows the postponed status: the countdown renders on status 2 only and the airborne time on status 3 only.
 
 The switch happens the moment the live object is applied: `selectRole` changes, and `HomePage` renders the role page from the snapshot it already holds. The snapshot named by the new `snapshotUrl` arrives a moment later and, if the pages changed since the last publish, the page re-renders; the event fields (name, times, message) fill in then, and until then the time-shaped sections render blank per `selectTimeReady`.
 
@@ -1455,7 +1460,7 @@ Fixtures come from the vendored `contracts/fixtures/*.json`; schema validation o
 
 ### 22.2 Playwright against the preview site
 
-Configuration: `baseURL = https://<preview-site-domain>`, Chromium desktop and Pixel 7 emulation, `E2E_API_BASE_URL` (the dev API), `E2E_CDN_BASE_URL`, and the secrets below from the `dev` GitHub environment. The harness refuses to run when `E2E_API_BASE_URL` does not contain `dev`, when `GET /me` for the admin token reports `isAdmin: false`, or when any event in `GET /admin/events` has `statusId` 3 at start. When `E2E_BASE_URL` is set and is not `localhost`, Playwright runs at `workers: 1` with `fullyParallel: false`: the status walk and the home state screenshots drive the same dev event and must not run at once, and the deployed site sits behind a bot checkpoint that answers `403` with a challenge page when one address opens many pages at once. The home state screenshots cover planned, scheduled, live, ended, and cancelled; the off-season home is not captured, because no admin call leaves dev without a current event.
+Configuration: `baseURL = https://<preview-site-domain>`, Chromium desktop and Pixel 7 emulation, `E2E_API_BASE_URL` (the dev API), `E2E_CDN_BASE_URL`, and the secrets below from the `dev` GitHub environment. The harness refuses to run when `E2E_API_BASE_URL` does not contain `dev`, when `GET /me` for the admin token reports `isAdmin: false`, or when any event in `GET /admin/events` has `statusId` 3 at start. When `E2E_BASE_URL` is set and is not `localhost`, Playwright runs at `workers: 1` with `fullyParallel: false`: the status walk and the home state screenshots drive the same dev event and must not run at once, and the deployed site sits behind a bot checkpoint that answers `403` with a challenge page when one address opens many pages at once. The home state screenshots cover planned, scheduled, live, ended, cancelled, and postponed; the off-season home is not captured, because no admin call leaves dev without a current event.
 
 Global setup (`tests/e2e/globalSetup.ts`, wired through the config's `globalSetup`): when `E2E_ADMIN_ID_TOKEN` is unset and the required Cognito variables are present, mints one ID token through `getAdminIdToken()` and stores it in `process.env.E2E_ADMIN_ID_TOKEN` so every worker inherits the same token. TOTP codes are single use, so each worker minting its own token inside the same 30 second step gets `ExpiredCodeException` from Cognito. When the variables are absent (a `--list` run, a unit run) it does nothing.
 
@@ -1483,7 +1488,8 @@ Dedicated walk event: year `2100`, name `E2E walk`, with `inheritRoute: true`. T
 8. Stop replay for 35 s. Assert the signal-lost chip appears after 30 s and the marker keeps its position.
 9. Status 4 with `notify: false`. Assert the ended page with the leaderboard showing the count from step 6 and the sponsor grid rendering at least one logo.
 10. Status 5 with `notify: false`. Assert the cancelled page shows the message from step 7 and no countdown.
-11. Restore: status 1 on the walk event (kept for the next run); `POST /admin/events/{previous}/current` when a previous current event existed; `POST /admin/beacons/{previous}/activate` when a previously active beacon existed and was not the walk beacon; `POST /admin/beacons/{walk-beacon}/revoke` on the beacon the walk minted. Every status change the walk makes keeps `notify: false`. A failure while revoking is logged and does not fail the test.
+11. Status 6 with `notify: false`. Read the role pages of the document in the store: when it holds a `postponed` page, assert `main[data-page-role="postponed"]` renders with its heading; otherwise assert the `planned` fallback page renders with its heading (5.4). No countdown.
+12. Restore: status 1 on the walk event (kept for the next run); `POST /admin/events/{previous}/current` when a previous current event existed; `POST /admin/beacons/{previous}/activate` when a previously active beacon existed and was not the walk beacon; `POST /admin/beacons/{walk-beacon}/revoke` on the beacon the walk minted. Every status change the walk makes keeps `notify: false`. A failure while revoking is logged and does not fail the test.
 
 `pages.spec.ts` (parallel): each ordinary page in the published document (read from the CDN snapshot by the harness) renders its first section; the page holding a `route_preview` in `viewer` style loads the `osd` chunk and not the map chunk, shows tiles from the asset's `dzi` (a request to `poster_files/` is seen), zooms on a wheel event, and enters and leaves fullscreen through its button; the auth pages render at their five paths with the site's shell and no Cognito host in the document; the header theme control is a menu (`theme-toggle` opens `theme-menu` holding the `theme-light`, `theme-dark`, `theme-system` radio items): opening it and clicking `theme-dark` sets `data-theme="dark"` on `<html>`, the choice survives a reload, and opening it again and clicking `theme-light` sets `data-theme="light"`; screenshots of every page and every home state in both schemes are compared against checked-in baselines; `/preview?token=<minted by the harness through POST /admin/content/preview-token>&page=ended` starts a preview session and lands on `/` with the preview banner, and Exit preview removes the banner; `/alerts/verify?token=wsv_<43 invalid chars>` and `/alerts/unsubscribe?token=wsu_<43 invalid chars>` render the invalid copy after one POST; `/alerts` signed in subscribes a unique address, asserts a Pending row, resends once, then deletes it; the contact form posts a message tagged with the run id and the harness finds and deletes it through the admin endpoints; the 404 page for `/nope`; reduced-motion emulation hides the snow toggle; at 320, 375, and 390 px wide `/` and every ordinary page has a `document.documentElement.scrollWidth` no wider than the viewport; at 800, 1024, and 1280 px the header nav's items sit on one line inside the nav, and when More shows it opens its menu and Escape closes it with focus back on More; the CSP meta is present and the hub WebSocket to `<gateway-domain>` opens (network log).
 

@@ -59,6 +59,7 @@ function makeContent(): ContentDocument {
       makePage(4, "live", "live"),
       makePage(5, "ended", "ended"),
       makePage(6, "cancelled", "cancelled"),
+      makePage(9, "postponed", "postponed"),
       makePage(7, "none", "about", "About", 10),
       makePage(8, "none", "contact", "Contact", 20),
     ],
@@ -108,12 +109,13 @@ describe("selectRole", () => {
   it("returns null when no live object", () => {
     expect(selectRole(initialStore)).toBeNull();
   });
-  it("maps 1..5 to their role and null to no_event", () => {
+  it("maps 1..6 to their role and null to no_event", () => {
     expect(selectRole(stateFor(1))).toBe("planned");
     expect(selectRole(stateFor(2))).toBe("scheduled");
     expect(selectRole(stateFor(3))).toBe("live");
     expect(selectRole(stateFor(4))).toBe("ended");
     expect(selectRole(stateFor(5))).toBe("cancelled");
+    expect(selectRole(stateFor(6))).toBe("postponed");
     expect(selectRole(stateFor(null))).toBe("no_event");
   });
   it("returns null on unknown status id", () => {
@@ -130,7 +132,7 @@ describe("selectHome", () => {
     expect(selectHome(s)).toEqual({ kind: "loading" });
   });
   it("returns the role page for every status", () => {
-    for (const [id, role] of [[1, "planned"], [2, "scheduled"], [3, "live"], [4, "ended"], [5, "cancelled"]] as const) {
+    for (const [id, role] of [[1, "planned"], [2, "scheduled"], [3, "live"], [4, "ended"], [5, "cancelled"], [6, "postponed"]] as const) {
       const s = stateFor(id);
       const r = selectHome(s);
       expect(r.kind).toBe("page");
@@ -142,8 +144,22 @@ describe("selectHome", () => {
     expect(r.kind).toBe("page");
     if (r.kind === "page") expect(r.page.role).toBe("no_event");
   });
+  it("selects the postponed page for status 6", () => {
+    const r = selectHome(stateFor(6));
+    expect(r.kind).toBe("page");
+    if (r.kind === "page") expect(r.page.slug).toBe("postponed");
+  });
+  it("falls back to the planned page for status 6 when no postponed page is published", () => {
+    const content = makeContent();
+    content.pages = content.pages.filter((p) => p.role !== "postponed");
+    const s: SiteStore = { ...stateFor(6), snapshot: { schemaVersion: 1, content, media: {}, icons: {} } };
+    const r = selectHome(s);
+    expect(r.kind).toBe("page");
+    if (r.kind === "page") expect(r.page.role).toBe("planned");
+  });
   it("returns reload on unknown status id", () => {
     expect(selectHome(stateFor(99))).toEqual({ kind: "reload" });
+    expect(selectHome(stateFor(7))).toEqual({ kind: "reload" });
   });
   it("reload wins over everything", () => {
     const s: SiteStore = { ...stateFor(1), schemaMismatch: true };

@@ -37,6 +37,7 @@ const HOME_STATES: { name: string; statusId: EventStatusId | null }[] = [
   { name: "live", statusId: 3 },
   { name: "ended", statusId: 4 },
   { name: "cancelled", statusId: 5 },
+  { name: "postponed", statusId: 6 },
 ];
 
 test.describe.configure({ mode: "serial" });

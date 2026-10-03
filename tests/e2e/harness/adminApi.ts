@@ -4,7 +4,7 @@
 import { e2eEnv } from "./env";
 import { getAdminIdToken } from "./adminToken";
 
-export type EventStatusId = 1 | 2 | 3 | 4 | 5;
+export type EventStatusId = 1 | 2 | 3 | 4 | 5 | 6;
 
 export type AdminEvent = {
   id: number;
