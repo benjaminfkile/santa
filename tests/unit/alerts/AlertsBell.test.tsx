@@ -58,7 +58,7 @@ const ACTIVE: Subscription = {
   createdAt: "2026-09-01T00:00:00Z",
 };
 
-function alert(id: number, sentAt: string, subject: string, kind = "status"): AlertItem {
+function alert(id: number, sentAt: string, subject: string, kind = "event_status"): AlertItem {
   return { id, subscriptionId: 1, address: "p@example.com", kind, eventId: 1, eventName: "Santa 2026", subject, sentAt };
 }
 
@@ -180,7 +180,7 @@ function stubReducedMotion(reduce: boolean) {
 
 const ALERTS = [
   alert(5, "2026-10-01T10:00:00Z", "Santa has landed"),
-  alert(7, "2026-10-01T12:00:00Z", "A message from the elves", "update"),
+  alert(7, "2026-10-01T12:00:00Z", "A message from the elves", "event_message"),
   alert(6, "2026-10-01T11:00:00Z", "Santa is in the air"),
 ];
 
@@ -306,8 +306,10 @@ describe("AlertsDialog", () => {
     expect(rows[2].querySelector('[data-testid="alerts-dialog-new"]')).toBeNull();
     expect(rows[0].textContent).toContain("Santa 2026");
     expect(rows[0].textContent).toContain("A message from the elves");
-    expect(rows[0].textContent).toContain("update");
-    expect(rows[1].textContent).toContain("status");
+    expect(rows[0].querySelector(".kind")?.textContent).toBe("update");
+    expect(rows[0].querySelector(".kind")?.classList.contains("kindUpdate")).toBe(true);
+    expect(rows[1].querySelector(".kind")?.textContent).toBe("status");
+    expect(rows[1].querySelector(".kind")?.classList.contains("kindStatus")).toBe(true);
 
     fireEvent.click(getByTestId("alerts-dialog-close"));
     expect(queryByTestId("alerts-dialog")).toBeNull();
