@@ -233,17 +233,22 @@ test("status walk", async ({ page }) => {
       timeout: 2 * POLL_INTERVAL_MS + 2000,
     });
 
-    // 7. Post a message; expect it in the ticker.
+    // 7. Post a message; expect the messages pill, and the message in its
+    // dialog, which opens only when the pill is pressed.
     const runId = process.env.GITHUB_RUN_ID ?? String(Date.now());
     const messageBody = `E2E ${runId}`;
     await postEventMessage(walk.id, { body: messageBody, eventTime: null });
     await waitForState(
       page,
-      (s, body) => s?.snapshot?.event?.latestMessage?.body === body,
+      (s, body) => (s?.snapshot?.event?.messages ?? []).some((m) => m.body === body),
       POLL_PLUS,
       messageBody,
     );
-    await expect(page.locator('[data-testid="latest-message"]')).toContainText(messageBody);
+    await expect(page.locator('[data-testid="messages-pill"]')).toBeVisible();
+    await expect(page.locator('[data-testid="messages-dialog"]')).toHaveCount(0);
+    await page.locator('[data-testid="messages-pill"]').click();
+    await expect(page.locator('[data-testid="messages-dialog"]')).toContainText(messageBody);
+    await page.locator('[data-testid="messages-dialog-close"]').click();
 
     // 8. Stop replay; signal-lost chip after 30 s; marker keeps position.
     rep.stop();

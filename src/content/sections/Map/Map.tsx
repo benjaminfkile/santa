@@ -1,6 +1,6 @@
 // docs/site.md sections 7.6 and 8. The live screen, laid out as the legacy
 // tracker: the map fills the viewport; pills top-left (live state with the
-// viewers, the fix status, the message ticker); the tracker menu button,
+// viewers, the fix status, the messages pill); the tracker menu button,
 // the bare cookie tally, and the leave-a-cookie glyph top-right; the flight
 // data dock's handle pill (while collapsed) above the sponsor tile
 // bottom-left; zoom while following and recenter after a drag bottom-right;
@@ -16,7 +16,6 @@ import { selectLiveState } from "../../../store/liveState";
 import { selectTakeover } from "../../selectPage";
 import { storageGet, storageSet } from "../../../lib/storage";
 import { setSnowOverride, useSnowEnabled } from "../../theme/seasonalLayers";
-import { LatestMessage } from "../LatestMessage/LatestMessage";
 import { SponsorCarousel } from "../SponsorCarousel/SponsorCarousel";
 import { CookieDialog } from "../CookieControl/CookieControl";
 import { MapView } from "../../../map/MapView";
@@ -29,6 +28,7 @@ import type { Snapshot } from "../../../contracts";
 import { copy } from "../../../copy/copy";
 import { FixStatus } from "./InfoOverlays";
 import { LiveIndicator } from "./LiveIndicator";
+import { MessagesPill } from "./MessagesPill";
 import { FlightDock, FlightDockHandle } from "./FlightDock";
 import { MapControls } from "./MapControls";
 import { RouteDisclaimer } from "./RouteDisclaimer";
@@ -185,7 +185,6 @@ export const Map: SectionComponent = ({ data, bundle }) => {
 
   const takeover = useStore(selectTakeover);
   const flightHistory = useStore((s) => s.snapshot?.event?.flightHistory ?? null);
-  const hasMessage = useStore((s) => (s.snapshot?.event?.latestMessage ?? null) !== null);
   const isLive = useStore((s) => s.live?.eventStatusId === 3);
   const showLeave = overlays.cookieControl && isLive;
   const flightPoints = useMemo(() => normalizePoints(flightHistory as FlightHistory | null), [flightHistory]);
@@ -348,15 +347,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
               <div className={styles.topLeft}>
                 {overlays.liveIndicator ? <LiveIndicator showCount={overlays.onlineCount} /> : null}
                 <FixStatus />
-                {overlays.latestMessage && hasMessage ? (
-                  <div className={styles.messageOverlay}>
-                    <LatestMessage
-                      data={{ style: "ticker" }}
-                      items={[]}
-                      bundle={bundle}
-                    />
-                  </div>
-                ) : null}
+                {overlays.latestMessage ? <MessagesPill bundle={bundle} /> : null}
               </div>
 
               <div className={styles.topRight}>

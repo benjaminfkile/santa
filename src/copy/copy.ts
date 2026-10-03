@@ -50,6 +50,14 @@ export const copy = {
     unavailable: "Map unavailable",
     retry: "Retry",
     trackerMenu: "Tracker menu",
+    messages: {
+      noun: (n: number) => (n === 1 ? "message" : "messages"),
+      pill: (n: number, fresh: number) =>
+        `${n} ${n === 1 ? "message" : "messages"}${fresh > 0 ? `, ${fresh} new` : ""}`,
+      title: "Flight updates",
+      newMarker: "New",
+      close: "Close",
+    },
     flightDock: {
       title: "Flight data",
       speed: "Speed",
