@@ -1,10 +1,12 @@
 /* docs/site.md sections 7.6 and 8. The live screen, laid out as the legacy
    tracker was: the map owns the viewport; small pills top-left (live state,
-   airborne time, distance, the instrument line, the message ticker); the
-   tracker menu button, the bare cookie tally, and the leave-a-cookie glyph
-   top-right; the sponsor tile bottom-left; zoom or recenter bottom-right.
-   Every overlay sits 8 px from its corner and nothing on the map is taller
-   than 44 px except the tally column and the sponsor tile. */
+   the fix status, the message ticker); the tracker menu button, the bare
+   cookie tally, and the leave-a-cookie glyph top-right; the flight data
+   handle pill and the sponsor tile bottom-left; zoom or recenter
+   bottom-right; the flight data dock (FlightDock.module.css) across the
+   bottom while open. Every overlay sits 8 px from its corner and nothing
+   on the map is taller than 44 px except the tally column, the sponsor
+   tile, and the dock. */
 
 .mapSection {
   position: relative;
@@ -57,6 +59,8 @@
 .topRight { top: 8px; right: 8px; align-items: flex-end; }
 .bottomLeft { bottom: 8px; left: 8px; align-items: flex-start; }
 .bottomRight { bottom: 8px; right: 8px; align-items: flex-end; }
+/* While the dock is open both bottom stacks sit 6 px above it. */
+.lifted { bottom: calc(8px + var(--dock-height, 0px) + 6px); }
 .menuOpen .topLeft,
 .menuOpen .bottomRight { display: none; }
 
@@ -107,24 +111,9 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
-.liftoffTimer { composes: pill; }
-.liftoffTimerBlank { display: none; }
-.liftoffTimerLabel { color: var(--text-dim); }
-.liftoffTimerValue { color: var(--text-bright); }
-.distanceChip { composes: pill; }
 .infoOverlaysStatus { composes: pill; color: var(--text-dim); }
 .infoOverlaysStatusSignalLost { color: var(--err); }
 .infoOverlaysStatusSignalLost svg { color: var(--err); }
-
-/* The instrument line: speed, heading, altitude on one pill. */
-.liveStrip { composes: pill; gap: 10px; }
-.liveStripInst {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 3px;
-}
-.liveStripValue { color: var(--text-bright); }
-.liveStripUnit { color: var(--text-dim); font-size: 0.6875rem; }
 
 /* The message ticker under the pills. */
 .messageOverlay {
@@ -229,7 +218,7 @@
 .recenter { composes: glass; border-radius: 8px; }
 .recenter .ctrl { color: var(--accent); }
 
-/* Bottom-left: the sponsor tile. */
+/* Bottom-left: the sponsor tile, under the dock handle pill. */
 .sponsorOverlay { display: flex; }
 
 .unavailable {
