@@ -1,9 +1,10 @@
 // docs/site.md section 7.6. The messages pill on the tracker: absent with
-// no messages or with `overlays.latestMessage` off; the count and the
-// unread dot against `wmsfo.messages.seen.<eventId>`; opening stores the
-// newest id and clears the dot; the dialog lists the messages newest
-// first with their times and the New markers; the dialog never opens on
-// mount or on a new message; the shake and reduced motion.
+// a null `latestMessage` or with `overlays.latestMessage` off; the unread
+// dot against `wmsfo.messages.seen.<eventId>`; pressing marks the message
+// read, clears the dot, and opens the one-message dialog with its time and
+// the New marker; the dialog never opens on mount or on a new message; a
+// rising id shakes once and brings the dot back; reduced motion; a
+// `latest_message` section on the same page clears the dot.
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -45,21 +46,21 @@ vi.mock("../../../../src/map/MapView", () => ({
 }));
 
 import { Map } from "../../../../src/content/sections/Map/Map";
+import { LatestMessage } from "../../../../src/content/sections/LatestMessage/LatestMessage";
 
 const bundle = { content: null as unknown, media: {}, icons: {} } as ContentBundle;
 const EVENT_ID = 7;
 const SEEN_KEY = `wmsfo.messages.seen.${EVENT_ID}`;
 
-type Message = NonNullable<Snapshot["event"]>["messages"][number];
+type Message = NonNullable<NonNullable<Snapshot["event"]>["latestMessage"]>;
 
-const M10: Message = { id: 10, body: "The sleigh is loaded.", eventTime: null, createdAt: "2026-12-22T00:40:00.000Z" };
-const M11: Message = { id: 11, body: "Wheels up at the airport.", eventTime: "2026-12-22T01:00:00.000Z", createdAt: "2026-12-22T01:01:00.000Z" };
+const M11: Message = { id: 11, body: "Wheels up at the airport.", eventTime: null, createdAt: "2026-12-22T01:01:00.000Z" };
 const M12: Message = { id: 12, body: "Santa is over the valley.", eventTime: "2026-12-22T01:30:00.000Z", createdAt: "2026-12-22T01:31:00.000Z" };
 
-function setMessages(messages: Message[]) {
+function setMessage(latestMessage: Message | null) {
   act(() =>
     store.setState({
-      snapshot: { schemaVersion: 1, event: { id: EVENT_ID, statusId: 3, messages } } as Snapshot,
+      snapshot: { schemaVersion: 1, event: { id: EVENT_ID, statusId: 3, latestMessage } } as Snapshot,
     }),
   );
 }
@@ -104,105 +105,126 @@ afterEach(() => {
 });
 
 describe("MessagesPill presence", () => {
-  it("is absent with no messages", () => {
-    setMessages([]);
+  it("is absent with a null message", () => {
+    setMessage(null);
     const view = renderMap();
     expect(view.queryByTestId("messages-pill")).toBeNull();
   });
 
   it("is absent with overlays.latestMessage off", () => {
-    setMessages([M10, M11]);
+    setMessage(M12);
     const view = renderMap(false);
     expect(view.queryByTestId("messages-pill")).toBeNull();
   });
 
-  it("renders no ticker on the tracker", () => {
-    setMessages([M10]);
+  it("is absent for a message with no id", () => {
+    setMessage({ body: "No id." });
     const view = renderMap();
-    expect(view.getByTestId("messages-pill")).toBeTruthy();
+    expect(view.queryByTestId("messages-pill")).toBeNull();
+  });
+
+  it("shows the envelope and no count", () => {
+    setMessage(M12);
+    const view = renderMap();
+    const pill = view.getByTestId("messages-pill");
+    expect(within(pill).getByTestId("messages-envelope")).toBeTruthy();
+    expect(view.queryByTestId("messages-count")).toBeNull();
+    expect(pill.textContent).toBe("");
     expect(view.queryByTestId("latest-message")).toBeNull();
   });
 });
 
-describe("MessagesPill count and dot", () => {
-  it("counts every message and shows the dot while no seen mark is stored", () => {
-    setMessages([M10, M11, M12]);
+describe("MessagesPill dot", () => {
+  it("shows the dot while no read mark is stored", () => {
+    setMessage(M12);
     const view = renderMap();
-    const pill = view.getByTestId("messages-pill");
-    expect(view.getByTestId("messages-count").textContent).toBe("3 messages");
-    expect(pill.getAttribute("aria-label")).toBe("3 messages, 3 new");
+    expect(view.getByTestId("messages-pill").getAttribute("aria-label")).toBe("Latest message, new");
     expect(view.getByTestId("messages-dot")).toBeTruthy();
   });
 
-  it("counts only the ids above the stored mark as new", () => {
+  it("shows the dot while the stored id is lower", () => {
     window.localStorage.setItem(SEEN_KEY, "11");
-    setMessages([M10, M11, M12]);
+    setMessage(M12);
     const view = renderMap();
-    expect(view.getByTestId("messages-pill").getAttribute("aria-label")).toBe("3 messages, 1 new");
     expect(view.getByTestId("messages-dot")).toBeTruthy();
   });
 
-  it("shows no dot when every message is seen", () => {
+  it("shows no dot when the stored id is equal", () => {
     window.localStorage.setItem(SEEN_KEY, "12");
-    setMessages([M10, M11, M12]);
+    setMessage(M12);
     const view = renderMap();
-    expect(view.getByTestId("messages-pill").getAttribute("aria-label")).toBe("3 messages");
+    expect(view.getByTestId("messages-pill").getAttribute("aria-label")).toBe("Latest message");
+    expect(view.queryByTestId("messages-dot")).toBeNull();
+  });
+
+  it("shows no dot when the stored id is higher", () => {
+    window.localStorage.setItem(SEEN_KEY, "13");
+    setMessage(M12);
+    const view = renderMap();
     expect(view.queryByTestId("messages-dot")).toBeNull();
   });
 
   it("reads the mark of this event only", () => {
     window.localStorage.setItem("wmsfo.messages.seen.6", "12");
-    setMessages([M10, M11, M12]);
+    setMessage(M12);
     const view = renderMap();
     expect(view.getByTestId("messages-dot")).toBeTruthy();
   });
 });
 
 describe("MessagesPill opening", () => {
-  it("stores the newest id and clears the dot", () => {
-    window.localStorage.setItem(SEEN_KEY, "10");
-    setMessages([M10, M12, M11]);
+  it("stores the id and clears the dot", () => {
+    window.localStorage.setItem(SEEN_KEY, "11");
+    setMessage(M12);
     const view = renderMap();
     fireEvent.click(view.getByTestId("messages-pill"));
     expect(window.localStorage.getItem(SEEN_KEY)).toBe("12");
     expect(view.queryByTestId("messages-dot")).toBeNull();
-    expect(view.getByTestId("messages-pill").getAttribute("aria-label")).toBe("3 messages");
+    expect(view.getByTestId("messages-pill").getAttribute("aria-label")).toBe("Latest message");
   });
 
-  it("lists the messages newest first with their times and the New markers", () => {
-    window.localStorage.setItem(SEEN_KEY, "10");
-    setMessages([M10, M12, M11]);
+  it("shows the one message with its time and the New marker", () => {
+    setMessage(M12);
     const view = renderMap();
     fireEvent.click(view.getByTestId("messages-pill"));
     const dialog = view.getByTestId("messages-dialog");
     expect(within(dialog).getByText("Flight updates")).toBeTruthy();
-    const rows = within(dialog).getAllByTestId(/^messages-dialog-row-/);
-    expect(rows.map((r) => r.getAttribute("data-testid"))).toEqual([
-      "messages-dialog-row-12",
-      "messages-dialog-row-11",
-      "messages-dialog-row-10",
-    ]);
+    const rows = within(dialog).getAllByTestId("messages-dialog-row");
+    expect(rows).toHaveLength(1);
     expect(rows[0].textContent).toContain("Santa is over the valley.");
     expect(within(rows[0]).getByTestId("messages-dialog-time").textContent).toBe(formatEventTime(M12.eventTime));
-    expect(within(rows[2]).getByTestId("messages-dialog-time").textContent).toBe(formatEventTime(M10.createdAt));
-    expect(within(rows[0]).queryByTestId("messages-dialog-new")).not.toBeNull();
-    expect(within(rows[1]).queryByTestId("messages-dialog-new")).not.toBeNull();
-    expect(within(rows[2]).queryByTestId("messages-dialog-new")).toBeNull();
+    expect(within(rows[0]).getByTestId("messages-dialog-new").textContent).toBe("New");
   });
 
-  it("keeps the New markers until the dialog closes", () => {
-    setMessages([M10, M11]);
+  it("takes the time from createdAt when eventTime is null", () => {
+    setMessage(M11);
     const view = renderMap();
     fireEvent.click(view.getByTestId("messages-pill"));
-    expect(view.getAllByTestId("messages-dialog-new")).toHaveLength(2);
+    expect(view.getByTestId("messages-dialog-time").textContent).toBe(formatEventTime(M11.createdAt));
+  });
+
+  it("shows no New marker for a message already read", () => {
+    window.localStorage.setItem(SEEN_KEY, "12");
+    setMessage(M12);
+    const view = renderMap();
+    fireEvent.click(view.getByTestId("messages-pill"));
+    expect(view.getByTestId("messages-dialog-row")).toBeTruthy();
+    expect(view.queryByTestId("messages-dialog-new")).toBeNull();
+  });
+
+  it("keeps the New marker until the dialog closes", () => {
+    setMessage(M12);
+    const view = renderMap();
+    fireEvent.click(view.getByTestId("messages-pill"));
+    expect(view.getByTestId("messages-dialog-new")).toBeTruthy();
     fireEvent.click(view.getByTestId("messages-dialog-close"));
     expect(view.queryByTestId("messages-dialog")).toBeNull();
     fireEvent.click(view.getByTestId("messages-pill"));
-    expect(view.queryAllByTestId("messages-dialog-new")).toHaveLength(0);
+    expect(view.queryByTestId("messages-dialog-new")).toBeNull();
   });
 
   it("closes on a backdrop press", () => {
-    setMessages([M10]);
+    setMessage(M12);
     const view = renderMap();
     fireEvent.click(view.getByTestId("messages-pill"));
     fireEvent.click(view.getByTestId("messages-dialog"));
@@ -212,45 +234,73 @@ describe("MessagesPill opening", () => {
 
 describe("MessagesPill never opens on its own", () => {
   it("does not open the dialog on mount", () => {
-    setMessages([M10, M11]);
+    setMessage(M12);
     const view = renderMap();
     expect(view.queryByTestId("messages-dialog")).toBeNull();
   });
 
-  it("a new message changes only the count and the dot", () => {
-    window.localStorage.setItem(SEEN_KEY, "11");
-    setMessages([M10, M11]);
+  it("a new message brings the dot back and opens nothing", () => {
+    setMessage(M11);
     const view = renderMap();
+    fireEvent.click(view.getByTestId("messages-pill"));
+    fireEvent.click(view.getByTestId("messages-dialog-close"));
     expect(view.queryByTestId("messages-dot")).toBeNull();
-    setMessages([M10, M11, M12]);
+    setMessage(M12);
     expect(view.queryByTestId("messages-dialog")).toBeNull();
-    expect(view.getByTestId("messages-count").textContent).toBe("3 messages");
     expect(view.getByTestId("messages-dot")).toBeTruthy();
   });
 });
 
 describe("MessagesPill shake", () => {
-  it("shakes when the newest id grows while mounted", () => {
-    stubReducedMotion(false);
-    setMessages([M10, M11]);
-    const view = renderMap();
-    expect(view.getByTestId("messages-envelope").className).not.toContain("messagesShake");
-    setMessages([M10, M11, M12]);
-    expect(view.getByTestId("messages-envelope").className).toContain("messagesShake");
+  it("shakes once when the id rises while mounted", () => {
+    vi.useFakeTimers();
+    try {
+      stubReducedMotion(false);
+      window.localStorage.setItem(SEEN_KEY, "11");
+      setMessage(M11);
+      const view = renderMap();
+      expect(view.getByTestId("messages-envelope").className).not.toContain("messagesShake");
+      expect(view.queryByTestId("messages-dot")).toBeNull();
+      setMessage(M12);
+      expect(view.getByTestId("messages-envelope").className).toContain("messagesShake");
+      expect(view.getByTestId("messages-dot")).toBeTruthy();
+      expect(view.queryByTestId("messages-dialog")).toBeNull();
+      act(() => {
+        vi.advanceTimersByTime(700);
+      });
+      expect(view.getByTestId("messages-envelope").className).not.toContain("messagesShake");
+      // The same id again does not shake.
+      setMessage({ ...M12 });
+      expect(view.getByTestId("messages-envelope").className).not.toContain("messagesShake");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("does not shake on the first render", () => {
     stubReducedMotion(false);
-    setMessages([M10, M11, M12]);
+    setMessage(M12);
     const view = renderMap();
     expect(view.getByTestId("messages-envelope").className).not.toContain("messagesShake");
   });
 
   it("adds no shake class under reduced motion", () => {
     stubReducedMotion(true);
-    setMessages([M10, M11]);
+    setMessage(M11);
     const view = renderMap();
-    setMessages([M10, M11, M12]);
+    setMessage(M12);
     expect(view.getByTestId("messages-envelope").className).not.toContain("messagesShake");
+  });
+});
+
+describe("MessagesPill and the latest_message section", () => {
+  it("clears the dot when a section on the same page marks the message read", () => {
+    setMessage(M12);
+    const view = renderMap();
+    expect(view.getByTestId("messages-dot")).toBeTruthy();
+    const section = render(<LatestMessage data={{ style: "ticker" }} items={[]} bundle={bundle} />);
+    expect(section.getByTestId("latest-message")).toBeTruthy();
+    expect(window.localStorage.getItem(SEEN_KEY)).toBe("12");
+    expect(view.queryByTestId("messages-dot")).toBeNull();
   });
 });

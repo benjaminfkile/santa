@@ -103,7 +103,7 @@ function setSnapshot(statusId: number | null) {
         content: makeContent() as unknown,
         media: {},
         icons: {},
-        event: statusId === null ? null : { statusId, messages: [] },
+        event: statusId === null ? null : { statusId },
       },
       snapshotUrl: "https://cdn/snap.json",
     }));

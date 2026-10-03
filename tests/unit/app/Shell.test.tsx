@@ -78,7 +78,7 @@ function seed(content: ContentDocument, mapFirst: boolean = false, media: Record
         content: content as unknown,
         media,
         icons: {},
-        event: { statusId: mapFirst ? 3 : 1, messages: [] },
+        event: { statusId: mapFirst ? 3 : 1 },
       },
       snapshotUrl: "https://cdn/snap.json",
       live: {

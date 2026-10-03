@@ -28,7 +28,6 @@ export const mapSectionLoading: string;
 export const mapSectionTakeover: string;
 export const menuButton: string;
 export const menuOpen: string;
-export const messagesCount: string;
 export const messagesDot: string;
 export const messagesEnvelope: string;
 export const messagesPill: string;
