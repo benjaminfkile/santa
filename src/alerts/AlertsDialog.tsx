@@ -13,6 +13,7 @@ import type { AlertItem } from "../api/subscriptions";
 import { copy } from "../copy/copy";
 import { formatEventTime } from "../lib/time";
 import { alertId } from "./alertId";
+import { alertKindLabel } from "./alertKind";
 import * as dlg from "../ui/Dialog.module.css";
 import * as btn from "../ui/Button.module.css";
 import * as styles from "./Alerts.module.css";
@@ -78,13 +79,14 @@ export function AlertsDialog({ alerts, seenId, manageHref, onClose }: AlertsDial
             {sorted.map((row) => {
               const id = alertId(row);
               const fresh = seenId === null || id > seenId;
-              const update = row.kind === "update";
+              const label = alertKindLabel(row.kind);
+              const update = label === copy.alerts.kindUpdate;
               return (
                 <li key={id} className={styles.row} data-testid={`alerts-dialog-row-${id}`}>
                   <div className={styles.rowHead}>
                     <span className={styles.when}>{formatEventTime(row.sentAt)}</span>
                     <span className={`${styles.kind} ${update ? styles.kindUpdate : styles.kindStatus}`}>
-                      {update ? copy.alerts.kindUpdate : copy.alerts.kindStatus}
+                      {label}
                     </span>
                     {fresh ? (
                       <span className={styles.fresh} data-testid="alerts-dialog-new">{copy.alerts.newMarker}</span>

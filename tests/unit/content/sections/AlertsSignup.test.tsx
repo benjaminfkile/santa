@@ -249,8 +249,8 @@ describe("AlertsSignup", () => {
     } as never);
     vi.mocked(subsApi.listAlerts).mockResolvedValueOnce({
       items: [
-        { id: 1, subscriptionId: 5, address: "p@e.com", kind: "status", eventId: 10, eventName: "Walk", statusId: 3, messageId: null, subject: "We are live", sentAt: "2024-12-24T18:00:00Z" },
-        { id: 2, subscriptionId: 5, address: "p@e.com", kind: "update", eventId: 10, eventName: "Walk", statusId: null, messageId: 42, subject: "Latest update", sentAt: "2024-12-24T20:00:00Z" },
+        { id: 1, subscriptionId: 5, address: "p@e.com", kind: "event_status", eventId: 10, eventName: "Walk", statusId: 3, messageId: null, subject: "We are live", sentAt: "2024-12-24T18:00:00Z" },
+        { id: 2, subscriptionId: 5, address: "p@e.com", kind: "event_message", eventId: 10, eventName: "Walk", statusId: null, messageId: 42, subject: "Latest update", sentAt: "2024-12-24T20:00:00Z" },
       ],
     } as never);
     const { findByTestId, getAllByTestId, queryByTestId } = renderWith({ status: "signedIn", email: "p@e", expired: false });
@@ -276,7 +276,7 @@ describe("AlertsSignup", () => {
     } as never);
     vi.mocked(subsApi.listAlerts).mockResolvedValueOnce({
       items: [
-        { id: 1, subscriptionId: 5, address: "p@e.com", kind: "status", eventId: 10, eventName: "Walk", statusId: 3, messageId: null, subject: "We are live", sentAt: "2024-12-24T18:00:00Z" },
+        { id: 1, subscriptionId: 5, address: "p@e.com", kind: "event_status", eventId: 10, eventName: "Walk", statusId: 3, messageId: null, subject: "We are live", sentAt: "2024-12-24T18:00:00Z" },
       ],
     } as never);
     const { findByTestId, getByTestId } = renderWith({ status: "signedIn", email: "p@e", expired: false });

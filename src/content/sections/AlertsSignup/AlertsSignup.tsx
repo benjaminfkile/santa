@@ -26,6 +26,8 @@ import { ApiRequestError, surfaceFor } from "../../../api/errors";
 import { SignInRequired } from "../../../auth/getIdToken";
 import { StatusPill } from "../../primitives/StatusPill";
 import { formatEventTime } from "../../../lib/time";
+import { alertKindLabel } from "../../../alerts/alertKind";
+import { copy } from "../../../copy/copy";
 import * as styles from "./AlertsSignup.module.css";
 import * as btn from "../../../ui/Button.module.css";
 import * as field from "../../../ui/Field.module.css";
@@ -496,7 +498,7 @@ function AlertRow({
   showAddress: boolean;
 }) {
   const sentAt = formatEventTime(row.sentAt);
-  const kindLabel = row.kind === "update" ? "update" : "status";
+  const kindLabel = alertKindLabel(row.kind);
   return (
     <li className={styles.alertsSignupSentRow} data-testid={`alert-${num(row.id)}`}>
       <div className={styles.alertsSignupSentHead}>
@@ -505,7 +507,7 @@ function AlertRow({
         </span>
         <span
           className={`${styles.alertsSignupSentKind} ${
-            kindLabel === "update"
+            kindLabel === copy.alerts.kindUpdate
               ? styles.alertsSignupSentKindUpdate
               : styles.alertsSignupSentKindStatus
           }`}
