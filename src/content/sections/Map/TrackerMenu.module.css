@@ -134,11 +134,13 @@
   font-size: 0.8125rem;
   color: var(--tracker-tile-fg);
 }
+/* The two groups align on their first row, so the account button stays on
+   the button row when a toggle opens its submenu under the right group. */
 .footer {
   display: flex;
   flex-wrap: nowrap;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 4px;
 }
 .footerStart {
@@ -147,6 +149,7 @@
   align-items: flex-end;
   gap: 4px;
 }
+
 /* Every footer button sits under a short label: a column at least the
    button's 44 px wide (a longer label widens the column), the buttons on
    one baseline whatever the label. */
@@ -167,16 +170,27 @@
   color: var(--text-dim);
   white-space: nowrap;
 }
-/* The right group wraps: when one line cannot hold every button at 44 px
-   the overflow drops to the next line, right-aligned, so the close button
-   ends the last line. */
+/* The right group is one row that never wraps: a grid whose first row is
+   the buttons, each in its own column, and whose second row carries a
+   toggle's submenu in that toggle's column, directly under it. */
 .footerEnd {
-  display: flex;
-  flex: 1 1 0;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  display: grid;
+  grid-auto-flow: row;
+  grid-auto-columns: minmax(44px, max-content);
+  justify-content: end;
+  align-items: end;
   gap: 6px 4px;
   min-width: 0;
+}
+.footerEnd > .footerItem { grid-row: 1; }
+/* A submenu starts in its toggle's column and grows to the right over the
+   empty second row, so another entry never moves the buttons above it. */
+.footerSub {
+  grid-row: 2;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  width: max-content;
 }
 /* Fixed 44 px circles that never shrink. */
 .footerBtn {

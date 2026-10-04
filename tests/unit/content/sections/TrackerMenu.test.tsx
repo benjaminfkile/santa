@@ -267,12 +267,28 @@ const rightTestIds = [
   "tracker-menu-time-labels",
 ];
 
+// The declarations of one rule, for asserting on the stylesheet without a
+// regex per property.
+function ruleOf(css: string, selector: string): string {
+  const i = css.indexOf(selector + " {");
+  expect(i).toBeGreaterThan(-1);
+  return css.slice(i, css.indexOf("}", i));
+}
+
 function expectRightGroupUnchanged(getByTestId: (id: string) => HTMLElement): void {
   const right = getByTestId("tracker-menu-toggles");
-  const labels = Array.from(right.querySelectorAll("button")).map((b) => b.getAttribute("aria-label"));
-  expect(labels).toEqual(["Gauges", "Your location", "Route", "Time labels", "Close menu"]);
-  const captions = Array.from(right.querySelectorAll("span[aria-hidden]")).map((s) => s.textContent);
-  expect(captions).toEqual(["Gauges", "Location", "Route", "Times", "Close"]);
+  // The button row is the grid's first row: every .footerItem that is a
+  // direct child. Time labels is not among them, it lives in the route
+  // submenu underneath.
+  const row = Array.from(right.children).filter((el) => el.className.includes("footerItem"));
+  const labels = row.map((el) => el.querySelector("button")!.getAttribute("aria-label"));
+  expect(labels).toEqual(["Gauges", "Your location", "Route", "Close menu"]);
+  const captions = row.map((el) => el.querySelector("span[aria-hidden]")!.textContent);
+  expect(captions).toEqual(["Gauges", "Location", "Route", "Close"]);
+  const sub = getByTestId("tracker-menu-route-sub");
+  expect(right.contains(sub)).toBe(true);
+  expect(sub.getAttribute("aria-label")).toBe("Route");
+  expect(sub.contains(getByTestId("tracker-menu-time-labels"))).toBe(true);
   for (const id of rightTestIds) expect(right.contains(getByTestId(id))).toBe(true);
 }
 
@@ -349,7 +365,7 @@ describe("TrackerMenu account button", () => {
     expect(off.getByTestId("tracker-menu-location")).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("with every control on and a flight history present the six buttons are fixed 44 px squares under their labels and the right group wraps", () => {
+  it("with every control on and a flight history present the buttons are fixed 44 px squares under their labels on one row, the route submenu under the route button", () => {
     const { getByTestId } = renderMenu({ status: "signedOut" });
     const left = getByTestId("tracker-menu-account");
     const right = getByTestId("tracker-menu-toggles");
@@ -374,11 +390,17 @@ describe("TrackerMenu account button", () => {
 
     const css = readFileSync(trackerModulePath, "utf8");
     expect(css).toMatch(/\.footer\s*\{[^}]*justify-content:\s*space-between/);
-    expect(css).toMatch(/\.footer\s*\{[^}]*align-items:\s*flex-end/);
+    expect(ruleOf(css, ".footer")).toContain("align-items: flex-start");
     expect(css).toMatch(/\.footerStart\s*\{[^}]*flex:\s*none/);
-    expect(css).toMatch(/\.footerEnd\s*\{[^}]*flex-wrap:\s*wrap/);
-    expect(css).toMatch(/\.footerEnd\s*\{[^}]*justify-content:\s*flex-end/);
-    expect(css).toMatch(/\.footerEnd\s*\{[^}]*gap:\s*6px 4px/);
+    // One row: a grid, no wrapping, every button column at least 44 px.
+    const footerEndRule = ruleOf(css, ".footerEnd");
+    expect(footerEndRule).toContain("display: grid");
+    expect(footerEndRule).toContain("grid-auto-columns: minmax(44px, max-content)");
+    expect(footerEndRule).toContain("justify-content: end");
+    expect(footerEndRule).toContain("gap: 6px 4px");
+    expect(footerEndRule).not.toContain("flex-wrap");
+    expect(css).toContain(".footerEnd > .footerItem { grid-row: 1; }");
+    expect(ruleOf(css, ".footerSub")).toContain("grid-row: 2");
     expect(css).toMatch(/\.footerBtn\s*\{[^}]*flex:\s*none;[^}]*width:\s*44px;[^}]*height:\s*44px/);
     expect(css).not.toMatch(/\.footerBtn\s*\{[^}]*min-width:\s*0/);
     expect(css).toMatch(/\.close\s*\{\s*composes:\s*footerBtn/);
