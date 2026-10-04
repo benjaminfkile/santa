@@ -93,7 +93,7 @@ describe("Map section landmarks", () => {
   it("with controls.landmarks absent the Landmarks button shows pressed and the controller receives landmarks: true", async () => {
     const utils = await renderMap({});
     const button = utils.getByTestId("tracker-menu-landmarks");
-    expect(button.getAttribute("aria-label")).toBe("Landmarks");
+    expect(button.getAttribute("aria-label")).toBe("Viewpoints");
     expect(button.getAttribute("aria-pressed")).toBe("true");
     expect(lastToggles().landmarks).toBe(true);
     const list = controller.setLandmarks.mock.calls[controller.setLandmarks.mock.calls.length - 1][0] as {

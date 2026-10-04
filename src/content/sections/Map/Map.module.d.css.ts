@@ -8,6 +8,7 @@ export const cookieTallyIcon: string;
 export const cookieTallyPlaceholder: string;
 export const cookieTallyRow: string;
 export const ctrl: string;
+export const distancePill: string;
 export const envelopeShake: string;
 export const glass: string;
 export const infoOverlaysStatus: string;

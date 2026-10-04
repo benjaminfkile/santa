@@ -116,6 +116,10 @@
 .infoOverlaysStatusSignalLost { color: var(--err); }
 .infoOverlaysStatusSignalLost svg { color: var(--err); }
 
+/* The distance pill: the visitor's distance from Santa, under the fix
+   status and above the messages pill. */
+.distancePill { composes: pill; }
+
 /* The messages pill under the fix status: the pill recipe as a button
    around the envelope with its unread dot. */
 .messagesPill {

@@ -1,6 +1,7 @@
 // docs/site.md sections 7.6 and 8. The live screen, laid out as the legacy
 // tracker: the map fills the viewport; pills top-left (live state with the
-// viewers, the fix status, the messages pill); the tracker menu button,
+// viewers, the fix status, the distance from Santa, and the messages pill
+// last); the tracker menu button,
 // the bare cookie tally, and the leave-a-cookie glyph top-right; the flight
 // data dock's handle pill (while collapsed) above the sponsor tile
 // bottom-left; zoom while following and recenter after a drag bottom-right;
@@ -31,7 +32,7 @@ import type { ContentBundle } from "../../../store/types";
 import { Icon, iconResolves } from "../../primitives/Icon";
 import { resolveLandmarks } from "../RoutePreview/routeMapConfig";
 import { copy } from "../../../copy/copy";
-import { FixStatus } from "./InfoOverlays";
+import { DistancePill, FixStatus } from "./InfoOverlays";
 import { LiveIndicator } from "./LiveIndicator";
 import { MessagesPill } from "./MessagesPill";
 import { FlightDock, FlightDockHandle } from "./FlightDock";
@@ -219,7 +220,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const flightDockAvailable = overlays.flightDock || overlays.liftoffTimer;
   const showDock = flightDockAvailable && flightDockOn && !menuOpen;
   const dockOpen = showDock && flightDockExpanded;
-  const dockDistance =
+  const shownDistance =
     overlays.distanceChip &&
     userState.enabled &&
     userState.distanceMetres !== null &&
@@ -391,6 +392,8 @@ export const Map: SectionComponent = ({ data, bundle }) => {
               <div className={styles.topLeft}>
                 {overlays.liveIndicator ? <LiveIndicator showCount={overlays.onlineCount} /> : null}
                 <FixStatus />
+                {shownDistance !== null ? <DistancePill metres={shownDistance} /> : null}
+                {/* The messages pill is last in the stack, whatever else is in it. */}
                 {overlays.latestMessage ? <MessagesPill bundle={bundle} /> : null}
               </div>
 
@@ -457,7 +460,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 <FlightDock
                   showInstruments={overlays.flightDock}
                   showAirborne={overlays.liftoffTimer}
-                  distanceMetres={dockDistance}
+                  distanceMetres={shownDistance}
                   onCollapse={() => setFlightDockExpanded(false)}
                   onHeightChange={setDockHeight}
                 />

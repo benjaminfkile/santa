@@ -1,11 +1,14 @@
-// docs/site.md section 7.6. The waiting-for-fix and signal-lost status
-// pill, shown under the live pill only while either state holds.
+// docs/site.md section 7.6. Two pills in the top-left stack: the
+// waiting-for-fix and signal-lost status pill, shown under the live pill
+// only while either state holds, and the distance pill, shown under it
+// while the visitor has their location on and the distance is known.
 
 import { useEffect, useState } from "react";
 import { useStore } from "../../../store/useStore";
 import { selectLiveState } from "../../../store/liveState";
 import { copy } from "../../../copy/copy";
-import { SignalGlyph } from "./glyphs";
+import { formatDistanceMetres } from "../../../map/userLocation";
+import { PersonPinGlyph, SignalGlyph } from "./glyphs";
 import * as styles from "./Map.module.css";
 
 function usePerfNow(intervalMs = 1000): number {
@@ -34,6 +37,23 @@ export function FixStatus() {
     >
       <SignalGlyph />
       <span>{status}</span>
+    </div>
+  );
+}
+
+// The visitor's distance from Santa. The caller decides whether there is
+// one to show (the distance chip overlay, the location on, a finite value),
+// so the pill renders whatever it is handed. The value is not announced as
+// it changes: it moves every second and a live region would talk over
+// everything else.
+export function DistancePill({ metres }: { metres: number }) {
+  const text = formatDistanceMetres(metres);
+  if (text === "") return null;
+  return (
+    <div className={styles.distancePill} data-testid="distance-pill">
+      <PersonPinGlyph size={14} />
+      <span className={styles.visuallyHidden}>{copy.map.distance.label}</span>
+      <span>{text}</span>
     </div>
   );
 }

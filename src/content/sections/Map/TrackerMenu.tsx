@@ -282,7 +282,7 @@ export function TrackerMenu(props: TrackerMenuProps) {
                   type="button"
                   className={styles.footerBtn}
                   aria-pressed={props.flightDock}
-                  aria-label="Flight data"
+                  aria-label={copy.tracker.data}
                   onClick={() => props.onFlightDockChange(!props.flightDock)}
                   data-testid="tracker-menu-flight-dock"
                 >
@@ -312,7 +312,7 @@ export function TrackerMenu(props: TrackerMenuProps) {
                   type="button"
                   className={styles.footerBtn}
                   aria-pressed={props.flightHistory}
-                  aria-label="Flight history"
+                  aria-label={copy.tracker.history}
                   onClick={() => props.onFlightHistoryChange(!props.flightHistory)}
                   data-testid="tracker-menu-flight-history"
                 >

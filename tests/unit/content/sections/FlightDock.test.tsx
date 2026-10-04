@@ -262,6 +262,57 @@ describe("the flight data dock", () => {
     expect(off.queryByTestId("flight-dock-foot")).toBeNull();
   });
 
+  it("the distance pill sits in the top-left stack with the messages pill last", async () => {
+    seed(FULL);
+    act(() =>
+      store.setState((prev) => ({
+        ...prev,
+        snapshot: {
+          ...prev.snapshot,
+          event: { ...prev.snapshot!.event, id: 7, latestMessage: { id: 3, body: "Hello" } },
+        } as unknown as Snapshot,
+      })),
+    );
+    const utils = await renderMap({ distanceChip: true, liveIndicator: true, latestMessage: true });
+    const stack = () => utils.container.querySelector(".topLeft")!;
+    const ids = () =>
+      Array.from(stack().children).map((el) => el.getAttribute("data-testid") ?? el.className);
+
+    // No location, no distance pill; the messages pill is still last.
+    expect(utils.queryByTestId("distance-pill")).toBeNull();
+    expect(ids()[ids().length - 1]).toBe("messages-pill");
+
+    act(() =>
+      mapView.options!.onUserLocationChange({
+        enabled: true,
+        position: { lat: 1, lng: 2 },
+        error: null,
+        distanceMetres: 5000,
+      }),
+    );
+    const pill = utils.getByTestId("distance-pill");
+    expect(pill.textContent).toContain("3.11 mi");
+    expect(stack().contains(pill)).toBe(true);
+    const order = ids();
+    expect(order[order.length - 1]).toBe("messages-pill");
+    expect(order.indexOf("distance-pill")).toBeLessThan(order.indexOf("messages-pill"));
+    expect(order.indexOf("distance-pill")).toBeGreaterThan(0);
+  });
+
+  it("the distance pill follows the distance chip flag", async () => {
+    seed(FULL);
+    const utils = await renderMap({ distanceChip: false, liveIndicator: true });
+    act(() =>
+      mapView.options!.onUserLocationChange({
+        enabled: true,
+        position: { lat: 1, lng: 2 },
+        error: null,
+        distanceMetres: 5000,
+      }),
+    );
+    expect(utils.queryByTestId("distance-pill")).toBeNull();
+  });
+
   it("collapsing shows the handle pill with speed and airborne; expanding returns the dock", async () => {
     seed(FULL);
     const utils = await renderMap();
@@ -349,7 +400,7 @@ describe("the flight data dock", () => {
     const utils = await renderMap();
     fireEvent.click(utils.getByRole("button", { name: "Tracker menu" }));
     const btn = utils.getByTestId("tracker-menu-flight-dock");
-    expect(btn.getAttribute("aria-label")).toBe("Flight data");
+    expect(btn.getAttribute("aria-label")).toBe("Gauges");
     expect(btn.getAttribute("aria-pressed")).toBe("true");
     const group = utils.getByTestId("tracker-menu-toggles");
     expect(group.querySelector("button")).toBe(btn);

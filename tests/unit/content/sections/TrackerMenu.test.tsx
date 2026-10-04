@@ -270,9 +270,9 @@ const rightTestIds = [
 function expectRightGroupUnchanged(getByTestId: (id: string) => HTMLElement): void {
   const right = getByTestId("tracker-menu-toggles");
   const labels = Array.from(right.querySelectorAll("button")).map((b) => b.getAttribute("aria-label"));
-  expect(labels).toEqual(["Flight data", "Your location", "Flight history", "Time labels", "Close menu"]);
+  expect(labels).toEqual(["Gauges", "Your location", "Route", "Time labels", "Close menu"]);
   const captions = Array.from(right.querySelectorAll("span[aria-hidden]")).map((s) => s.textContent);
-  expect(captions).toEqual(["Data", "Location", "History", "Times", "Close"]);
+  expect(captions).toEqual(["Gauges", "Location", "Route", "Times", "Close"]);
   for (const id of rightTestIds) expect(right.contains(getByTestId(id))).toBe(true);
 }
 

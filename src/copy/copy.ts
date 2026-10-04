@@ -57,6 +57,10 @@ export const copy = {
       newMarker: "New",
       close: "Close",
     },
+    distance: {
+      // The pill shows only the value; this is its accessible prefix.
+      label: "Distance to Santa",
+    },
     flightDock: {
       title: "Flight data",
       speed: "Speed",
@@ -82,11 +86,11 @@ export const copy = {
     },
   },
   tracker: {
-    data: "Data",
+    data: "Gauges",
     location: "Location",
-    history: "History",
+    history: "Route",
     times: "Times",
-    landmarks: "Landmarks",
+    landmarks: "Viewpoints",
     close: "Close",
   },
   sponsors: {
