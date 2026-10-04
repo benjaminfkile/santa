@@ -19,7 +19,6 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
-  type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
 } from "react";
@@ -183,13 +182,10 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
     .filter(Boolean)
     .join(" ");
 
-  // The card's rendered logo size follows an explicit logoWidth; without
-  // one the CSS default (48 px) applies. The live tile keeps the legacy
-  // fixed tile whatever the setting.
-  const rootStyle =
-    variant === "card" && d.logoWidth !== undefined && d.logoWidth !== null
-      ? ({ "--sponsor-logo-width": `${d.logoWidth}px` } as CSSProperties)
-      : undefined;
+  // The card's logo box is a fixed square (the stylesheet), so stepping
+  // through sponsors never changes the slide's height; logoWidth only picks
+  // the image size fetched (sizeOverride on Media). The live tile keeps the
+  // legacy fixed tile.
 
   const card = variant === "card";
   const count = sponsors.length;
@@ -228,7 +224,7 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
   const swipe = controls && !desktop;
 
   return (
-    <div className={rootClass} data-variant={variant} style={rootStyle}>
+    <div className={rootClass} data-variant={variant}>
       {variant === "card" && d.heading ? (
         <p className={styles.sponsorCarouselHeading}>
           <Inline text={d.heading} bundle={bundle} event={event} />

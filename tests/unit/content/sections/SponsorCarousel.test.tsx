@@ -6,6 +6,8 @@
 // manual step pauses the auto-advance for 30 s; the tile has no controls.
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
@@ -242,30 +244,29 @@ describe("SponsorCarousel card variant", () => {
     expect(container.textContent).not.toMatch(/\d+\s*s\b/);
   });
 
-  it("a filled logoWidth sizes the card's logo through the CSS variable", () => {
+  it("the slide is one fixed height per breakpoint with a fixed logo box, whatever logoWidth says", () => {
     seedSponsors([{ id: 1, name: "A", lingerMs: 5000 }]);
     const { container } = render(
       <MemoryRouter>
         <SponsorCarousel
-          data={{ variant: "card", logoWidth: 300 }}
+          data={{ variant: "card", logoWidth: 960 }}
           items={[]}
           bundle={buildBundle()}
         />
       </MemoryRouter>,
     );
     const root = container.firstElementChild as HTMLElement;
-    expect(root.style.getPropertyValue("--sponsor-logo-width")).toBe("300px");
-  });
-
-  it("without a logoWidth the card leaves the CSS default in place", () => {
-    seedSponsors([{ id: 1, name: "A", lingerMs: 5000 }]);
-    const { container } = render(
-      <MemoryRouter>
-        <SponsorCarousel data={{ variant: "card" }} items={[]} bundle={buildBundle()} />
-      </MemoryRouter>,
-    );
-    const root = container.firstElementChild as HTMLElement;
     expect(root.style.getPropertyValue("--sponsor-logo-width")).toBe("");
+    const sheet = readFileSync(
+      resolve(__dirname, "../../../../src/content/sections/SponsorCarousel/SponsorCarousel.module.css"),
+      "utf8",
+    );
+    expect(sheet).toMatch(/\.sponsorCarouselCard \.sponsorCarouselSlide \{[^}]*height: 144px;/);
+    expect(sheet).toMatch(/@media \(min-width: 761px\) \{\s*\.sponsorCarouselCard \.sponsorCarouselSlide \{ height: 192px; \}/);
+    expect(sheet).toMatch(/\.sponsorCarouselLogo \{[^}]*width: 112px;[^}]*height: 112px;/);
+    expect(sheet).toMatch(/\.sponsorCarouselCard \.sponsorCarouselNameOnly \{ width: 160px; height: 160px; \}/);
+    expect(sheet).not.toMatch(/--sponsor-logo-width/);
+    expect(sheet).not.toMatch(/\.sponsorCarouselCard \.sponsorCarouselName \{[^}]*white-space: normal/);
   });
 });
 
