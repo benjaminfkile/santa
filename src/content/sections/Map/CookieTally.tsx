@@ -4,11 +4,18 @@
 // count then the type's icon, right-aligned so a longer count hangs
 // further left while the icons stay in one column. Legibility comes from
 // a shadow in the chrome's panel colour. Rows reorder in place as live
-// objects arrive, with no animation.
+// objects arrive, with no animation. A chevron above the column collapses
+// it for a viewer who would rather not look at the counts; collapsed, the
+// chevron is all that is left, and the choice is kept for the page load in
+// trackerToggles like the tracker's other choices.
 
+import { useState } from "react";
 import type { IconRef } from "../../../contracts";
 import type { ContentBundle } from "../../../store/types";
 import { useStore } from "../../../store/useStore";
+import { copy } from "../../../copy/copy";
+import { ChevronGlyph } from "./glyphs";
+import { readTrackerToggle, writeTrackerToggle } from "./trackerToggles";
 import { Icon, iconResolves } from "../../primitives/Icon";
 import { rankCookieTypes } from "../Leaderboard/Leaderboard";
 import * as styles from "./Map.module.css";
@@ -26,12 +33,32 @@ function readIcon(icon: unknown): IconRef | null {
 export function CookieTally({ bundle }: { bundle: ContentBundle }) {
   const cookieTypes = useStore((s) => s.snapshot?.cookieTypes ?? null);
   const tally = useStore((s) => s.live?.cookieTally ?? null);
+  const [open, setOpen] = useState<boolean>(() => readTrackerToggle("cookieTally", true));
 
   if (cookieTypes === null || cookieTypes.length === 0) return null;
   const ranked = rankCookieTypes(cookieTypes, tally ?? {});
 
+  const toggle = () => {
+    writeTrackerToggle("cookieTally", !open);
+    setOpen(!open);
+  };
+
   return (
-    <ol className={styles.cookieTally} data-testid="cookie-tally">
+    <div className={styles.cookieTallyWrap} data-testid="cookie-tally-wrap">
+      <button
+        type="button"
+        className={`${styles.cookieTallyToggle}${open ? "" : " " + styles.cookieTallyToggleClosed}`}
+        aria-expanded={open}
+        aria-controls="cookie-tally-list"
+        aria-label={open ? copy.map.cookieTally.hide : copy.map.cookieTally.show}
+        title={open ? copy.map.cookieTally.hide : copy.map.cookieTally.show}
+        onClick={toggle}
+        data-testid="cookie-tally-toggle"
+      >
+        <ChevronGlyph size={18} />
+      </button>
+      {open ? (
+        <ol id="cookie-tally-list" className={styles.cookieTally} data-testid="cookie-tally">
       {ranked.map((row) => {
         const icon = readIcon(row.icon);
         return (
@@ -59,7 +86,9 @@ export function CookieTally({ bundle }: { bundle: ContentBundle }) {
             )}
           </li>
         );
-      })}
-    </ol>
+        })}
+        </ol>
+      ) : null}
+    </div>
   );
 }

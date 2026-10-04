@@ -57,6 +57,10 @@ export const copy = {
       newMarker: "New",
       close: "Close",
     },
+    cookieTally: {
+      hide: "Hide the cookie counts",
+      show: "Show the cookie counts",
+    },
     distance: {
       // The pill shows only the value; this is its accessible prefix.
       label: "Distance to Santa",

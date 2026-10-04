@@ -171,6 +171,36 @@
    row is the count then the icon, aligned to the right edge so a longer
    count hangs further left and the icons stay in one column. The shadow
    in the chrome's panel colour keeps both legible on every map style. */
+/* The tally and its collapse chevron, right-aligned under the menu button.
+   Collapsed, the chevron is all that is left. */
+.cookieTallyWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.cookieTallyToggle {
+  appearance: none;
+  width: 34px;
+  height: 26px;
+  margin-right: 5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-bright);
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  filter: drop-shadow(0 0 1px var(--panel)) drop-shadow(0 0 4px var(--panel))
+    drop-shadow(0 0 8px var(--panel));
+  transition: var(--hover-transition);
+}
+.cookieTallyToggle:hover { color: var(--accent); }
+/* The chevron points at what the press does: up to fold the column away,
+   down to bring it back. */
+.cookieTallyToggle svg { transform: rotate(180deg); }
+.cookieTallyToggleClosed svg { transform: none; }
+
 .cookieTally {
   list-style: none;
   margin: 0;

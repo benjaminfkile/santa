@@ -71,14 +71,21 @@
   align-items: center;
   gap: var(--space-2);
 }
-/* A round icon button on the quiet recipe: 36px square, the glyph centred. */
+/* A round icon button on the quiet recipe: 36px square, the glyph centred.
+   The plus and the minus are bare strokes, so they take the bright text
+   colour and a heavier stroke than the other glyphs: at the quiet recipe's
+   --text on --panel-2 they read as almost nothing. */
 .stepBtn {
   composes: btnQuiet from "../../../ui/Button.module.css";
   width: 36px;
   height: 36px;
   min-height: 36px;
   padding: 0;
+  color: var(--text-bright);
 }
+/* The shared disabled wash at 0.5 takes these two below legible; a plus
+   that cannot be pressed still has to be readable. */
+.stepBtn:disabled { opacity: 0.65; }
 .count {
   min-width: 1.5ch;
   text-align: center;

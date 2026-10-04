@@ -1,6 +1,7 @@
 // docs/site.md section 8.5. The viewer's tracker choices for the page load:
 // flight history, time labels, landmarks, the flight data dock shown or
-// hidden, and the dock expanded or collapsed. The map section seeds its toggles from
+// hidden, the dock expanded or collapsed, and the cookie tally open or
+// collapsed. The map section seeds its toggles from
 // here and falls back to its defaults only until the viewer has chosen, so
 // a remount of the section (a live flip, the unavailable panel's retry)
 // keeps what the viewer picked. Nothing is persisted.
@@ -10,7 +11,8 @@ export type TrackerToggleKey =
   | "timeLabels"
   | "landmarks"
   | "flightDock"
-  | "flightDockExpanded";
+  | "flightDockExpanded"
+  | "cookieTally";
 
 const choices: Partial<Record<TrackerToggleKey, boolean>> = {};
 
@@ -28,4 +30,5 @@ export function resetTrackerTogglesForTests(): void {
   delete choices.landmarks;
   delete choices.flightDock;
   delete choices.flightDockExpanded;
+  delete choices.cookieTally;
 }

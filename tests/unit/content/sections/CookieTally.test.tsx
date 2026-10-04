@@ -15,6 +15,7 @@ import type { LiveObject, Snapshot } from "../../../../src/contracts";
 import { AuthProvider } from "../../../../src/auth/AuthProvider";
 import type { AuthState } from "../../../../src/auth/AuthProvider";
 import { CookieTally } from "../../../../src/content/sections/Map/CookieTally";
+import { resetTrackerTogglesForTests } from "../../../../src/content/sections/Map/trackerToggles";
 import { CookieDialog } from "../../../../src/content/sections/CookieControl/CookieControl";
 import * as mapStyles from "../../../../src/content/sections/Map/Map.module.css";
 
@@ -93,6 +94,8 @@ async function renderMap(overlays: Record<string, boolean>, auth: AuthState = { 
 }
 
 beforeEach(() => {
+  // The tally's collapse choice lives in a module, so it leaks between tests.
+  resetTrackerTogglesForTests();
   act(() => store.setState({ ...initialStore }));
   vi.mocked(cookiesApi.getMyCookies).mockReset();
   vi.mocked(cookiesApi.leaveCookies).mockReset();
@@ -100,6 +103,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  resetTrackerTogglesForTests();
   act(() => store.setState({ ...initialStore }));
 });
 
@@ -133,16 +137,42 @@ describe("CookieTally", () => {
     expect(rows[0].textContent).toContain("12");
   });
 
-  it("has no glass box, header, or expand control", () => {
+  it("has no glass box and no header, and its only control is the collapse chevron", () => {
     setState({ "1": 1 });
     const { container } = render(<CookieTally bundle={bundle} />);
     expect(container.querySelector(`.${mapStyles.glass}`)).toBeNull();
     for (const el of Array.from(container.querySelectorAll("*"))) {
       expect(el.className.toString().split(" ")).not.toContain(mapStyles.glass);
     }
-    expect(container.querySelector("button")).toBeNull();
-    expect(container.querySelector("[aria-expanded]")).toBeNull();
+    const buttons = Array.from(container.querySelectorAll("button"));
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0].getAttribute("data-testid")).toBe("cookie-tally-toggle");
     expect(container.textContent).not.toContain("Cookies");
+  });
+
+  it("the chevron folds the counts away and brings them back, and the choice survives a remount", () => {
+    setState({ "1": 1 });
+    const view = render(<CookieTally bundle={bundle} />);
+    const toggle = () => view.getByTestId("cookie-tally-toggle");
+    expect(toggle().getAttribute("aria-expanded")).toBe("true");
+    expect(view.queryByTestId("cookie-tally")).not.toBeNull();
+
+    fireEvent.click(toggle());
+    expect(toggle().getAttribute("aria-expanded")).toBe("false");
+    // Collapsed: no counts, no rows, and the chevron is still reachable.
+    expect(view.queryByTestId("cookie-tally")).toBeNull();
+    expect(view.queryAllByTestId("cookie-tally-row")).toHaveLength(0);
+    expect(toggle().getAttribute("aria-label")).toBe("Show the cookie counts");
+
+    // A remount (a live flip, the unavailable panel's retry) keeps the choice.
+    view.unmount();
+    const again = render(<CookieTally bundle={bundle} />);
+    expect(again.getByTestId("cookie-tally-toggle").getAttribute("aria-expanded")).toBe("false");
+    expect(again.queryByTestId("cookie-tally")).toBeNull();
+
+    fireEvent.click(again.getByTestId("cookie-tally-toggle"));
+    expect(again.queryByTestId("cookie-tally")).not.toBeNull();
+    expect(again.getByTestId("cookie-tally-toggle").getAttribute("aria-label")).toBe("Hide the cookie counts");
   });
 
   it("the column's rules draw no box and carry the shadows and tabular digits", () => {
