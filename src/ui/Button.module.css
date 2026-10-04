@@ -1,7 +1,11 @@
-/* docs/site.md section 7.7. The shared button recipes: outline in the
-   accent (the default), the accent fill for the one primary action, and
-   the quiet line-coloured outline for secondary actions. Every button on
-   the site that is not an icon button composes one of these. */
+/* docs/site.md section 7.3. The shared button recipes, Frost fills with
+   no borders on fully round controls: `.btn` is the secondary (the accent
+   on the accent wash), `.btnFill` the primary (the accent fill), and
+   `.btnQuiet` the quiet one (body text on the raised panel). Hover is a
+   tint: a filled button dims a little in light and lifts a little in
+   dark, and the washed buttons take the accent wash with accent text.
+   Every button on the site that is not an icon button composes one of
+   these. */
 
 .btn {
   appearance: none;
@@ -11,9 +15,9 @@
   gap: var(--space-2);
   min-height: 40px;
   padding: 0.4rem 1rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--accent);
-  background: transparent;
+  border-radius: var(--radius-control);
+  border: 0;
+  background: var(--accent-soft);
   color: var(--accent);
   font-family: var(--font-sans);
   font-weight: 500;
@@ -23,23 +27,22 @@
   cursor: pointer;
   transition: var(--hover-transition);
 }
-.btn:hover { background: var(--accent-soft); }
+.btn:hover:not(:disabled) { background: var(--accent-soft); color: var(--accent); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn:disabled:hover { background: transparent; }
 .btnFill {
   composes: btn;
   background: var(--accent);
   color: var(--on-accent);
   font-weight: 600;
 }
-.btnFill:hover { background: var(--text-bright); border-color: var(--text-bright); color: var(--ground); }
-.btnFill:disabled:hover { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btnFill:hover:not(:disabled) { background: var(--accent); color: var(--on-accent); }
+:global(:root[data-theme="light"]) .btnFill:hover:not(:disabled) { filter: brightness(0.94); }
+:global(:root[data-theme="dark"]) .btnFill:hover:not(:disabled) { filter: brightness(1.12); }
 .btnQuiet {
   composes: btn;
-  border-color: var(--line);
+  background: var(--panel-2);
   color: var(--text);
 }
-.btnQuiet:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 .btnSm {
   min-height: 34px;
   padding: 0.25rem 0.75rem;

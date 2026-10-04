@@ -8,22 +8,7 @@
   color: var(--text-bright);
 }
 .linksButtons { display: flex; gap: var(--space-3); flex-wrap: wrap; }
-.linksButton {
-  min-height: 44px;
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  border-radius: var(--radius-sm);
-  text-decoration: none;
-  background: transparent;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-family: var(--font-sans);
-  font-weight: 500;
-  transition: var(--hover-transition);
-}
-.linksButton:hover { background: var(--accent-soft); }
+.linksButton { composes: btn from "../../../ui/Button.module.css"; }
 .linksCards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));

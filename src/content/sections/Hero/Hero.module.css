@@ -1,8 +1,8 @@
 /* docs/site.md section 7.4. Hero: eyebrow in mono accent, h1 in Bricolage,
-   intro at 56ch, the two call-to-action buttons in the fill and outline
-   recipes. The hero follows the section's align at every width: `start`
-   puts the icon or logo, the copy, and the links at the start; `center`
-   (the frame's `data-align="center"`) centres them. */
+   intro at 56ch, the two call-to-action buttons on the shared fill and
+   secondary button recipes. The hero follows the section's align at every
+   width: `start` puts the icon or logo, the copy, and the links at the
+   start; `center` (the frame's `data-align="center"`) centres them. */
 
 .hero {
   display: flex;
@@ -89,38 +89,6 @@
   margin-top: var(--space-2);
 }
 :global(section[data-align="center"]) .hero:not(.heroPaired) .heroLinks { justify-content: center; }
-.heroLink {
-  min-height: 40px;
-  padding: 0.4rem 1rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--accent);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: 0.9375rem;
-  cursor: pointer;
-  background: transparent;
-  color: var(--accent);
-  transition: var(--hover-transition);
-}
-.heroLinkPrimary {
-  background: var(--accent);
-  color: var(--on-accent);
-  border-color: var(--accent);
-  font-weight: 600;
-}
-.heroLinkSecondary {
-  background: transparent;
-  color: var(--accent);
-  border-color: var(--accent);
-}
-.heroLink:hover { background: var(--accent-soft); }
-.heroLinkPrimary:hover {
-  background: var(--text-bright);
-  border-color: var(--text-bright);
-  color: var(--ground);
-}
+.heroLink { composes: btn from "../../../ui/Button.module.css"; }
+.heroLinkPrimary { composes: btnFill from "../../../ui/Button.module.css"; }
+.heroLinkSecondary { composes: btn from "../../../ui/Button.module.css"; }

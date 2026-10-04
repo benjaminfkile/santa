@@ -1,0 +1,27 @@
+/* docs/site.md section 7.3. The pill recipe for every status pill, chip,
+   and pill-shaped action: sans, sentence case, 0.75rem semibold on a
+   14 percent tint of its own colour, fully round, no border. The tone
+   classes set the colour, and the tint follows it. */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 3px 10px;
+  border-radius: var(--radius-control);
+  border: 0;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  white-space: nowrap;
+}
+.pillOk { color: var(--ok); }
+.pillWarn { color: var(--warn); }
+.pillErr { color: var(--err); }
+.pillDim { color: var(--text-dim); }
+.pillAccent { color: var(--accent); }
+.pillText { color: var(--text); }

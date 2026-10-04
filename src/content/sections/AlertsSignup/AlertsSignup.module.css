@@ -30,7 +30,33 @@
   min-height: 44px;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-control);
+  background: var(--panel-2);
+  color: var(--text-bright);
+  font: 400 0.9375rem var(--font-sans);
+}
+.alertsSignupInput:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-color: var(--accent);
+}
+.alertsSignupForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+.alertsSignupForm > label { width: 100%; }
+.alertsSignupSubmit {
+  composes: btnFill from "../../../ui/Button.module.css";
+  min-height: 44px;
+}
+.alertsSignupHelp { color: var(--err); }
+.alertsSignupInput {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
   background: var(--panel-2);
   color: var(--text-bright);
   font: 400 0.9375rem var(--font-sans);
@@ -97,51 +123,13 @@
   letter-spacing: 0.08em;
   color: var(--text-dim);
 }
-.alertsSignupRowAction {
-  min-height: 40px;
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--text);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  transition: var(--hover-transition);
-}
-.alertsSignupRowAction:hover { color: var(--accent); border-color: var(--accent); }
+.alertsSignupRowAction { composes: btnQuiet btnSm from "../../../ui/Button.module.css"; }
 .alertsSignup [role="alert"] { color: var(--err); margin: 0; font-size: 0.8125rem; }
 .alertsSignupPending { min-height: 60px; }
-.alertsSignupSignedOut button {
-  min-height: 44px;
-  padding: 0.5rem 1.1rem;
-  border: 1px solid var(--accent);
-  background: transparent;
-  color: var(--accent);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-sans);
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--hover-transition);
-}
-.alertsSignupSignedOut button:hover { background: var(--accent-soft); }
 .alertsSignupAddAnother {
+  composes: btn from "../../../ui/Button.module.css";
   align-self: flex-start;
-  min-height: 40px;
-  padding: 0.4rem 0.9rem;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--accent);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-family: var(--font-sans);
-  font-size: 0.9375rem;
-  font-weight: 500;
-  transition: var(--hover-transition);
 }
-.alertsSignupAddAnother:hover { border-color: var(--accent); background: var(--accent-soft); }
 .alertsSignupSent {
   display: flex;
   flex-direction: column;

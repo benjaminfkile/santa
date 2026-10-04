@@ -86,22 +86,7 @@
 .blockLinksList { flex-direction: column; }
 .blockLinksButtons { flex-direction: row; }
 .blockLinksItem { list-style: none; }
-.blockLinksButton {
-  min-height: 44px;
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  border-radius: var(--radius-sm);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  background: transparent;
-  font-family: var(--font-sans);
-  font-weight: 500;
-  transition: var(--hover-transition);
-}
-.blockLinksButton:hover { background: var(--accent-soft); }
+.blockLinksButton { composes: btn from "../../../ui/Button.module.css"; }
 
 .blockIcon { display: flex; color: var(--accent); }
 .blockIconStart { justify-content: flex-start; }

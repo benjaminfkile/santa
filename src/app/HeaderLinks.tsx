@@ -1,9 +1,10 @@
 // docs/site.md section 7.7. The header links: one anchor per
 // `settings.headerLinks` entry, in order, first in the header's actions
-// row at every width. Each is a 44 px button on the theme toggle recipe
-// with the accent border, drawing the link's icon at 22 px (a library icon
-// inline, a media icon through <img>); a link without an icon, or with one
-// that resolves to nothing, draws the label's first letter in a circle.
+// row at every width. Each is a 44 px button on the secondary button
+// recipe (the accent on the accent wash), drawing the link's icon at 22 px
+// (a library icon inline, a media icon through <img>); a link without an
+// icon, or with one that resolves to nothing, draws the label's first
+// letter in a circle.
 // From 761 px up the label shows beside the icon inside the same button (a
 // pill); below that the button holds the icon alone. A `newTab` link opens
 // in a new tab with `rel="noopener"`.
@@ -30,7 +31,7 @@ export function HeaderLinks({ links, bundle }: HeaderLinksProps) {
         <a
           key={`${i}:${link.href}`}
           href={link.href}
-          className={`${styles.themeToggle} ${styles.headerLink}`}
+          className={styles.headerLink}
           aria-label={link.label}
           title={link.label}
           rel={link.newTab ? "noopener" : undefined}

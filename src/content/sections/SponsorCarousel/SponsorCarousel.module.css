@@ -155,22 +155,5 @@
   text-align: center;
 }
 .sponsorDialogActions { display: flex; gap: var(--space-2); flex-wrap: wrap; justify-content: center; }
-.sponsorDialogVisit,
-.sponsorDialogClose {
-  min-height: 40px;
-  padding: 0.4rem 1rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--accent);
-  font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: 0.9375rem;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-  transition: var(--hover-transition);
-}
-.sponsorDialogVisit { background: var(--accent); color: var(--on-accent); font-weight: 600; }
-.sponsorDialogVisit:hover { background: var(--text-bright); border-color: var(--text-bright); color: var(--ground); }
-.sponsorDialogClose { background: transparent; color: var(--accent); }
-.sponsorDialogClose:hover { background: var(--accent-soft); }
+.sponsorDialogVisit { composes: btnFill from "../../../ui/Button.module.css"; }
+.sponsorDialogClose { composes: btnQuiet from "../../../ui/Button.module.css"; }

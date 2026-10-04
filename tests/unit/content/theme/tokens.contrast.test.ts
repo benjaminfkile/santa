@@ -1,7 +1,10 @@
 // docs/site.md section 7.7. Parses tokens.css and fails the build when any
 // text token on any surface token drops under 4.5:1, or a status token on
 // --panel under 3:1, or the scrollbar thumb (at rest and on hover) on
-// --panel under 3:1.
+// --panel under 3:1. It also holds the component recipes (section 7.3) to
+// 4.5:1: the accent on the accent wash over the panel, the on-accent text
+// on the accent fill, the body text on the raised panel, and every pill
+// tone on its own 14 percent tint over the panel.
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -250,6 +253,32 @@ describe("tokens.css contrast", () => {
       const ratio = contrastRatio(resolveThumb(hover, palette, panel), panel);
       expect(ratio).toBeGreaterThanOrEqual(NON_TEXT_THRESHOLD);
     });
+  }
+
+  const PILL_TONES = ["--ok", "--warn", "--err", "--text-dim", "--accent", "--text"] as const;
+
+  for (const palette of [dark, light]) {
+    const panel = parseColor(palette.tokens.get("--panel") ?? "", palette.tokens);
+    const token = (name: string) => resolveThumb(`var(${name})`, palette, panel);
+
+    it(`the accent on the accent wash over --panel is at least 4.5:1 (${palette.name})`, () => {
+      expect(contrastRatio(token("--accent"), token("--accent-soft"))).toBeGreaterThanOrEqual(TEXT_THRESHOLD);
+    });
+
+    it(`--on-accent on --accent is at least 4.5:1 (${palette.name})`, () => {
+      expect(contrastRatio(token("--on-accent"), token("--accent"))).toBeGreaterThanOrEqual(TEXT_THRESHOLD);
+    });
+
+    it(`--text on --panel-2 is at least 4.5:1 (${palette.name})`, () => {
+      expect(contrastRatio(token("--text"), token("--panel-2"))).toBeGreaterThanOrEqual(TEXT_THRESHOLD);
+    });
+
+    for (const tone of PILL_TONES) {
+      it(`the ${tone} pill on its 14 percent tint over --panel is at least 4.5:1 (${palette.name})`, () => {
+        const tint = resolveThumb(`color-mix(in srgb, var(${tone}) 14%, var(--panel))`, palette, panel);
+        expect(contrastRatio(token(tone), tint)).toBeGreaterThanOrEqual(TEXT_THRESHOLD);
+      });
+    }
   }
 
   it("fails when a text token drops below 4.5:1 (proof: deliberate low contrast)", () => {

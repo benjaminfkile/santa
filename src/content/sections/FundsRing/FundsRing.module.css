@@ -46,23 +46,4 @@
   color: var(--accent);
 }
 .fundsRingCaption { margin: 0; color: var(--text); font-size: 0.9375rem; }
-.fundsRingDonate {
-  min-height: 44px;
-  padding: 0.5rem 1.1rem;
-  border-radius: var(--radius-sm);
-  background: var(--accent);
-  color: var(--on-accent);
-  border: 1px solid var(--accent);
-  font-family: var(--font-sans);
-  font-weight: 600;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  transition: var(--hover-transition);
-}
-.fundsRingDonate:hover {
-  background: var(--text-bright);
-  border-color: var(--text-bright);
-  color: var(--ground);
-}
+.fundsRingDonate { composes: btnFill from "../../../ui/Button.module.css"; }

@@ -32,7 +32,8 @@
 }
 
 /* The translucent surface every pill and button on the map shares: a
-   pre-blended fill with no backdrop filter. */
+   pre-blended fill with no backdrop filter and a line border, so it reads
+   on every map style. Every control on it is fully round. */
 .glass {
   background: color-mix(in srgb, var(--panel) 94%, transparent);
   border: 1px solid var(--line);
@@ -64,15 +65,15 @@
 .menuOpen .topLeft,
 .menuOpen .bottomRight { display: none; }
 
-/* Pills: 34 px, a glyph and a short line. */
+/* Pills: 34 px and fully round, a glyph and a short line. */
 .pill {
   composes: glass;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   height: 34px;
-  padding: 0 10px 0 8px;
-  border-radius: 8px;
+  padding: 0 12px 0 10px;
+  border-radius: var(--radius-control);
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
@@ -123,7 +124,7 @@
   cursor: pointer;
   transition: var(--hover-transition);
 }
-.messagesPill:hover { border-color: var(--accent); }
+.messagesPill:hover { background: var(--accent-soft); color: var(--accent); }
 .messagesEnvelope {
   position: relative;
   display: inline-flex;
@@ -160,7 +161,7 @@
 }
 
 /* Tracker menu button, 44 px, top-right. */
-.menuButton { composes: glass; border-radius: 8px; }
+.menuButton { composes: glass; border-radius: var(--radius-control); }
 
 /* The cookie tally under the menu button: a bare column, no box. Each
    row is the count then the icon, aligned to the right edge so a longer
@@ -228,15 +229,17 @@
 }
 .cookieLeave:hover { color: var(--accent); }
 
-/* Bottom-right: zoom in and out while following, recenter when not. */
+/* Bottom-right: zoom in and out while following, recenter when not. The
+   zoom group is one round column that clips its two square halves. */
 .mapControls { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .zoomGroup {
   composes: glass;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
+.zoomGroup .ctrl { border-radius: 0; }
 .zoomGroup .ctrl:first-child { border-bottom: 1px solid var(--line); }
 .ctrl {
   appearance: none;
@@ -247,11 +250,12 @@
   color: var(--text);
   display: inline-grid;
   place-items: center;
+  border-radius: var(--radius-control);
   cursor: pointer;
   transition: var(--hover-transition);
 }
 .ctrl:hover { color: var(--accent); background: var(--accent-soft); }
-.recenter { composes: glass; border-radius: 8px; }
+.recenter { composes: glass; border-radius: var(--radius-control); }
 .recenter .ctrl { color: var(--accent); }
 
 /* Bottom-left: the sponsor tile, under the dock handle pill. */
