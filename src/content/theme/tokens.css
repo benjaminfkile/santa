@@ -2,6 +2,7 @@
    every class rule lives in a co-located `.module.css`. */
 
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --ground: #070d1c;
   --panel: #0f182e;
   --panel-2: #16213c;
@@ -32,6 +33,7 @@
 }
 
 :root[data-theme="light"] {
+  color-scheme: light;
   --ground: #eef3fa;
   --panel: #ffffff;
   --panel-2: #f5f8fd;
@@ -143,6 +145,23 @@ a:hover { color: var(--accent); }
 :focus-visible { outline: var(--focus-outline); outline-offset: var(--focus-offset); }
 [hidden] { display: none !important; }
 ::selection { background: var(--accent-soft); color: var(--text-bright); }
+/* Every scroll container, the page included, draws a thin scrollbar: the
+   thumb is the line colour lifted toward the dim text (3:1 on the panel),
+   on a transparent track, and the dim text on hover. Resolved per element,
+   so a container that rebinds the tokens (the tracker) recolours its own
+   scrollbar. The WebKit pair serves browsers without `scrollbar-color`. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--text-dim) 70%, var(--line)) transparent;
+}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-dim) 70%, var(--line));
+  border: 2px solid var(--panel);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
 
 @media (prefers-reduced-motion: reduce) {
   * {

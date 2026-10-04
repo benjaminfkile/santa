@@ -1,5 +1,6 @@
 // docs/site.md section 7.7. Parses tokens.css and fails the build when any
 // text token on any surface token drops under 4.5:1, or a status token on
+// --panel under 3:1, or the scrollbar thumb (at rest and on hover) on
 // --panel under 3:1.
 
 import { readFileSync } from "node:fs";
@@ -179,6 +180,48 @@ export function checkPaletteContrast(
   return problems;
 }
 
+// The value of `property` in the first rule whose selector is exactly
+// `selector`.
+function ruleValue(selector: string, property: string): string {
+  const bare = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  for (const chunk of bare.split("}")) {
+    const open = chunk.lastIndexOf("{");
+    if (open === -1 || chunk.slice(0, open).trim() !== selector) continue;
+    for (const decl of chunk.slice(open + 1).split(";")) {
+      const colon = decl.indexOf(":");
+      if (colon === -1) continue;
+      if (decl.slice(0, colon).trim() === property) return decl.slice(colon + 1).trim();
+    }
+  }
+  throw new Error(`${property} not found in ${selector}`);
+}
+
+// Resolves a token reference, a literal, or
+// `color-mix(in srgb, A P%, B)` to an opaque colour over `panel`.
+function resolveThumb(value: string, palette: Palette, panel: Rgb): Rgb {
+  const v = value.trim();
+  if (v.startsWith("color-mix(")) {
+    const inner = v.slice("color-mix(".length, v.lastIndexOf(")"));
+    const parts = inner.split(/,(?![^(]*\))/).map((s) => s.trim());
+    if (parts[0] !== "in srgb") throw new Error(`unsupported mix: ${v}`);
+    const first = parts[1].match(/^(.*?)\s+([\d.]+)%$/);
+    if (!first) throw new Error(`unsupported mix: ${v}`);
+    const p = Number(first[2]) / 100;
+    const a = resolveThumb(first[1], palette, panel);
+    const b = resolveThumb(parts[2], palette, panel);
+    return {
+      r: a.r * p + b.r * (1 - p),
+      g: a.g * p + b.g * (1 - p),
+      b: a.b * p + b.b * (1 - p),
+      a: 1,
+    };
+  }
+  const c = parseColor(v, palette.tokens);
+  return c.a < 1 ? overOpaque(c, panel) : c;
+}
+
+const NON_TEXT_THRESHOLD = 3;
+
 describe("tokens.css contrast", () => {
   const dark = loadPalette("dark");
   const light = loadPalette("light");
@@ -190,6 +233,24 @@ describe("tokens.css contrast", () => {
   it("passes for the light palette", () => {
     expect(checkPaletteContrast(light)).toEqual([]);
   });
+
+  for (const palette of [dark, light]) {
+    const panel = parseColor(palette.tokens.get("--panel") ?? "", palette.tokens);
+
+    it(`the scrollbar thumb on --panel is at least 3:1 (${palette.name})`, () => {
+      const scrollbarColor = ruleValue("*", "scrollbar-color");
+      const thumbValue = scrollbarColor.replace(/\s+transparent$/, "");
+      expect(ruleValue("::-webkit-scrollbar-thumb", "background")).toBe(thumbValue);
+      const ratio = contrastRatio(resolveThumb(thumbValue, palette, panel), panel);
+      expect(ratio).toBeGreaterThanOrEqual(NON_TEXT_THRESHOLD);
+    });
+
+    it(`the hovered scrollbar thumb on --panel is at least 3:1 (${palette.name})`, () => {
+      const hover = ruleValue("::-webkit-scrollbar-thumb:hover", "background");
+      const ratio = contrastRatio(resolveThumb(hover, palette, panel), panel);
+      expect(ratio).toBeGreaterThanOrEqual(NON_TEXT_THRESHOLD);
+    });
+  }
 
   it("fails when a text token drops below 4.5:1 (proof: deliberate low contrast)", () => {
     // Replace --text with a value very close to --panel, so the ratio
