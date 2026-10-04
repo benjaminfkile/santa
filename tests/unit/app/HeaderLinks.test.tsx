@@ -167,13 +167,11 @@ describe("Header links", () => {
     expect(sheet).not.toMatch(/@media \(min-width: 761px\) \{\s*\.headerLinkLabel \{ display: none;/);
   });
 
-  it("is a 44 px button on the theme toggle recipe with the accent border and a 22 px icon", () => {
+  it("is a 44 px button on the secondary button recipe with a 22 px icon", () => {
     seed(makeContent(THREE_LINKS));
-    const link = renderShell().getAllByTestId("header-link")[0];
-    const theme = document.querySelector('[data-testid="theme-toggle"]')!;
-    expect(link.classList.contains(theme.classList[0])).toBe(true);
+    renderShell();
     const sheet = css();
-    expect(sheet).toMatch(/\.headerLink \{[^}]*border-color: var\(--accent\);/);
+    expect(sheet).toMatch(/\.headerLink \{\s*composes: btn from "\.\.\/ui\/Button\.module\.css";[^}]*min-height: 44px;/);
     expect(sheet).toMatch(/\.headerLinkIcon svg,\s*\.headerLinkIcon img \{[^}]*width: 22px;[^}]*height: 22px;/);
   });
 

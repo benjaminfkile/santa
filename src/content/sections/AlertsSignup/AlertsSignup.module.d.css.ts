@@ -28,6 +28,5 @@ export const alertsSignupSentRow: string;
 export const alertsSignupSentRows: string;
 export const alertsSignupSentSubject: string;
 export const alertsSignupSentWhen: string;
-export const alertsSignupSignedOut: string;
 export const alertsSignupSubmit: string;
 

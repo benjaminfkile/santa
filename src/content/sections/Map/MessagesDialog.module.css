@@ -20,16 +20,7 @@
   color: var(--text-dim);
   font-variant-numeric: tabular-nums;
 }
-.fresh {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--err);
-  color: var(--err);
-}
+.fresh { composes: pill pillErr from "../../../ui/Pill.module.css"; }
 .body {
   margin: 0;
   font-size: 1rem;

@@ -73,20 +73,10 @@
   color: var(--text-dim);
   font-variant-numeric: tabular-nums;
 }
-.kind,
-.fresh {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  color: var(--text-dim);
-}
-.kindStatus { color: var(--accent); border-color: var(--accent); }
-.kindUpdate { color: var(--text); border-color: var(--line); }
-.fresh { color: var(--err); border-color: var(--err); }
+.kind { composes: pill from "../ui/Pill.module.css"; }
+.kindStatus { composes: pillAccent from "../ui/Pill.module.css"; }
+.kindUpdate { composes: pillText from "../ui/Pill.module.css"; }
+.fresh { composes: pill pillErr from "../ui/Pill.module.css"; }
 .event {
   font-weight: 500;
   color: var(--text-bright);

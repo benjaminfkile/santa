@@ -2,9 +2,11 @@
    tracker's: a card in the top-right corner (301 px, the full width on a
    phone), the six map styles as round thumbnails with a nickname and an
    accent underline on the active one, a row of Terrain, Road, and Snow
-   toggles, the data row, and the footer row of square buttons: the account
+   toggles, the data row, and the footer row of round buttons: the account
    button alone on the left, and flight data, location, history, time
-   labels, fit, and close on the right. */
+   labels, fit, and close on the right. The toggles and the footer buttons
+   are Frost controls: the raised panel fill, fully round, no border, and
+   the accent wash with accent text when selected or pressed. */
 
 .trackerMenu {
   position: absolute;
@@ -19,7 +21,7 @@
 .panel {
   background: var(--tracker-panel);
   color: var(--text-bright);
-  border-radius: 0 0 0 8px;
+  border-radius: 0 0 0 var(--radius-md);
   box-shadow: var(--shadow);
   padding: 6px;
   display: flex;
@@ -79,7 +81,7 @@
   flex: 1;
   height: 32px;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--radius-control);
   background: var(--panel-2);
   color: var(--tracker-tile-fg);
   font-family: var(--font-sans);
@@ -89,27 +91,18 @@
   justify-content: center;
   gap: 5px;
   cursor: pointer;
-  overflow: hidden;
   transition: var(--hover-transition);
 }
 /* Hover colours only under a pointer that hovers: a tap on a touch
    screen leaves :hover on the button, which would keep a toggle coloured
    after it is turned off. */
 @media (hover: hover) {
-  .rowToggle:hover { color: var(--accent); }
+  .rowToggle:hover { background: var(--accent-soft); color: var(--accent); }
 }
 .pill { composes: rowToggle; }
-.pillSelected { composes: onMark; }
 .toggle { composes: rowToggle; }
-.toggle[aria-pressed="true"]::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  background: var(--accent);
-}
+.pillSelected,
+.toggle[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
 .dataRow {
   display: flex;
   flex-wrap: wrap;
@@ -164,7 +157,7 @@
   gap: 6px 4px;
   min-width: 0;
 }
-/* Fixed 44 px squares that never shrink. */
+/* Fixed 44 px circles that never shrink. */
 .footerBtn {
   appearance: none;
   position: relative;
@@ -172,27 +165,18 @@
   width: 44px;
   height: 44px;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--radius-control);
   background: var(--panel-2);
   color: var(--tracker-tile-fg);
   display: inline-grid;
   place-items: center;
   cursor: pointer;
-  overflow: hidden;
   transition: var(--hover-transition);
 }
 @media (hover: hover) {
-  .footerBtn:hover { color: var(--accent); }
+  .footerBtn:hover { background: var(--accent-soft); color: var(--accent); }
 }
-.footerBtn[aria-pressed="true"]::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  background: var(--accent);
-}
+.footerBtn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
 .close { composes: footerBtn; }
 
 @media (max-width: 760px) {

@@ -1,31 +1,33 @@
-/* docs/site.md section 7.6. Shared icon-button recipe: a 44 x 44
-   square, `--panel` background at 94 percent with no backdrop filter,
-   hover and pressed states in --accent. Used by the map controls, the tracker
-   menu button, and the poster viewer controls. */
+/* docs/site.md section 7.3. Shared icon-button recipe: a 44 px circle on
+   the raised panel with no border; pressed is the accent wash with accent
+   text, and hover is the same tint. Used by the map controls, the tracker
+   menu button, the header's theme, bell, and menu buttons, the dialog
+   close X, and the poster viewer controls. */
 
 .ibtn {
   appearance: none;
-  background: color-mix(in srgb, var(--panel) 94%, transparent);
-  border: 1px solid var(--line);
+  background: var(--panel-2);
+  border: 0;
   color: var(--text);
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-sm);
+  padding: 0;
+  border-radius: var(--radius-control);
   display: inline-grid;
   place-items: center;
   cursor: pointer;
   transition: var(--hover-transition);
 }
-.ibtn:hover {
-  border-color: var(--accent);
+.ibtn:hover:not(:disabled) {
   background: var(--accent-soft);
+  color: var(--accent);
 }
+.ibtn:disabled { opacity: 0.5; cursor: not-allowed; }
 .ibtn svg {
   width: 18px;
   height: 18px;
 }
 .ibtn[aria-pressed="true"] {
-  border-color: var(--accent);
   background: var(--accent-soft);
   color: var(--accent);
 }

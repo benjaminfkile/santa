@@ -141,6 +141,7 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: var(--space-1) 0;
+  overflow: hidden;
   z-index: 20;
   box-shadow: var(--shadow);
   display: flex;
@@ -175,54 +176,31 @@
   align-items: center;
   gap: var(--space-3);
 }
-.signIn {
-  color: var(--accent);
-  text-decoration: none;
-  min-height: 36px;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  border: 1px solid var(--accent);
-  cursor: pointer;
-  font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: var(--hover-transition);
-}
-.signIn:hover { background: var(--accent-soft); }
+/* The header actions compose the shared recipes: Sign in and Sign out
+   are the secondary button, the theme toggle, the bell, and the menu
+   button are the icon button. */
+.signIn { composes: btn from "../ui/Button.module.css"; }
 .menuButton,
 .themeToggle {
-  width: 44px;
-  height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  background: transparent;
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
+  composes: ibtn from "../ui/IconButton.module.css";
   font-family: var(--font-sans);
   font-size: 0.95rem;
-  transition: var(--hover-transition);
 }
-.menuButton:hover,
-.themeToggle:hover { color: var(--accent); border-color: var(--accent); }
-/* The header links (HeaderLinks.tsx): the theme toggle's 44 px recipe with
-   the accent border, so they stand out from the quiet controls beside
+/* The header links (HeaderLinks.tsx): the secondary button recipe at the
+   icon button's 44 px, so they stand out from the quiet controls beside
    them. The icon draws at 22 px; a link without one shows its label's
-   first letter in a circle. At 760 px and below the button holds the icon
-   alone; from 761 px up the label sits beside the icon and the button
-   widens into a pill. */
+   first letter in a circle. At 760 px and below the button is a 44 px
+   circle holding the icon alone; from 761 px up the label sits beside the
+   icon and the button widens into a pill. */
 .headerLink {
+  composes: btn from "../ui/Button.module.css";
   flex: none;
-  gap: var(--space-2);
-  color: var(--accent);
-  border-color: var(--accent);
-  text-decoration: none;
+  box-sizing: border-box;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
 }
-.headerLink:hover { background: var(--accent-soft); }
 .headerLinkIcon {
   flex: none;
   width: 22px;
@@ -259,7 +237,6 @@
   .headerLink {
     width: auto;
     padding: 0 var(--space-4) 0 var(--space-3);
-    border-radius: 999px;
   }
 }
 @media (max-width: 760px) {
@@ -275,6 +252,7 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: var(--space-1) 0;
+  overflow: hidden;
   z-index: 20;
   box-shadow: var(--shadow);
   display: flex;
@@ -441,24 +419,20 @@
   margin-left: var(--space-3);
   font-size: 0.85rem;
 }
+/* The banner's action is the pill recipe in the accent tone as a 44 px
+   button; its tint is mixed over the panel so it reads on every banner. */
 .bannerAction {
+  composes: pill pillAccent from "../ui/Pill.module.css";
+  appearance: none;
   margin-left: var(--space-3);
   min-height: 44px;
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-size: 0.85rem;
+  padding: 3px 14px;
+  background: color-mix(in srgb, currentColor 14%, var(--panel));
   cursor: pointer;
+  transition: var(--hover-transition);
 }
 .bannerAction:hover {
-  background: color-mix(in srgb, currentColor 12%, transparent);
-}
-.bannerAction:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 2px;
+  background: color-mix(in srgb, currentColor 24%, var(--panel));
 }
 
 .footer {

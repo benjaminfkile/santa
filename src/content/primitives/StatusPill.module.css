@@ -1,28 +1,16 @@
 /* docs/site.md section 7.4. Status pill: one shared recipe used by every
    section that shows a state (Verified, Pending, Unsubscribed, and the
-   contact-form error/success chips). Ok, warn, err, and dim variants trace
-   the semantic tokens. */
+   contact-form error/success chips). It composes the pill recipe, and the
+   ok, warn, err, and dim variants compose its tones. */
 
-.statusPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 3px 9px;
-  border-radius: 999px;
-  border: 1px solid currentColor;
-  background: transparent;
-}
+.statusPill { composes: pill from "../../ui/Pill.module.css"; }
 .statusPillDot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: currentColor;
 }
-.statusPillOk { color: var(--ok); }
-.statusPillWarn { color: var(--warn); }
-.statusPillErr { color: var(--err); }
-.statusPillDim { color: var(--text-dim); }
+.statusPillOk { composes: pillOk from "../../ui/Pill.module.css"; }
+.statusPillWarn { composes: pillWarn from "../../ui/Pill.module.css"; }
+.statusPillErr { composes: pillErr from "../../ui/Pill.module.css"; }
+.statusPillDim { composes: pillDim from "../../ui/Pill.module.css"; }

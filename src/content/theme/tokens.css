@@ -46,9 +46,9 @@
   --on-accent: #ffffff;
   --gold: #8a6210;
   --link: #0b6bb5;
-  --ok: #1f7f4f;
+  --ok: #1c7548;
   --warn: #8a6210;
-  --err: #c2362c;
+  --err: #ba3329;
   --shadow: 0 1px 3px rgba(15, 26, 48, 0.08);
   --shadow-raised: 0 10px 28px rgba(15, 26, 48, 0.18);
   --snow: rgba(140, 165, 205, 0.35);
@@ -104,7 +104,8 @@
   --route-viewer-max-h: min(80vh, 900px);
 
   --radius-sm: 6px;
-  --radius-md: 10px;
+  --radius-md: 16px;
+  --radius-control: 999px;
 
   --hover-transition: border-color 120ms ease-out, color 120ms ease-out, background-color 120ms ease-out;
   --focus-outline: 2px solid var(--accent);

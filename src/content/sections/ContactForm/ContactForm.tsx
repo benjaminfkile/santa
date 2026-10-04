@@ -187,7 +187,7 @@ export const ContactForm: SectionComponent = ({ data, bundle }) => {
             Please try again in {cooldownSecs}s.
           </p>
         ) : null}
-        <button type="submit" disabled={!canSubmit} data-testid="contact-submit">
+        <button type="submit" className={styles.contactFormSubmit} disabled={!canSubmit} data-testid="contact-submit">
           {state.kind === "submitting" ? "Sending…" : "Send"}
         </button>
       </form>

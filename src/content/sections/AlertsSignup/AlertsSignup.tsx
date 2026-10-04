@@ -98,7 +98,7 @@ function SignedOut({
   onSignIn: () => void;
 }) {
   return (
-    <div className={`${styles.alertsSignup} ${styles.alertsSignupSignedOut}`}>
+    <div className={styles.alertsSignup}>
       {data.heading ? <h2>{data.heading}</h2> : null}
       <p><Inline text={data.signedOutCopy ?? ""} bundle={bundle} /></p>
       <button type="button" className={btn.btn} onClick={onSignIn}>Sign in</button>

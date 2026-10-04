@@ -17,7 +17,7 @@
   min-height: 44px;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-control);
   background: var(--panel-2);
   color: var(--text-bright);
   font: 400 0.9375rem var(--font-sans);
@@ -31,7 +31,7 @@
   border-color: var(--accent);
 }
 .input[aria-invalid="true"] { border-color: var(--err); }
-textarea.input { min-height: 88px; resize: vertical; }
+textarea.input { min-height: 88px; resize: vertical; border-radius: var(--radius-md); }
 .help { font-size: 0.8125rem; color: var(--text-dim); margin: 0; }
 .counter {
   font-family: var(--font-mono);

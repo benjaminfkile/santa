@@ -71,22 +71,14 @@
   align-items: center;
   gap: var(--space-2);
 }
+/* A round icon button on the quiet recipe: 36px square, the glyph centred. */
 .stepBtn {
-  appearance: none;
+  composes: btnQuiet from "../../../ui/Button.module.css";
   width: 36px;
   height: 36px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text);
-  display: inline-grid;
-  place-items: center;
-  cursor: pointer;
-  transition: var(--hover-transition);
+  min-height: 36px;
+  padding: 0;
 }
-.stepBtn:hover { border-color: var(--accent); color: var(--accent); }
-.stepBtn:disabled { opacity: 0.4; cursor: not-allowed; }
-.stepBtn:disabled:hover { border-color: var(--line); color: var(--text); }
 .count {
   min-width: 1.5ch;
   text-align: center;
