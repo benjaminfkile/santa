@@ -39,9 +39,6 @@
   transition: opacity 400ms ease-in-out;
   min-width: 0;
 }
-/* Below 761 px the slide takes horizontal swipes itself and leaves
-   vertical scrolling to the page. */
-.sponsorCarouselSlide[data-swipe] { touch-action: pan-y; user-select: none; }
 .sponsorCarouselReducedMotion .sponsorCarouselSlide { transition: none; }
 /* The card stacks: the logo with the sponsor's name under it, never
    beside it, at one fixed height whatever the sponsor (the logo box is a
@@ -59,17 +56,18 @@
 @media (min-width: 761px) {
   .sponsorCarouselCard .sponsorCarouselSlide { height: 192px; }
 }
-/* The card's slide row: the slide centred alone below 761 px, and from
-   761 px a 44 px Previous arrow, the slide, and a 44 px Next arrow. */
+/* The card's slide row at every width: a 44 px Previous arrow, the slide,
+   and a 44 px Next arrow (the slide alone with one sponsor). */
 .sponsorCarouselCard .sponsorCarouselBar { justify-content: center; }
 .sponsorCarouselCard .sponsorCarouselBar > .sponsorCarouselSlide { margin-inline: auto; }
+.sponsorCarouselCard .sponsorCarouselBar[data-arrows] {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  gap: var(--space-3);
+  align-items: center;
+}
 @media (min-width: 761px) {
-  .sponsorCarouselCard .sponsorCarouselBar[data-arrows] {
-    display: grid;
-    grid-template-columns: 44px 1fr 44px;
-    gap: 16px;
-    align-items: center;
-  }
+  .sponsorCarouselCard .sponsorCarouselBar[data-arrows] { gap: 16px; }
 }
 .sponsorCarouselCard .sponsorCarouselName {
   flex: none;
@@ -218,5 +216,18 @@
   text-align: center;
 }
 .sponsorDialogActions { display: flex; gap: var(--space-2); flex-wrap: wrap; justify-content: center; }
-.sponsorDialogVisit { composes: btnFill from "../../../ui/Button.module.css"; }
+/* The dialog's links: 44 px round icon buttons on the secondary button
+   recipe, one per address the sponsor has (website, Facebook, Instagram),
+   the library icon at 18 px; the label is the accessible name. */
+.sponsorDialogLink {
+  composes: btn from "../../../ui/Button.module.css";
+  box-sizing: border-box;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+}
+.sponsorDialogLink svg,
+.sponsorDialogLink img { width: 18px; height: 18px; }
+.sponsorDialogLinkText { font-size: 0.6875rem; font-weight: 600; }
 .sponsorDialogClose { composes: btnQuiet from "../../../ui/Button.module.css"; }

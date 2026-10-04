@@ -18,14 +18,13 @@ import {
   useEffect,
   useRef,
   useState,
-  useSyncExternalStore,
   type KeyboardEvent,
-  type PointerEvent,
 } from "react";
 import type { SectionComponent } from "../../registry";
 import type { MediaRef, Sponsor } from "../../../contracts";
 import { Inline } from "../../inline/Inline";
 import { Media } from "../../primitives/Media";
+import { Icon, iconResolves } from "../../primitives/Icon";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
 import { useReducedMotion } from "../../../lib/motion";
@@ -41,24 +40,6 @@ type SponsorCarouselData = {
 
 const DEFAULT_LINGER_MS = 8000;
 const MANUAL_PAUSE_MS = 30000;
-const SWIPE_THRESHOLD_PX = 40;
-const DESKTOP_QUERY = "(min-width: 761px)";
-
-function desktopQuery(): MediaQueryList | null {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return null;
-  return window.matchMedia(DESKTOP_QUERY);
-}
-
-function subscribeDesktop(cb: () => void): () => void {
-  const mq = desktopQuery();
-  if (mq === null) return () => {};
-  mq.addEventListener("change", cb);
-  return () => mq.removeEventListener("change", cb);
-}
-
-function isDesktop(): boolean {
-  return desktopQuery()?.matches ?? false;
-}
 
 function Chevron({ direction }: { direction: "left" | "right" }) {
   return (
@@ -76,8 +57,15 @@ function Chevron({ direction }: { direction: "left" | "right" }) {
   );
 }
 
-function sponsorHref(s: Sponsor): string | null {
-  return s.websiteUrl ?? s.fbUrl ?? s.igUrl ?? null;
+// The dialog's links, in order: the website, Facebook, Instagram; each
+// only when the sponsor has it, drawn as a 44 px icon button with the
+// library icon and the label as its accessible name.
+function sponsorLinks(s: Sponsor): { href: string; icon: string; label: string; testId: string }[] {
+  const out: { href: string; icon: string; label: string; testId: string }[] = [];
+  if (s.websiteUrl) out.push({ href: s.websiteUrl, icon: "globe", label: copy.sponsors.website, testId: "sponsor-website" });
+  if (s.fbUrl) out.push({ href: s.fbUrl, icon: "facebook", label: copy.sponsors.facebook, testId: "sponsor-facebook" });
+  if (s.igUrl) out.push({ href: s.igUrl, icon: "instagram", label: copy.sponsors.instagram, testId: "sponsor-instagram" });
+  return out;
 }
 
 function randomIndex(length: number): number {
@@ -91,7 +79,6 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
   const sponsors = useStore((s) => s.snapshot?.sponsors ?? null);
   const event = useSnapshotEvent();
   const reduced = useReducedMotion();
-  const desktop = useSyncExternalStore(subscribeDesktop, isDesktop, () => false);
 
   const [index, setIndex] = useState(() =>
     sponsors && sponsors.length > 0 ? randomIndex(sponsors.length) : 0,
@@ -161,12 +148,6 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
     return () => window.clearTimeout(timer);
   }, [index, visible, paused, sponsors]);
 
-  // The pointer position at the start of a press on the slide, and whether
-  // the press ended in a swipe (so the click that follows does not open
-  // the dialog).
-  const pressRef = useRef<{ x: number; y: number } | null>(null);
-  const swipedRef = useRef(false);
-
   if (!sponsors || sponsors.length === 0) return null;
   const current = sponsors[index] ?? sponsors[0];
   if (!current) return null;
@@ -206,22 +187,6 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
       step(1);
     }
   };
-  const onPointerDown = (e: PointerEvent<HTMLButtonElement>): void => {
-    pressRef.current = { x: e.clientX, y: e.clientY };
-    swipedRef.current = false;
-  };
-  const onPointerUp = (e: PointerEvent<HTMLButtonElement>): void => {
-    const start = pressRef.current;
-    pressRef.current = null;
-    if (start === null) return;
-    const dx = e.clientX - start.x;
-    const dy = e.clientY - start.y;
-    if (Math.abs(dx) >= SWIPE_THRESHOLD_PX && Math.abs(dx) > Math.abs(dy)) {
-      swipedRef.current = true;
-      step(dx < 0 ? 1 : -1);
-    }
-  };
-  const swipe = controls && !desktop;
 
   return (
     <div className={rootClass} data-variant={variant}>
@@ -230,8 +195,8 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
           <Inline text={d.heading} bundle={bundle} event={event} />
         </p>
       ) : null}
-      <div className={styles.sponsorCarouselBar} data-arrows={controls && desktop ? "" : undefined}>
-        {controls && desktop ? (
+      <div className={styles.sponsorCarouselBar} data-arrows={controls ? "" : undefined}>
+        {controls ? (
           <button
             type="button"
             className={iconButton.ibtn}
@@ -245,26 +210,10 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
         <button
           type="button"
           className={styles.sponsorCarouselSlide}
-          onClick={() => {
-            if (swipedRef.current) {
-              swipedRef.current = false;
-              return;
-            }
-            setOpen(current);
-          }}
+          onClick={() => setOpen(current)}
           onKeyDown={controls ? onKeyDown : undefined}
-          onPointerDown={swipe ? onPointerDown : undefined}
-          onPointerUp={swipe ? onPointerUp : undefined}
-          onPointerCancel={
-            swipe
-              ? () => {
-                  pressRef.current = null;
-                }
-              : undefined
-          }
           aria-label={current.name ?? copy.sponsors.open}
           data-testid="sponsor-open"
-          data-swipe={swipe ? "" : undefined}
         >
           {media ? (
             <Media
@@ -282,7 +231,7 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
             <span className={styles.sponsorCarouselName}>{current.name}</span>
           ) : null}
         </button>
-        {controls && desktop ? (
+        {controls ? (
           <button
             type="button"
             className={iconButton.ibtn}
@@ -340,7 +289,7 @@ function SponsorDialog({
       }
     }
   }, []);
-  const href = sponsorHref(sponsor);
+  const links = sponsorLinks(sponsor);
   const media: MediaRef | null = sponsor.logoMediaId
     ? { mediaId: sponsor.logoMediaId, alt: sponsor.name ?? null }
     : null;
@@ -361,17 +310,27 @@ function SponsorDialog({
         ) : null}
         <p className={styles.sponsorDialogName}>{sponsor.name}</p>
         <div className={styles.sponsorDialogActions}>
-          {href ? (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.sponsorDialogVisit}
-              data-testid="sponsor-visit"
-            >
-              {copy.sponsors.visit}
-            </a>
-          ) : null}
+          {links.map((link) => {
+            const icon = { source: "library", id: link.icon } as const;
+            return (
+              <a
+                key={link.testId}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.sponsorDialogLink}
+                aria-label={link.label}
+                title={link.label}
+                data-testid={link.testId}
+              >
+                {bundle !== null && iconResolves(icon, bundle) ? (
+                  <Icon icon={icon} bundle={bundle} alt="" decorative size={18} />
+                ) : (
+                  <span className={styles.sponsorDialogLinkText}>{link.label}</span>
+                )}
+              </a>
+            );
+          })}
           <button type="button" className={styles.sponsorDialogClose} onClick={onClose}>
             {copy.sponsors.close}
           </button>

@@ -84,9 +84,9 @@ describe("the component recipe set", () => {
     expect(rule(shell, ".bannerAction")).toContain('composes: pill pillAccent from "../ui/Pill.module.css"');
   });
 
-  it("the sponsor dialog composes the fill and the quiet buttons", () => {
+  it("the sponsor dialog composes the secondary and the quiet buttons", () => {
     const sheet = read("content/sections/SponsorCarousel/SponsorCarousel.module.css");
-    expect(rule(sheet, ".sponsorDialogVisit")).toContain('composes: btnFill from "../../../ui/Button.module.css"');
+    expect(rule(sheet, ".sponsorDialogLink")).toContain('composes: btn from "../../../ui/Button.module.css"');
     expect(rule(sheet, ".sponsorDialogClose")).toContain('composes: btnQuiet from "../../../ui/Button.module.css"');
   });
 

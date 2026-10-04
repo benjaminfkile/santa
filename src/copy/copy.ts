@@ -96,7 +96,9 @@ export const copy = {
     open: "Sponsor",
     previous: "Previous sponsor",
     next: "Next sponsor",
-    visit: "Visit website",
+    website: "Website",
+    facebook: "Facebook",
+    instagram: "Instagram",
     close: "Close",
   },
   cookies: {

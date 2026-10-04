@@ -307,13 +307,14 @@ describe("SponsorCarousel card controls", () => {
     expect(bars.slice(1).every((b) => !b.hasAttribute("aria-current"))).toBe(true);
   });
 
-  it("renders no arrows at 390 px but keeps the bars", () => {
+  it("renders the same two arrows and the bars at 390 px", () => {
     mockDesktop(false);
     seedSponsors(FOUR);
     renderCarousel();
-    expect(screen.queryByTestId("sponsor-previous")).toBeNull();
-    expect(screen.queryByTestId("sponsor-next")).toBeNull();
+    expect(screen.getByTestId("sponsor-previous")).toHaveAttribute("aria-label", "Previous sponsor");
+    expect(screen.getByTestId("sponsor-next")).toHaveAttribute("aria-label", "Next sponsor");
     expect(screen.getAllByTestId("sponsor-bar")).toHaveLength(4);
+    expect(screen.getByTestId("sponsor-open")).not.toHaveAttribute("data-swipe");
   });
 
   it("Next shows the next sponsor and pauses the auto-advance for 30 s", () => {
@@ -349,22 +350,35 @@ describe("SponsorCarousel card controls", () => {
     expect(screen.getAllByTestId("sponsor-bar")[2]).toHaveAttribute("aria-current", "true");
   });
 
-  it("a 60 px swipe left steps and a 0 px tap opens the dialog", () => {
+  it("a horizontal drag on the slide does not step; a tap opens the dialog", () => {
     mockDesktop(false);
     seedSponsors(FOUR);
     renderCarousel();
     const slide = screen.getByTestId("sponsor-open");
     fireEvent.pointerDown(slide, { clientX: 200, clientY: 100 });
     fireEvent.pointerUp(slide, { clientX: 140, clientY: 100 });
+    expect(shownName()).toBe("A");
     fireEvent.click(slide);
-    expect(shownName()).toBe("B");
-    expect(screen.queryByTestId("sponsor-dialog")).toBeNull();
-
-    fireEvent.pointerDown(slide, { clientX: 200, clientY: 100 });
-    fireEvent.pointerUp(slide, { clientX: 200, clientY: 100 });
-    fireEvent.click(slide);
-    expect(shownName()).toBe("B");
     expect(screen.getByTestId("sponsor-dialog")).toBeInTheDocument();
+  });
+
+  it("the dialog links the website, Facebook, and Instagram, each only when the sponsor has it", () => {
+    mockDesktop(true);
+    seedSponsors([
+      { id: 1, name: "A", lingerMs: 1000, websiteUrl: "https://a.example", fbUrl: "https://facebook.example/a", igUrl: null },
+      { id: 2, name: "B", lingerMs: 1000, websiteUrl: null, fbUrl: null, igUrl: "https://instagram.example/b" },
+    ] as unknown as SponsorSeed[]);
+    renderCarousel();
+    fireEvent.click(screen.getByTestId("sponsor-open"));
+    const website = screen.getByTestId("sponsor-website");
+    const facebook = screen.getByTestId("sponsor-facebook");
+    expect(website).toHaveAttribute("href", "https://a.example");
+    expect(website).toHaveAttribute("aria-label", "Website");
+    expect(website).toHaveAttribute("target", "_blank");
+    expect(facebook).toHaveAttribute("href", "https://facebook.example/a");
+    expect(facebook).toHaveAttribute("aria-label", "Facebook");
+    expect(screen.queryByTestId("sponsor-instagram")).toBeNull();
+    expect(screen.queryByTestId("sponsor-visit")).toBeNull();
   });
 
   it("Right and Left arrow keys on the slide step", () => {
