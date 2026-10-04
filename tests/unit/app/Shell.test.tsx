@@ -301,7 +301,31 @@ describe("Shell brand logo", () => {
     expect(queryByTestId("brand-logo")).toBeNull();
     expect(brand.querySelector('svg[aria-label="WMSFO"]')).not.toBeNull();
     expect(brand.textContent).toBe("WMSFO Test");
-    expect(brand.getAttribute("aria-label")).toBeNull();
+    expect(brand.getAttribute("aria-label")).toBe("WMSFO Test");
+  });
+
+  it("hides the site name when it would not fit on one line and keeps it as the link's name", () => {
+    seed(makeContent());
+    const scroll = vi.spyOn(HTMLElement.prototype, "scrollWidth", "get");
+    const client = vi.spyOn(HTMLElement.prototype, "clientWidth", "get");
+    scroll.mockImplementation(function (this: HTMLElement) { return this.dataset.testid === "brand-name" ? 300 : 0; });
+    client.mockImplementation(function (this: HTMLElement) { return this.dataset.testid === "brand-name" ? 120 : 0; });
+    try {
+      const { getByTestId, getByRole } = renderShell();
+      const name = getByTestId("brand-name");
+      expect(name.getAttribute("data-fit")).toBe("no");
+      const brand = getByTestId("site-header").querySelector('a[href="/"]')!;
+      expect(getByRole("link", { name: "WMSFO Test" })).toBe(brand);
+    } finally {
+      scroll.mockRestore();
+      client.mockRestore();
+    }
+  });
+
+  it("marks the site name as fitting when it sits on one line", () => {
+    seed(makeContent());
+    const { getByTestId } = renderShell();
+    expect(getByTestId("brand-name").getAttribute("data-fit")).toBe("yes");
   });
 
   it("shows the logo in place of the mark, then the site name, with logoMedia", () => {

@@ -48,9 +48,11 @@
   flex: 0 1 auto;
 }
 /* The brand is the one header part that gives up width: the logo scales
-   down inside its box and the name wraps, so the actions never leave the
-   viewport. */
-.brand > span { min-width: 0; overflow-wrap: anywhere; }
+   down inside its box, and the name never wraps: it stays on one line and
+   is measured by the shell (Shell.tsx, the fit observer); when it would
+   not fit on one line it is not shown at all and the logo stands alone. */
+.brand > span { min-width: 0; white-space: nowrap; overflow: hidden; }
+.brand > span[data-fit="no"] { display: none; }
 .brandLogo { height: 32px; }
 /* Doubled to outrank the Logo module's own `flex: none`. */
 .brandLogo.brandLogo { min-width: 0; max-width: 100%; flex: 0 1 auto; }

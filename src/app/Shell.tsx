@@ -157,6 +157,27 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
   // its accessible name either way. Without one it shows BrandMark and name.
   const hasLogo = (settings?.logoMedia ?? null) !== null;
   const showName = !hasLogo || settings?.headerShowsSiteName !== false;
+  const siteName = settings?.siteName ?? null;
+  // The name never wraps. On every header resize the span is measured on
+  // one line (its hidden state lifted for the measurement, all before the
+  // paint) and marked `data-fit`: "no" hides it, so a header too narrow
+  // for the whole name shows the logo alone.
+  const nameRef = useRef<HTMLSpanElement | null>(null);
+  useLayoutEffect(() => {
+    const header = headerRef.current;
+    const span = nameRef.current;
+    if (header === null || span === null) return;
+    const measure = (): void => {
+      span.removeAttribute("data-fit");
+      const fits = span.scrollWidth <= span.clientWidth + 1;
+      span.setAttribute("data-fit", fits ? "yes" : "no");
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(header);
+    return () => ro.disconnect();
+  }, [showName, siteName]);
   const { state: authState, signIn, signOut } = useAuth();
   const homeRole = useStore(selectRole);
   const location = useLocation();
@@ -298,14 +319,14 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
         <Link
           to="/"
           className={styles.brand}
-          aria-label={hasLogo && !showName ? settings.siteName : undefined}
+          aria-label={settings.siteName}
         >
           {hasLogo && bundle !== null ? (
             <Logo bundle={bundle} className={styles.brandLogo} testId="brand-logo" />
           ) : (
             <BrandMark />
           )}
-          {showName ? <span>{settings.siteName}</span> : null}
+          {showName ? <span ref={nameRef} data-testid="brand-name">{settings.siteName}</span> : null}
         </Link>
       ) : null}
       {entries.length > 0 ? (
