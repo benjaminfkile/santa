@@ -369,12 +369,12 @@ describe("TrackerMenu account button", () => {
     // Every button in both groups is the 44 px footerBtn square.
     const footerSrc = src.slice(src.indexOf("styles.footerStart"));
     const classes = [...footerSrc.matchAll(/<button[^>]*?className=\{styles\.(\w+)\}/g)].map((m) => m[1]);
-    expect(classes.length).toBe(9);
+    expect(classes.length).toBe(8);
     for (const c of classes) expect(["footerBtn", "close"]).toContain(c);
 
     const css = readFileSync(trackerModulePath, "utf8");
     expect(css).toMatch(/\.footer\s*\{[^}]*justify-content:\s*space-between/);
-    expect(css).toMatch(/\.footer\s*\{[^}]*align-items:\s*flex-start/);
+    expect(css).toMatch(/\.footer\s*\{[^}]*align-items:\s*flex-end/);
     expect(css).toMatch(/\.footerStart\s*\{[^}]*flex:\s*none/);
     expect(css).toMatch(/\.footerEnd\s*\{[^}]*flex-wrap:\s*wrap/);
     expect(css).toMatch(/\.footerEnd\s*\{[^}]*justify-content:\s*flex-end/);
