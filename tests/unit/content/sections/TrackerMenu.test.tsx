@@ -160,9 +160,9 @@ describe("TrackerMenu data row", () => {
     expect(getByTestId("data-row-distance").textContent).toMatch(/\d+\.\d{2} mi/);
   });
 
-  it("formats liftoff, recorded, and received times through formatEventTime", () => {
+  it("shows the liftoff time alone, through formatEventTime", () => {
     seedLive();
-    const { getByTestId } = render(
+    const { getByTestId, queryByTestId } = render(
       <MemoryRouter>
         <TrackerMenu
           open
@@ -198,8 +198,9 @@ describe("TrackerMenu data row", () => {
       </MemoryRouter>,
     );
     expect(getByTestId("data-row-liftoff").textContent).toContain(formatEventTime("2026-12-24T01:00:00Z"));
-    expect(getByTestId("data-row-recorded").textContent).toContain(formatEventTime("2026-12-24T02:15:00Z"));
-    expect(getByTestId("data-row-received").textContent).toContain(formatEventTime("2026-12-24T02:15:03Z"));
+    // Liftoff is the only time in the data row; the fix diagnostics are gone.
+    expect(queryByTestId("data-row-recorded")).toBeNull();
+    expect(queryByTestId("data-row-received")).toBeNull();
   });
 
   it("data row cells are rendered in --font-mono with tabular numerals", () => {

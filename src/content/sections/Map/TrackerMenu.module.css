@@ -220,3 +220,10 @@
   .trackerMenu { width: 100%; }
   .panel { border-radius: 0; }
 }
+
+/* On a pointer-sized screen the glyph sits a little smaller inside the same
+   44 px button: the card is denser there than on a phone, where the full
+   22 px reads better at arm's length. The hit area never changes. */
+@media (min-width: 761px) {
+  .footerBtn svg { width: 19px; height: 19px; }
+}

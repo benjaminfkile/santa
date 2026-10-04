@@ -19,13 +19,11 @@ import type { MapTheme } from "../../../map/themes";
 import {
   AccuracyGlyph,
   AltitudeGlyph,
-  ClockGlyph,
   CloseGlyph,
   CompassGlyph,
   LandmarkGlyph,
   GaugeGlyph,
   HistoryGlyph,
-  InboxGlyph,
   LocationGlyph,
   PersonPinGlyph,
   RoadGlyph,
@@ -91,8 +89,6 @@ export function TrackerMenu(props: TrackerMenuProps) {
   const altitudeM = useStore((s) => s.live?.altitudeM ?? null);
   const accuracyM = useStore((s) => s.live?.accuracyM ?? null);
   const wentLiveAt = useStore((s) => s.snapshot?.event?.wentLiveAt ?? null);
-  const recordedAt = useStore((s) => s.live?.recordedAt ?? null);
-  const receivedAt = useStore((s) => s.live?.receivedAt ?? null);
   const { state: authState, signIn, signOut } = useAuth();
   const location = useLocation();
 
@@ -223,18 +219,6 @@ export function TrackerMenu(props: TrackerMenuProps) {
               <dt><TakeoffGlyph /><span>Liftoff</span></dt>
               <dd data-testid="data-row-liftoff">
                 {formatEventTime(wentLiveAt) || copy.live.unavailablePlaceholder}
-              </dd>
-            </div>
-            <div>
-              <dt><ClockGlyph /><span>Recorded</span></dt>
-              <dd data-testid="data-row-recorded">
-                {formatEventTime(recordedAt) || copy.live.unavailablePlaceholder}
-              </dd>
-            </div>
-            <div>
-              <dt><InboxGlyph /><span>Received</span></dt>
-              <dd data-testid="data-row-received">
-                {formatEventTime(receivedAt) || copy.live.unavailablePlaceholder}
               </dd>
             </div>
           </dl>
