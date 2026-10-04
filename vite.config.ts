@@ -77,7 +77,6 @@ export default defineConfig({
             { name: "map", test: /@googlemaps[\\/]js-api-loader|[\\/]src[\\/]map[\\/]/, priority: 20 },
             { name: "alerts", test: /[\\/]src[\\/]pages[\\/]Alerts[\\/]/, priority: 20 },
             { name: "routemap", test: /[\\/]maplibre-gl[\\/]|[\\/]pmtiles[\\/]|@protomaps[\\/]basemaps|[\\/]src[\\/]routeMap[\\/]/, priority: 20 },
-            { name: "osd", test: /[\\/]openseadragon[\\/]|[\\/]src[\\/]content[\\/]sections[\\/]RoutePreview[\\/]PosterViewer/, priority: 20 },
           ],
         },
       },

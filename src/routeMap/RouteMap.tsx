@@ -143,7 +143,7 @@ export function RouteMap({
     function fail(error: unknown): void {
       if (cancelled || reported) return;
       reported = true;
-      console.warn("route map: falling back to the poster", error);
+      console.warn("route map: the map did not load", error);
       latest.current.onFail();
     }
     mountRouteMap({

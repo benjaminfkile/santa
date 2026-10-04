@@ -168,7 +168,6 @@ function setEvent(
       event: {
         id: 1,
         scheduledAt,
-        routeImageMediaId: null,
         routeMap: { path: PATH, timeline, durationMinutes: 72, timed: true },
         routeMapConfig,
       },
@@ -184,7 +183,7 @@ async function settle(): Promise<void> {
 }
 
 function renderSection(
-  data: Record<string, unknown> = { style: "map" },
+  data: Record<string, unknown> = {},
   settings: Record<string, unknown> = {},
 ) {
   return render(
@@ -444,7 +443,6 @@ describe("route map POI kinds and landmarks", () => {
   it("passes neither with them in the section data only", async () => {
     setEvent(null, TIMELINE);
     renderSection({
-      style: "map",
       pois: { kinds: ["peak"] },
       landmarks: [{ name: "Mount Jumbo", lat: 46.88, lng: -113.96 }],
     });

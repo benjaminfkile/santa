@@ -143,7 +143,6 @@ function setEvent(routeMapConfig: Record<string, unknown> | null = null): void {
       schemaVersion: 1,
       event: {
         id: 1,
-        routeImageMediaId: null,
         routeMap: { path: PATH, timeline: TIMELINE, durationMinutes: 10, timed: true },
         routeMapConfig,
       },
@@ -164,7 +163,7 @@ async function renderSection(config: Record<string, unknown> | null = null, data
   setEvent(config);
   const result = render(
     <MemoryRouter>
-      <RoutePreview data={{ style: "map", ...data }} items={[]} bundle={buildBundle()} />
+      <RoutePreview data={data} items={[]} bundle={buildBundle()} />
     </MemoryRouter>,
   );
   await settle();
@@ -551,7 +550,7 @@ describe("route map fullscreen on a phone and on a refused request", () => {
     const { container } = render(
       <MemoryRouter>
         <Navigator />
-        <RoutePreview data={{ style: "map" }} items={[]} bundle={buildBundle()} />
+        <RoutePreview data={{}} items={[]} bundle={buildBundle()} />
       </MemoryRouter>,
     );
     await settle();

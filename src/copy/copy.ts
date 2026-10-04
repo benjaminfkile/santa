@@ -80,14 +80,6 @@ export const copy = {
       closeLandmark: "Close",
       directions: "Get directions",
     },
-    poster: {
-      zoomIn: "Zoom in",
-      zoomOut: "Zoom out",
-      fit: "Fit",
-      fullscreen: "Fullscreen",
-      exitFullscreen: "Exit fullscreen",
-      openFullRoute: "Open the full route",
-    },
   },
   tracker: {
     landmarks: "Landmarks",
