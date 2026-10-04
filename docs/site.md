@@ -381,6 +381,9 @@ const ROLE_BY_STATUS: Record<number, PageRole> = { 1: "planned", 2: "scheduled",
 export function selectBundle(s: SiteStore): ContentBundle | null {
   if (s.preview) return s.preview;
   if (!s.snapshot) return null;
+  // Memoized on the snapshot identity: the store object changes on every live
+  // poll while the snapshot does not, and a fresh bundle each poll rebuilds
+  // everything keyed on it.
   return { content: s.snapshot.content, media: s.snapshot.media, icons: s.snapshot.icons };
 }
 
@@ -825,7 +828,7 @@ Initial view: when a fix exists, centre on it at `data.defaultZoom`; otherwise `
 
 ### 8.3 Controller
 
-`mapController` owns the `google.maps.Map` and exposes: `setTheme(key)`, `setMapType("terrain" | "roadmap")`, `follow(on)`, `recenter()`, `zoomBy(delta)`, `fitHistory()`, `destroy()`. It subscribes to the store once and, on each applied object whose `seq` changed, calls `santaMarker.setPosition` and, while following, `map.panTo`. `dragstart` sets `follow(false)`; the recenter button sets `follow(true)` and pans. `zoom_changed` (debounced 150 ms) redraws the flight history overlay so arrow density and label interval match the zoom. `destroy()` removes the map listeners and the pending zoom redraw and detaches the marker, the overlay, and the user location; after it every method is a no-op, so a late call or a late map event on a disposed controller (a rapid live flip) draws nothing and calls back into nothing. A build that fails part way detaches what it had already put on the map before `MapView` retries. The user location ignores a permission answer that arrives after `destroy()`: no watch starts and no change is reported.
+`mapController` owns the `google.maps.Map` and exposes: `setTheme(key)`, `setMapType("terrain" | "roadmap")`, `follow(on)`, `recenter()`, `zoomBy(delta)`, `fitHistory()`, `destroy()`. It subscribes to the store once and, on each applied object whose `seq` changed, calls `santaMarker.setPosition` and, while following, `map.panTo`. `dragstart` sets `follow(false)`; the recenter button sets `follow(true)` and pans. `zoom_changed` (debounced 150 ms) redraws the flight history overlay so arrow density and label interval match the zoom. `destroy()` removes the map listeners and the pending zoom redraw and detaches the marker, the overlay, and the user location; after it every method is a no-op, so a late call or a late map event on a disposed controller (a rapid live flip) draws nothing and calls back into nothing. A build that fails part way detaches what it had already put on the map before `MapView` retries. `setLandmarks(list)` compares the list against what is drawn (place, name, icon, description) and returns without touching the map when they say the same thing, so a repeated list leaves the badges alone and an open landmark popover stays open; only a real edit rebuilds the overlay. The user location ignores a permission answer that arrives after `destroy()`: no watch starts and no change is reported.
 
 ### 8.4 Themes
 

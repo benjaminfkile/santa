@@ -1,7 +1,7 @@
 // docs/site.md section 5.4 and 22.1 rows for selectPage.
 
 import { describe, it, expect } from "vitest";
-import { selectHome, selectSlug, selectRole, selectTakeover } from "../../../src/content/selectPage";
+import { selectBundle, selectHome, selectSlug, selectRole, selectTakeover } from "../../../src/content/selectPage";
 import type { SiteStore, ContentBundle } from "../../../src/store/types";
 import { initialStore } from "../../../src/store/types";
 import type { ContentDocument, LiveObject, PageRole } from "../../../src/contracts";
@@ -203,5 +203,29 @@ describe("selectTakeover", () => {
   });
   it("is false when the event is not live", () => {
     expect(selectTakeover(stateFor(2))).toBe(false);
+  });
+});
+
+describe("selectBundle", () => {
+  it("keeps one bundle per snapshot, so a live poll does not hand readers a new one", () => {
+    const base = stateFor(3);
+    const first = selectBundle(base);
+    // A poll replaces the state object and the live object; the snapshot stays.
+    const polled: SiteStore = { ...base, live: { ...base.live! } as typeof base.live };
+    expect(selectBundle(polled)).toBe(first);
+    // A new snapshot is a new bundle.
+    const resnapped: SiteStore = { ...base, snapshot: { ...base.snapshot! } };
+    const next = selectBundle(resnapped);
+    expect(next).not.toBe(first);
+    expect(selectBundle(resnapped)).toBe(next);
+  });
+
+  it("returns the preview bundle as it stands", () => {
+    const preview = makeBundle();
+    expect(selectBundle({ ...stateFor(3), preview })).toBe(preview);
+  });
+
+  it("is null without a snapshot", () => {
+    expect(selectBundle(initialStore)).toBeNull();
   });
 });

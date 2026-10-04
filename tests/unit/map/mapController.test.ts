@@ -130,6 +130,35 @@ describe("createMapController lifecycle", () => {
     expect(count()).toBe(0);
   });
 
+  it("an equal landmark list keeps the badges and an open popover in place", async () => {
+    const c = createMapController(fakeLibs(), document.createElement("div"), options());
+    const map = FakeMap.instances[0];
+    const pane = map.panes.overlayMouseTarget;
+    const list = () => [
+      { name: "Town Hall", lat: 40, lng: -105, description: "The clock tower" },
+      { name: "Fire Station", lat: 41, lng: -106 },
+    ];
+    c.setLandmarks(list());
+    map.setZoom(12);
+    await Promise.resolve();
+    const badge = pane.querySelector<HTMLButtonElement>('[data-testid="tracker-landmark-badge"]');
+    const first = pane.querySelector('[data-testid="tracker-landmark"]');
+    badge?.click();
+    expect(pane.querySelectorAll('[data-testid="tracker-landmark-popover"]')).toHaveLength(1);
+    // The live poll hands the section a fresh array of the same landmarks.
+    c.setLandmarks(list());
+    await Promise.resolve();
+    expect(pane.querySelector('[data-testid="tracker-landmark"]')).toBe(first);
+    expect(pane.querySelectorAll('[data-testid="tracker-landmark-popover"]')).toHaveLength(1);
+    // A real edit still rebuilds.
+    c.setLandmarks([{ name: "Town Hall", lat: 40, lng: -105, description: "Repainted" }]);
+    await Promise.resolve();
+    expect(pane.querySelectorAll('[data-testid="tracker-landmark"]')).toHaveLength(1);
+    expect(pane.querySelector('[data-testid="tracker-landmark"]')).not.toBe(first);
+    expect(pane.querySelectorAll('[data-testid="tracker-landmark-popover"]')).toHaveLength(0);
+    c.destroy();
+  });
+
   it("a build that fails part way leaves nothing on the map", () => {
     const libs = fakeLibs();
     const onChange = vi.fn();

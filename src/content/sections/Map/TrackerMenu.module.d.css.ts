@@ -4,6 +4,8 @@ export const dataRow: string;
 export const footer: string;
 export const footerBtn: string;
 export const footerEnd: string;
+export const footerItem: string;
+export const footerLabel: string;
 export const footerStart: string;
 export const onMark: string;
 export const panel: string;

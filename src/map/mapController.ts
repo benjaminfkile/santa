@@ -83,6 +83,7 @@ export function createMapController(
 
   let overlay: FlightHistoryOverlay = createFlightHistoryOverlay(libs, map, null);
   let landmarks: LandmarksOverlay = createLandmarksOverlay(libs, map, [], null);
+  let landmarksKey = landmarksSignature([]);
 
   function updateLandmarks(): void {
     landmarks.update({ visible: toggles.landmarks, zoom: map.getZoom() ?? opts.defaultZoom });
@@ -152,6 +153,11 @@ export function createMapController(
     },
     setLandmarks(list) {
       if (disposed) return;
+      // Rebuilding drops an open popover and makes every badge blink, so a
+      // list that says the same thing as the one on the map is a no-op.
+      const key = landmarksSignature(list);
+      if (key === landmarksKey) return;
+      landmarksKey = key;
       landmarks.destroy();
       landmarks = createLandmarksOverlay(libs, map, list, opts.mountIcon ?? null);
       updateLandmarks();
@@ -218,4 +224,12 @@ export function createMapController(
       }
     },
   };
+}
+
+// What the overlay draws from a landmark: its place, its name, its icon, and
+// its description. Two lists with the same signature draw the same badges.
+function landmarksSignature(list: readonly TrackerLandmark[]): string {
+  return JSON.stringify(
+    list.map((l) => [l.lat, l.lng, l.name, l.icon ?? null, l.description ?? null]),
+  );
 }
