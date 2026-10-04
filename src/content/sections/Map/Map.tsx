@@ -13,6 +13,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import type { SectionComponent } from "../../registry";
+import { useAuth } from "../../../auth/AuthProvider";
 import { store, useStore } from "../../../store/useStore";
 import { selectLiveState } from "../../../store/liveState";
 import { selectTakeover } from "../../selectPage";
@@ -210,6 +211,12 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const flightHistory = useStore((s) => s.snapshot?.event?.flightHistory ?? null);
   const isLive = useStore((s) => s.live?.eventStatusId === 3);
   const showLeave = overlays.cookieControl && isLive;
+  // A visitor who is not signed in gets the button all the same: pressing it
+  // opens the dialog that asks them to sign in, so the label says that rather
+  // than promising something the press does not do.
+  const { state: authState } = useAuth();
+  const leaveLabel =
+    authState.status === "signedOut" ? copy.cookies.signInToLeave : copy.cookies.leave;
   const settingsLandmarks = bundle.content?.settings?.landmarks;
   const landmarks = useMemo(
     () => trackerLandmarks(settingsLandmarks, bundle),
@@ -412,11 +419,12 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                   <button
                     type="button"
                     className={styles.cookieLeave}
-                    aria-label={copy.cookies.leave}
+                    aria-label={leaveLabel}
+                    title={leaveLabel}
                     data-testid="cookie-tally-leave"
                     onClick={() => setCookieOpen(true)}
                   >
-                    <CookiePlusGlyph size={22} />
+                    <CookiePlusGlyph size={26} />
                   </button>
                 ) : null}
               </div>

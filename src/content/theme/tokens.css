@@ -1,6 +1,14 @@
 /* docs/site.md section 7.7. North Pole Night tokens and base type only;
    every class rule lives in a co-located `.module.css`. */
 
+/* Scheme-independent. Cookie brown is only ever drawn over the map, whose
+   style is chosen separately from the site's light or dark, so one value has
+   to read on a snow basemap and a night one alike. */
+:root {
+  --cookie: #d2975a;
+  --cookie-bright: #e8b77f;
+}
+
 :root[data-theme="dark"] {
   color-scheme: dark;
   --ground: #070d1c;

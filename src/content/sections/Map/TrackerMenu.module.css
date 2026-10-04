@@ -13,7 +13,7 @@
   z-index: 5;
   top: 0;
   right: 0;
-  width: min(301px, 100%);
+  width: min(360px, 100%);
   max-height: 100%;
   overflow-y: auto;
   box-sizing: border-box;
@@ -170,27 +170,29 @@
   color: var(--text-dim);
   white-space: nowrap;
 }
-/* The right group is one row that never wraps: a grid whose first row is
-   the buttons, each in its own column, and whose second row carries a
-   toggle's submenu in that toggle's column, directly under it. */
+/* The right group is one row that never wraps. */
 .footerEnd {
-  display: grid;
-  grid-auto-flow: row;
-  grid-auto-columns: minmax(44px, max-content);
-  justify-content: end;
-  align-items: end;
-  gap: 6px 4px;
-  min-width: 0;
-}
-.footerEnd > .footerItem { grid-row: 1; }
-/* A submenu starts in its toggle's column and grows to the right over the
-   empty second row, so another entry never moves the buttons above it. */
-.footerSub {
-  grid-row: 2;
   display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
   align-items: flex-end;
   gap: 4px;
-  width: max-content;
+  min-width: 0;
+}
+/* A toggle and the buttons it switches on are one bracketed group, so it
+   reads as a set rather than as more buttons in the row. The rules are
+   drawn only while the extras are there (.footerGroupOpen); on its own the
+   toggle sits in the row like any other button. */
+.footerGroup {
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  gap: 4px;
+}
+.footerGroupOpen {
+  padding: 0 5px;
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
 }
 /* Fixed 44 px circles that never shrink. */
 .footerBtn {

@@ -185,8 +185,8 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 4px;
-  min-height: 24px;
+  gap: 5px;
+  min-height: 30px;
 }
 .cookieTallyCount {
   font-family: var(--font-mono);
@@ -194,23 +194,26 @@
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: var(--text-bright);
-  text-shadow: 0 0 2px var(--panel), 0 0 6px var(--panel);
+  text-shadow: 0 0 2px var(--panel), 0 0 5px var(--panel), 0 0 9px var(--panel);
   white-space: nowrap;
 }
 .cookieTallyIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   flex: none;
   color: var(--accent);
-  filter: drop-shadow(0 0 1px var(--panel)) drop-shadow(0 0 3px var(--panel));
+  /* Three stops: a tight edge that separates the glyph from whatever is
+     under it, then two softer ones that carry it over busy map detail. */
+  filter: drop-shadow(0 0 1px var(--panel)) drop-shadow(0 0 4px var(--panel))
+    drop-shadow(0 0 8px var(--panel));
 }
 .cookieTallyPlaceholder::before {
   content: "";
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: var(--panel-2);
 }
@@ -224,14 +227,15 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--text-bright);
+  color: var(--cookie);
   display: inline-grid;
   place-items: center;
   cursor: pointer;
-  filter: drop-shadow(0 0 1px var(--panel)) drop-shadow(0 0 3px var(--panel));
+  filter: drop-shadow(0 0 1px var(--panel)) drop-shadow(0 0 4px var(--panel))
+    drop-shadow(0 0 8px var(--panel));
   transition: var(--hover-transition);
 }
-.cookieLeave:hover { color: var(--accent); }
+.cookieLeave:hover { color: var(--cookie-bright); }
 
 /* Bottom-right: zoom in and out while following, recenter when not. The
    zoom group is one round column that clips its two square halves. */

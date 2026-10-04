@@ -154,8 +154,8 @@ describe("CookieTally", () => {
       expect(body).not.toMatch(/composes|background:(?!\s*transparent)|border:(?!\s*0;)|box-shadow/);
     }
     expect(rule("cookieTallyRow")).toMatch(/justify-content: flex-end/);
-    expect(rule("cookieTallyRow")).toMatch(/gap: 4px/);
-    expect(rule("cookieTallyCount")).toMatch(/text-shadow: 0 0 2px var\(--panel\), 0 0 6px var\(--panel\)/);
+    expect(rule("cookieTallyRow")).toMatch(/gap: 5px/);
+    expect(rule("cookieTallyCount")).toContain("text-shadow: 0 0 2px var(--panel), 0 0 5px var(--panel), 0 0 9px var(--panel)");
     expect(rule("cookieTallyCount")).toMatch(/tabular-nums/);
     expect(rule("cookieTallyIcon")).toMatch(/drop-shadow\([^)]*var\(--panel\)\)/);
     expect(rule("cookieLeave")).toMatch(/width: 44px/);
@@ -174,11 +174,12 @@ describe("the tally and the leave glyph on the live screen", () => {
     const utils = await renderMap({ leaderboardPanel: true, cookieControl: true });
     expect(utils.getByTestId("cookie-tally")).toBeInTheDocument();
     const leave = utils.getByTestId("cookie-tally-leave");
-    expect(leave.getAttribute("aria-label")).toBe("Leave cookies");
-    expect(leave.querySelector("svg")?.getAttribute("width")).toBe("22");
+    // Signed out, so the label says what the press actually does.
+    expect(leave.getAttribute("aria-label")).toBe("Sign in to leave cookies");
+    expect(leave.querySelector("svg")?.getAttribute("width")).toBe("26");
     expect(utils.queryByTestId("cookie-control-sign-in")).toBeNull();
     expect(utils.queryByTestId("cookie-control-open")).toBeNull();
-    expect(utils.queryByText("Sign in to leave a cookie")).toBeNull();
+    expect(utils.queryByText("Sign in to leave cookies")).toBeNull();
   });
 
   it("the flags off remove the column and the glyph", async () => {
@@ -208,7 +209,7 @@ describe("the tally and the leave glyph on the live screen", () => {
     const utils = await renderMap({ leaderboardPanel: true, cookieControl: true });
     fireEvent.click(utils.getByTestId("cookie-tally-leave"));
     expect(utils.getByTestId("cookie-sheet")).toBeInTheDocument();
-    expect(utils.getByTestId("cookie-dialog-signed-out").textContent).toBe("Sign in to leave a cookie");
+    expect(utils.getByTestId("cookie-dialog-signed-out").textContent).toBe("Sign in to leave cookies");
     expect(utils.getByTestId("cookie-dialog-sign-in").textContent).toBe("Sign in");
     expect(utils.getByText("Close")).toBeInTheDocument();
     expect(cookiesApi.getMyCookies).not.toHaveBeenCalled();

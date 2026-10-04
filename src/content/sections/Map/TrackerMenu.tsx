@@ -116,11 +116,6 @@ export function TrackerMenu(props: TrackerMenuProps) {
   const cardinal = headingDeg !== null ? headingToCardinal(headingDeg) : null;
   const showFlightHistory = props.controls.flightHistory && props.flightHistoryAvailable;
   const showLandmarks = props.controls.landmarks !== false && props.landmarksAvailable === true;
-  // The footer right group is a grid whose first row is the buttons, in the
-  // order they are written. The route submenu goes in the second row, in the
-  // route button's own column, so it sits directly under it however many
-  // buttons precede it.
-  const routeColumn = 1 + (props.flightDockAvailable ? 1 : 0) + (props.controls.location ? 1 : 0);
 
   return (
     <div
@@ -311,18 +306,40 @@ export function TrackerMenu(props: TrackerMenuProps) {
               </div>
             ) : null}
             {showFlightHistory ? (
-              <div className={styles.footerItem}>
-                <span className={styles.footerLabel} aria-hidden>{copy.tracker.history}</span>
-                <button
-                  type="button"
-                  className={styles.footerBtn}
-                  aria-pressed={props.flightHistory}
-                  aria-label={copy.tracker.history}
-                  onClick={() => props.onFlightHistoryChange(!props.flightHistory)}
-                  data-testid="tracker-menu-flight-history"
-                >
-                  <HistoryGlyph size={22} />
-                </button>
+              <div
+                className={props.flightHistory ? `${styles.footerGroup} ${styles.footerGroupOpen}` : styles.footerGroup}
+                role="group"
+                aria-label={copy.tracker.history}
+                data-testid="tracker-menu-route-group"
+              >
+                <div className={styles.footerItem}>
+                  <span className={styles.footerLabel} aria-hidden>{copy.tracker.history}</span>
+                  <button
+                    type="button"
+                    className={styles.footerBtn}
+                    aria-pressed={props.flightHistory}
+                    aria-label={copy.tracker.history}
+                    onClick={() => props.onFlightHistoryChange(!props.flightHistory)}
+                    data-testid="tracker-menu-flight-history"
+                  >
+                    <HistoryGlyph size={22} />
+                  </button>
+                </div>
+                {props.flightHistory ? (
+                  <div className={styles.footerItem}>
+                    <span className={styles.footerLabel} aria-hidden>{copy.tracker.times}</span>
+                    <button
+                      type="button"
+                      className={styles.footerBtn}
+                      aria-pressed={props.timeLabels}
+                      aria-label="Time labels"
+                      onClick={() => props.onTimeLabelsChange(!props.timeLabels)}
+                      data-testid="tracker-menu-time-labels"
+                    >
+                      <TimesGlyph size={22} />
+                    </button>
+                  </div>
+                ) : null}
               </div>
             ) : null}
             {showLandmarks ? (
@@ -346,29 +363,6 @@ export function TrackerMenu(props: TrackerMenuProps) {
                 <CloseGlyph size={22} />
               </button>
             </div>
-            {showFlightHistory && props.flightHistory ? (
-              <div
-                className={styles.footerSub}
-                style={{ gridColumnStart: routeColumn }}
-                role="group"
-                aria-label={copy.tracker.history}
-                data-testid="tracker-menu-route-sub"
-              >
-                <div className={styles.footerItem}>
-                  <span className={styles.footerLabel} aria-hidden>{copy.tracker.times}</span>
-                  <button
-                    type="button"
-                    className={styles.footerBtn}
-                    aria-pressed={props.timeLabels}
-                    aria-label="Time labels"
-                    onClick={() => props.onTimeLabelsChange(!props.timeLabels)}
-                    data-testid="tracker-menu-time-labels"
-                  >
-                    <TimesGlyph size={22} />
-                  </button>
-                </div>
-              </div>
-            ) : null}
           </div>
         </div>
       </div>

@@ -104,7 +104,7 @@ export const copy = {
   },
   cookies: {
     leave: "Leave cookies",
-    signInToLeave: "Sign in to leave a cookie",
+    signInToLeave: "Sign in to leave cookies",
     title: "Leave cookies for Santa",
     remaining: (remaining: number, limit: number) => `${remaining} of ${limit} left`,
     more: (name: string) => `One more ${name}`,

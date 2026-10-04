@@ -13,7 +13,7 @@ import { Icon, iconResolves } from "../../primitives/Icon";
 import { rankCookieTypes } from "../Leaderboard/Leaderboard";
 import * as styles from "./Map.module.css";
 
-const ICON_SIZE = 22;
+const ICON_SIZE = 28;
 
 function readIcon(icon: unknown): IconRef | null {
   if (icon === null || icon === undefined || typeof icon !== "object") return null;
