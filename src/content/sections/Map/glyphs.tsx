@@ -48,6 +48,10 @@ export const HistoryGlyph = (p: GlyphProps) => (
 export const TimesGlyph = (p: GlyphProps) => (
   <Glyph {...p}><path d="M7 3h10M7 21h10M8 3c0 5 4 6 4 9s-4 4-4 9M16 3c0 5-4 6-4 9s4 4 4 9" /></Glyph>
 );
+// A flag on a pole over a ground line.
+export const LandmarkGlyph = (p: GlyphProps) => (
+  <Glyph {...p}><path d="M6 21V4M6 4h11l-2.5 4L17 12H6M3 21h8" /></Glyph>
+);
 export const FitGlyph = (p: GlyphProps) => (
   <Glyph {...p}><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></Glyph>
 );

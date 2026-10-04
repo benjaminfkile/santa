@@ -1,5 +1,5 @@
 // docs/site.md section 8.3. Owns the `google.maps.Map`, the Santa marker,
-// the flight history overlay, and the user location. Subscribes to the
+// the flight history overlay, the landmarks overlay, and the user location. Subscribes to the
 // store once and moves the marker imperatively; React never re-renders on
 // a fix. `destroy` removes the map listeners and pending timers, and every
 // method is a no-op afterwards, so a late call or a late map event on a
@@ -12,6 +12,12 @@ import {
   type FlightHistoryOverlay,
   type HistoryPoint,
 } from "./flightHistoryOverlay";
+import {
+  createLandmarksOverlay,
+  type LandmarksOverlay,
+  type MountIcon,
+  type TrackerLandmark,
+} from "./landmarksOverlay";
 import { createUserLocation, type UserLocation, type UserLocationState } from "./userLocation";
 import type { MapsLibs } from "./loadMaps";
 import type { MapTheme } from "./themes";
@@ -22,6 +28,7 @@ export type MapControllerOptions = {
   defaultZoom: number;
   showSantaMarker: boolean;
   showUserLocation: boolean;
+  mountIcon?: MountIcon;
   onFollowChange?: (following: boolean) => void;
   onUserLocationChange?: (s: UserLocationState) => void;
 };
@@ -31,7 +38,8 @@ export type MapController = {
   setTheme(theme: MapTheme): void;
   setMapType(type: "terrain" | "roadmap"): void;
   setFlightHistory(points: HistoryPoint[] | null): void;
-  setToggles(t: { flightHistory: boolean; timeLabels: boolean }): void;
+  setLandmarks(list: readonly TrackerLandmark[]): void;
+  setToggles(t: { flightHistory?: boolean; timeLabels?: boolean; landmarks?: boolean }): void;
   setLiveFix(
     state: LiveState,
     pos: google.maps.LatLngLiteral | null,
@@ -54,7 +62,7 @@ export function createMapController(
 ): MapController {
   let theme = opts.theme;
   let points: HistoryPoint[] | null = null;
-  let toggles = { flightHistory: false, timeLabels: true };
+  let toggles = { flightHistory: false, timeLabels: true, landmarks: true };
   let following = true;
   let santa: SantaMarker | null = null;
   let userLoc: UserLocation | null = null;
@@ -74,6 +82,11 @@ export function createMapController(
   });
 
   let overlay: FlightHistoryOverlay = createFlightHistoryOverlay(libs, map, null);
+  let landmarks: LandmarksOverlay = createLandmarksOverlay(libs, map, [], null);
+
+  function updateLandmarks(): void {
+    landmarks.update({ visible: toggles.landmarks, zoom: map.getZoom() ?? opts.defaultZoom });
+  }
 
   // A build that fails part way detaches what it already put on the map
   // before the error reaches MapView's retry.
@@ -106,6 +119,7 @@ export function createMapController(
 
   listeners.push(map.addListener("zoom_changed", () => {
     if (disposed) return;
+    updateLandmarks();
     if (zoomDebounce !== null) window.clearTimeout(zoomDebounce);
     zoomDebounce = window.setTimeout(() => {
       zoomDebounce = null;
@@ -136,10 +150,21 @@ export function createMapController(
       overlay = createFlightHistoryOverlay(libs, map, points);
       overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
     },
+    setLandmarks(list) {
+      if (disposed) return;
+      landmarks.destroy();
+      landmarks = createLandmarksOverlay(libs, map, list, opts.mountIcon ?? null);
+      updateLandmarks();
+    },
     setToggles(t) {
       if (disposed) return;
-      toggles = { ...toggles, ...t };
+      toggles = {
+        flightHistory: t.flightHistory ?? toggles.flightHistory,
+        timeLabels: t.timeLabels ?? toggles.timeLabels,
+        landmarks: t.landmarks ?? toggles.landmarks,
+      };
       overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
+      updateLandmarks();
     },
     setLiveFix(state, pos, seqChanged) {
       if (disposed) return;
@@ -182,6 +207,7 @@ export function createMapController(
       for (const l of listeners) l.remove();
       listeners.length = 0;
       overlay.destroy();
+      landmarks.destroy();
       santa?.destroy();
       santa = null;
       userLoc?.destroy();
