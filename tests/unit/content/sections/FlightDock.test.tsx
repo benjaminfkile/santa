@@ -262,7 +262,7 @@ describe("the flight data dock", () => {
     expect(off.queryByTestId("flight-dock-foot")).toBeNull();
   });
 
-  it("the distance pill sits in the top-left stack with the messages pill last", async () => {
+  it("the distance pill sits directly under the live pill with the messages pill last", async () => {
     seed(FULL);
     act(() =>
       store.setState((prev) => ({
@@ -293,10 +293,12 @@ describe("the flight data dock", () => {
     const pill = utils.getByTestId("distance-pill");
     expect(pill.textContent).toContain("3.11 mi");
     expect(stack().contains(pill)).toBe(true);
+    // The live pill first, the distance directly under it, the messages
+    // pill last.
     const order = ids();
+    expect(order[0]).toContain("liveIndicator");
+    expect(order[1]).toBe("distance-pill");
     expect(order[order.length - 1]).toBe("messages-pill");
-    expect(order.indexOf("distance-pill")).toBeLessThan(order.indexOf("messages-pill"));
-    expect(order.indexOf("distance-pill")).toBeGreaterThan(0);
   });
 
   it("the distance pill follows the distance chip flag", async () => {

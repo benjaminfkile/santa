@@ -1,6 +1,6 @@
 // docs/site.md sections 7.6 and 8. The live screen, laid out as the legacy
 // tracker: the map fills the viewport; pills top-left (live state with the
-// viewers, the fix status, the distance from Santa, and the messages pill
+// viewers, the distance from Santa, the fix status, and the messages pill
 // last); the tracker menu button,
 // the bare cookie tally, and the leave-a-cookie glyph top-right; the flight
 // data dock's handle pill (while collapsed) above the sponsor tile
@@ -391,8 +391,8 @@ export const Map: SectionComponent = ({ data, bundle }) => {
             <>
               <div className={styles.topLeft}>
                 {overlays.liveIndicator ? <LiveIndicator showCount={overlays.onlineCount} /> : null}
-                <FixStatus />
                 {shownDistance !== null ? <DistancePill metres={shownDistance} /> : null}
+                <FixStatus />
                 {/* The messages pill is last in the stack, whatever else is in it. */}
                 {overlays.latestMessage ? <MessagesPill bundle={bundle} /> : null}
               </div>

@@ -1,7 +1,7 @@
-// docs/site.md section 7.6. Two pills in the top-left stack: the
-// waiting-for-fix and signal-lost status pill, shown under the live pill
-// only while either state holds, and the distance pill, shown under it
-// while the visitor has their location on and the distance is known.
+// docs/site.md section 7.6. Two pills in the top-left stack: the distance
+// pill, directly under the live pill while the visitor has their location
+// on and the distance is known, and the waiting-for-fix and signal-lost
+// status pill under it, only while either state holds.
 
 import { useEffect, useState } from "react";
 import { useStore } from "../../../store/useStore";
