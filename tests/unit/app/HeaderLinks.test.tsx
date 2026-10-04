@@ -1,8 +1,8 @@
 // docs/site.md section 7.7, Header links. The header's link buttons from
 // `settings.headerLinks`: none renders nothing; each link is an anchor in
 // order with its label, icon (library inline, media through <img>, or the
-// label's first letter in a circle), and new-tab attributes; the label shows
-// from 761 px up and hides below; the links come first in the actions row,
+// label's first letter in a circle), and new-tab attributes; the label is never
+// drawn, only the accessible name; the links come first in the actions row,
 // before sign-in, the bell, the theme toggle, and the menu button.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -125,17 +125,17 @@ describe("Header links", () => {
     ]);
     expect(links.map((a) => a.getAttribute("aria-label"))).toEqual(["Facebook", "Photos", "news"]);
     expect(links.map((a) => a.getAttribute("title"))).toEqual(["Facebook", "Photos", "news"]);
-    expect(links.map((a) => a.textContent)).toEqual(["Facebook", "Photos", "Nnews"]);
+    expect(links.map((a) => a.textContent)).toEqual(["", "", "N"]);
 
     const [facebook, photos, news] = links;
     const svg = facebook.querySelector("svg")!;
     expect(svg.getAttribute("data-icon-source")).toBe("library");
     expect(svg.getAttribute("data-icon-id")).toBe("facebook");
-    expect(svg.getAttribute("width")).toBe("22");
+    expect(svg.getAttribute("width")).toBe("18");
 
     const img = photos.querySelector("img")!;
     expect(img.getAttribute("src")).toBe("https://cdn/photos.svg");
-    expect(img.getAttribute("width")).toBe("22");
+    expect(img.getAttribute("width")).toBe("18");
 
     expect(news.querySelector("svg, img")).toBeNull();
     expect(news.querySelector('[data-testid="header-link-letter"]')!.textContent).toBe("N");
@@ -157,22 +157,25 @@ describe("Header links", () => {
     warn.mockRestore();
   });
 
-  it("shows the label beside the icon from 761 px up and hides it below", () => {
+  it("never draws the label; the label is the accessible name and the title", () => {
     seed(makeContent(THREE_LINKS));
     const link = renderShell().getAllByTestId("header-link")[0];
-    expect(link.querySelector('[data-testid="header-link-label"]')!.textContent).toBe("Facebook");
+    expect(link.querySelector('[data-testid="header-link-label"]')).toBeNull();
+    expect(link.textContent?.trim()).toBe("");
+    expect(link.getAttribute("aria-label")).toBe("Facebook");
+    expect(link.getAttribute("title")).toBe("Facebook");
     const sheet = css();
-    expect(sheet).toMatch(/@media \(max-width: 760px\) \{\s*\.headerLinkLabel \{ display: none; \}/);
-    expect(sheet).toMatch(/@media \(min-width: 761px\) \{\s*\.headerLink \{[^}]*width: auto;/);
-    expect(sheet).not.toMatch(/@media \(min-width: 761px\) \{\s*\.headerLinkLabel \{ display: none;/);
+    expect(sheet).not.toMatch(/.headerLinkLabel/);
+    expect(sheet).not.toMatch(/@media (min-width: 761px) {s*.headerLink {/);
   });
 
-  it("is a 44 px button on the secondary button recipe with a 22 px icon", () => {
+  it("is a 44 px button on the secondary button recipe with an 18 px icon, like the icon buttons", () => {
     seed(makeContent(THREE_LINKS));
     renderShell();
     const sheet = css();
     expect(sheet).toMatch(/\.headerLink \{\s*composes: btn from "\.\.\/ui\/Button\.module\.css";[^}]*min-height: 44px;/);
-    expect(sheet).toMatch(/\.headerLinkIcon svg,\s*\.headerLinkIcon img \{[^}]*width: 22px;[^}]*height: 22px;/);
+    expect(sheet).toMatch(/\.headerLinkIcon svg,\s*\.headerLinkIcon img \{[^}]*width: 18px;[^}]*height: 18px;/);
+    expect(sheet).toMatch(/.headerLink {[^}]*width: 44px;[^}]*height: 44px;/);
   });
 
   it("comes first in the actions row: header links, sign-in, bell, theme, menu", async () => {

@@ -1,13 +1,13 @@
 // docs/site.md section 7.7. The header links: one anchor per
 // `settings.headerLinks` entry, in order, first in the header's actions
-// row at every width. Each is a 44 px button on the secondary button
-// recipe (the accent on the accent wash), drawing the link's icon at 22 px
-// (a library icon inline, a media icon through <img>); a link without an
-// icon, or with one that resolves to nothing, draws the label's first
-// letter in a circle.
-// From 761 px up the label shows beside the icon inside the same button (a
-// pill); below that the button holds the icon alone. A `newTab` link opens
-// in a new tab with `rel="noopener"`.
+// row at every width. Each is a 44 px round button the size of the icon
+// buttons beside it, on the secondary button recipe (the accent on the
+// accent wash), drawing the link's icon at 18 px like every other header
+// icon (a library icon inline, a media icon through <img>); a link without
+// an icon, or with one that resolves to nothing, draws the label's first
+// letter in a circle. The label is the button's accessible name and its
+// title; it is never drawn. A `newTab` link opens in a new tab with
+// `rel="noopener"`.
 
 import type { Link } from "../contracts";
 import type { ContentBundle } from "../store/types";
@@ -16,7 +16,7 @@ import * as styles from "./Shell.module.css";
 
 // The icon size inside the button; matches `.headerLinkIcon` in
 // Shell.module.css.
-const HEADER_LINK_ICON_PX = 22;
+const HEADER_LINK_ICON_PX = 18;
 
 export type HeaderLinksProps = {
   links: readonly Link[] | null | undefined;
@@ -52,9 +52,6 @@ export function HeaderLinks({ links, bundle }: HeaderLinksProps) {
                 {firstLetter(link.label)}
               </span>
             )}
-          </span>
-          <span className={styles.headerLinkLabel} aria-hidden data-testid="header-link-label">
-            {link.label}
           </span>
         </a>
       ))}

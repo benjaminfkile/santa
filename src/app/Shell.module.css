@@ -181,7 +181,8 @@
 /* The header actions compose the shared recipes: Sign in and Sign out
    are the secondary button, the theme toggle, the bell, and the menu
    button are the icon button. */
-.signIn { composes: btn from "../ui/Button.module.css"; }
+/* 44 px tall so it lines up with the icon buttons and the header links. */
+.signIn { composes: btn from "../ui/Button.module.css"; min-height: 44px; }
 .menuButton,
 .themeToggle {
   composes: ibtn from "../ui/IconButton.module.css";
@@ -189,11 +190,10 @@
   font-size: 0.95rem;
 }
 /* The header links (HeaderLinks.tsx): the secondary button recipe at the
-   icon button's 44 px, so they stand out from the quiet controls beside
-   them. The icon draws at 22 px; a link without one shows its label's
-   first letter in a circle. At 760 px and below the button is a 44 px
-   circle holding the icon alone; from 761 px up the label sits beside the
-   icon and the button widens into a pill. */
+   icon button's exact geometry (a 44 px circle, an 18 px icon) at every
+   width, so they are the same size as the controls beside them; the
+   accent wash tells them apart. A link without a resolvable icon draws
+   its first letter in a circle. The label is never drawn. */
 .headerLink {
   composes: btn from "../ui/Button.module.css";
   flex: none;
@@ -205,44 +205,30 @@
 }
 .headerLinkIcon {
   flex: none;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 .headerLinkIcon svg,
 .headerLinkIcon img {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
 }
 .headerLinkLetter {
   box-sizing: border-box;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 1.5px solid currentColor;
   border-radius: 50%;
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   line-height: 1;
-}
-.headerLinkLabel {
-  font-weight: 500;
-  font-size: 0.875rem;
-  white-space: nowrap;
-}
-@media (min-width: 761px) {
-  .headerLink {
-    width: auto;
-    padding: 0 var(--space-4) 0 var(--space-3);
-  }
-}
-@media (max-width: 760px) {
-  .headerLinkLabel { display: none; }
 }
 .themePicker { position: relative; display: inline-flex; }
 .themeMenu {
