@@ -181,8 +181,10 @@
 /* The header actions compose the shared recipes: Sign in and Sign out
    are the secondary button, the theme toggle, the bell, and the menu
    button are the icon button. */
-/* 44 px tall so it lines up with the icon buttons and the header links. */
-.signIn { composes: btn from "../ui/Button.module.css"; min-height: 44px; }
+.signIn { composes: btn from "../ui/Button.module.css"; }
+/* 44 px tall so it lines up with the icon buttons and the header links;
+   scoped so it outranks the recipe's 40 px, whose sheet follows this one. */
+.actions .signIn { min-height: 44px; }
 .menuButton,
 .themeToggle {
   composes: ibtn from "../ui/IconButton.module.css";
