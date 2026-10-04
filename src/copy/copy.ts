@@ -91,6 +91,8 @@ export const copy = {
   },
   sponsors: {
     open: "Sponsor",
+    previous: "Previous sponsor",
+    next: "Next sponsor",
     visit: "Visit website",
     close: "Close",
   },

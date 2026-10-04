@@ -2,9 +2,11 @@
 // sponsor, plays snapshot order from there and wraps, keeps its index
 // across a snapshot change when the sponsor at that index is unchanged,
 // restarts at the first otherwise, and the card variant has no linger line.
+// The card variant steps on its arrows, bars, swipes, and arrow keys, and a
+// manual step pauses the auto-advance for 30 s; the tile has no controls.
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import { SponsorCarousel } from "../../../../src/content/sections/SponsorCarousel/SponsorCarousel";
@@ -264,5 +266,130 @@ describe("SponsorCarousel card variant", () => {
     );
     const root = container.firstElementChild as HTMLElement;
     expect(root.style.getPropertyValue("--sponsor-logo-width")).toBe("");
+  });
+});
+
+function mockDesktop(matches: boolean): void {
+  vi.spyOn(window, "matchMedia").mockImplementation(
+    (query: string) =>
+      ({
+        matches: query === "(min-width: 761px)" ? matches : false,
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }) as unknown as MediaQueryList,
+  );
+}
+
+const FOUR: SponsorSeed[] = [
+  { id: 1, name: "A", lingerMs: 1000 },
+  { id: 2, name: "B", lingerMs: 1000 },
+  { id: 3, name: "C", lingerMs: 1000 },
+  { id: 4, name: "D", lingerMs: 1000 },
+];
+
+describe("SponsorCarousel card controls", () => {
+  it("renders two arrows at 800 px and four bars with aria-current on the shown one", () => {
+    mockDesktop(true);
+    seedSponsors(FOUR);
+    renderCarousel();
+    expect(screen.getByTestId("sponsor-previous")).toHaveAttribute("aria-label", "Previous sponsor");
+    expect(screen.getByTestId("sponsor-next")).toHaveAttribute("aria-label", "Next sponsor");
+    const bars = screen.getAllByTestId("sponsor-bar");
+    expect(bars).toHaveLength(4);
+    expect(bars.map((b) => b.getAttribute("aria-label"))).toEqual(["A", "B", "C", "D"]);
+    expect(bars[0]).toHaveAttribute("aria-current", "true");
+    expect(bars.slice(1).every((b) => !b.hasAttribute("aria-current"))).toBe(true);
+  });
+
+  it("renders no arrows at 390 px but keeps the bars", () => {
+    mockDesktop(false);
+    seedSponsors(FOUR);
+    renderCarousel();
+    expect(screen.queryByTestId("sponsor-previous")).toBeNull();
+    expect(screen.queryByTestId("sponsor-next")).toBeNull();
+    expect(screen.getAllByTestId("sponsor-bar")).toHaveLength(4);
+  });
+
+  it("Next shows the next sponsor and pauses the auto-advance for 30 s", () => {
+    vi.useFakeTimers();
+    mockDesktop(true);
+    seedSponsors(FOUR);
+    renderCarousel();
+    expect(shownName()).toBe("A");
+    fireEvent.click(screen.getByTestId("sponsor-next"));
+    expect(shownName()).toBe("B");
+    act(() => {
+      vi.advanceTimersByTime(29999);
+    });
+    expect(shownName()).toBe("B");
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(shownName()).toBe("B");
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(shownName()).toBe("C");
+    fireEvent.click(screen.getByTestId("sponsor-previous"));
+    expect(shownName()).toBe("B");
+  });
+
+  it("a bar click jumps to its sponsor", () => {
+    mockDesktop(true);
+    seedSponsors(FOUR);
+    renderCarousel();
+    fireEvent.click(screen.getAllByTestId("sponsor-bar")[2]!);
+    expect(shownName()).toBe("C");
+    expect(screen.getAllByTestId("sponsor-bar")[2]).toHaveAttribute("aria-current", "true");
+  });
+
+  it("a 60 px swipe left steps and a 0 px tap opens the dialog", () => {
+    mockDesktop(false);
+    seedSponsors(FOUR);
+    renderCarousel();
+    const slide = screen.getByTestId("sponsor-open");
+    fireEvent.pointerDown(slide, { clientX: 200, clientY: 100 });
+    fireEvent.pointerUp(slide, { clientX: 140, clientY: 100 });
+    fireEvent.click(slide);
+    expect(shownName()).toBe("B");
+    expect(screen.queryByTestId("sponsor-dialog")).toBeNull();
+
+    fireEvent.pointerDown(slide, { clientX: 200, clientY: 100 });
+    fireEvent.pointerUp(slide, { clientX: 200, clientY: 100 });
+    fireEvent.click(slide);
+    expect(shownName()).toBe("B");
+    expect(screen.getByTestId("sponsor-dialog")).toBeInTheDocument();
+  });
+
+  it("Right and Left arrow keys on the slide step", () => {
+    mockDesktop(true);
+    seedSponsors(FOUR);
+    renderCarousel();
+    const slide = screen.getByTestId("sponsor-open");
+    fireEvent.keyDown(slide, { key: "ArrowRight" });
+    expect(shownName()).toBe("B");
+    fireEvent.keyDown(slide, { key: "ArrowLeft" });
+    fireEvent.keyDown(slide, { key: "ArrowLeft" });
+    expect(shownName()).toBe("D");
+  });
+
+  it("the tile variant has no controls", () => {
+    mockDesktop(true);
+    seedSponsors(FOUR);
+    render(
+      <MemoryRouter>
+        <SponsorCarousel data={{ variant: "tile" }} items={[]} bundle={buildBundle()} />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByTestId("sponsor-previous")).toBeNull();
+    expect(screen.queryByTestId("sponsor-next")).toBeNull();
+    expect(screen.queryByTestId("sponsor-bar")).toBeNull();
+    fireEvent.keyDown(screen.getByTestId("sponsor-open"), { key: "ArrowRight" });
+    expect(shownName()).toBe("A");
   });
 });

@@ -1,12 +1,13 @@
 /* docs/site.md sections 7.4 and 15. Sponsor carousel: the card variant on
-   ordinary pages (logo tile, name, the dots), the tile variant on the live screen (the legacy tracker's bare
+   ordinary pages (logo tile and name between the Previous and Next arrows
+   from 761 px, the short bars under it), the tile variant on the live screen (the legacy tracker's bare
    logo tile: 70 px tall, at most 180 px wide, 5 px padding), and the
    centred dialog either opens on a tap. */
 
 .sponsorCarousel { display: flex; flex-direction: column; gap: var(--space-2); }
 .sponsorCarouselCard {
-  /* The section frame supplies the card; the card variant is the bar
-     stack of heading, slide, and the dots. */
+  /* The section frame supplies the card; the card variant is the stack
+     of heading, slide row, and the bars. */
 }
 .sponsorCarouselHeading {
   margin: 0;
@@ -38,6 +39,9 @@
   transition: opacity 400ms ease-in-out;
   min-width: 0;
 }
+/* Below 761 px the slide takes horizontal swipes itself and leaves
+   vertical scrolling to the page. */
+.sponsorCarouselSlide[data-swipe] { touch-action: pan-y; user-select: none; }
 .sponsorCarouselReducedMotion .sponsorCarouselSlide { transition: none; }
 /* The card stacks: the logo with the sponsor's name under it, never
    beside it. The live tile keeps the legacy row. */
@@ -46,16 +50,29 @@
   align-items: center;
   gap: var(--space-2);
 }
+/* The card's slide row: the slide centred alone below 761 px, and from
+   761 px a 44 px Previous arrow, the slide, and a 44 px Next arrow. */
+.sponsorCarouselCard .sponsorCarouselBar { justify-content: center; }
+.sponsorCarouselCard .sponsorCarouselBar > .sponsorCarouselSlide { margin-inline: auto; }
+@media (min-width: 761px) {
+  .sponsorCarouselCard .sponsorCarouselBar[data-arrows] {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    gap: 16px;
+    align-items: center;
+  }
+}
 .sponsorCarouselCard .sponsorCarouselName {
   white-space: normal;
   text-align: center;
   max-width: 100%;
 }
 /* The card's logo follows the section's logoWidth (a CSS variable the
-   component sets when the field is filled in; 48 px otherwise), never
-   wider than its container, height keeping the image's shape. */
+   component sets when the field is filled in; 112 px square below 761 px
+   and 160 px from 761 px otherwise), never wider than its container,
+   height keeping the image's shape. */
 .sponsorCarouselLogo {
-  width: min(var(--sponsor-logo-width, 48px), 100%);
+  width: min(var(--sponsor-logo-width, 112px), 100%);
   height: auto;
   aspect-ratio: 1 / 1;
   border-radius: var(--radius-sm);
@@ -63,6 +80,9 @@
   border: 1px solid var(--line);
   object-fit: contain;
   flex: 0 1 auto;
+}
+@media (min-width: 761px) {
+  .sponsorCarouselLogo { width: min(var(--sponsor-logo-width, 160px), 100%); }
 }
 .sponsorCarouselNameOnly {
   font-family: var(--font-sans);
@@ -80,20 +100,36 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.sponsorCarouselDots {
+/* The card's bars: one short bar per sponsor, centred under the slide;
+   the current one is longer and in the accent. Each bar is a button whose
+   padding widens the hit area around the 4 px stroke. */
+.sponsorCarouselBars {
   display: flex;
-  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
   padding: 0;
   margin: 0;
   list-style: none;
 }
-.sponsorCarouselDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+.sponsorCarouselBars > li { display: flex; }
+.sponsorCarouselBarButton {
+  appearance: none;
+  box-sizing: content-box;
+  width: 18px;
+  height: 4px;
+  padding: 10px 3px;
+  border: 0;
+  border-radius: var(--radius-control);
   background: var(--line);
+  background-clip: content-box;
+  cursor: pointer;
 }
-.sponsorCarouselDotOn { background: var(--accent); }
+.sponsorCarouselBarButton[aria-current="true"] {
+  width: 28px;
+  background-color: var(--accent);
+}
 
 /* The live screen's tile: a pre-blended fill with no backdrop filter. */
 .sponsorCarouselTile .sponsorCarouselBar { gap: 0; }
