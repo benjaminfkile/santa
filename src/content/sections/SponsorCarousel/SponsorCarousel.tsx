@@ -2,13 +2,27 @@
 // sponsor when the first non-empty list arrives, then plays snapshot order
 // (never shuffled) from there: one sponsor at a time for its `lingerMs`,
 // wraps around, pauses while the document is hidden. The `card` variant
-// (the section) shows the logo tile, the name, and the dots; the
-// `tile` variant (the live screen) is the legacy tracker's bare logo tile.
+// (the section) shows the logo tile and the name, a Previous and a Next
+// icon button beside the slide from 761 px, and a row of short bars under
+// it that jump to a sponsor; below 761 px a horizontal swipe on the slide
+// steps instead of the arrows. Left and Right on the focused slide step.
+// A manual step pauses the auto-advance for 30 s, after which it resumes
+// from the shown sponsor with that sponsor's own `lingerMs`. The `tile`
+// variant (the live screen) is the legacy tracker's bare logo tile with
+// no controls.
 // Tapping a sponsor opens a small centred dialog with the logo, the name,
 // and a link to the sponsor's site; the dialog closes on its button, on
 // Escape, or on a tap outside it.
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+} from "react";
 import type { SectionComponent } from "../../registry";
 import type { MediaRef, Sponsor } from "../../../contracts";
 import { Inline } from "../../inline/Inline";
@@ -18,6 +32,7 @@ import { useStore } from "../../../store/useStore";
 import { useReducedMotion } from "../../../lib/motion";
 import { copy } from "../../../copy/copy";
 import * as styles from "./SponsorCarousel.module.css";
+import * as iconButton from "../../../ui/IconButton.module.css";
 
 type SponsorCarouselData = {
   heading?: string | null;
@@ -26,6 +41,41 @@ type SponsorCarouselData = {
 };
 
 const DEFAULT_LINGER_MS = 8000;
+const MANUAL_PAUSE_MS = 30000;
+const SWIPE_THRESHOLD_PX = 40;
+const DESKTOP_QUERY = "(min-width: 761px)";
+
+function desktopQuery(): MediaQueryList | null {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return null;
+  return window.matchMedia(DESKTOP_QUERY);
+}
+
+function subscribeDesktop(cb: () => void): () => void {
+  const mq = desktopQuery();
+  if (mq === null) return () => {};
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+}
+
+function isDesktop(): boolean {
+  return desktopQuery()?.matches ?? false;
+}
+
+function Chevron({ direction }: { direction: "left" | "right" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <polyline points={direction === "left" ? "15 6 9 12 15 18" : "9 6 15 12 9 18"} />
+    </svg>
+  );
+}
 
 function sponsorHref(s: Sponsor): string | null {
   return s.websiteUrl ?? s.fbUrl ?? s.igUrl ?? null;
@@ -42,6 +92,7 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
   const sponsors = useStore((s) => s.snapshot?.sponsors ?? null);
   const event = useSnapshotEvent();
   const reduced = useReducedMotion();
+  const desktop = useSyncExternalStore(subscribeDesktop, isDesktop, () => false);
 
   const [index, setIndex] = useState(() =>
     sponsors && sponsors.length > 0 ? randomIndex(sponsors.length) : 0,
@@ -91,15 +142,31 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
     return () => document.removeEventListener("visibilitychange", handler);
   }, []);
 
+  // A manual step sets `paused` and bumps `manualStep`, which restarts the
+  // 30 s pause; the auto-advance below waits while it is set.
+  const [paused, setPaused] = useState(false);
+  const [manualStep, setManualStep] = useState(0);
   useEffect(() => {
-    if (!visible) return;
+    if (!paused) return;
+    const timer = window.setTimeout(() => setPaused(false), MANUAL_PAUSE_MS);
+    return () => window.clearTimeout(timer);
+  }, [paused, manualStep]);
+
+  useEffect(() => {
+    if (!visible || paused) return;
     if (!sponsors || sponsors.length <= 1) return;
     const linger = sponsors[index]?.lingerMs ?? DEFAULT_LINGER_MS;
     const timer = window.setTimeout(() => {
       setIndex((i) => (i + 1) % sponsors.length);
     }, linger);
     return () => window.clearTimeout(timer);
-  }, [index, visible, sponsors]);
+  }, [index, visible, paused, sponsors]);
+
+  // The pointer position at the start of a press on the slide, and whether
+  // the press ended in a swipe (so the click that follows does not open
+  // the dialog).
+  const pressRef = useRef<{ x: number; y: number } | null>(null);
+  const swipedRef = useRef(false);
 
   if (!sponsors || sponsors.length === 0) return null;
   const current = sponsors[index] ?? sponsors[0];
@@ -124,6 +191,42 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
       ? ({ "--sponsor-logo-width": `${d.logoWidth}px` } as CSSProperties)
       : undefined;
 
+  const card = variant === "card";
+  const count = sponsors.length;
+  const controls = card && count > 1;
+  const showAt = (i: number): void => {
+    setIndex(((i % count) + count) % count);
+    setPaused(true);
+    setManualStep((n) => n + 1);
+  };
+  const step = (delta: number): void => showAt(index + delta);
+
+  const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>): void => {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      step(-1);
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      step(1);
+    }
+  };
+  const onPointerDown = (e: PointerEvent<HTMLButtonElement>): void => {
+    pressRef.current = { x: e.clientX, y: e.clientY };
+    swipedRef.current = false;
+  };
+  const onPointerUp = (e: PointerEvent<HTMLButtonElement>): void => {
+    const start = pressRef.current;
+    pressRef.current = null;
+    if (start === null) return;
+    const dx = e.clientX - start.x;
+    const dy = e.clientY - start.y;
+    if (Math.abs(dx) >= SWIPE_THRESHOLD_PX && Math.abs(dx) > Math.abs(dy)) {
+      swipedRef.current = true;
+      step(dx < 0 ? 1 : -1);
+    }
+  };
+  const swipe = controls && !desktop;
+
   return (
     <div className={rootClass} data-variant={variant} style={rootStyle}>
       {variant === "card" && d.heading ? (
@@ -131,13 +234,41 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
           <Inline text={d.heading} bundle={bundle} event={event} />
         </p>
       ) : null}
-      <div className={styles.sponsorCarouselBar}>
+      <div className={styles.sponsorCarouselBar} data-arrows={controls && desktop ? "" : undefined}>
+        {controls && desktop ? (
+          <button
+            type="button"
+            className={iconButton.ibtn}
+            onClick={() => step(-1)}
+            aria-label={copy.sponsors.previous}
+            data-testid="sponsor-previous"
+          >
+            <Chevron direction="left" />
+          </button>
+        ) : null}
         <button
           type="button"
           className={styles.sponsorCarouselSlide}
-          onClick={() => setOpen(current)}
+          onClick={() => {
+            if (swipedRef.current) {
+              swipedRef.current = false;
+              return;
+            }
+            setOpen(current);
+          }}
+          onKeyDown={controls ? onKeyDown : undefined}
+          onPointerDown={swipe ? onPointerDown : undefined}
+          onPointerUp={swipe ? onPointerUp : undefined}
+          onPointerCancel={
+            swipe
+              ? () => {
+                  pressRef.current = null;
+                }
+              : undefined
+          }
           aria-label={current.name ?? copy.sponsors.open}
           data-testid="sponsor-open"
+          data-swipe={swipe ? "" : undefined}
         >
           {media ? (
             <Media
@@ -155,17 +286,34 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
             <span className={styles.sponsorCarouselName}>{current.name}</span>
           ) : null}
         </button>
-        {variant === "card" && sponsors.length > 1 ? (
-          <ul className={styles.sponsorCarouselDots} aria-hidden>
-            {sponsors.map((_, i) => (
-              <li
-                key={i}
-                className={`${styles.sponsorCarouselDot}${i === index ? " " + styles.sponsorCarouselDotOn : ""}`}
-              />
-            ))}
-          </ul>
+        {controls && desktop ? (
+          <button
+            type="button"
+            className={iconButton.ibtn}
+            onClick={() => step(1)}
+            aria-label={copy.sponsors.next}
+            data-testid="sponsor-next"
+          >
+            <Chevron direction="right" />
+          </button>
         ) : null}
       </div>
+      {controls ? (
+        <ol className={styles.sponsorCarouselBars}>
+          {sponsors.map((s, i) => (
+            <li key={i}>
+              <button
+                type="button"
+                className={styles.sponsorCarouselBarButton}
+                onClick={() => showAt(i)}
+                aria-label={s.name ?? copy.sponsors.open}
+                aria-current={i === index ? "true" : undefined}
+                data-testid="sponsor-bar"
+              />
+            </li>
+          ))}
+        </ol>
+      ) : null}
       {open !== null ? (
         <SponsorDialog sponsor={open} bundle={bundle} logoWidth={logoWidth} onClose={() => setOpen(null)} />
       ) : null}
