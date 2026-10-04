@@ -238,7 +238,7 @@ test("status walk", async ({ page }) => {
     // opens only when the pill is pressed and marks the message read.
     const runId = process.env.GITHUB_RUN_ID ?? String(Date.now());
     const messageBody = `E2E ${runId}`;
-    await postEventMessage(walk.id, { body: messageBody, eventTime: null });
+    await postEventMessage(walk.id, { body: messageBody, notify: false });
     await waitForState(
       page,
       (s, body) => s?.snapshot?.event?.latestMessage?.body === body,

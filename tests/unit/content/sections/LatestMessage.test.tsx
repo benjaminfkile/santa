@@ -68,7 +68,6 @@ describe("LatestMessage inside a SectionFrame", () => {
       latestMessage: {
         id: 1,
         body: "Weather report",
-        eventTime: "2026-12-24T12:00:00Z",
         createdAt: "2026-12-24T12:00:00Z",
       },
     } as unknown as Snapshot["event"]);
@@ -87,7 +86,7 @@ describe("LatestMessage inside a SectionFrame", () => {
 });
 
 describe("LatestMessage marks the message read", () => {
-  const message = { id: 12, body: "Over the valley", eventTime: null, createdAt: "2026-12-22T01:31:00Z" };
+  const message = { id: 12, body: "Over the valley", createdAt: "2026-12-22T01:31:00Z" };
 
   it("stores the id when the card renders", () => {
     setSnapshot({ id: 7, statusId: 3, latestMessage: message });

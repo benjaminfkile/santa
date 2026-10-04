@@ -49,19 +49,6 @@ export interface Snapshot {
         fullscreen?: boolean | null;
         terrain?: boolean | null;
       } | null;
-      landmarks?:
-        | {
-            name?: string;
-            lat?: number;
-            lng?: number;
-            icon?: {
-              source?: string;
-              id?: string;
-              display?: unknown;
-            } | null;
-            description?: string | null;
-          }[]
-        | null;
       pois?: {
         kinds?: string[];
       } | null;
@@ -69,7 +56,6 @@ export interface Snapshot {
     latestMessage?: {
       id?: number;
       body?: string;
-      eventTime?: string | null;
       createdAt?: string;
     } | null;
   } | null;

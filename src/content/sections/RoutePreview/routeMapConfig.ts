@@ -1,16 +1,19 @@
-// docs/site.md section 8.9. The route map's inputs, all from the event's
-// `routeMapConfig` in the snapshot. Each value resolves on its own: the
-// config's value, else the default. A null or absent config, block, or
-// key reads as absent, and so does a value outside its contract set.
+// docs/site.md section 8.9. The route map's inputs. The event's
+// `routeMapConfig` in the snapshot gives the display, the controls, and
+// the POI kinds; the site settings give the landmarks. Each value
+// resolves on its own: the config's value, else the default. A null or
+// absent config, block, or key reads as absent, and so does a value
+// outside its contract set.
 //  - `display`: the five display values, defaulting to labels every 15
 //    minutes, arrows on, medium arrows, normal width, and medium labels.
 //    The named sizes become the style's scales through DISPLAY_SCALES.
 //  - `controls`: the fullscreen and terrain switches, each true unless
 //    the config says false.
-//  - `landmarks`: the entries with a name and numeric coordinates, each
-//    with its icon when it is a well formed reference and its
-//    description when it is a string; absent without a list.
 //  - `pois.kinds`: the string kinds; absent without a list.
+//  - resolveLandmarks: the site settings' `landmarks` entries with a name
+//    and numeric coordinates, each with its icon when it is a well formed
+//    reference and its description when it is a string; absent without
+//    a list.
 
 import type { IconRef, Snapshot } from "../../../contracts";
 import type { LandmarkData } from "./RouteLandmarks";
@@ -59,7 +62,6 @@ export type ResolvedRouteMapDisplay = {
 export type ResolvedRouteMapConfig = {
   display: ResolvedRouteMapDisplay;
   controls: { fullscreen: boolean; terrain: boolean };
-  landmarks: LandmarkData[] | undefined;
   poiKinds: string[] | undefined;
 };
 
@@ -90,7 +92,7 @@ function asIcon(v: unknown): IconRef | null {
   return v as IconRef;
 }
 
-function resolveLandmarks(list: unknown): LandmarkData[] | undefined {
+export function resolveLandmarks(list: unknown): LandmarkData[] | undefined {
   if (!Array.isArray(list)) return undefined;
   const out: LandmarkData[] = [];
   for (const item of list as unknown[]) {
@@ -135,7 +137,6 @@ export function resolveRouteMapConfig(config: RouteMapConfig | null | undefined)
       fullscreen: config?.controls?.fullscreen !== false,
       terrain: config?.controls?.terrain !== false,
     },
-    landmarks: resolveLandmarks(config?.landmarks),
     poiKinds: resolvePoiKinds(config?.pois?.kinds),
   };
 }

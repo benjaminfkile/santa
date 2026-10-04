@@ -22,7 +22,6 @@ export type AdminEvent = {
 export type AdminMessage = {
   id: number;
   body: string;
-  eventTime: string | null;
   createdAt: string;
 };
 
@@ -115,11 +114,10 @@ export async function patchEvent(
 
 export async function postEventMessage(
   id: number,
-  body: { body: string; eventTime: string | null; notify?: boolean },
+  body: { body: string; notify?: boolean },
 ): Promise<AdminMessage> {
   return request<AdminMessage>("POST", `/admin/events/${id}/messages`, {
     body: body.body,
-    eventTime: body.eventTime,
     notify: body.notify ?? false,
   });
 }

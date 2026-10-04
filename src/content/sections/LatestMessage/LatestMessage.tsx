@@ -1,5 +1,5 @@
-// docs/site.md section 7.4. LatestMessage: `card`: body plus `eventTime`
-// (or `createdAt` when null); `ticker`: one collapsible line;
+// docs/site.md section 7.4. LatestMessage: `card`: body plus `createdAt`;
+// `ticker`: one collapsible line;
 // `aria-live="polite"`; nothing when null. Rendering a message with a
 // numeric id marks it read through lib/messageSeen, in both styles and
 // with the ticker collapsed, so the tracker's envelope pill clears its dot.
@@ -34,7 +34,7 @@ export const LatestMessage: SectionComponent = ({ data, bundle }) => {
 
   if (message === null || message === undefined) return null;
 
-  const timeIso = message.eventTime ?? message.createdAt ?? null;
+  const timeIso = message.createdAt ?? null;
   const timeText = formatEventTime(timeIso);
   const heading = d.heading ?? null;
   const body = message.body ?? "";
