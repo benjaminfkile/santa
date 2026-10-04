@@ -142,6 +142,7 @@ describe("TrackerMenu data row", () => {
       onFlightDockChange: () => {},
       onFitHistory: () => {},
       onOpenLocation: () => {},
+    locationEnabled: false,
     };
     const { getByTestId, rerender } = render(
       <MemoryRouter>
@@ -193,6 +194,7 @@ describe("TrackerMenu data row", () => {
           onFlightDockChange={() => {}}
           onFitHistory={() => {}}
           onOpenLocation={() => {}}
+          locationEnabled={false}
           distanceMetres={null}
         />
       </MemoryRouter>,
@@ -239,6 +241,7 @@ function footerProps(onClose: () => void) {
     onFlightDockChange: () => {},
     onFitHistory: () => {},
     onOpenLocation: () => {},
+    locationEnabled: false,
     distanceMetres: null,
   };
 }
@@ -326,6 +329,26 @@ describe("TrackerMenu account button", () => {
     expect(queryByTestId("tracker-menu-sign-out")).toBeNull();
     expect(getByTestId("tracker-menu-account").children).toHaveLength(0);
     expectRightGroupUnchanged(getByTestId);
+  });
+
+  it("the location button is pressed while the visitor's location is on and not otherwise", () => {
+    const { getByTestId, unmount } = render(
+      <MemoryRouter initialEntries={["/live"]}>
+        <AuthProvider initialState={{ status: "signedOut" }}>
+          <TrackerMenu {...footerProps()} locationEnabled />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+    expect(getByTestId("tracker-menu-location")).toHaveAttribute("aria-pressed", "true");
+    unmount();
+    const off = render(
+      <MemoryRouter initialEntries={["/live"]}>
+        <AuthProvider initialState={{ status: "signedOut" }}>
+          <TrackerMenu {...footerProps()} locationEnabled={false} />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+    expect(off.getByTestId("tracker-menu-location")).toHaveAttribute("aria-pressed", "false");
   });
 
   it("with every control on and a flight history present the seven buttons are fixed 44 px squares and the right group wraps", () => {

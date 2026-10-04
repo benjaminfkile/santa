@@ -75,6 +75,9 @@ export type TrackerMenuProps = {
   onFlightDockChange: (v: boolean) => void;
   onFitHistory: () => void;
   onOpenLocation: () => void;
+  // Whether the visitor's location is on (the dot on the map); the location
+  // button is pressed while it is.
+  locationEnabled: boolean;
   distanceMetres: number | null;
 };
 
@@ -281,7 +284,14 @@ export function TrackerMenu(props: TrackerMenuProps) {
               </button>
             ) : null}
             {props.controls.location ? (
-              <button type="button" className={styles.footerBtn} onClick={props.onOpenLocation} aria-label="Your location">
+              <button
+                type="button"
+                className={styles.footerBtn}
+                onClick={props.onOpenLocation}
+                aria-label="Your location"
+                aria-pressed={props.locationEnabled}
+                data-testid="tracker-menu-location"
+              >
                 <LocationGlyph size={22} />
               </button>
             ) : null}

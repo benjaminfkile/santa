@@ -487,6 +487,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 onFlightDockChange={setFlightDockOn}
                 onFitHistory={() => controller?.fitHistory()}
                 onOpenLocation={() => setLocationOpen(true)}
+                locationEnabled={userState.enabled}
                 distanceMetres={userState.distanceMetres}
               />
               <LocationPrompt
