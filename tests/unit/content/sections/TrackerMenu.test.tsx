@@ -335,7 +335,7 @@ describe("TrackerMenu account button", () => {
     const { getByTestId, unmount } = render(
       <MemoryRouter initialEntries={["/live"]}>
         <AuthProvider initialState={{ status: "signedOut" }}>
-          <TrackerMenu {...footerProps()} locationEnabled />
+          <TrackerMenu {...footerProps(() => {})} locationEnabled />
         </AuthProvider>
       </MemoryRouter>,
     );
@@ -344,7 +344,7 @@ describe("TrackerMenu account button", () => {
     const off = render(
       <MemoryRouter initialEntries={["/live"]}>
         <AuthProvider initialState={{ status: "signedOut" }}>
-          <TrackerMenu {...footerProps()} locationEnabled={false} />
+          <TrackerMenu {...footerProps(() => {})} locationEnabled={false} />
         </AuthProvider>
       </MemoryRouter>,
     );
