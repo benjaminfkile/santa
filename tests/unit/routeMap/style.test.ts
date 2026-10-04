@@ -127,6 +127,24 @@ describe("route map style options", () => {
     expect(marks.paint?.["circle-stroke-color"]).toBe("#c62828");
   });
 
+  it("leaves the start circle out with startCircle false, keeping the end circle and the marks", () => {
+    const plain = buildStyle("light", BASE, PATH, MARKS, false);
+    const unset = buildStyle("light", BASE, PATH, MARKS, false, { startCircle: true });
+    expect(JSON.stringify(unset)).toBe(JSON.stringify(plain));
+    const style = buildStyle("light", BASE, PATH, MARKS, false, { startCircle: false });
+    type Ends = { features: { properties: { end: string }; geometry: { coordinates: number[] } }[] };
+    const plainEnds = (plain.sources["route-ends"] as unknown as { data: Ends }).data;
+    expect(plainEnds.features.map((f) => f.properties.end)).toEqual(["start", "end"]);
+    const ends = (style.sources["route-ends"] as unknown as { data: Ends }).data;
+    expect(ends.features.map((f) => f.properties.end)).toEqual(["end"]);
+    expect(ends.features[0].geometry.coordinates).toEqual([3, 5]);
+    const endLayer = layer<CircleLayerSpecification>(style, "route-ends");
+    expect(endLayer.paint?.["circle-radius"]).toBe(6);
+    const marks = (style.sources["route-marks"] as unknown as { data: { features: unknown[] } }).data;
+    expect(marks.features).toHaveLength(MARKS.length);
+    layer<CircleLayerSpecification>(style, "route-marks");
+  });
+
   it("adds an arrowhead symbol layer along the route line", () => {
     const plain = buildStyle("dark", BASE, PATH, MARKS);
     expect(plain.layers.some((l) => l.id === ARROWS_LAYER)).toBe(false);

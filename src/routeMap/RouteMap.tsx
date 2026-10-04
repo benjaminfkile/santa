@@ -9,12 +9,9 @@
 // `arrows`, `arrowScale`, `routeWidthScale`, and `labelScale` pass
 // through to the style options of the same names; `landmarkMarkers` stands each caller's
 // element on its point as a marker (the caller renders the landmark
-// badges and buttons into them); `pin`
-// stands the Santa pin (the caller's `pinElement`) on a point, placed at
-// once on mount and eased to each new point after, except when
-// `reducedMotion` is set, where it moves at once. The caller renders the
-// pin and reads the motion preference, so this chunk imports neither
-// react-dom nor the icon and motion modules.
+// badges and buttons into them); `startElement` stands as a marker on the
+// path's first point (the caller builds it, so this chunk imports neither
+// react-dom nor the icon modules).
 // The control stack sits at the top right of the frame, each button
 // carrying `controlClassName` (the caller passes the icon button recipe,
 // which stays out of this chunk because the tracker shares it): a
@@ -64,9 +61,7 @@ export type RouteMapProps = {
   arrowScale?: number;
   routeWidthScale?: number;
   labelScale?: number;
-  pin?: LatLng | null;
-  pinElement?: HTMLElement;
-  reducedMotion?: boolean;
+  startElement?: HTMLElement;
   ariaLabel?: string;
   fullscreenControl?: boolean;
   terrainControl?: boolean;
@@ -87,9 +82,7 @@ export function RouteMap({
   arrowScale,
   routeWidthScale,
   labelScale,
-  pin = null,
-  pinElement,
-  reducedMotion = false,
+  startElement,
   ariaLabel,
   fullscreenControl = false,
   terrainControl = false,
@@ -117,11 +110,9 @@ export function RouteMap({
     arrowScale,
     routeWidthScale,
     labelScale,
-    pin,
-    pinElement,
+    startElement,
     appearance,
     terrain,
-    reducedMotion,
     onFail,
   });
 
@@ -137,11 +128,9 @@ export function RouteMap({
     arrowScale,
     routeWidthScale,
     labelScale,
-    pin,
-    pinElement,
+    startElement,
     appearance,
     terrain,
-    reducedMotion,
     onFail,
   };
   });
@@ -171,7 +160,7 @@ export function RouteMap({
       labelScale: latest.current.labelScale,
       appearance: latest.current.appearance,
       terrain: latest.current.terrain,
-      pinElement: latest.current.pinElement,
+      startElement: latest.current.startElement,
       onError: fail,
     })
       .then((handle) => {
@@ -195,7 +184,6 @@ export function RouteMap({
           appearance: now.appearance,
           terrain: now.terrain,
         });
-        handle.setPin(now.pin, false);
         setMounted(true);
       })
       .catch(fail);
@@ -259,13 +247,6 @@ export function RouteMap({
     setTerrainOn(next);
     storageSet(TERRAIN_KEY, next ? "on" : "off");
   }
-
-  const pinLat = pin?.lat ?? null;
-  const pinLng = pin?.lng ?? null;
-  useEffect(() => {
-    const point = pinLat === null || pinLng === null ? null : { lat: pinLat, lng: pinLng };
-    handleRef.current?.setPin(point, !latest.current.reducedMotion);
-  }, [pinLat, pinLng]);
 
   const showFullscreen = fullscreenControl && onToggleFullscreen !== undefined;
 

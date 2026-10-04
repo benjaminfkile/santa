@@ -70,9 +70,9 @@ export const copy = {
     zoomOut: "Zoom out",
     centerOnSanta: "Center on Santa",
     snow: "Snow",
-    routeTime: "Time along the route",
-    routeElapsed: (elapsed: string) => `${elapsed} into the flight`,
+    routeStart: "Starts here",
     routeMap: {
+      region: "Santa's planned route; the star marks where he starts",
       fullscreen: "Show the route map fullscreen",
       exitFullscreen: "Exit fullscreen",
       terrain: "Terrain view",

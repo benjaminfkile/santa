@@ -225,10 +225,7 @@ describe("route_preview style map", () => {
     expect(line.geometry.type).toBe("LineString");
     expect(line.geometry.coordinates).toEqual(PATH.map((p) => [p.lng, p.lat]));
     const ends = style.sources["route-ends"].data as { features: { geometry: { coordinates: number[] } }[] };
-    expect(ends.features.map((f) => f.geometry.coordinates)).toEqual([
-      [PATH[0].lng, PATH[0].lat],
-      [PATH[2].lng, PATH[2].lat],
-    ]);
+    expect(ends.features.map((f) => f.geometry.coordinates)).toEqual([[PATH[2].lng, PATH[2].lat]]);
     const layer = routeLayer(style);
     expect(layer?.type).toBe("line");
     expect(layer?.layout).toMatchObject({ "line-join": "round", "line-cap": "round" });
