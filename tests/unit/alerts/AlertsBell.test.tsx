@@ -1,6 +1,7 @@
 // docs/site.md section 7.7, Alerts bell. The header bell's visibility, the
 // badge against `wmsfo.alerts.seen`, the dialog (newest first, the New
-// markers, the empty text, the footer with Close alone), the glyph, the
+// markers, the empty text, the footer with Close, the close X in the head
+// outside the scroll region), the glyph, the
 // fetch cadence, and
 // the swing under reduced motion. The e2e suite has no spec that drives a
 // verified subscription (signUp.spec stops at the emailed code), so the
@@ -40,6 +41,20 @@ vi.mock("../../../src/alerts/Alerts.module.css", () => ({
   event: "event",
   subject: "subject",
   message: "message",
+}));
+vi.mock("../../../src/ui/Dialog.module.css", () => ({
+  dialog: "dialog",
+  dialogNarrow: "dialogNarrow",
+  body: "body",
+  head: "head",
+  closeX: "closeX",
+  scroll: "scroll",
+  title: "title",
+  meta: "meta",
+  copy: "copy",
+  actions: "actions",
+  alert: "alert",
+  notice: "notice",
 }));
 
 vi.mock("../../../src/api/subscriptions", () => ({
@@ -364,6 +379,36 @@ describe("AlertsDialog", () => {
     const { findByTestId, getByTestId } = renderShell(SIGNED_IN);
     fireEvent.click(await findByTestId("alerts-bell"));
     expect(getByTestId("alerts-dialog-empty").textContent).toBe("No alerts have been sent to you yet");
+  });
+
+  it("keeps the close X and the bottom Close outside the scroll region with thirty alerts", async () => {
+    const many = Array.from({ length: 30 }, (_, i) =>
+      alert(i + 1, `2026-10-01T${String(i % 24).padStart(2, "0")}:${String(i).padStart(2, "0")}:00Z`, `Alert ${i + 1}`),
+    );
+    mockLists([ACTIVE], many);
+    const { findByTestId, getByTestId } = renderShell(SIGNED_IN);
+    fireEvent.click(await findByTestId("alerts-bell"));
+    const dialog = getByTestId("alerts-dialog");
+    expect(dialog.classList.contains("dialog")).toBe(true);
+    expect(dialog.classList.contains("dialogNarrow")).toBe(false);
+    const scroll = getByTestId("alerts-dialog-scroll");
+    expect(scroll.classList.contains("scroll")).toBe(true);
+    expect(scroll.querySelectorAll("li")).toHaveLength(30);
+    const x = getByTestId("alerts-dialog-close-x");
+    const close = getByTestId("alerts-dialog-close");
+    expect(x.getAttribute("aria-label")).toBe("Close");
+    expect(x.closest(".head")).not.toBeNull();
+    expect(scroll.contains(x)).toBe(false);
+    expect(scroll.contains(close)).toBe(false);
+    expect(close.closest(".actions")).not.toBeNull();
+  });
+
+  it("closes from the close X in the head", async () => {
+    mockLists([ACTIVE], ALERTS);
+    const { findByTestId, getByTestId, queryByTestId } = renderShell(SIGNED_IN);
+    fireEvent.click(await findByTestId("alerts-bell"));
+    fireEvent.click(getByTestId("alerts-dialog-close-x"));
+    expect(queryByTestId("alerts-dialog")).toBeNull();
   });
 
   it("has Close in the footer and no Manage alerts link, even with an alerts_signup page", async () => {

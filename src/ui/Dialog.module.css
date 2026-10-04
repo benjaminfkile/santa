@@ -1,8 +1,11 @@
 /* docs/site.md section 7.7. The shared dialog recipe: a native <dialog>
    opened with showModal, so it is centred in the viewport on every screen
    (the live screen included) with a dimmed backdrop; the panel, its
-   heading row, and its action row. Colours come from the tokens, which
-   the live screen rebinds to the map style. */
+   heading row with the close X, the scroll region, and its action row.
+   The panel is 600 px wide on desktop (440 px with `.dialogNarrow`) and
+   at most 80 percent of the viewport tall; the heading and action rows
+   stay put while only the scroll region scrolls. Colours come from the
+   tokens, which the live screen rebinds to the map style. */
 
 .dialog {
   border: 1px solid var(--line);
@@ -11,23 +14,43 @@
   padding: 0;
   border-radius: var(--radius-md);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-  width: min(440px, calc(100vw - 32px));
-  max-height: calc(100vh - 32px);
-  max-height: calc(100dvh - 32px);
-  overflow: auto;
+  width: min(600px, calc(100vw - 32px));
+  max-height: 80vh;
+  max-height: 80dvh;
+  flex-direction: column;
+  overflow: hidden;
 }
+.dialog[open] { display: flex; }
+.dialogNarrow { width: min(440px, calc(100vw - 32px)); }
 .dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
 .body {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
   gap: var(--space-3);
   padding: var(--space-5);
 }
 .head {
   display: flex;
-  align-items: baseline;
+  flex: none;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+}
+/* The title takes the free space, so the meta and the close X (on the
+   icon button recipe) sit at the head's end. */
+.head > .title { margin-right: auto; }
+.closeX { flex: none; }
+/* The content between the head and the action row; the only part that
+   scrolls. */
+.scroll {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: var(--space-3);
+  overflow-y: auto;
 }
 .title {
   margin: 0;
@@ -46,6 +69,7 @@
 .copy { margin: 0; font-size: 0.9375rem; }
 .actions {
   display: flex;
+  flex: none;
   gap: var(--space-2);
   justify-content: flex-end;
   flex-wrap: wrap;
