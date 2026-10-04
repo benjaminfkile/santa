@@ -13,6 +13,23 @@ import type { AuthState } from "../../../../src/auth/AuthProvider";
 import type { ContentBundle } from "../../../../src/store/types";
 import { ApiRequestError } from "../../../../src/api/client";
 
+// The test run loads no CSS, so the recipe's class names are stood in by
+// their own keys.
+vi.mock("../../../../src/ui/Dialog.module.css", () => ({
+  dialog: "dialog",
+  dialogNarrow: "dialogNarrow",
+  body: "body",
+  head: "head",
+  closeX: "closeX",
+  scroll: "scroll",
+  title: "title",
+  meta: "meta",
+  copy: "copy",
+  actions: "actions",
+  alert: "alert",
+  notice: "notice",
+}));
+
 vi.mock("../../../../src/api/cookies", () => ({
   getMyCookies: vi.fn(),
   leaveCookies: vi.fn(),
@@ -129,6 +146,22 @@ describe("CookieControl", () => {
     expect(getByTestId("cookie-submit")).toBeDisabled();
     // Nothing can be added when nothing is left.
     expect(getByTestId("cookie-type")).toBeDisabled();
+  });
+
+  it("puts the cookie dialog on the narrow modifier with a close X outside its scroll region", async () => {
+    setLiveStatus(3);
+    setCookieTypes([{ id: 10, name: "Chocolate chip" }]);
+    const { getByTestId, queryByTestId } = await openWith(5, 0, 5);
+    const sheet = getByTestId("cookie-sheet");
+    expect(sheet.classList.contains("dialog")).toBe(true);
+    expect(sheet.classList.contains("dialogNarrow")).toBe(true);
+    const scroll = getByTestId("cookie-dialog-scroll");
+    expect(scroll.classList.contains("scroll")).toBe(true);
+    const x = getByTestId("cookie-dialog-close-x");
+    expect(scroll.contains(x)).toBe(false);
+    expect(scroll.contains(getByTestId("cookie-submit"))).toBe(false);
+    await userEvent.click(x);
+    expect(queryByTestId("cookie-sheet")).toBeNull();
   });
 
   it("caps the picks at the remaining allowance across every type", async () => {

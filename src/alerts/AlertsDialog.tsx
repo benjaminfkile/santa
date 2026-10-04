@@ -1,6 +1,8 @@
 // docs/site.md section 7.7, Alerts bell. The alerts dialog on the shared
 // dialog recipe: a native <dialog> opened with showModal that closes on a
-// backdrop press, Escape, and the Close button. It lists the alerts sent
+// backdrop press, Escape, the close X in its head, and the Close button.
+// The list (or the empty text) sits in the recipe's scroll region between
+// the head and the footer, which stay put. It lists the alerts sent
 // to the visitor newest first (the time in the viewer's timezone, the
 // event name, the subject line, the message under it when the alert
 // carries one, and the kind label of section 13.1), with
@@ -15,6 +17,8 @@ import { alertId } from "./alertId";
 import { alertKindLabel } from "./alertKind";
 import * as dlg from "../ui/Dialog.module.css";
 import * as btn from "../ui/Button.module.css";
+import * as ibtn from "../ui/IconButton.module.css";
+import { CloseGlyph } from "../content/sections/Map/glyphs";
 import * as styles from "./Alerts.module.css";
 
 export type AlertsDialogProps = {
@@ -69,37 +73,48 @@ export function AlertsDialog({ alerts, seenId, onClose }: AlertsDialogProps) {
       <div className={dlg.body}>
         <div className={dlg.head}>
           <h2 id="alerts-dialog-title" className={dlg.title}>{copy.alerts.title}</h2>
+          <button
+            type="button"
+            className={`${ibtn.ibtn} ${dlg.closeX}`}
+            aria-label={copy.alerts.close}
+            onClick={close}
+            data-testid="alerts-dialog-close-x"
+          >
+            <CloseGlyph size={18} />
+          </button>
         </div>
-        {sorted.length === 0 ? (
-          <p className={dlg.copy} data-testid="alerts-dialog-empty">{copy.alerts.empty}</p>
-        ) : (
-          <ul className={styles.rows} data-testid="alerts-dialog-list">
-            {sorted.map((row) => {
-              const id = alertId(row);
-              const fresh = seenId === null || id > seenId;
-              const label = alertKindLabel(row.kind);
-              const update = label === copy.alerts.kindUpdate;
-              return (
-                <li key={id} className={styles.row} data-testid={`alerts-dialog-row-${id}`}>
-                  <div className={styles.rowHead}>
-                    <span className={styles.when}>{formatEventTime(row.sentAt)}</span>
-                    <span className={`${styles.kind} ${update ? styles.kindUpdate : styles.kindStatus}`}>
-                      {label}
-                    </span>
-                    {fresh ? (
-                      <span className={styles.fresh} data-testid="alerts-dialog-new">{copy.alerts.newMarker}</span>
+        <div className={dlg.scroll} data-testid="alerts-dialog-scroll">
+          {sorted.length === 0 ? (
+            <p className={dlg.copy} data-testid="alerts-dialog-empty">{copy.alerts.empty}</p>
+          ) : (
+            <ul className={styles.rows} data-testid="alerts-dialog-list">
+              {sorted.map((row) => {
+                const id = alertId(row);
+                const fresh = seenId === null || id > seenId;
+                const label = alertKindLabel(row.kind);
+                const update = label === copy.alerts.kindUpdate;
+                return (
+                  <li key={id} className={styles.row} data-testid={`alerts-dialog-row-${id}`}>
+                    <div className={styles.rowHead}>
+                      <span className={styles.when}>{formatEventTime(row.sentAt)}</span>
+                      <span className={`${styles.kind} ${update ? styles.kindUpdate : styles.kindStatus}`}>
+                        {label}
+                      </span>
+                      {fresh ? (
+                        <span className={styles.fresh} data-testid="alerts-dialog-new">{copy.alerts.newMarker}</span>
+                      ) : null}
+                    </div>
+                    <div className={styles.event}>{row.eventName ?? ""}</div>
+                    <div className={styles.subject}>{row.subject ?? ""}</div>
+                    {row.message != null ? (
+                      <div className={styles.message} data-testid="alerts-dialog-message">{row.message}</div>
                     ) : null}
-                  </div>
-                  <div className={styles.event}>{row.eventName ?? ""}</div>
-                  <div className={styles.subject}>{row.subject ?? ""}</div>
-                  {row.message != null ? (
-                    <div className={styles.message} data-testid="alerts-dialog-message">{row.message}</div>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-        )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
         <div className={dlg.actions}>
           <button type="button" className={btn.btnFill} onClick={close} data-testid="alerts-dialog-close">
             {copy.alerts.close}

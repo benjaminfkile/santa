@@ -2,7 +2,9 @@
 // status 3; signedOutCopy with a sign-in link when signed out; a button
 // that opens the cookie dialog, centred in the viewport, where the visitor
 // picks how many of each type to leave (up to the remaining allowance) and
-// the site posts them in one request. The dialog is exported for the live
+// the site posts them in one request. The dialog is on the narrow width of
+// the shared recipe, with a close X in its head and its picker in the
+// recipe's scroll region. The dialog is exported for the live
 // screen, which opens it from its own glyph; signed out it offers Sign in.
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -17,10 +19,11 @@ import { Icon } from "../../primitives/Icon";
 import { getMyCookies, leaveCookies } from "../../../api/cookies";
 import { ApiRequestError, SignInRequired, surfaceFor } from "../../../api/errors";
 import { copy } from "../../../copy/copy";
-import { MinusGlyph, PlusGlyph } from "../Map/glyphs";
+import { CloseGlyph, MinusGlyph, PlusGlyph } from "../Map/glyphs";
 import * as styles from "./CookieControl.module.css";
 import * as btn from "../../../ui/Button.module.css";
 import * as dlg from "../../../ui/Dialog.module.css";
+import * as ibtn from "../../../ui/IconButton.module.css";
 import * as field from "../../../ui/Field.module.css";
 
 export type CookieControlData = {
@@ -307,7 +310,9 @@ export function CookieDialog({
     if (auth.status !== "unknown" && !signedIn) {
       return (
         <>
-          <p className={dlg.copy} data-testid="cookie-dialog-signed-out">{copy.cookies.signInToLeave}</p>
+          <div className={dlg.scroll}>
+            <p className={dlg.copy} data-testid="cookie-dialog-signed-out">{copy.cookies.signInToLeave}</p>
+          </div>
           <div className={dlg.actions}>
             <button type="button" className={btn.btnQuiet} onClick={close}>{copy.cookies.close}</button>
             <button type="button" className={btn.btnFill} onClick={signInFromDialog} data-testid="cookie-dialog-sign-in">
@@ -320,7 +325,9 @@ export function CookieDialog({
     if (!signedIn || state.kind === "loading") {
       return (
         <>
-          <p className={dlg.copy}>{copy.loading.initial}</p>
+          <div className={dlg.scroll}>
+            <p className={dlg.copy}>{copy.loading.initial}</p>
+          </div>
           <div className={dlg.actions}>
             <button type="button" className={btn.btnQuiet} onClick={close}>{copy.cookies.cancel}</button>
           </div>
@@ -330,7 +337,9 @@ export function CookieDialog({
     if (state.kind === "error") {
       return (
         <>
-          <p role="alert" className={dlg.alert}>{state.message}</p>
+          <div className={dlg.scroll}>
+            <p role="alert" className={dlg.alert}>{state.message}</p>
+          </div>
           <div className={dlg.actions}>
             <button type="button" className={btn.btnQuiet} onClick={close}>{copy.cookies.close}</button>
             <button type="button" className={btn.btn} onClick={() => void load()}>{copy.map.retry}</button>
@@ -345,65 +354,67 @@ export function CookieDialog({
     const disabled = state.submitting || state.remaining <= 0 || total === 0 || cooldownSecs > 0;
     return (
       <>
-        <ul className={styles.rows}>
-          {types.map((t) => {
-            const id = num(t.id);
-            const count = state.counts[id] ?? 0;
-            return (
-              <li key={id} className={styles.row} data-testid="cookie-row">
-                {renderTypeIcon(t.icon, bundle)}
-                <span className={styles.rowName}>{t.name}</span>
-                <span className={styles.stepper}>
-                  <button
-                    type="button"
-                    className={styles.stepBtn}
-                    aria-label={copy.cookies.fewer(t.name ?? "")}
-                    disabled={count === 0 || state.submitting}
-                    onClick={() => bump(id, -1)}
-                    data-testid="cookie-minus"
-                  >
-                    <MinusGlyph size={16} />
-                  </button>
-                  <span className={`${styles.count}${count > 0 ? " " + styles.countOn : ""}`} aria-live="polite" data-testid="cookie-count">
-                    {count}
+        <div className={dlg.scroll} data-testid="cookie-dialog-scroll">
+          <ul className={styles.rows}>
+            {types.map((t) => {
+              const id = num(t.id);
+              const count = state.counts[id] ?? 0;
+              return (
+                <li key={id} className={styles.row} data-testid="cookie-row">
+                  {renderTypeIcon(t.icon, bundle)}
+                  <span className={styles.rowName}>{t.name}</span>
+                  <span className={styles.stepper}>
+                    <button
+                      type="button"
+                      className={styles.stepBtn}
+                      aria-label={copy.cookies.fewer(t.name ?? "")}
+                      disabled={count === 0 || state.submitting}
+                      onClick={() => bump(id, -1)}
+                      data-testid="cookie-minus"
+                    >
+                      <MinusGlyph size={16} />
+                    </button>
+                    <span className={`${styles.count}${count > 0 ? " " + styles.countOn : ""}`} aria-live="polite" data-testid="cookie-count">
+                      {count}
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.stepBtn}
+                      aria-label={copy.cookies.more(t.name ?? "")}
+                      disabled={!canAdd}
+                      onClick={() => bump(id, 1)}
+                      data-testid="cookie-type"
+                    >
+                      <PlusGlyph size={16} />
+                    </button>
                   </span>
-                  <button
-                    type="button"
-                    className={styles.stepBtn}
-                    aria-label={copy.cookies.more(t.name ?? "")}
-                    disabled={!canAdd}
-                    onClick={() => bump(id, 1)}
-                    data-testid="cookie-type"
-                  >
-                    <PlusGlyph size={16} />
-                  </button>
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-        <label className={field.field}>
-          <span className={field.label}>{copy.cookies.noteLabel}</span>
-          <textarea
-            className={field.input}
-            maxLength={140}
-            value={state.note}
-            disabled={state.submitting}
-            onChange={(e) => setReady((p) => ({ ...p, note: e.target.value, fieldError: null }))}
-            aria-describedby={state.fieldError !== null ? "cookie-note-error" : undefined}
-            aria-invalid={state.fieldError !== null}
-          />
-          <span className={field.counter} data-testid="cookie-note-counter">{state.note.length}/140</span>
-        </label>
-        {state.fieldError !== null ? (
-          <p id="cookie-note-error" role="alert" className={field.error}>{state.fieldError}</p>
-        ) : null}
-        {state.error !== null ? (
-          <p role="alert" className={dlg.alert} data-testid="cookie-error">{state.error}</p>
-        ) : null}
-        {state.confirmation !== null ? (
-          <p className={dlg.notice} role="status" data-testid="cookie-confirmation">{state.confirmation}</p>
-        ) : null}
+                </li>
+              );
+            })}
+          </ul>
+          <label className={field.field}>
+            <span className={field.label}>{copy.cookies.noteLabel}</span>
+            <textarea
+              className={field.input}
+              maxLength={140}
+              value={state.note}
+              disabled={state.submitting}
+              onChange={(e) => setReady((p) => ({ ...p, note: e.target.value, fieldError: null }))}
+              aria-describedby={state.fieldError !== null ? "cookie-note-error" : undefined}
+              aria-invalid={state.fieldError !== null}
+            />
+            <span className={field.counter} data-testid="cookie-note-counter">{state.note.length}/140</span>
+          </label>
+          {state.fieldError !== null ? (
+            <p id="cookie-note-error" role="alert" className={field.error}>{state.fieldError}</p>
+          ) : null}
+          {state.error !== null ? (
+            <p role="alert" className={dlg.alert} data-testid="cookie-error">{state.error}</p>
+          ) : null}
+          {state.confirmation !== null ? (
+            <p className={dlg.notice} role="status" data-testid="cookie-confirmation">{state.confirmation}</p>
+          ) : null}
+        </div>
         <div className={dlg.actions}>
           <button type="button" className={btn.btnQuiet} onClick={close} disabled={state.submitting}>
             {copy.cookies.close}
@@ -425,7 +436,7 @@ export function CookieDialog({
   return (
     <dialog
       ref={ref}
-      className={dlg.dialog}
+      className={`${dlg.dialog} ${dlg.dialogNarrow}`}
       aria-labelledby="cookie-dialog-title"
       data-testid="cookie-sheet"
       onClose={onClose}
@@ -441,6 +452,16 @@ export function CookieDialog({
               {copy.cookies.remaining(state.remaining, state.limit)}
             </span>
           ) : null}
+          <button
+            type="button"
+            className={`${ibtn.ibtn} ${dlg.closeX}`}
+            aria-label={copy.cookies.close}
+            onClick={close}
+            disabled={state.kind === "ready" && state.submitting}
+            data-testid="cookie-dialog-close-x"
+          >
+            <CloseGlyph size={18} />
+          </button>
         </div>
         {body}
       </div>
