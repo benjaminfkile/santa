@@ -1,14 +1,13 @@
 // docs/site.md section 8.9. The entries of `event.routeMap.timeline` with
 // numeric minutes and coordinates, in minute order; the elapsed flight
 // time of a minute count in the "1h 15m" form (minutes only under an
-// hour, hours plus minutes from one hour, no padding); the slider label
-// of one entry ("1h 15m into the flight"); and the map's time labels, one
-// at every interior multiple of the interval (TIME_LABEL_EVERY minutes
-// unless given; never minute 0 and never the final entry, where the start
-// and end markers stand). An interval of 0 gives no labels.
+// hour, hours plus minutes from one hour, no padding); and the map's
+// time labels, one at every interior multiple of the interval
+// (TIME_LABEL_EVERY minutes unless given; never minute 0 and never the
+// final entry, where the start and end markers stand). An interval of 0
+// gives no labels.
 
 import type { Snapshot } from "../../../contracts";
-import { copy } from "../../../copy/copy";
 
 export type TimelineEntry = { minutes: number; lat: number; lng: number };
 
@@ -37,10 +36,6 @@ export function formatElapsed(minutes: number): string {
   const hours = Math.floor(total / 60);
   const rest = total % 60;
   return hours === 0 ? `${rest}m` : `${hours}h ${rest}m`;
-}
-
-export function routeTimeLabel(minutes: number): string {
-  return copy.map.routeElapsed(formatElapsed(minutes));
 }
 
 export function routeTimeLabels(

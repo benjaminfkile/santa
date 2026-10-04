@@ -8,7 +8,7 @@
 //  - Fullscreen enters and exits through the Fullscreen API and through
 //    the takeover, resizing the map and refitting the path on both edges;
 //    Escape exits both; the takeover alone locks the body scroll; the
-//    slider still works in fullscreen, and the same map, with no
+//    stage holds no slider, and the same map, with no
 //    cooperativeGestures option, stays up.
 //  - A document with only the webkit flag (iPhone Safari) goes straight
 //    to the takeover, which mounts under document.body; the API path
@@ -319,7 +319,7 @@ describe("route map fullscreen", () => {
     expect(api.request.mock.contexts[0]).toBe(stage);
     expect(stage.getAttribute("data-fullscreen")).toBe("api");
     expect(stage.contains(q(container, "route-map-frame"))).toBe(true);
-    expect(stage.contains(q(container, "route-timeline-slider"))).toBe(true);
+    expect(stage.querySelector('input[type="range"]')).toBeNull();
     expect(map.resize).toHaveBeenCalledTimes(1);
     expect(map.fitBounds).toHaveBeenCalledTimes(1);
     expect(q(container, "route-map-fullscreen")?.getAttribute("aria-label")).toBe("Exit fullscreen");
@@ -395,12 +395,7 @@ describe("route map fullscreen", () => {
     expect(map.fitBounds).toHaveBeenCalledTimes(1);
     expect(q(container, "route-map-fullscreen")?.getAttribute("aria-label")).toBe("Exit fullscreen");
 
-    const slider = q(container, "route-timeline-slider") as HTMLInputElement;
-    expect(stage.contains(slider)).toBe(true);
-    await act(async () => {
-      fireEvent.change(slider, { target: { value: "2" } });
-    });
-    expect(slider.value).toBe("2");
+    expect(stage.querySelector('input[type="range"]')).toBeNull();
     expect(stage.getAttribute("data-fullscreen")).toBe("takeover");
 
     await act(async () => {

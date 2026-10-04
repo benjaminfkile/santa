@@ -8,10 +8,10 @@
 // while panning) do not. The path is fitted with padding on mount and on
 // every container resize. `update` swaps the style as a diff: a new
 // appearance changes paint properties only, so the basemap tiles stay on
-// screen. `setPin` stands the Santa pin (a MapLibre marker around the
-// caller's element, anchored at its bottom centre) on a point, eased
-// over PIN_TRANSITION_MS when asked to animate and placed at once
-// otherwise; null removes it. `terrain`
+// screen. `startElement` stands a MapLibre marker around the caller's
+// element, anchored at its bottom centre, on the path's first point, and
+// the style then leaves its start circle out; a changed path moves the
+// marker. `terrain`
 // adds the hillshade over the terrain archive to the style, through the
 // same diff, so an appearance switch keeps it. `refit` resizes the map to
 // its container and fits the path again (the fullscreen edges call it).
@@ -70,7 +70,7 @@ export type RouteMapOptions = {
   arrowScale?: number;
   routeWidthScale?: number;
   labelScale?: number;
-  pinElement?: HTMLElement;
+  startElement?: HTMLElement;
   onError: (error: unknown) => void;
 };
 
@@ -92,17 +92,10 @@ export type RouteMapUpdate = {
 export type RouteMapHandle = {
   update: (next: RouteMapUpdate) => void;
   refit: () => void;
-  setPin: (point: LatLng | null, animate: boolean) => void;
   destroy: () => void;
 };
 
 const FIT_PADDING = 40;
-
-export const PIN_TRANSITION_MS = 300;
-
-function easeOutCubic(t: number): number {
-  return 1 - (1 - t) ** 3;
-}
 
 let protocol: Protocol | null = null;
 
@@ -198,10 +191,12 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
   let arrowScale = options.arrowScale;
   let routeWidthScale = options.routeWidthScale;
   let labelScale = options.labelScale;
+  const startElement = options.startElement;
 
   function styleOptions(): StyleOptions {
     return {
       timeLabels,
+      ...(startElement !== undefined ? { startCircle: false } : {}),
       ...(poiKinds !== undefined ? { poiKinds } : {}),
       ...(landmarks !== undefined ? { landmarks } : {}),
       ...(arrows ? { arrows } : {}),
@@ -266,19 +261,12 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
     observer.observe(container);
   }
 
-  let pin: Marker | null = null;
-  let pinAt: LatLng | null = null;
-  let frame: number | null = null;
-
-  function stopEasing(): void {
-    if (frame !== null) cancelAnimationFrame(frame);
-    frame = null;
-  }
-
-  function placePin(point: LatLng): void {
-    pinAt = point;
-    pin?.setLngLat([point.lng, point.lat]);
-  }
+  const start: Marker | null =
+    startElement === undefined || path.length === 0
+      ? null
+      : new Marker({ element: startElement, anchor: "bottom" })
+          .setLngLat([path[0].lng, path[0].lat])
+          .addTo(map);
 
   let landmarkMarkers: readonly LandmarkMarker[] = [];
   let landmarkPins: Marker[] = [];
@@ -332,46 +320,14 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
       map.setStyle(buildStyle(appearance, base, path, marks, terrain, styleOptions()), {
         diff: true,
       });
-      if (pathChanged) fit();
+      if (pathChanged) {
+        if (path.length > 0) start?.setLngLat([path[0].lng, path[0].lat]);
+        fit();
+      }
     },
     refit,
-    setPin(point, animate) {
-      stopEasing();
-      if (point === null) {
-        pin?.remove();
-        pin = null;
-        pinAt = null;
-        return;
-      }
-      if (pin === null) {
-        pin = new Marker({ element: options.pinElement, anchor: "bottom" })
-          .setLngLat([point.lng, point.lat])
-          .addTo(map);
-        pinAt = point;
-        return;
-      }
-      const from = pinAt;
-      if (!animate || from === null || typeof requestAnimationFrame !== "function") {
-        placePin(point);
-        return;
-      }
-      let start: number | null = null;
-      const step = (now: number): void => {
-        if (start === null) start = now;
-        const t = Math.min(1, (now - start) / PIN_TRANSITION_MS);
-        const k = easeOutCubic(t);
-        placePin({
-          lat: from.lat + (point.lat - from.lat) * k,
-          lng: from.lng + (point.lng - from.lng) * k,
-        });
-        frame = t < 1 ? requestAnimationFrame(step) : null;
-      };
-      frame = requestAnimationFrame(step);
-    },
     destroy() {
-      stopEasing();
-      pin?.remove();
-      pin = null;
+      start?.remove();
       for (const marker of landmarkPins) marker.remove();
       landmarkPins = [];
       observer?.disconnect();

@@ -17,7 +17,6 @@ export const routeLandmarkPopoverTitle: string;
 export const routeMap: string;
 export const routeMapStage: string;
 export const routeMapStageTakeover: string;
-export const routePin: string;
 export const routePoster: string;
 export const routePosterControls: string;
 export const routePosterFullscreen: string;
@@ -32,7 +31,7 @@ export const routePreviewImageWrap: string;
 export const routePreviewLink: string;
 export const routePreviewOverlay: string;
 export const routePreviewViewer: string;
-export const routeTimeline: string;
-export const routeTimelineLabel: string;
-export const routeTimelineSlider: string;
+export const routeStart: string;
+export const routeStartFlag: string;
+export const routeStartLabel: string;
 

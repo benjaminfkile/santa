@@ -1,25 +1,22 @@
-// docs/site.md sections 8.9, 17, 22.1. The route map timeline with
-// MapLibre and pmtiles mocked:
-//  - The slider has min 0, one step per timeline entry, and starts at 0;
-//    the arrow keys step one entry and Home and End reach the ends.
-//  - The time label and aria-valuetext are the elapsed flight time
-//    ("1h 15m into the flight"), with no wall clock even when the event
-//    has a scheduledAt.
+// docs/site.md sections 8.9, 22.1. The route map timeline with MapLibre
+// and pmtiles mocked:
+//  - A timed route renders no range input and no Santa pin; the start
+//    marker (the star flag and its "Starts here" label, anchored at its
+//    bottom) stands on the path's first point, the style draws the end
+//    circle without the start circle, and the region label speaks the
+//    start. No wall clock appears even when the event has a scheduledAt.
 //  - The style's time labels are exactly the interior multiples of 15
 //    minutes, in the "1h 15m" form.
-//  - The marks source holds every timeline entry; the Santa pin (the
-//    legacy pin image, anchored at its bottom) starts on the first entry
-//    and follows the slider.
-//  - The pin eases between entries, and moves at once under reduced motion.
-//  - A timeline of fewer than two entries keeps the path and shows no
-//    marks, slider, or pin.
+//  - The marks source holds every timeline entry.
+//  - A timeline of fewer than two entries keeps the path and the start
+//    marker and shows no marks.
 //  - The event's `routeMapConfig.pois.kinds` and `routeMapConfig.landmarks`
 //    reach the style as its POI kind filter and its landmark labels;
 //    without them, or with them in the section data only, the style has
 //    neither.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, cleanup, act, fireEvent } from "@testing-library/react";
+import { render, cleanup, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import { store } from "../../../../src/store/useStore";
@@ -30,11 +27,9 @@ import { RoutePreview } from "../../../../src/content/sections/RoutePreview/Rout
 import {
   formatElapsed,
   routeMapTimeline,
-  routeTimeLabel,
   routeTimeLabels,
 } from "../../../../src/content/sections/RoutePreview/routeTimelineData";
-import { PIN_TRANSITION_MS } from "../../../../src/routeMap";
-import { SANTA_PIN_URL } from "../../../../src/map/santaPin";
+import { copy } from "../../../../src/copy/copy";
 
 type FakeMapInstance = {
   options: Record<string, unknown>;
@@ -153,31 +148,6 @@ const SCHEDULED_AT = "2026-12-22T01:00:00.000Z";
 
 const mutableEnv = env as unknown as { ROUTE_BASEMAP_URL: string };
 const originalBasemap = mutableEnv.ROUTE_BASEMAP_URL;
-const originalMatchMedia = window.matchMedia;
-const originalRaf = window.requestAnimationFrame;
-const originalCaf = window.cancelAnimationFrame;
-
-let frames: FrameRequestCallback[] = [];
-
-function flushFrame(time: number): void {
-  const queued = frames;
-  frames = [];
-  for (const cb of queued) cb(time);
-}
-
-function mockReducedMotion(reduce: boolean): void {
-  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-    matches: query === "(prefers-reduced-motion: reduce)" ? reduce : false,
-    media: query,
-    onchange: null,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    addListener: () => {},
-    removeListener: () => {},
-    dispatchEvent: () => false,
-  })) as unknown as typeof window.matchMedia;
-}
-
 function buildBundle(): ContentBundle {
   return {
     content: { pages: [], nav: [] } as unknown as ContentDocument,
@@ -221,16 +191,6 @@ function renderSection(data: Record<string, unknown> = { style: "map" }) {
   );
 }
 
-function slider(container: HTMLElement): HTMLInputElement {
-  const el = container.querySelector<HTMLInputElement>('[data-testid="route-timeline-slider"]');
-  expect(el).not.toBeNull();
-  return el!;
-}
-
-function label(container: HTMLElement): string {
-  return container.querySelector('[data-testid="route-timeline-label"]')?.textContent ?? "";
-}
-
 function indexOfMinutes(minutes: number): number {
   return LONG_TIMELINE.findIndex((e) => e.minutes === minutes);
 }
@@ -253,25 +213,11 @@ function markCoordinates(style: StyleShape): number[][] {
   return data.features.map((f) => f.geometry.coordinates);
 }
 
-function lastLngLat(): [number, number] | undefined {
-  const marker = mocks.markers[0];
-  return marker?.lngLats[marker.lngLats.length - 1];
-}
-
 beforeEach(() => {
   mocks.maps.length = 0;
   mocks.markers.length = 0;
-  frames = [];
   mutableEnv.ROUTE_BASEMAP_URL = "https://cdn.example/basemap";
   document.documentElement.setAttribute("data-theme", "light");
-  mockReducedMotion(false);
-  window.requestAnimationFrame = ((cb: FrameRequestCallback) => {
-    frames.push(cb);
-    return frames.length;
-  }) as typeof window.requestAnimationFrame;
-  window.cancelAnimationFrame = (() => {
-    frames = [];
-  }) as typeof window.cancelAnimationFrame;
 });
 
 afterEach(() => {
@@ -279,9 +225,6 @@ afterEach(() => {
   store.setState(() => ({ ...initialStore }));
   mutableEnv.ROUTE_BASEMAP_URL = originalBasemap;
   document.documentElement.removeAttribute("data-theme");
-  window.matchMedia = originalMatchMedia;
-  window.requestAnimationFrame = originalRaf;
-  window.cancelAnimationFrame = originalCaf;
   vi.restoreAllMocks();
 });
 
@@ -308,9 +251,6 @@ describe("route timeline data", () => {
     expect(formatElapsed(60)).toBe("1h 0m");
     expect(formatElapsed(75)).toBe("1h 15m");
     expect(formatElapsed(605)).toBe("10h 5m");
-    expect(routeTimeLabel(0)).toBe("0m into the flight");
-    expect(routeTimeLabel(45)).toBe("45m into the flight");
-    expect(routeTimeLabel(75)).toBe("1h 15m into the flight");
   });
 
   it("labels every interior multiple of 15 minutes, never minute 0 or the final entry", () => {
@@ -335,80 +275,55 @@ describe("route timeline data", () => {
 });
 
 describe("route map timeline", () => {
-  it("starts at 0 with min 0 and one 5 minute step per entry", async () => {
+  it("renders no slider and no Santa pin, and marks the start with the star flag and its label", async () => {
     setEvent(null, LONG_TIMELINE);
     const { container } = renderSection();
     await settle();
-    const input = slider(container);
-    expect(input.min).toBe("0");
-    expect(input.max).toBe(String(LONG_TIMELINE.length - 1));
-    expect(input.step).toBe("1");
-    expect(input.value).toBe("0");
-    expect(label(container)).toBe("0m into the flight");
-    fireEvent.keyDown(input, { key: "ArrowRight" });
-    expect(slider(container).value).toBe("1");
-    expect(label(container)).toBe("5m into the flight");
+    expect(container.querySelector('input[type="range"]')).toBeNull();
+    expect(container.querySelector('[data-testid="route-timeline"]')).toBeNull();
+    expect(container.querySelector('[data-testid="route-map-pin"]')).toBeNull();
+    expect(container.querySelector("img")).toBeNull();
+    expect(mocks.markers).toHaveLength(1);
+    const marker = mocks.markers[0];
+    expect(marker.added).toBe(true);
+    expect(marker.anchor).toBe("bottom");
+    expect(marker.lngLats[marker.lngLats.length - 1]).toEqual([PATH[0].lng, PATH[0].lat]);
+    const el = marker.element!;
+    expect(el.getAttribute("data-testid")).toBe("route-map-start");
+    expect(el.getAttribute("aria-hidden")).toBe("true");
+    expect(el.querySelector("img")).toBeNull();
+    const svg = el.querySelector("svg")!;
+    expect(svg.getAttribute("height")).toBe("36");
+    expect(svg.querySelector('[fill="var(--gold)"]')).not.toBeNull();
+    const label = el.querySelector('[data-testid="route-map-start-label"]');
+    expect(label?.textContent).toBe(copy.map.routeStart);
+    expect(label?.textContent).toBe("Starts here");
+    const region = container.querySelector('[data-testid="route-map"]');
+    expect(region?.getAttribute("aria-label")).toBe(
+      "Santa's planned route; the star marks where he starts",
+    );
   });
 
-  it("has one slider step per timeline entry, with Home and End reaching the ends", async () => {
+  it("draws the end circle and leaves the start to the marker", async () => {
     setEvent(null, TIMELINE);
-    const { container } = renderSection();
+    renderSection();
     await settle();
-    const input = slider(container);
-    expect(input.type).toBe("range");
-    expect(input.min).toBe("0");
-    expect(input.max).toBe(String(TIMELINE.length - 1));
-    expect(input.step).toBe("1");
-    expect(input.value).toBe("0");
-    expect(input.getAttribute("aria-label")).toBeTruthy();
-
-    fireEvent.keyDown(input, { key: "ArrowRight" });
-    expect(slider(container).value).toBe("1");
-    fireEvent.keyDown(input, { key: "ArrowUp" });
-    expect(slider(container).value).toBe("2");
-    fireEvent.keyDown(input, { key: "ArrowLeft" });
-    expect(slider(container).value).toBe("1");
-    fireEvent.keyDown(input, { key: "End" });
-    expect(slider(container).value).toBe(String(TIMELINE.length - 1));
-    fireEvent.keyDown(input, { key: "ArrowRight" });
-    expect(slider(container).value).toBe(String(TIMELINE.length - 1));
-    fireEvent.keyDown(input, { key: "Home" });
-    expect(slider(container).value).toBe("0");
-    fireEvent.keyDown(input, { key: "ArrowDown" });
-    expect(slider(container).value).toBe("0");
-
-    fireEvent.change(input, { target: { value: "3" } });
-    expect(slider(container).value).toBe("3");
-  });
-
-  it("speaks elapsed flight time in the label and aria-valuetext", async () => {
-    setEvent(null, LONG_TIMELINE);
-    const { container } = renderSection();
-    await settle();
-    const expectAt = (text: string) => {
-      expect(label(container)).toBe(text);
-      expect(slider(container).getAttribute("aria-valuetext")).toBe(text);
+    const style = mocks.maps[0].options.style as StyleShape;
+    const ends = style.sources["route-ends"].data as {
+      features: { properties: { end: string }; geometry: { coordinates: number[] } }[];
     };
-    expectAt("0m into the flight");
-    fireEvent.change(slider(container), { target: { value: String(indexOfMinutes(45)) } });
-    expectAt("45m into the flight");
-    fireEvent.change(slider(container), { target: { value: String(indexOfMinutes(75)) } });
-    expectAt("1h 15m into the flight");
-    fireEvent.keyDown(slider(container), { key: "End" });
-    expectAt("1h 33m into the flight");
+    expect(ends.features.map((f) => f.properties.end)).toEqual(["end"]);
+    expect(ends.features[0].geometry.coordinates).toEqual([PATH[2].lng, PATH[2].lat]);
+    expect(style.layers.some((l) => l.id === "route-ends")).toBe(true);
   });
 
   it("shows no wall clock time for an event with a scheduledAt", async () => {
     setEvent(SCHEDULED_AT, TIMELINE);
     const { container } = renderSection();
     await settle();
-    const stage = () => container.querySelector('[data-testid="route-map-stage"]')?.textContent ?? "";
-    expect(label(container)).toBe("0m into the flight");
-    expect(stage()).not.toMatch(/AM|PM|Dec|:\d\d/);
-    fireEvent.keyDown(slider(container), { key: "End" });
-    expect(label(container)).toBe("1h 12m into the flight");
-    expect(slider(container).getAttribute("aria-valuetext")).toBe("1h 12m into the flight");
-    expect(stage()).not.toMatch(/AM|PM|Dec|:\d\d/);
+    const stage = container.querySelector('[data-testid="route-map-stage"]')?.textContent ?? "";
+    expect(stage).not.toMatch(/AM|PM|Dec|:\d\d/);
+    expect(mocks.markers[0].element?.textContent).not.toMatch(/AM|PM|Dec|:\d\d/);
   });
 
   it("passes the style a time label at every interior multiple of 15 minutes", async () => {
@@ -459,67 +374,7 @@ describe("route map timeline", () => {
     expect(ids.indexOf("route-marks")).toBeLessThan(ids.indexOf("route-ends"));
   });
 
-  it("stands the pin on the first entry and moves it to the entry the slider selects", async () => {
-    setEvent(null, TIMELINE);
-    const { container } = renderSection();
-    await settle();
-    expect(mocks.markers).toHaveLength(1);
-    const marker = mocks.markers[0];
-    expect(marker.added).toBe(true);
-    expect(marker.element?.getAttribute("data-testid")).toBe("route-map-pin");
-    expect(marker.element?.tagName).toBe("IMG");
-    expect(marker.element?.getAttribute("src")).toBe(SANTA_PIN_URL);
-    expect(marker.element?.style.height).toBe("40px");
-    expect(marker.element?.getAttribute("aria-hidden")).toBe("true");
-    expect(marker.anchor).toBe("bottom");
-    expect(lastLngLat()).toEqual([TIMELINE[0].lng, TIMELINE[0].lat]);
-
-    fireEvent.keyDown(slider(container), { key: "ArrowRight" });
-    flushFrame(1000);
-    flushFrame(1000 + PIN_TRANSITION_MS);
-    expect(lastLngLat()).toEqual([TIMELINE[1].lng, TIMELINE[1].lat]);
-
-    fireEvent.keyDown(slider(container), { key: "End" });
-    flushFrame(2000);
-    flushFrame(2000 + PIN_TRANSITION_MS);
-    expect(lastLngLat()).toEqual([TIMELINE[4].lng, TIMELINE[4].lat]);
-    expect(mocks.markers).toHaveLength(1);
-  });
-
-  it("eases the pin between entries", async () => {
-    setEvent(null, TIMELINE);
-    const { container } = renderSection();
-    await settle();
-    const marker = mocks.markers[0];
-    const before = marker.lngLats.length;
-    fireEvent.keyDown(slider(container), { key: "End" });
-    expect(marker.lngLats).toHaveLength(before);
-    expect(frames).toHaveLength(1);
-    flushFrame(1000);
-    flushFrame(1000 + PIN_TRANSITION_MS / 2);
-    const [lng, lat] = lastLngLat()!;
-    expect(lng).toBeGreaterThan(TIMELINE[0].lng);
-    expect(lng).toBeLessThan(TIMELINE[4].lng);
-    expect(lat).not.toBe(TIMELINE[4].lat);
-    flushFrame(1000 + PIN_TRANSITION_MS);
-    expect(lastLngLat()).toEqual([TIMELINE[4].lng, TIMELINE[4].lat]);
-    expect(frames).toHaveLength(0);
-  });
-
-  it("moves the pin at once under reduced motion", async () => {
-    mockReducedMotion(true);
-    setEvent(null, TIMELINE);
-    const { container } = renderSection();
-    await settle();
-    const marker = mocks.markers[0];
-    const before = marker.lngLats.length;
-    fireEvent.keyDown(slider(container), { key: "End" });
-    expect(frames).toHaveLength(0);
-    expect(marker.lngLats).toHaveLength(before + 1);
-    expect(lastLngLat()).toEqual([TIMELINE[4].lng, TIMELINE[4].lat]);
-  });
-
-  it("keeps the path and hides the marks, slider, and pin with fewer than two entries", async () => {
+  it("keeps the path and the start marker and hides the marks with fewer than two entries", async () => {
     for (const timeline of [[], [TIMELINE[0]]]) {
       mocks.maps.length = 0;
       mocks.markers.length = 0;
@@ -532,7 +387,9 @@ describe("route map timeline", () => {
       const line = style.sources.route.data as { geometry: { coordinates: number[][] } };
       expect(line.geometry.coordinates).toEqual(PATH.map((p) => [p.lng, p.lat]));
       expect(markCoordinates(style)).toEqual([]);
-      expect(mocks.markers).toHaveLength(0);
+      expect(mocks.markers).toHaveLength(1);
+      expect(mocks.markers[0].element?.getAttribute("data-testid")).toBe("route-map-start");
+      expect(mocks.markers[0].lngLats[0]).toEqual([PATH[0].lng, PATH[0].lat]);
       cleanup();
     }
   });

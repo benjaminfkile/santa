@@ -1,12 +1,16 @@
 // docs/site.md sections 8.9 and 18. The `routemap` chunk (maplibre-gl,
 // pmtiles, @protomaps/basemaps, src/routeMap) is loaded only when a
 // `map`-style route_preview mounts: the index chunk reaches it through a
-// dynamic import alone and carries none of MapLibre. This test inspects
-// the built `dist/` folder. It is skipped when there is no build output.
+// dynamic import alone and carries none of MapLibre, and its scripts and
+// styles together stay under the size-limit budget in package.json,
+// brotli compressed. This test inspects the built `dist/` folder. It is
+// skipped when there is no build output.
 
 import { describe, it, expect } from "vitest";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
+import { brotliCompressSync } from "node:zlib";
+import pkg from "../../../package.json";
 
 const DIST_ASSETS = resolve(__dirname, "..", "..", "..", "dist", "assets");
 
@@ -44,5 +48,23 @@ describe("routemap chunk", () => {
       if (f === name || f.startsWith("index-")) continue;
       expect(readFileSync(resolve(DIST_ASSETS, f), "utf8").includes(`./${name}`), f).toBe(false);
     }
+  });
+
+  it("stays under its size budget, brotli compressed", () => {
+    if (findChunk("routemap") === null) return;
+    const entry = (pkg as unknown as { "size-limit": { name: string; limit: string }[] })[
+      "size-limit"
+    ].find((e) => e.name.startsWith("routemap ("));
+    expect(entry).toBeDefined();
+    const limitBytes = Number.parseFloat(entry!.limit) * 1000;
+    const files = readdirSync(DIST_ASSETS).filter(
+      (f) => f.startsWith("routemap-") && (f.endsWith(".js") || f.endsWith(".css")),
+    );
+    const bytes = files.reduce(
+      (sum, f) => sum + brotliCompressSync(readFileSync(resolve(DIST_ASSETS, f))).length,
+      0,
+    );
+    expect(bytes).toBeGreaterThan(0);
+    expect(bytes).toBeLessThan(limitBytes);
   });
 });

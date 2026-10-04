@@ -55,6 +55,9 @@
 //    marker there) and its label sits LANDMARK_BADGE_OFFSET ems out, clear
 //    of that marker. Without a `badge` landmark both layers are exactly
 //    as above.
+// `startCircle` false leaves the start circle out of the end markers
+// source, so only the end circle is drawn (the map owner stands its own
+// start marker there); absent or true keeps both circles.
 // The time label and landmark sizes (the text and the dots under it)
 // follow the zoom: LABEL_CURVE multiplies each by LABEL_MIN_FACTOR at
 // LABEL_ZOOM_LOW and under (the fitted view of a whole route) and grows
@@ -114,6 +117,7 @@ export type StyleOptions = {
   landmarks?: readonly Landmark[];
   labelScale?: number;
   labelCurve?: LabelCurve;
+  startCircle?: boolean;
 };
 
 export type LabelCurve = "zoom" | "flat";
@@ -428,7 +432,7 @@ export function buildStyle(
   const ends = path.length === 0
     ? []
     : [
-        { end: "start", point: path[0] },
+        ...(options.startCircle === false ? [] : [{ end: "start", point: path[0] }]),
         { end: "end", point: path[path.length - 1] },
       ];
   return {

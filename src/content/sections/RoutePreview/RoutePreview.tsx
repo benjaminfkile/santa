@@ -12,15 +12,17 @@
 //     of section 8.9 (MapLibre over the CDN basemap, `event.routeMap.path`
 //     drawn on it) in its own `routemap` chunk. With no route map (null,
 //     or fewer than two points), no VITE_ROUTE_BASEMAP_URL, or a failed
-//     load, the section renders exactly what `image` renders. With two or
-//     more `event.routeMap.timeline` entries the map also carries a dot at
-//     every entry, a labelled dot at every interior multiple of the time
-//     label interval, and the Santa pin on the selected one, and a time slider over the
-//     entries (starting at the first, labelled with the elapsed flight
-//     time) sits under the frame; with
-//     fewer, only the path is drawn. The frame and the slider share one
-//     wrapper, the fullscreen target (useRouteMapFullscreen), rendered
-//     through TakeoverPortal so the takeover sits under document.body.
+//     load, the section renders exactly what `image` renders. The start
+//     marker (routeStartMarker: a gold star flag and a "Starts here"
+//     label) stands on the path's first point and the end keeps its
+//     circle; nothing on the map moves. With two or more
+//     `event.routeMap.timeline` entries the map also carries a dot at
+//     every entry and a labelled dot at every interior multiple of the
+//     time label interval; with fewer, only the path and its ends are
+//     drawn. The frame sits in one wrapper, the fullscreen target
+//     (useRouteMapFullscreen), rendered through TakeoverPortal so the
+//     takeover sits under document.body. The map region is labelled
+//     `copy.map.routeMap.region`, which speaks the start.
 //     Every map input comes from `event.routeMapConfig` (routeMapConfig), each
 //     value falling back to its default; a null config draws the default
 //     map. The map carries a fullscreen button and a terrain toggle
@@ -45,19 +47,12 @@ import { Media } from "../../primitives/Media";
 import { resolveMedia } from "../../primitives/resolve";
 import { PosterViewer } from "./PosterViewer";
 import { routeMapPath, type LatLng } from "./routeMapPath";
-import {
-  routeMapTimeline,
-  routeTimeLabel,
-  routeTimeLabels,
-  type TimelineLabel,
-} from "./routeTimelineData";
-import { RouteTimeSlider } from "./RouteTimeSlider";
+import { routeMapTimeline, routeTimeLabels, type TimelineLabel } from "./routeTimelineData";
+import { createRouteStartMarker } from "./routeStartMarker";
 import { useRouteLandmarks } from "./RouteLandmarks";
 import { resolveRouteMapConfig } from "./routeMapConfig";
 import { useRouteMapFullscreen } from "./useRouteMapFullscreen";
 import { TakeoverPortal } from "../../../lib/TakeoverPortal";
-import { createSantaPinImage } from "../../../map/santaPin";
-import { useReducedMotion } from "../../../lib/motion";
 import { env } from "../../../config/env";
 import { copy } from "../../../copy/copy";
 import * as styles from "./RoutePreview.module.css";
@@ -74,9 +69,7 @@ type RouteMapProps = {
   arrowScale?: number;
   routeWidthScale?: number;
   labelScale?: number;
-  pin?: LatLng | null;
-  pinElement?: HTMLElement;
-  reducedMotion?: boolean;
+  startElement?: HTMLElement;
   ariaLabel?: string;
   fullscreenControl?: boolean;
   terrainControl?: boolean;
@@ -112,18 +105,6 @@ type RoutePreviewData = {
   emptyText?: string | null;
   disclaimer?: string | null;
 };
-
-// The Santa pin's element, handed to the route map as its marker: the
-// legacy pin image, ROUTE_PIN_HEIGHT css px tall, anchored at its bottom
-// centre (the pin tip) by the route map.
-const ROUTE_PIN_HEIGHT = 40;
-
-function createPinElement(): HTMLElement {
-  const el = createSantaPinImage(ROUTE_PIN_HEIGHT);
-  el.className = styles.routePin;
-  el.setAttribute("data-testid", "route-map-pin");
-  return el;
-}
 
 function findViewerPageSlug(content: ContentDocument | null | undefined): string | null {
   if (!content?.pages) return null;
@@ -165,14 +146,7 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
     [timeline, labelEvery],
   );
   const landmarks = useRouteLandmarks(config.landmarks, bundle);
-  const [selected, setSelected] = useState(0);
-  const reducedMotion = useReducedMotion();
-  const [pinElement] = useState(createPinElement);
-  const stop = timeline === null ? null : timeline[Math.min(selected, timeline.length - 1)];
-  const pin = useMemo(
-    () => (stop === null ? null : { lat: stop.lat, lng: stop.lng }),
-    [stop],
-  );
+  const [startElement] = useState(createRouteStartMarker);
 
   const stageRef = useRef<HTMLDivElement | null>(null);
   const fullscreen = useRouteMapFullscreen(stageRef);
@@ -221,10 +195,8 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
                   arrowScale={display.arrowScale}
                   routeWidthScale={display.routeWidthScale}
                   labelScale={display.labelScale}
-                  pin={pin}
-                  pinElement={pinElement}
-                  reducedMotion={reducedMotion}
-                  ariaLabel={d.heading ?? undefined}
+                  startElement={startElement}
+                  ariaLabel={copy.map.routeMap.region}
                   fullscreenControl={config.controls.fullscreen}
                   terrainControl={config.controls.terrain}
                   controlClassName={ibtn.ibtn}
@@ -235,14 +207,6 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
               </Suspense>
               {landmarks.popover}
             </div>
-            {timeline !== null && stop !== null ? (
-              <RouteTimeSlider
-                timeline={timeline}
-                index={timeline.indexOf(stop)}
-                label={routeTimeLabel(stop.minutes)}
-                onSelect={setSelected}
-              />
-            ) : null}
           </div>
         </TakeoverPortal>
         {landmarks.portals}
