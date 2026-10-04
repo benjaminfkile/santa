@@ -16,7 +16,6 @@ export const footerLinks: string;
 export const footerText: string;
 export const headerLink: string;
 export const headerLinkIcon: string;
-export const headerLinkLabel: string;
 export const headerLinkLetter: string;
 export const inlineNav: string;
 export const inlineNavList: string;

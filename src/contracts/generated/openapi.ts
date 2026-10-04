@@ -5309,7 +5309,6 @@ export interface components {
         CloneEventCopy: {
             sponsors?: boolean;
             route?: boolean;
-            poster?: boolean;
             routeMapConfig?: boolean;
         };
         CloneEventRequest: {
@@ -5581,8 +5580,6 @@ export interface components {
             /** Format: int64 */
             routeId?: null | number | string;
             routeUrl?: null | string;
-            routeImageMediaId?: null | string;
-            routeImage?: null | components["schemas"]["MediaAssetDto"];
             routeMapConfig?: null | components["schemas"]["RouteMapConfig"];
             createdBy?: string;
             /** Format: date-time */
@@ -6104,7 +6101,6 @@ export interface components {
             fundsPercent?: null | number | string;
             /** Format: int64 */
             routeId?: null | number | string;
-            routeImageMediaId?: null | string;
             scheduleTimeZone?: components["schemas"]["JsonElement"];
             routeMapConfig?: components["schemas"]["JsonElement"];
         };

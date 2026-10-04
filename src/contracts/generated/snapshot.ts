@@ -14,7 +14,6 @@ export interface Snapshot {
     wentLiveAt?: string | null;
     endedAt?: string | null;
     fundsPercent?: number;
-    routeImageMediaId?: string | null;
     flightHistory?: {
       routeId?: number;
       name?: string;

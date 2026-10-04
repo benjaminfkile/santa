@@ -187,7 +187,6 @@ function setEvent(routeMapConfig?: Config | null): void {
       event: {
         id: 1,
         scheduledAt: null,
-        routeImageMediaId: null,
         routeMap: { path: PATH, timeline: TIMELINE, durationMinutes: 93, timed: true },
         ...(routeMapConfig === undefined ? {} : { routeMapConfig }),
       },
@@ -212,7 +211,7 @@ async function renderSection(
   setEvent(config);
   const result = render(
     <MemoryRouter>
-      <RoutePreview data={{ style: "map", ...data }} items={[]} bundle={buildBundle(settings)} />
+      <RoutePreview data={data} items={[]} bundle={buildBundle(settings)} />
     </MemoryRouter>,
   );
   await settle();

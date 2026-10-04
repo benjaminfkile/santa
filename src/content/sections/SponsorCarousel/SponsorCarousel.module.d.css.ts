@@ -15,7 +15,8 @@ export const sponsorDialog: string;
 export const sponsorDialogActions: string;
 export const sponsorDialogBody: string;
 export const sponsorDialogClose: string;
+export const sponsorDialogLink: string;
+export const sponsorDialogLinkText: string;
 export const sponsorDialogLogo: string;
 export const sponsorDialogName: string;
-export const sponsorDialogVisit: string;
 

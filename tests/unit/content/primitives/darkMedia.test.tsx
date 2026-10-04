@@ -2,12 +2,11 @@
 // dark version renders a light image and a dark image, each carrying the
 // class CSS hides in the other theme; `invertInDark` alone adds the invert
 // class; neither renders one plain image. Every place a media entry is
-// drawn (media icon, logo, media background, route poster image, sponsor
-// logo) honours it. Library icons are untouched.
+// drawn (media icon, logo, media background, sponsor logo) honours it.
+// Library icons are untouched.
 
 import { describe, it, expect, afterEach } from "vitest";
 import { act, cleanup, render } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { ReactElement } from "react";
@@ -17,7 +16,6 @@ import { Icon } from "../../../../src/content/primitives/Icon";
 import { resolveIconDark } from "../../../../src/content/primitives/resolve";
 import { Logo } from "../../../../src/content/Logo";
 import { SectionFrame } from "../../../../src/content/SectionFrame";
-import { RoutePreview } from "../../../../src/content/sections/RoutePreview/RoutePreview";
 import { SponsorGrid } from "../../../../src/content/sections/SponsorGrid/SponsorGrid";
 import { store } from "../../../../src/store/useStore";
 import { initialStore, type ContentBundle } from "../../../../src/store/types";
@@ -53,14 +51,7 @@ function bundle(entry: Entry): ContentBundle {
   return {
     content: {
       settings: { siteName: "Site", logoMedia: { mediaId: "m", alt: null } },
-      pages: [
-        {
-          id: 1,
-          slug: "route",
-          role: "none",
-          sections: [{ id: 1, kind: "route_preview", data: { style: "viewer" } }],
-        },
-      ],
+      pages: [],
       nav: [],
     } as unknown as ContentBundle["content"],
     media: { m: entry },
@@ -173,15 +164,6 @@ function seedSponsor(): void {
   });
 }
 
-function seedPoster(): void {
-  act(() => {
-    store.setState({
-      ...initialStore,
-      snapshot: { schemaVersion: 1, event: { id: 1, routeImageMediaId: "m" } } as unknown as Snapshot,
-    });
-  });
-}
-
 type Path = {
   name: string;
   seed?: () => void;
@@ -222,16 +204,6 @@ const PATHS: Path[] = [
       </SectionFrame>
     ),
     pick: (c) => images(c.querySelector('[data-testid="section-frame-background"]') as HTMLElement),
-  },
-  {
-    name: "route poster image",
-    seed: seedPoster,
-    draw: (b) => (
-      <MemoryRouter>
-        <RoutePreview data={{ style: "image" }} items={[]} bundle={b} />
-      </MemoryRouter>
-    ),
-    pick: (c) => images(c.querySelector('[data-testid="route-preview-link"]') as HTMLElement),
   },
   {
     name: "sponsor logo",

@@ -27,7 +27,6 @@
     "@protomaps/basemaps": "^5.7.2",
     "amazon-cognito-identity-js": "^6.3.20",
     "maplibre-gl": "^6.11.2",
-    "openseadragon": "^5.0.1",
     "pmtiles": "^4.5.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -43,7 +42,6 @@
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",
     "@types/node": "^24.13.3",
-    "@types/openseadragon": "^5.0.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
@@ -79,14 +77,6 @@
         "dist/assets/Map-*.js"
       ],
       "limit": "50 KB"
-    },
-    {
-      "name": "osd (openseadragon + PosterViewer)",
-      "path": [
-        "dist/assets/osd-*.js",
-        "dist/assets/PosterViewer-*.js"
-      ],
-      "limit": "80 KB"
     },
     {
       "name": "routemap (maplibre-gl + pmtiles + @protomaps/basemaps + src/routeMap)",

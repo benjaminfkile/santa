@@ -23,7 +23,7 @@ import {
 type PublishedPage = {
   slug: string;
   role: string;
-  sections: { kind: string; data?: { style?: string } }[];
+  sections: { kind: string }[];
 };
 
 test.beforeAll(async () => {
@@ -96,46 +96,27 @@ test("the header nav keeps its items on one line and moves the rest into More", 
   }
 });
 
-test("a page with a route_preview in viewer style loads the osd chunk, tiles the poster, zooms on a wheel event, and enters and leaves fullscreen through the button without loading the map chunk", async ({ page }) => {
+test("a page with a route_preview draws the route map or its empty text without loading the map chunk", async ({ page }) => {
   const adminSnap = await getAdminSnapshot();
   const snap = (await fetchCdnSnapshot(adminSnap.url)) as { content?: { pages?: PublishedPage[] } };
   const pages = snap.content?.pages ?? [];
-  const target = pages.find((p) =>
-    p.sections.some((s) => s.kind === "route_preview" && s.data?.style === "viewer"),
+  const target = pages.find(
+    (p) => p.role === "none" && p.sections.some((s) => s.kind === "route_preview"),
   );
-  test.skip(target === undefined, "no route_preview in viewer style in the published document");
+  test.skip(target === undefined, "no route_preview on an ordinary page in the published document");
   if (!target) return;
-  // Track scripts and tile requests: the osd chunk must load, the map chunk
-  // must not, and when the asset has a Deep Zoom pyramid a `poster_files/`
-  // request must be seen (site.md 8.5, 22.2).
+  // The route preview draws in the routemap chunk; the map chunk of the
+  // live screen must not load (site.md 8.9, 22.2).
   const mapScripts: string[] = [];
-  const osdScripts: string[] = [];
-  const posterFileRequests: string[] = [];
   page.on("response", (res) => {
     const url = res.url();
     if (/\/assets\/map-[^/]+\.js$/.test(url)) mapScripts.push(url);
-    if (/\/assets\/osd-[^/]+\.js$/.test(url)) osdScripts.push(url);
-    if (/poster_files\//.test(url)) posterFileRequests.push(url);
   });
   await goto(page, `/${target.slug}`);
-  const viewer = page.locator('[data-testid="poster-viewer"]');
-  await expect(viewer).toBeVisible({ timeout: 20_000 });
-  // Wait for the openseadragon canvas to appear inside the host.
-  await expect(viewer.locator("canvas, img").first()).toBeVisible({ timeout: 20_000 });
-  // Wheel zoom moves the viewport; the tile canvas transform changes.
-  await viewer.dispatchEvent("wheel", { deltaY: -400, clientX: 200, clientY: 200 });
-  await page.waitForTimeout(500);
-  // Fullscreen: click the button, expect data-fullscreen to flip on and back.
-  const fs = page.locator('[data-testid="poster-fullscreen"]');
-  await fs.click();
-  await expect(viewer).toHaveAttribute("data-fullscreen", "on", { timeout: 5_000 });
-  await fs.click();
-  await expect(viewer).toHaveAttribute("data-fullscreen", "off", { timeout: 5_000 });
-  expect(osdScripts.length).toBeGreaterThan(0);
+  await expect(
+    page.locator('[data-testid="route-preview-map"], [data-testid="route-preview-empty"]').first(),
+  ).toBeVisible({ timeout: 20_000 });
   expect(mapScripts).toEqual([]);
-  // The starter content's route poster carries a `dzi` (contracts fixture);
-  // tile requests fetch `poster_files/<level>/<x>_<y>.jpg` from the CDN.
-  expect(posterFileRequests.length).toBeGreaterThan(0);
 });
 
 test("the sponsors page renders one card per snapshot sponsor with equal per-row heights at 1280 px", async ({ page }) => {
