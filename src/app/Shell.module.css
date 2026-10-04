@@ -469,10 +469,12 @@
 }
 /* The panel and its button exist for phones; the inline nav covers wider
    screens. While the panel is open the button keeps its box (so the header
-   does not shift) but is hidden: the panel occupies its corner. */
-.menuButton { display: none; }
+   does not shift) but is hidden: the panel occupies its corner. The hide
+   rules are scoped to the actions row so they outrank the composed icon
+   button recipe, whose sheet follows this one in the bundle. */
+.actions .menuButton { display: none; }
 @media (max-width: 760px) {
-  .menuButton { display: inline-flex; }
+  .actions .menuButton { display: inline-grid; }
 }
 .menuButton[data-panel-open="true"] { visibility: hidden; }
 
@@ -497,7 +499,8 @@
 @media (max-width: 760px) {
   .siteHeader { padding: var(--space-3) var(--space-4); }
   .brand { font-size: 0.9375rem; }
-  .signIn { display: none; }
+  /* Scoped so it outranks the composed button recipe (see .menuButton). */
+  .actions .signIn { display: none; }
   .footer {
     flex-direction: column;
     align-items: flex-start;
