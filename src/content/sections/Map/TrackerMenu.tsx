@@ -3,8 +3,9 @@
 // with a nickname and an accent underline on the active one, then Terrain, Road, and Snow, then
 // the data row (a glyph and a value per item), then the footer row: the
 // account button (sign in or sign out) alone on the left, and flight data,
-// location, flight history, time labels, fit, and close as square buttons on
-// the right.
+// location, flight history, time labels, fit, landmarks, and close as
+// square buttons on the right. Landmarks shows while the site has
+// landmarks and the section's `controls.landmarks` is not false.
 
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
@@ -22,6 +23,7 @@ import {
   CloseGlyph,
   CompassGlyph,
   FitGlyph,
+  LandmarkGlyph,
   GaugeGlyph,
   HistoryGlyph,
   InboxGlyph,
@@ -46,6 +48,7 @@ type Toggles = {
   timeLabels: boolean;
   location: boolean;
   dataRow: boolean;
+  landmarks?: boolean;
 };
 
 export type TrackerMenuProps = {
@@ -64,6 +67,9 @@ export type TrackerMenuProps = {
   onFlightHistoryChange: (v: boolean) => void;
   timeLabels: boolean;
   onTimeLabelsChange: (v: boolean) => void;
+  landmarksAvailable?: boolean;
+  landmarks?: boolean;
+  onLandmarksChange?: (v: boolean) => void;
   flightDockAvailable: boolean;
   flightDock: boolean;
   onFlightDockChange: (v: boolean) => void;
@@ -108,6 +114,7 @@ export function TrackerMenu(props: TrackerMenuProps) {
   const accuracyFt = accuracyM !== null ? metresToFeet(accuracyM) : null;
   const cardinal = headingDeg !== null ? headingToCardinal(headingDeg) : null;
   const showFlightHistory = props.controls.flightHistory && props.flightHistoryAvailable;
+  const showLandmarks = props.controls.landmarks !== false && props.landmarksAvailable === true;
 
   return (
     <div
@@ -311,6 +318,18 @@ export function TrackerMenu(props: TrackerMenuProps) {
                 data-testid="tracker-menu-fit-history"
               >
                 <FitGlyph size={22} />
+              </button>
+            ) : null}
+            {showLandmarks ? (
+              <button
+                type="button"
+                className={styles.footerBtn}
+                aria-pressed={props.landmarks === true}
+                aria-label={copy.tracker.landmarks}
+                onClick={() => props.onLandmarksChange?.(props.landmarks !== true)}
+                data-testid="tracker-menu-landmarks"
+              >
+                <LandmarkGlyph size={22} />
               </button>
             ) : null}
             <button type="button" className={styles.close} onClick={props.onClose} aria-label="Close menu">

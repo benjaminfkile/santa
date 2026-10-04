@@ -10,6 +10,7 @@
 // else on the site renders.
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { createRoot } from "react-dom/client";
 import type { SectionComponent } from "../../registry";
 import { store, useStore } from "../../../store/useStore";
 import { selectLiveState } from "../../../store/liveState";
@@ -24,7 +25,11 @@ import type { UserLocationState } from "../../../map/userLocation";
 import type { MapTheme } from "../../../map/themes";
 import { resolveOfferedThemes, resolveInitialTheme } from "../../../map/themes";
 import { acquire as acquireWakeLock, release as releaseWakeLock } from "../../../map/wakeLock";
-import type { Snapshot } from "../../../contracts";
+import type { MountIcon, TrackerLandmark } from "../../../map/landmarksOverlay";
+import type { IconRef, Snapshot } from "../../../contracts";
+import type { ContentBundle } from "../../../store/types";
+import { Icon, iconResolves } from "../../primitives/Icon";
+import { resolveLandmarks } from "../RoutePreview/routeMapConfig";
 import { copy } from "../../../copy/copy";
 import { FixStatus } from "./InfoOverlays";
 import { LiveIndicator } from "./LiveIndicator";
@@ -91,6 +96,14 @@ function normalizePoints(fh: FlightHistory | null): { lat: number; lng: number; 
   return filtered;
 }
 
+// The site settings' landmarks for the tracker, each icon kept only when it
+// draws, so a landmark whose icon does not resolve shows the dot.
+function trackerLandmarks(list: unknown, bundle: ContentBundle): TrackerLandmark[] {
+  return (resolveLandmarks(list) ?? []).map((l) =>
+    l.icon && !iconResolves(l.icon, bundle) ? { ...l, icon: null } : l,
+  );
+}
+
 // The site's effective appearance: the root's `data-theme`, dark or light.
 function readAppearance(): "light" | "dark" {
   return typeof document !== "undefined" &&
@@ -149,6 +162,13 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const [timeLabels, setTimeLabelsState] = useState<boolean>(() =>
     readTrackerToggle("timeLabels", true),
   );
+  const [landmarksOn, setLandmarksOnState] = useState<boolean>(() =>
+    readTrackerToggle("landmarks", true),
+  );
+  const setLandmarksOn = useCallback((v: boolean) => {
+    writeTrackerToggle("landmarks", v);
+    setLandmarksOnState(v);
+  }, []);
   const setFlightHistoryOn = useCallback((v: boolean) => {
     writeTrackerToggle("flightHistory", v);
     setFlightHistoryOnState(v);
@@ -189,6 +209,11 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const flightHistory = useStore((s) => s.snapshot?.event?.flightHistory ?? null);
   const isLive = useStore((s) => s.live?.eventStatusId === 3);
   const showLeave = overlays.cookieControl && isLive;
+  const settingsLandmarks = bundle.content?.settings?.landmarks;
+  const landmarks = useMemo(
+    () => trackerLandmarks(settingsLandmarks, bundle),
+    [settingsLandmarks, bundle],
+  );
   const flightPoints = useMemo(() => normalizePoints(flightHistory as FlightHistory | null), [flightHistory]);
   const flightHistoryAvailable = flightPoints !== null;
   const flightDockAvailable = overlays.flightDock || overlays.liftoffTimer;
@@ -202,6 +227,16 @@ export const Map: SectionComponent = ({ data, bundle }) => {
       ? userState.distanceMetres
       : null;
 
+  // Landmark icons render through the Icon primitive into the overlay's
+  // badge, each in its own root, against the latest bundle.
+  const bundleRef = useRef(bundle);
+  bundleRef.current = bundle;
+  const mountIcon = useCallback<MountIcon>((container: HTMLElement, icon: IconRef) => {
+    const root = createRoot(container);
+    root.render(<Icon icon={icon} bundle={bundleRef.current} decorative size={18} />);
+    return () => queueMicrotask(() => root.unmount());
+  }, []);
+
   const defaultCenter = d.defaultCenter ?? { lat: 39.7392, lng: -104.9903 };
   const defaultZoom = d.defaultZoom ?? 8;
 
@@ -212,6 +247,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
       defaultZoom,
       showSantaMarker: true,
       showUserLocation: controls.location,
+      mountIcon,
       onFollowChange: (f: boolean) => setFollowing(f),
       onUserLocationChange: (s: UserLocationState) => setUserState(s),
     }),
@@ -246,8 +282,14 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     controller.setToggles({
       flightHistory: flightHistoryOn && flightHistoryAvailable,
       timeLabels,
+      landmarks: landmarksOn,
     });
-  }, [controller, flightHistoryOn, flightHistoryAvailable, timeLabels]);
+  }, [controller, flightHistoryOn, flightHistoryAvailable, timeLabels, landmarksOn]);
+
+  useEffect(() => {
+    if (controller === null) return;
+    controller.setLandmarks(landmarks);
+  }, [controller, landmarks]);
 
   useEffect(() => {
     if (controller === null) return;
@@ -437,6 +479,9 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 onFlightHistoryChange={setFlightHistoryOn}
                 timeLabels={timeLabels}
                 onTimeLabelsChange={setTimeLabels}
+                landmarksAvailable={landmarks.length > 0}
+                landmarks={landmarksOn}
+                onLandmarksChange={setLandmarksOn}
                 flightDockAvailable={flightDockAvailable}
                 flightDock={flightDockOn}
                 onFlightDockChange={setFlightDockOn}

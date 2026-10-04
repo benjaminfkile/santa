@@ -89,6 +89,9 @@ export const copy = {
       openFullRoute: "Open the full route",
     },
   },
+  tracker: {
+    landmarks: "Landmarks",
+  },
   sponsors: {
     open: "Sponsor",
     previous: "Previous sponsor",

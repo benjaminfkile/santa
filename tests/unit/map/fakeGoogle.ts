@@ -1,7 +1,7 @@
 // A small stand-in for the Google Maps libraries: enough of `Map`,
 // `OverlayView`, `Polyline`, `Marker`, and the global `google.maps`
 // namespace for the real MapView, controller, Santa marker, flight history
-// overlay, and user location to run under jsdom. Every object records
+// overlay, landmarks overlay, and user location to run under jsdom. Every object records
 // whether it is attached so a test can see what is still on a map.
 
 type Listener = (...args: unknown[]) => void;
@@ -15,6 +15,7 @@ export class FakeMap {
   panes = {
     markerLayer: document.createElement("div"),
     overlayLayer: document.createElement("div"),
+    overlayMouseTarget: document.createElement("div"),
   };
   container: HTMLElement;
   constructor(container: HTMLElement, opts: { zoom?: number; center?: google.maps.LatLngLiteral }) {
@@ -61,6 +62,7 @@ export class FakeMap {
 // run on a microtask, once the map's panes exist.
 export class FakeOverlayView {
   static instances: FakeOverlayView[] = [];
+  static preventMapHitsAndGesturesFrom(): void {}
   private map: FakeMap | null = null;
   private added = false;
   onAdd?(): void;

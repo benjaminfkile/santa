@@ -107,6 +107,29 @@ describe("createMapController lifecycle", () => {
     c.destroy();
   });
 
+  it("draws the landmarks from zoom 10 while the landmarks toggle is on, and detaches them on destroy", async () => {
+    const c = createMapController(fakeLibs(), document.createElement("div"), options());
+    const map = FakeMap.instances[0];
+    const pane = map.panes.overlayMouseTarget;
+    const count = () => pane.querySelectorAll('[data-testid="tracker-landmark"]').length;
+    c.setLandmarks([
+      { name: "Town Hall", lat: 40, lng: -105 },
+      { name: "Fire Station", lat: 41, lng: -106 },
+    ]);
+    await Promise.resolve();
+    expect(count()).toBe(0);
+    map.setZoom(12);
+    await Promise.resolve();
+    expect(count()).toBe(2);
+    c.setToggles({ landmarks: false });
+    expect(count()).toBe(0);
+    c.setToggles({ landmarks: true });
+    await Promise.resolve();
+    expect(count()).toBe(2);
+    c.destroy();
+    expect(count()).toBe(0);
+  });
+
   it("a build that fails part way leaves nothing on the map", () => {
     const libs = fakeLibs();
     const onChange = vi.fn();

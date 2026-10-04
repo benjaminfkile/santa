@@ -1,0 +1,119 @@
+/* docs/site.md section 8.5. The live tracker's landmarks: a 28 px round
+   badge on the glass recipe holding the landmark's icon or an 8 px accent
+   dot, centred on the point, the name beside it in the map's label style
+   (small sans text with a halo in the panel colour), and the popover
+   above the badge. The element sits in the overlay mouse target pane and
+   takes the tracker's chrome tokens from the map section. */
+
+.landmark {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+.landmark[data-open="true"] { z-index: 1; }
+.badge {
+  composes: glass from "../content/sections/Map/Map.module.css";
+  appearance: none;
+  position: absolute;
+  left: -14px;
+  top: -14px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  border-radius: 50%;
+  color: var(--text-bright);
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .badge:hover { border-color: var(--accent); }
+}
+.badge[aria-expanded="true"] { border-color: var(--accent); }
+.badge:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.icon {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+}
+.icon img,
+.icon svg {
+  display: block;
+  max-width: 18px;
+  max-height: 18px;
+}
+.dot {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.label {
+  position: absolute;
+  left: 18px;
+  top: 0;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--text-bright);
+  text-shadow:
+    0 0 2px var(--panel),
+    0 0 2px var(--panel),
+    0 0 3px var(--panel);
+  pointer-events: none;
+}
+
+/* The popover: a panel centred above the badge, the name, a close
+   button, the description, and the directions link. */
+.popover {
+  position: absolute;
+  left: 0;
+  bottom: 22px;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(20rem, 80vw);
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.3);
+  cursor: auto;
+}
+.popoverHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.popoverTitle {
+  margin: 0;
+  padding-top: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--font-size-h3);
+  font-weight: 600;
+  color: var(--text-bright);
+  overflow-wrap: anywhere;
+}
+.popoverClose {
+  composes: ibtn from "../ui/IconButton.module.css";
+}
+.popoverText {
+  margin: var(--space-2) 0 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.directions {
+  margin-top: var(--space-3);
+}
