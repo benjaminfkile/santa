@@ -5448,8 +5448,6 @@ export interface components {
         };
         CreateEventMessageRequest: {
             body?: string;
-            /** Format: date-time */
-            eventTime?: null | string;
             notify?: boolean;
         };
         CreateEventRequest: {
@@ -5599,13 +5597,14 @@ export interface components {
             /** Format: int64 */
             eventId?: number | string;
             body?: string;
-            /** Format: date-time */
-            eventTime?: null | string;
             createdBy?: string;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
+            notify?: boolean;
+            /** Format: int32 */
+            sentCount?: number | string;
             audit?: null | components["schemas"]["AuditStampDto"];
         };
         HealthResponse: {
@@ -6093,8 +6092,6 @@ export interface components {
         };
         PatchEventMessageRequest: {
             body?: null | string;
-            /** Format: date-time */
-            eventTime?: null | string;
         };
         PatchEventRequest: {
             name?: null | string;
@@ -6475,7 +6472,6 @@ export interface components {
         RouteMapConfig: {
             display?: null | components["schemas"]["RouteMapDisplay"];
             controls?: null | components["schemas"]["RouteMapControls"];
-            landmarks?: null | components["schemas"]["RouteMapLandmark"][];
             pois?: null | components["schemas"]["RouteMapPois"];
         };
         RouteMapControls: {
@@ -6489,15 +6485,6 @@ export interface components {
             arrowSize?: null | string;
             routeWidth?: null | string;
             labelSize?: null | string;
-        };
-        RouteMapLandmark: {
-            name?: string;
-            /** Format: double */
-            lat?: number | string;
-            /** Format: double */
-            lng?: number | string;
-            icon?: null | components["schemas"]["IconValue"];
-            description?: null | string;
         };
         RouteMapPoint: {
             /** Format: double */

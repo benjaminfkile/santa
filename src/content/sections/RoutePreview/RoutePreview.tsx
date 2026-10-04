@@ -23,12 +23,14 @@
 //     (useRouteMapFullscreen), rendered through TakeoverPortal so the
 //     takeover sits under document.body. The map region is labelled
 //     `copy.map.routeMap.region`, which speaks the start.
-//     Every map input comes from `event.routeMapConfig` (routeMapConfig), each
-//     value falling back to its default; a null config draws the default
-//     map. The map carries a fullscreen button and a terrain toggle
-//     unless `controls.fullscreen` or `controls.terrain` is false.
-//     `pois.kinds` reaches the style as its POI kind list and `landmarks`
-//     as its landmarks, each name the label; without them the style gets
+//     The display, the controls, and the POI kinds come from
+//     `event.routeMapConfig` (routeMapConfig), each value falling back to
+//     its default; a null config draws the default map. The landmarks come
+//     from the site settings' `landmarks`; absent means none. The map
+//     carries a fullscreen button and a terrain toggle unless
+//     `controls.fullscreen` or `controls.terrain` is false. `pois.kinds`
+//     reaches the style as its POI kind list and the landmarks as its
+//     landmarks, each name the label; without them the style gets
 //     neither. A landmark with an icon or a description also gets a
 //     marker and its popover (RouteLandmarks). The five display values
 //     (time label interval, arrows, arrow size, route width, label size)
@@ -50,7 +52,7 @@ import { routeMapPath, type LatLng } from "./routeMapPath";
 import { routeMapTimeline, routeTimeLabels, type TimelineLabel } from "./routeTimelineData";
 import { createRouteStartMarker } from "./routeStartMarker";
 import { useRouteLandmarks } from "./RouteLandmarks";
-import { resolveRouteMapConfig } from "./routeMapConfig";
+import { resolveLandmarks, resolveRouteMapConfig } from "./routeMapConfig";
 import { useRouteMapFullscreen } from "./useRouteMapFullscreen";
 import { TakeoverPortal } from "../../../lib/TakeoverPortal";
 import { env } from "../../../config/env";
@@ -145,7 +147,9 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
     () => (timeline === null ? NO_LABELS : routeTimeLabels(timeline, labelEvery)),
     [timeline, labelEvery],
   );
-  const landmarks = useRouteLandmarks(config.landmarks, bundle);
+  const settingsLandmarks = content?.settings?.landmarks;
+  const landmarkList = useMemo(() => resolveLandmarks(settingsLandmarks), [settingsLandmarks]);
+  const landmarks = useRouteLandmarks(landmarkList, bundle);
   const [startElement] = useState(createRouteStartMarker);
 
   const stageRef = useRef<HTMLDivElement | null>(null);

@@ -54,8 +54,8 @@ const SEEN_KEY = `wmsfo.messages.seen.${EVENT_ID}`;
 
 type Message = NonNullable<NonNullable<Snapshot["event"]>["latestMessage"]>;
 
-const M11: Message = { id: 11, body: "Wheels up at the airport.", eventTime: null, createdAt: "2026-12-22T01:01:00.000Z" };
-const M12: Message = { id: 12, body: "Santa is over the valley.", eventTime: "2026-12-22T01:30:00.000Z", createdAt: "2026-12-22T01:31:00.000Z" };
+const M11: Message = { id: 11, body: "Wheels up at the airport.", createdAt: "2026-12-22T01:01:00.000Z" };
+const M12: Message = { id: 12, body: "Santa is over the valley.", createdAt: "2026-12-22T01:31:00.000Z" };
 
 function setMessage(latestMessage: Message | null) {
   act(() =>
@@ -192,12 +192,12 @@ describe("MessagesPill opening", () => {
     const rows = within(dialog).getAllByTestId("messages-dialog-row");
     expect(rows).toHaveLength(1);
     expect(rows[0].textContent).toContain("Santa is over the valley.");
-    expect(within(rows[0]).getByTestId("messages-dialog-time").textContent).toBe(formatEventTime(M12.eventTime));
+    expect(within(rows[0]).getByTestId("messages-dialog-time").textContent).toBe(formatEventTime(M12.createdAt));
     expect(within(rows[0]).getByTestId("messages-dialog-new").textContent).toBe("New");
   });
 
-  it("takes the time from createdAt when eventTime is null", () => {
-    setMessage(M11);
+  it("renders the message's createdAt, ignoring any other time on a raw snapshot", () => {
+    setMessage({ ...M11, eventTime: "2026-12-22T05:00:00.000Z" } as unknown as Message);
     const view = renderMap();
     fireEvent.click(view.getByTestId("messages-pill"));
     expect(view.getByTestId("messages-dialog-time").textContent).toBe(formatEventTime(M11.createdAt));

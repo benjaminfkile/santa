@@ -57,6 +57,7 @@ type MapSectionData = {
     timeLabels?: boolean;
     location?: boolean;
     dataRow?: boolean;
+    landmarks?: boolean;
   };
   overlays?: {
     liveIndicator?: boolean;
@@ -120,6 +121,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     timeLabels: d.controls?.timeLabels ?? true,
     location: d.controls?.location ?? false,
     dataRow: d.controls?.dataRow ?? false,
+    landmarks: d.controls?.landmarks ?? true,
   };
 
   const overlays: Required<NonNullable<MapSectionData["overlays"]>> = {

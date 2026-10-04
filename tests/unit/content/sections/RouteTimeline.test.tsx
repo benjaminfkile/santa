@@ -10,10 +10,10 @@
 //  - The marks source holds every timeline entry.
 //  - A timeline of fewer than two entries keeps the path and the start
 //    marker and shows no marks.
-//  - The event's `routeMapConfig.pois.kinds` and `routeMapConfig.landmarks`
-//    reach the style as its POI kind filter and its landmark labels;
-//    without them, or with them in the section data only, the style has
-//    neither.
+//  - The event's `routeMapConfig.pois.kinds` and the site settings'
+//    `landmarks` reach the style as its POI kind filter and its landmark
+//    labels; without them, or with them in the section data only, the
+//    style has neither.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, cleanup, act } from "@testing-library/react";
@@ -148,9 +148,9 @@ const SCHEDULED_AT = "2026-12-22T01:00:00.000Z";
 
 const mutableEnv = env as unknown as { ROUTE_BASEMAP_URL: string };
 const originalBasemap = mutableEnv.ROUTE_BASEMAP_URL;
-function buildBundle(): ContentBundle {
+function buildBundle(settings: Record<string, unknown> = {}): ContentBundle {
   return {
-    content: { pages: [], nav: [] } as unknown as ContentDocument,
+    content: { pages: [], nav: [], settings } as unknown as ContentDocument,
     media: {},
     icons: {},
   } as unknown as ContentBundle;
@@ -183,10 +183,13 @@ async function settle(): Promise<void> {
   });
 }
 
-function renderSection(data: Record<string, unknown> = { style: "map" }) {
+function renderSection(
+  data: Record<string, unknown> = { style: "map" },
+  settings: Record<string, unknown> = {},
+) {
   return render(
     <MemoryRouter>
-      <RoutePreview data={data} items={[]} bundle={buildBundle()} />
+      <RoutePreview data={data} items={[]} bundle={buildBundle(settings)} />
     </MemoryRouter>,
   );
 }
@@ -396,15 +399,14 @@ describe("route map timeline", () => {
 });
 
 describe("route map POI kinds and landmarks", () => {
-  it("passes the config's POI kinds and landmarks into the style", async () => {
-    setEvent(null, TIMELINE, {
-      pois: { kinds: ["peak", "museum"] },
+  it("passes the config's POI kinds and the settings' landmarks into the style", async () => {
+    setEvent(null, TIMELINE, { pois: { kinds: ["peak", "museum"] } });
+    renderSection(undefined, {
       landmarks: [
         { name: "Mount Jumbo", lat: 46.88, lng: -113.96 },
         { name: "Caras Park", lat: 46.87, lng: -113.99 },
       ],
     });
-    renderSection();
     await settle();
     expect(mocks.maps).toHaveLength(1);
     for (const style of [mocks.maps[0].options.style as StyleShape, currentStyle()]) {
@@ -429,7 +431,7 @@ describe("route map POI kinds and landmarks", () => {
     expect(currentStyle().layers.some((l) => l.id === "pois")).toBe(false);
   });
 
-  it("passes neither without them in the config", async () => {
+  it("passes neither without them in the config and the settings", async () => {
     setEvent(null, TIMELINE);
     renderSection();
     await settle();

@@ -5,7 +5,7 @@
 // section, it takes the tokens the section binds to the map style, as the
 // cookie dialog does. It shows the event's latest message: the body
 // through `Inline` as the `latest_message` section draws it, its time from
-// `eventTime` (or `createdAt`), and a New marker while `fresh`, which says
+// `createdAt`, and a New marker while `fresh`, which says
 // the message was unread when the dialog opened.
 
 import { useEffect, useRef } from "react";
@@ -52,7 +52,7 @@ export function MessagesDialog({ message, fresh, bundle, onClose }: MessagesDial
     onClose();
   };
 
-  const time = formatEventTime(message.eventTime ?? message.createdAt ?? null);
+  const time = formatEventTime(message.createdAt ?? null);
 
   return (
     <dialog

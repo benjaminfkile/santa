@@ -117,6 +117,11 @@ export interface SiteSettings {
    * @maxItems 3
    */
   headerLinks?: [] | [Link] | [Link, Link] | [Link, Link, Link];
+  /**
+   * @minItems 0
+   * @maxItems 50
+   */
+  landmarks?: Landmark[];
 }
 export interface Display {
   sizePx?: number;
@@ -150,6 +155,23 @@ export interface MediaRef {
   mediaId: string;
   alt: string | null;
   display?: Display | null;
+}
+export interface Landmark {
+  name: string;
+  lat: number;
+  lng: number;
+  icon?:
+    | {
+        source: "library";
+        id: string;
+        display?: Display | null;
+      }
+    | {
+        source: "media";
+        id: string;
+        display?: Display | null;
+      };
+  description?: string;
 }
 export interface Presentation {
   width: "full" | "wide" | "narrow";
