@@ -485,7 +485,6 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 flightDockAvailable={flightDockAvailable}
                 flightDock={flightDockOn}
                 onFlightDockChange={setFlightDockOn}
-                onFitHistory={() => controller?.fitHistory()}
                 onOpenLocation={() => setLocationOpen(true)}
                 locationEnabled={userState.enabled}
                 distanceMetres={userState.distanceMetres}

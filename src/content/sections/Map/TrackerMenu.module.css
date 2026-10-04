@@ -138,13 +138,34 @@
   display: flex;
   flex-wrap: nowrap;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: flex-end;
   gap: 4px;
 }
 .footerStart {
   display: flex;
   flex: none;
+  align-items: flex-end;
   gap: 4px;
+}
+/* Every footer button sits under a short label: a column at least the
+   button's 44 px wide (a longer label widens the column), the buttons on
+   one baseline whatever the label. */
+.footerItem {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 44px;
+}
+.footerLabel {
+  font-family: var(--font-sans);
+  font-size: 0.625rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--text-dim);
+  white-space: nowrap;
 }
 /* The right group wraps: when one line cannot hold every button at 44 px
    the overflow drops to the next line, right-aligned, so the close button

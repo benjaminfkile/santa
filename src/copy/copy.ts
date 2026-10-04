@@ -82,7 +82,12 @@ export const copy = {
     },
   },
   tracker: {
+    data: "Data",
+    location: "Location",
+    history: "History",
+    times: "Times",
     landmarks: "Landmarks",
+    close: "Close",
   },
   sponsors: {
     open: "Sponsor",

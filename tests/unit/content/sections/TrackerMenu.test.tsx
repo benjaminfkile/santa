@@ -140,7 +140,6 @@ describe("TrackerMenu data row", () => {
       flightDockAvailable: false,
       flightDock: false,
       onFlightDockChange: () => {},
-      onFitHistory: () => {},
       onOpenLocation: () => {},
     locationEnabled: false,
     };
@@ -192,7 +191,6 @@ describe("TrackerMenu data row", () => {
           flightDockAvailable={false}
           flightDock={false}
           onFlightDockChange={() => {}}
-          onFitHistory={() => {}}
           onOpenLocation={() => {}}
           locationEnabled={false}
           distanceMetres={null}
@@ -239,7 +237,6 @@ function footerProps(onClose: () => void) {
     flightDockAvailable: true,
     flightDock: true,
     onFlightDockChange: () => {},
-    onFitHistory: () => {},
     onOpenLocation: () => {},
     locationEnabled: false,
     distanceMetres: null,
@@ -268,13 +265,14 @@ const rightTestIds = [
   "tracker-menu-flight-dock",
   "tracker-menu-flight-history",
   "tracker-menu-time-labels",
-  "tracker-menu-fit-history",
 ];
 
 function expectRightGroupUnchanged(getByTestId: (id: string) => HTMLElement): void {
   const right = getByTestId("tracker-menu-toggles");
   const labels = Array.from(right.querySelectorAll("button")).map((b) => b.getAttribute("aria-label"));
-  expect(labels).toEqual(["Flight data", "Your location", "Flight history", "Time labels", "Fit history", "Close menu"]);
+  expect(labels).toEqual(["Flight data", "Your location", "Flight history", "Time labels", "Close menu"]);
+  const captions = Array.from(right.querySelectorAll("span[aria-hidden]")).map((s) => s.textContent);
+  expect(captions).toEqual(["Data", "Location", "History", "Times", "Close"]);
   for (const id of rightTestIds) expect(right.contains(getByTestId(id))).toBe(true);
 }
 
@@ -351,14 +349,15 @@ describe("TrackerMenu account button", () => {
     expect(off.getByTestId("tracker-menu-location")).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("with every control on and a flight history present the seven buttons are fixed 44 px squares and the right group wraps", () => {
+  it("with every control on and a flight history present the six buttons are fixed 44 px squares under their labels and the right group wraps", () => {
     const { getByTestId } = renderMenu({ status: "signedOut" });
     const left = getByTestId("tracker-menu-account");
     const right = getByTestId("tracker-menu-toggles");
     expect(left.parentElement).toBe(right.parentElement);
     expect(left.parentElement?.children).toHaveLength(2);
     const buttons = [...Array.from(left.querySelectorAll("button")), ...Array.from(right.querySelectorAll("button"))];
-    expect(buttons).toHaveLength(7);
+    expect(buttons).toHaveLength(6);
+    expect(left.querySelector("span[aria-hidden]")?.textContent).toBe("Sign in");
     for (const b of buttons) expect(b.className).toContain("footerBtn");
     expect(right.className).toContain("footerEnd");
     expectRightGroupUnchanged(getByTestId);

@@ -22,7 +22,6 @@ import {
   ClockGlyph,
   CloseGlyph,
   CompassGlyph,
-  FitGlyph,
   LandmarkGlyph,
   GaugeGlyph,
   HistoryGlyph,
@@ -73,7 +72,6 @@ export type TrackerMenuProps = {
   flightDockAvailable: boolean;
   flightDock: boolean;
   onFlightDockChange: (v: boolean) => void;
-  onFitHistory: () => void;
   onOpenLocation: () => void;
   // Whether the visitor's location is on (the dot on the map); the location
   // button is pressed while it is.
@@ -245,106 +243,119 @@ export function TrackerMenu(props: TrackerMenuProps) {
         <div className={styles.footer}>
           <div className={styles.footerStart} data-testid="tracker-menu-account">
             {authState.status === "signedOut" ? (
-              <button
-                type="button"
-                className={styles.footerBtn}
-                aria-label={copy.signIn.button}
-                onClick={() => {
-                  props.onClose();
-                  void signIn(location.pathname + location.search);
-                }}
-                data-testid="tracker-menu-sign-in"
-              >
-                <SignInGlyph size={22} />
-              </button>
+              <div className={styles.footerItem}>
+                <span className={styles.footerLabel} aria-hidden>{copy.signIn.button}</span>
+                <button
+                  type="button"
+                  className={styles.footerBtn}
+                  aria-label={copy.signIn.button}
+                  onClick={() => {
+                    props.onClose();
+                    void signIn(location.pathname + location.search);
+                  }}
+                  data-testid="tracker-menu-sign-in"
+                >
+                  <SignInGlyph size={22} />
+                </button>
+              </div>
             ) : null}
             {authState.status === "signedIn" ? (
-              <button
-                type="button"
-                className={styles.footerBtn}
-                aria-label={copy.signIn.signOut}
-                onClick={() => void signOut()}
-                data-testid="tracker-menu-sign-out"
-              >
-                <SignOutGlyph size={22} />
-              </button>
+              <div className={styles.footerItem}>
+                <span className={styles.footerLabel} aria-hidden>{copy.signIn.signOut}</span>
+                <button
+                  type="button"
+                  className={styles.footerBtn}
+                  aria-label={copy.signIn.signOut}
+                  onClick={() => void signOut()}
+                  data-testid="tracker-menu-sign-out"
+                >
+                  <SignOutGlyph size={22} />
+                </button>
+              </div>
             ) : null}
           </div>
           <div className={styles.footerEnd} data-testid="tracker-menu-toggles">
             {props.flightDockAvailable ? (
-              <button
-                type="button"
-                className={styles.footerBtn}
-                aria-pressed={props.flightDock}
-                aria-label="Flight data"
-                onClick={() => props.onFlightDockChange(!props.flightDock)}
-                data-testid="tracker-menu-flight-dock"
-              >
-                <GaugeGlyph size={22} />
-              </button>
+              <div className={styles.footerItem}>
+                <span className={styles.footerLabel} aria-hidden>{copy.tracker.data}</span>
+                <button
+                  type="button"
+                  className={styles.footerBtn}
+                  aria-pressed={props.flightDock}
+                  aria-label="Flight data"
+                  onClick={() => props.onFlightDockChange(!props.flightDock)}
+                  data-testid="tracker-menu-flight-dock"
+                >
+                  <GaugeGlyph size={22} />
+                </button>
+              </div>
             ) : null}
             {props.controls.location ? (
-              <button
-                type="button"
-                className={styles.footerBtn}
-                onClick={props.onOpenLocation}
-                aria-label="Your location"
-                aria-pressed={props.locationEnabled}
-                data-testid="tracker-menu-location"
-              >
-                <LocationGlyph size={22} />
-              </button>
+              <div className={styles.footerItem}>
+                <span className={styles.footerLabel} aria-hidden>{copy.tracker.location}</span>
+                <button
+                  type="button"
+                  className={styles.footerBtn}
+                  onClick={props.onOpenLocation}
+                  aria-label="Your location"
+                  aria-pressed={props.locationEnabled}
+                  data-testid="tracker-menu-location"
+                >
+                  <LocationGlyph size={22} />
+                </button>
+              </div>
             ) : null}
             {showFlightHistory ? (
-              <button
-                type="button"
-                className={styles.footerBtn}
-                aria-pressed={props.flightHistory}
-                aria-label="Flight history"
-                onClick={() => props.onFlightHistoryChange(!props.flightHistory)}
-                data-testid="tracker-menu-flight-history"
-              >
-                <HistoryGlyph size={22} />
-              </button>
+              <div className={styles.footerItem}>
+                <span className={styles.footerLabel} aria-hidden>{copy.tracker.history}</span>
+                <button
+                  type="button"
+                  className={styles.footerBtn}
+                  aria-pressed={props.flightHistory}
+                  aria-label="Flight history"
+                  onClick={() => props.onFlightHistoryChange(!props.flightHistory)}
+                  data-testid="tracker-menu-flight-history"
+                >
+                  <HistoryGlyph size={22} />
+                </button>
+              </div>
             ) : null}
             {showFlightHistory && props.flightHistory ? (
-              <button
-                type="button"
-                className={styles.footerBtn}
-                aria-pressed={props.timeLabels}
-                aria-label="Time labels"
-                onClick={() => props.onTimeLabelsChange(!props.timeLabels)}
-                data-testid="tracker-menu-time-labels"
-              >
-                <TimesGlyph size={22} />
-              </button>
-            ) : null}
-            {showFlightHistory && props.flightHistory ? (
-              <button
-                type="button"
-                className={styles.footerBtn}
-                aria-label="Fit history"
-                onClick={props.onFitHistory}
-                data-testid="tracker-menu-fit-history"
-              >
-                <FitGlyph size={22} />
-              </button>
+              <div className={styles.footerItem}>
+                <span className={styles.footerLabel} aria-hidden>{copy.tracker.times}</span>
+                <button
+                  type="button"
+                  className={styles.footerBtn}
+                  aria-pressed={props.timeLabels}
+                  aria-label="Time labels"
+                  onClick={() => props.onTimeLabelsChange(!props.timeLabels)}
+                  data-testid="tracker-menu-time-labels"
+                >
+                  <TimesGlyph size={22} />
+                </button>
+              </div>
             ) : null}
             {showLandmarks ? (
-              <button
-                type="button"
-                className={styles.footerBtn}
-                aria-pressed={props.landmarks === true}
-                aria-label={copy.tracker.landmarks}
-                onClick={() => props.onLandmarksChange?.(props.landmarks !== true)}
-                data-testid="tracker-menu-landmarks"
-              >
-                <LandmarkGlyph size={22} />
-              </button>
+              <div className={styles.footerItem}>
+                <span className={styles.footerLabel} aria-hidden>{copy.tracker.landmarks}</span>
+                <button
+                  type="button"
+                  className={styles.footerBtn}
+                  aria-pressed={props.landmarks === true}
+                  aria-label={copy.tracker.landmarks}
+                  onClick={() => props.onLandmarksChange?.(props.landmarks !== true)}
+                  data-testid="tracker-menu-landmarks"
+                >
+                  <LandmarkGlyph size={22} />
+                </button>
+              </div>
             ) : null}
-            <button type="button" className={styles.close} onClick={props.onClose} aria-label="Close menu">
-              <CloseGlyph size={22} />
-            </button>
+            <div className={styles.footerItem}>
+              <span className={styles.footerLabel} aria-hidden>{copy.tracker.close}</span>
+              <button type="button" className={styles.close} onClick={props.onClose} aria-label="Close menu">
+                <CloseGlyph size={22} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
