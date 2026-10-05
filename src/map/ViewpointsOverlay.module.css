@@ -1,5 +1,5 @@
-/* docs/site.md section 8.5. The live tracker's landmarks: a 28 px round
-   badge on the glass recipe holding the landmark's icon or an 8 px accent
+/* docs/site.md section 8.5. The live tracker's viewpoints: a 28 px round
+   badge on the glass recipe holding the viewpoint's icon or an 8 px accent
    dot, centred on the point, the name beside it in the map's label style
    (small sans text with a halo in the panel colour), and the popover
    above the badge. Below the name zoom the element carries
@@ -10,7 +10,7 @@
    and below the tracker menu. Both take the tracker's chrome tokens from
    the map section. */
 
-.landmark {
+.viewpoint {
   position: absolute;
   width: 0;
   height: 0;
@@ -78,10 +78,10 @@
   pointer-events: none;
 }
 
-.landmark[data-name="hidden"] .label { display: none; }
+.viewpoint[data-name="hidden"] .label { display: none; }
 @media (hover: hover) {
-  .landmark[data-name="hidden"] .badge:hover + .label,
-  .landmark[data-name="hidden"] .badge:focus-visible + .label {
+  .viewpoint[data-name="hidden"] .badge:hover + .label,
+  .viewpoint[data-name="hidden"] .badge:focus-visible + .label {
     display: block;
     left: 0;
     top: -20px;

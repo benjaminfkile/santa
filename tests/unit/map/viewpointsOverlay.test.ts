@@ -1,5 +1,5 @@
-// docs/site.md section 8.5. The landmarks overlay builds one element per
-// landmark, a badge holding the icon when one is set and the accent dot
+// docs/site.md section 8.5. The viewpoints overlay builds one element per
+// viewpoint, a badge holding the icon when one is set and the accent dot
 // otherwise, with the name beside it; a click on a badge opens the popover
 // with the name, the description, and the directions link in the popover
 // host, placed from the point's container pixel and moved on every draw;
@@ -9,15 +9,15 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
-  createLandmarksOverlay,
-  LANDMARKS_MIN_ZOOM,
+  createViewpointsOverlay,
+  VIEWPOINTS_MIN_ZOOM,
   NAME_MIN_ZOOM,
   POPOVER_GAP,
   type MountIcon,
-} from "../../../src/map/landmarksOverlay";
+} from "../../../src/map/viewpointsOverlay";
 import { FakeMap, FakeOverlayView, fakeLibs, installFakeGoogle, resetFakeGoogle } from "./fakeGoogle";
 
-const landmarks = [
+const viewpoints = [
   {
     name: "Town Hall",
     lat: 40,
@@ -37,10 +37,10 @@ function setup() {
   });
   const host = document.createElement("div");
   document.body.appendChild(host);
-  const overlay = createLandmarksOverlay(
+  const overlay = createViewpointsOverlay(
     fakeLibs(),
     map as unknown as google.maps.Map,
-    landmarks,
+    viewpoints,
     mountIcon,
     host,
   );
@@ -55,19 +55,19 @@ beforeEach(() => {
   document.body.innerHTML = "";
 });
 
-describe("createLandmarksOverlay", () => {
-  it("builds one element per landmark: the icon badge when set, the dot otherwise, and the name", async () => {
+describe("createViewpointsOverlay", () => {
+  it("builds one element per viewpoint: the icon badge when set, the dot otherwise, and the name", async () => {
     const { overlay, pane, mountIcon } = setup();
     overlay.update({ visible: true, zoom: 12 });
     await Promise.resolve();
-    const elements = pane.querySelectorAll('[data-testid="tracker-landmark"]');
+    const elements = pane.querySelectorAll('[data-testid="tracker-viewpoint"]');
     expect(elements).toHaveLength(2);
     expect(mountIcon).toHaveBeenCalledTimes(1);
     expect(mountIcon.mock.calls[0][1]).toEqual({ source: "library", id: "star" });
-    expect(elements[0].querySelector('[data-testid="tracker-landmark-icon"]')).not.toBeNull();
-    expect(elements[0].querySelector('[data-testid="tracker-landmark-dot"]')).toBeNull();
-    expect(elements[1].querySelector('[data-testid="tracker-landmark-icon"]')).toBeNull();
-    expect(elements[1].querySelector('[data-testid="tracker-landmark-dot"]')).not.toBeNull();
+    expect(elements[0].querySelector('[data-testid="tracker-viewpoint-icon"]')).not.toBeNull();
+    expect(elements[0].querySelector('[data-testid="tracker-viewpoint-dot"]')).toBeNull();
+    expect(elements[1].querySelector('[data-testid="tracker-viewpoint-icon"]')).toBeNull();
+    expect(elements[1].querySelector('[data-testid="tracker-viewpoint-dot"]')).not.toBeNull();
     expect(elements[0].textContent).toContain("Town Hall");
     expect(elements[1].textContent).toContain("Fire Station");
     expect((elements[0] as HTMLElement).style.left).toBe("-1050px");
@@ -79,24 +79,24 @@ describe("createLandmarksOverlay", () => {
     const { overlay, pane, host } = setup();
     overlay.update({ visible: true, zoom: 12 });
     await Promise.resolve();
-    const badge = pane.querySelector<HTMLButtonElement>('[data-testid="tracker-landmark-badge"]')!;
+    const badge = pane.querySelector<HTMLButtonElement>('[data-testid="tracker-viewpoint-badge"]')!;
     badge.click();
-    expect(pane.querySelector('[data-testid="tracker-landmark-popover"]')).toBeNull();
-    const popover = host.querySelector('[data-testid="tracker-landmark-popover"]')!;
+    expect(pane.querySelector('[data-testid="tracker-viewpoint-popover"]')).toBeNull();
+    const popover = host.querySelector('[data-testid="tracker-viewpoint-popover"]')!;
     expect(popover).not.toBeNull();
     expect(popover.parentElement).toBe(host);
     expect(badge.getAttribute("aria-expanded")).toBe("true");
     expect(popover.querySelector("h3")?.textContent).toBe("Town Hall");
     expect(popover.textContent).toContain("Where the parade starts.");
-    const link = popover.querySelector<HTMLAnchorElement>('[data-testid="tracker-landmark-directions"]')!;
+    const link = popover.querySelector<HTMLAnchorElement>('[data-testid="tracker-viewpoint-directions"]')!;
     expect(link.textContent).toBe("Get directions");
     expect(link.getAttribute("href")).toBe("https://www.google.com/maps/dir/?api=1&destination=40,-105");
     expect(link.getAttribute("target")).toBe("_blank");
 
     // One popover at a time: the second badge replaces the first.
-    const second = pane.querySelectorAll<HTMLButtonElement>('[data-testid="tracker-landmark-badge"]')[1];
+    const second = pane.querySelectorAll<HTMLButtonElement>('[data-testid="tracker-viewpoint-badge"]')[1];
     second.click();
-    const popovers = host.querySelectorAll('[data-testid="tracker-landmark-popover"]');
+    const popovers = host.querySelectorAll('[data-testid="tracker-viewpoint-popover"]');
     expect(popovers).toHaveLength(1);
     expect(popovers[0].querySelector("h3")?.textContent).toBe("Fire Station");
     expect(badge.getAttribute("aria-expanded")).toBe("false");
@@ -106,8 +106,8 @@ describe("createLandmarksOverlay", () => {
     const { overlay, pane, host } = setup();
     overlay.update({ visible: true, zoom: 12 });
     await Promise.resolve();
-    pane.querySelector<HTMLButtonElement>('[data-testid="tracker-landmark-badge"]')!.click();
-    const popover = host.querySelector<HTMLElement>('[data-testid="tracker-landmark-popover"]')!;
+    pane.querySelector<HTMLButtonElement>('[data-testid="tracker-viewpoint-badge"]')!.click();
+    const popover = host.querySelector<HTMLElement>('[data-testid="tracker-viewpoint-popover"]')!;
     expect(popover.style.left).toBe("-1050px");
     expect(popover.style.top).toBe(`${400 - POPOVER_GAP}px`);
 
@@ -122,20 +122,20 @@ describe("createLandmarksOverlay", () => {
     const { overlay, pane, host } = setup();
     overlay.update({ visible: true, zoom: 12 });
     await Promise.resolve();
-    const badge = pane.querySelector<HTMLButtonElement>('[data-testid="tracker-landmark-badge"]')!;
+    const badge = pane.querySelector<HTMLButtonElement>('[data-testid="tracker-viewpoint-badge"]')!;
     badge.click();
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
-    expect(host.querySelector('[data-testid="tracker-landmark-popover"]')).toBeNull();
+    expect(host.querySelector('[data-testid="tracker-viewpoint-popover"]')).toBeNull();
     expect(document.activeElement).toBe(badge);
 
     badge.click();
-    const popover = host.querySelector('[data-testid="tracker-landmark-popover"]')!;
+    const popover = host.querySelector('[data-testid="tracker-viewpoint-popover"]')!;
     popover.dispatchEvent(new Event("pointerdown", { bubbles: true }));
-    expect(host.querySelector('[data-testid="tracker-landmark-popover"]')).not.toBeNull();
+    expect(host.querySelector('[data-testid="tracker-viewpoint-popover"]')).not.toBeNull();
     badge.dispatchEvent(new Event("pointerdown", { bubbles: true }));
-    expect(host.querySelector('[data-testid="tracker-landmark-popover"]')).not.toBeNull();
+    expect(host.querySelector('[data-testid="tracker-viewpoint-popover"]')).not.toBeNull();
     document.body.dispatchEvent(new Event("pointerdown", { bubbles: true }));
-    expect(host.querySelector('[data-testid="tracker-landmark-popover"]')).toBeNull();
+    expect(host.querySelector('[data-testid="tracker-viewpoint-popover"]')).toBeNull();
   });
 
   it("keeps the popover inside the host's width when both have a width", async () => {
@@ -143,12 +143,12 @@ describe("createLandmarksOverlay", () => {
     Object.defineProperty(host, "clientWidth", { configurable: true, value: 400 });
     overlay.update({ visible: true, zoom: 12 });
     await Promise.resolve();
-    const badge = pane.querySelector<HTMLButtonElement>('[data-testid="tracker-landmark-badge"]')!;
+    const badge = pane.querySelector<HTMLButtonElement>('[data-testid="tracker-viewpoint-badge"]')!;
     const original = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth");
     Object.defineProperty(HTMLElement.prototype, "offsetWidth", { configurable: true, get: () => 200 });
     try {
       badge.click();
-      const popover = host.querySelector<HTMLElement>('[data-testid="tracker-landmark-popover"]')!;
+      const popover = host.querySelector<HTMLElement>('[data-testid="tracker-viewpoint-popover"]')!;
       // The point is far left of the host: the popover's left edge stops 8 px in.
       expect(popover.style.left).toBe("108px");
       FakeOverlayView.shift = { x: 2000, y: 0 };
@@ -161,14 +161,14 @@ describe("createLandmarksOverlay", () => {
 
   it("leaves the map below zoom 10 and while the toggle is off", async () => {
     const { overlay, pane } = setup();
-    overlay.update({ visible: true, zoom: LANDMARKS_MIN_ZOOM - 1 });
+    overlay.update({ visible: true, zoom: VIEWPOINTS_MIN_ZOOM - 1 });
     await Promise.resolve();
-    expect(pane.querySelectorAll('[data-testid="tracker-landmark"]')).toHaveLength(0);
-    overlay.update({ visible: true, zoom: LANDMARKS_MIN_ZOOM });
+    expect(pane.querySelectorAll('[data-testid="tracker-viewpoint"]')).toHaveLength(0);
+    overlay.update({ visible: true, zoom: VIEWPOINTS_MIN_ZOOM });
     await Promise.resolve();
-    expect(pane.querySelectorAll('[data-testid="tracker-landmark"]')).toHaveLength(2);
+    expect(pane.querySelectorAll('[data-testid="tracker-viewpoint"]')).toHaveLength(2);
     overlay.update({ visible: false, zoom: 14 });
-    expect(pane.querySelectorAll('[data-testid="tracker-landmark"]')).toHaveLength(0);
+    expect(pane.querySelectorAll('[data-testid="tracker-viewpoint"]')).toHaveLength(0);
   });
 
   it("marks the names hidden below zoom 12 and shown from 12, and still opens the popover at 11", async () => {
@@ -176,11 +176,11 @@ describe("createLandmarksOverlay", () => {
     expect(NAME_MIN_ZOOM).toBe(12);
     overlay.update({ visible: true, zoom: 11 });
     await Promise.resolve();
-    const elements = Array.from(pane.querySelectorAll('[data-testid="tracker-landmark"]'));
+    const elements = Array.from(pane.querySelectorAll('[data-testid="tracker-viewpoint"]'));
     expect(elements).toHaveLength(2);
     for (const e of elements) expect(e.getAttribute("data-name")).toBe("hidden");
-    pane.querySelector<HTMLButtonElement>('[data-testid="tracker-landmark-badge"]')!.click();
-    expect(host.querySelector('[data-testid="tracker-landmark-popover"] h3')?.textContent).toBe("Town Hall");
+    pane.querySelector<HTMLButtonElement>('[data-testid="tracker-viewpoint-badge"]')!.click();
+    expect(host.querySelector('[data-testid="tracker-viewpoint-popover"] h3')?.textContent).toBe("Town Hall");
     overlay.update({ visible: true, zoom: 12 });
     for (const e of elements) expect(e.getAttribute("data-name")).toBe("shown");
   });
@@ -189,11 +189,11 @@ describe("createLandmarksOverlay", () => {
     const { overlay, pane, host, unmount } = setup();
     overlay.update({ visible: true, zoom: 12 });
     await Promise.resolve();
-    pane.querySelector<HTMLButtonElement>('[data-testid="tracker-landmark-badge"]')!.click();
-    expect(host.querySelector('[data-testid="tracker-landmark-popover"]')).not.toBeNull();
+    pane.querySelector<HTMLButtonElement>('[data-testid="tracker-viewpoint-badge"]')!.click();
+    expect(host.querySelector('[data-testid="tracker-viewpoint-popover"]')).not.toBeNull();
     overlay.destroy();
-    expect(host.querySelector('[data-testid="tracker-landmark-popover"]')).toBeNull();
-    expect(pane.querySelectorAll('[data-testid="tracker-landmark"]')).toHaveLength(0);
+    expect(host.querySelector('[data-testid="tracker-viewpoint-popover"]')).toBeNull();
+    expect(pane.querySelectorAll('[data-testid="tracker-viewpoint"]')).toHaveLength(0);
     expect(unmount).toHaveBeenCalledTimes(1);
   });
 });

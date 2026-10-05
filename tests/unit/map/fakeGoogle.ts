@@ -1,7 +1,7 @@
 // A small stand-in for the Google Maps libraries: enough of `Map`,
 // `OverlayView`, `Polyline`, `Marker`, and the global `google.maps`
 // namespace for the real MapView, controller, Santa marker, flight history
-// overlay, landmarks overlay, and user location to run under jsdom. Every object records
+// overlay, viewpoints overlay, and user location to run under jsdom. Every object records
 // whether it is attached so a test can see what is still on a map.
 
 type Listener = (...args: unknown[]) => void;

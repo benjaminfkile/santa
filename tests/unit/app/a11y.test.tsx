@@ -1,4 +1,4 @@
-// docs/site.md section 20. Landmarks, skip link, menu button semantics,
+// docs/site.md section 20. The header, nav, and main regions, the skip link, menu button semantics,
 // live regions on Loading and ReloadPrompt: verified with axe against the
 // rendered DOM. jsdom is enough for axe's structural checks. Colour and
 // touch-target rules from section 20 are not covered here (colour needs
@@ -54,7 +54,7 @@ describe("accessibility (axe)", () => {
     expect(results.violations, reportViolations(results)).toHaveLength(0);
   });
 
-  it("App shell renders the required landmarks and the skip link (section 20)", () => {
+  it("App shell renders the header, nav, and main regions and the skip link (section 20)", () => {
     const { container } = render(<App />);
     const skip = container.querySelector('a[href="#main"]');
     expect(skip).not.toBeNull();

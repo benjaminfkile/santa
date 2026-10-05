@@ -14,7 +14,7 @@ const controller = {
   setMapType: vi.fn(),
   setToggles: vi.fn(),
   setFlightHistory: vi.fn(),
-  setLandmarks: vi.fn(),
+  setViewpoints: vi.fn(),
   setPois: vi.fn(),
   setLiveFix: vi.fn(),
   follow: vi.fn(),

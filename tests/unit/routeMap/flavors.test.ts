@@ -24,7 +24,7 @@ describe("route map flavors", () => {
     }
   });
 
-  it("takes the dark POI and landmark colours from the night tracker theme", () => {
+  it("takes the dark POI and viewpoint colours from the night tracker theme", () => {
     const night = JSON.stringify(nightTheme).toLowerCase();
     const values = [
       ...Object.values(POI_COLOURS.dark),

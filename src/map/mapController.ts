@@ -1,5 +1,5 @@
 // docs/site.md section 8.3. Owns the `google.maps.Map`, the Santa marker,
-// the flight history overlay, the landmarks overlay, the user location, and
+// the flight history overlay, the viewpoints overlay, the user location, and
 // the map styles (the theme's with the section's place filter on top).
 // Subscribes to the store once and moves the marker imperatively; React
 // never re-renders on a fix. `destroy` removes the map listeners and pending timers, and every
@@ -14,11 +14,11 @@ import {
   type HistoryPoint,
 } from "./flightHistoryOverlay";
 import {
-  createLandmarksOverlay,
-  type LandmarksOverlay,
+  createViewpointsOverlay,
+  type ViewpointsOverlay,
   type MountIcon,
-  type TrackerLandmark,
-} from "./landmarksOverlay";
+  type TrackerViewpoint,
+} from "./viewpointsOverlay";
 import { createUserLocation, type UserLocation, type UserLocationState } from "./userLocation";
 import type { MapsLibs } from "./loadMaps";
 import type { MapTheme } from "./themes";
@@ -41,7 +41,7 @@ export type MapController = {
   setPois(filter: PoiFilter): void;
   setMapType(type: "terrain" | "roadmap"): void;
   setFlightHistory(points: HistoryPoint[] | null): void;
-  setLandmarks(list: readonly TrackerLandmark[]): void;
+  setViewpoints(list: readonly TrackerViewpoint[]): void;
   setToggles(t: { flightHistory?: boolean; timeLabels?: boolean; landmarks?: boolean }): void;
   setLiveFix(
     state: LiveState,
@@ -86,14 +86,14 @@ export function createMapController(
   });
 
   let overlay: FlightHistoryOverlay = createFlightHistoryOverlay(libs, map, null);
-  // The landmark popover lives in the map view wrapper, whose box is the
+  // The viewpoint popover lives in the map view wrapper, whose box is the
   // canvas's box, so the map's container pixels are its pixels.
   const popoverHost = container.parentElement ?? container;
-  let landmarks: LandmarksOverlay = createLandmarksOverlay(libs, map, [], null, popoverHost);
-  let landmarksKey = landmarksSignature([]);
+  let viewpoints: ViewpointsOverlay = createViewpointsOverlay(libs, map, [], null, popoverHost);
+  let viewpointsKey = viewpointsSignature([]);
 
-  function updateLandmarks(): void {
-    landmarks.update({ visible: toggles.landmarks, zoom: map.getZoom() ?? opts.defaultZoom });
+  function updateViewpoints(): void {
+    viewpoints.update({ visible: toggles.landmarks, zoom: map.getZoom() ?? opts.defaultZoom });
   }
 
   // A build that fails part way detaches what it already put on the map
@@ -127,7 +127,7 @@ export function createMapController(
 
   listeners.push(map.addListener("zoom_changed", () => {
     if (disposed) return;
-    updateLandmarks();
+    updateViewpoints();
     if (zoomDebounce !== null) window.clearTimeout(zoomDebounce);
     zoomDebounce = window.setTimeout(() => {
       zoomDebounce = null;
@@ -163,16 +163,16 @@ export function createMapController(
       overlay = createFlightHistoryOverlay(libs, map, points);
       overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
     },
-    setLandmarks(list) {
+    setViewpoints(list) {
       if (disposed) return;
       // Rebuilding drops an open popover and makes every badge blink, so a
       // list that says the same thing as the one on the map is a no-op.
-      const key = landmarksSignature(list);
-      if (key === landmarksKey) return;
-      landmarksKey = key;
-      landmarks.destroy();
-      landmarks = createLandmarksOverlay(libs, map, list, opts.mountIcon ?? null, popoverHost);
-      updateLandmarks();
+      const key = viewpointsSignature(list);
+      if (key === viewpointsKey) return;
+      viewpointsKey = key;
+      viewpoints.destroy();
+      viewpoints = createViewpointsOverlay(libs, map, list, opts.mountIcon ?? null, popoverHost);
+      updateViewpoints();
     },
     setToggles(t) {
       if (disposed) return;
@@ -182,7 +182,7 @@ export function createMapController(
         landmarks: t.landmarks ?? toggles.landmarks,
       };
       overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
-      updateLandmarks();
+      updateViewpoints();
     },
     setLiveFix(state, pos, seqChanged) {
       if (disposed) return;
@@ -225,7 +225,7 @@ export function createMapController(
       for (const l of listeners) l.remove();
       listeners.length = 0;
       overlay.destroy();
-      landmarks.destroy();
+      viewpoints.destroy();
       santa?.destroy();
       santa = null;
       userLoc?.destroy();
@@ -238,9 +238,9 @@ export function createMapController(
   };
 }
 
-// What the overlay draws from a landmark: its place, its name, its icon, and
+// What the overlay draws from a viewpoint: its place, its name, its icon, and
 // its description. Two lists with the same signature draw the same badges.
-function landmarksSignature(list: readonly TrackerLandmark[]): string {
+function viewpointsSignature(list: readonly TrackerViewpoint[]): string {
   return JSON.stringify(
     list.map((l) => [l.lat, l.lng, l.name, l.icon ?? null, l.description ?? null]),
   );

@@ -2,10 +2,10 @@
 // poster: without options the style is the site map's own, `routeColor`
 // recolours the route, `arrows` adds the arrowhead layer over the SDF
 // image, `timeLabels` adds one labelled dot per entry, `details` drops
-// the basemap's landmark, place name, and road name label layers,
-// `poiKinds` filters the POI layers to the listed kinds, and `landmarks`
+// the basemap's viewpoint, place name, and road name label layers,
+// `poiKinds` filters the POI layers to the listed kinds, and `viewpoints`
 // adds one smaller labelled dot per entry (no dot and a wider label
-// offset for a `badge` landmark), `routeWidthScale` scales the route
+// offset for a `badge` viewpoint), `routeWidthScale` scales the route
 // line's width, and the label sizes follow the zoom times `labelScale`.
 // The poster's label options (POSTER_LABELS) keep its overlay exactly
 // as the fixture records it.
@@ -23,9 +23,9 @@ import {
   ARROWS_LAYER,
   BASEMAP_SOURCE,
   DETAIL_LAYERS,
-  LANDMARKS_LAYER,
-  LANDMARKS_SOURCE,
-  LANDMARK_DOTS_LAYER,
+  VIEWPOINTS_LAYER,
+  VIEWPOINTS_SOURCE,
+  VIEWPOINT_DOTS_LAYER,
   ROUTE_ARROW_ICON,
   ROUTE_SOURCE,
   TIME_LABELS_LAYER,
@@ -95,11 +95,11 @@ describe("route map style options", () => {
         expect(JSON.stringify(allDetails)).toBe(JSON.stringify(plain));
         const noExtras = buildStyle(appearance, BASE, PATH, MARKS, terrain, {
           poiKinds: undefined,
-          landmarks: undefined,
+          viewpoints: undefined,
         });
         expect(JSON.stringify(noExtras)).toBe(JSON.stringify(plain));
-        const noLandmarks = buildStyle(appearance, BASE, PATH, MARKS, terrain, { landmarks: [] });
-        expect(JSON.stringify(noLandmarks)).toBe(JSON.stringify(plain));
+        const noViewpoints = buildStyle(appearance, BASE, PATH, MARKS, terrain, { viewpoints: [] });
+        expect(JSON.stringify(noViewpoints)).toBe(JSON.stringify(plain));
         const unitWidth = buildStyle(appearance, BASE, PATH, MARKS, terrain, { routeWidthScale: 1 });
         expect(JSON.stringify(unitWidth)).toBe(JSON.stringify(plain));
         for (const routeWidthScale of [undefined, 0, -1]) {
@@ -378,16 +378,16 @@ describe("route map style options", () => {
     }
   });
 
-  it("adds one smaller labelled dot per landmark in the halo pair, apart from the time labels", () => {
-    const landmarks = [
+  it("adds one smaller labelled dot per viewpoint in the halo pair, apart from the time labels", () => {
+    const viewpoints = [
       { lat: 46.87, lng: -114.0, label: "Missoula Airport" },
       { lat: 46.9, lng: -113.95, label: "Mount Jumbo" },
     ];
     const timeLabels = [{ lat: 1, lng: 2, label: "15m" }];
     for (const appearance of ["light", "dark"] as Appearance[]) {
       const palette = ROUTE_PALETTES[appearance];
-      const style = buildStyle(appearance, BASE, PATH, MARKS, false, { landmarks, timeLabels });
-      const source = style.sources[LANDMARKS_SOURCE] as {
+      const style = buildStyle(appearance, BASE, PATH, MARKS, false, { viewpoints, timeLabels });
+      const source = style.sources[VIEWPOINTS_SOURCE] as {
         type: string;
         data: { features: { properties: { label: string }; geometry: unknown }[] };
       };
@@ -398,9 +398,9 @@ describe("route map style options", () => {
       ]);
       expect(source.data.features[1].geometry).toEqual({ type: "Point", coordinates: [-113.95, 46.9] });
 
-      const labels = layer<SymbolLayerSpecification>(style, LANDMARKS_LAYER);
+      const labels = layer<SymbolLayerSpecification>(style, VIEWPOINTS_LAYER);
       const timeLayer = layer<SymbolLayerSpecification>(style, TIME_LABELS_LAYER);
-      expect(labels.source).toBe(LANDMARKS_SOURCE);
+      expect(labels.source).toBe(VIEWPOINTS_SOURCE);
       expect(labels.minzoom).toBeUndefined();
       expect(labels.layout?.["text-field"]).toEqual(["get", "label"]);
       expect(labels.layout?.["text-font"]).toEqual(["Noto Sans Medium"]);
@@ -411,52 +411,52 @@ describe("route map style options", () => {
       expect(labels.paint?.["text-halo-color"]).toBe(palette.labelHalo);
       expect(labels.paint?.["text-halo-width"]).toBe(timeLayer.paint?.["text-halo-width"]);
 
-      const dots = layer<CircleLayerSpecification>(style, LANDMARK_DOTS_LAYER);
+      const dots = layer<CircleLayerSpecification>(style, VIEWPOINT_DOTS_LAYER);
       const timeDots = layer<CircleLayerSpecification>(style, TIME_LABEL_DOTS_LAYER);
-      expect(dots.source).toBe(LANDMARKS_SOURCE);
+      expect(dots.source).toBe(VIEWPOINTS_SOURCE);
       expect(dots.minzoom).toBeUndefined();
       expect(dots.paint?.["circle-color"]).toBe(palette.landmarkFill);
       expect(dots.paint?.["circle-stroke-color"]).toBe(palette.landmarkStroke);
       expect(dots.paint).not.toEqual(timeDots.paint);
 
       const ids = style.layers.map((l) => l.id);
-      expect(ids.indexOf(LANDMARK_DOTS_LAYER)).toBeGreaterThan(ids.indexOf("route-ends"));
-      expect(ids.indexOf(LANDMARKS_LAYER)).toBe(ids.indexOf(LANDMARK_DOTS_LAYER) + 1);
-      expect(ids.indexOf(TIME_LABEL_DOTS_LAYER)).toBeGreaterThan(ids.indexOf(LANDMARKS_LAYER));
-      expect(ids.filter((id) => id === LANDMARKS_LAYER)).toHaveLength(1);
+      expect(ids.indexOf(VIEWPOINT_DOTS_LAYER)).toBeGreaterThan(ids.indexOf("route-ends"));
+      expect(ids.indexOf(VIEWPOINTS_LAYER)).toBe(ids.indexOf(VIEWPOINT_DOTS_LAYER) + 1);
+      expect(ids.indexOf(TIME_LABEL_DOTS_LAYER)).toBeGreaterThan(ids.indexOf(VIEWPOINTS_LAYER));
+      expect(ids.filter((id) => id === VIEWPOINTS_LAYER)).toHaveLength(1);
     }
     expect(ROUTE_PALETTES.light).toMatchObject({ landmarkFill: "#5f6368", landmarkStroke: "#ffffff" });
     expect(ROUTE_PALETTES.dark).toMatchObject({ landmarkFill: "#8fa3c2", landmarkStroke: "#0f1a2b" });
   });
 
-  it("leaves the dot off a badge landmark and sets its label further out", () => {
-    const plainLandmarks = [
+  it("leaves the dot off a badge viewpoint and sets its label further out", () => {
+    const plainViewpoints = [
       { lat: 46.87, lng: -114.0, label: "Missoula Airport" },
       { lat: 46.9, lng: -113.95, label: "Mount Jumbo" },
     ];
-    const plain = buildStyle("light", BASE, PATH, MARKS, false, { landmarks: plainLandmarks });
-    expect(layer<CircleLayerSpecification>(plain, LANDMARK_DOTS_LAYER).filter).toBeUndefined();
-    expect(layer<SymbolLayerSpecification>(plain, LANDMARKS_LAYER).layout?.["text-radial-offset"]).toBe(0.5);
+    const plain = buildStyle("light", BASE, PATH, MARKS, false, { viewpoints: plainViewpoints });
+    expect(layer<CircleLayerSpecification>(plain, VIEWPOINT_DOTS_LAYER).filter).toBeUndefined();
+    expect(layer<SymbolLayerSpecification>(plain, VIEWPOINTS_LAYER).layout?.["text-radial-offset"]).toBe(0.5);
     const explicit = buildStyle("light", BASE, PATH, MARKS, false, {
-      landmarks: plainLandmarks.map((l) => ({ ...l, badge: false })),
+      viewpoints: plainViewpoints.map((l) => ({ ...l, badge: false })),
     });
     expect(JSON.stringify(explicit)).toBe(JSON.stringify(plain));
 
     const style = buildStyle("light", BASE, PATH, MARKS, false, {
-      landmarks: [plainLandmarks[0], { ...plainLandmarks[1], badge: true }],
+      viewpoints: [plainViewpoints[0], { ...plainViewpoints[1], badge: true }],
     });
-    const source = style.sources[LANDMARKS_SOURCE] as {
+    const source = style.sources[VIEWPOINTS_SOURCE] as {
       data: { features: { properties: Record<string, unknown> }[] };
     };
     expect(source.data.features.map((f) => f.properties)).toEqual([
       { label: "Missoula Airport" },
       { label: "Mount Jumbo", badge: true },
     ]);
-    expect(layer<CircleLayerSpecification>(style, LANDMARK_DOTS_LAYER).filter).toEqual([
+    expect(layer<CircleLayerSpecification>(style, VIEWPOINT_DOTS_LAYER).filter).toEqual([
       "!",
       ["has", "badge"],
     ]);
-    expect(layer<SymbolLayerSpecification>(style, LANDMARKS_LAYER).layout?.["text-radial-offset"]).toEqual([
+    expect(layer<SymbolLayerSpecification>(style, VIEWPOINTS_LAYER).layout?.["text-radial-offset"]).toEqual([
       "case",
       ["has", "badge"],
       1.3,
@@ -466,39 +466,39 @@ describe("route map style options", () => {
 
   describe("label sizes", () => {
     const timeLabels = [{ lat: 1, lng: 2, label: "15m" }];
-    const landmarks = [{ lat: 3, lng: 4, label: "Caras Park" }];
+    const viewpoints = [{ lat: 3, lng: 4, label: "Caras Park" }];
     const sizes = (options: Parameters<typeof buildStyle>[5] = {}) => {
-      const style = buildStyle("light", BASE, PATH, MARKS, false, { timeLabels, landmarks, ...options });
+      const style = buildStyle("light", BASE, PATH, MARKS, false, { timeLabels, viewpoints, ...options });
       return {
         timeText: layer<SymbolLayerSpecification>(style, TIME_LABELS_LAYER).layout?.["text-size"],
-        landmarkText: layer<SymbolLayerSpecification>(style, LANDMARKS_LAYER).layout?.["text-size"],
+        viewpointText: layer<SymbolLayerSpecification>(style, VIEWPOINTS_LAYER).layout?.["text-size"],
         timeDot: layer<CircleLayerSpecification>(style, TIME_LABEL_DOTS_LAYER).paint?.["circle-radius"],
-        landmarkDot: layer<CircleLayerSpecification>(style, LANDMARK_DOTS_LAYER).paint?.["circle-radius"],
+        viewpointDot: layer<CircleLayerSpecification>(style, VIEWPOINT_DOTS_LAYER).paint?.["circle-radius"],
       };
     };
 
     it("interpolates both text sizes over the zoom, times the label scale", () => {
       for (const scale of [0.8, 1, 1.3]) {
-        const { timeText, landmarkText } = sizes({ labelScale: scale });
+        const { timeText, viewpointText } = sizes({ labelScale: scale });
         expect(timeText).toEqual(textSize(20, scale));
-        expect(landmarkText).toEqual(textSize(14, scale));
+        expect(viewpointText).toEqual(textSize(14, scale));
       }
       expect(sizes().timeText).toEqual(textSize(20, 1));
-      expect(sizes().landmarkText).toEqual(textSize(14, 1));
+      expect(sizes().viewpointText).toEqual(textSize(14, 1));
     });
 
     it("reads a label scale at or under 0 as 1", () => {
-      const unit = JSON.stringify(buildStyle("dark", BASE, PATH, MARKS, true, { timeLabels, landmarks }));
+      const unit = JSON.stringify(buildStyle("dark", BASE, PATH, MARKS, true, { timeLabels, viewpoints }));
       for (const labelScale of [undefined, 0, -1, 1]) {
         expect(
-          JSON.stringify(buildStyle("dark", BASE, PATH, MARKS, true, { timeLabels, landmarks, labelScale })),
+          JSON.stringify(buildStyle("dark", BASE, PATH, MARKS, true, { timeLabels, viewpoints, labelScale })),
         ).toBe(unit);
       }
     });
 
     it("shows about two thirds of the full size at a fitted valley view and the full size at street level, with no jump", () => {
-      const { timeText, landmarkText, timeDot, landmarkDot } = sizes();
-      for (const [text, full] of [[timeText, 20], [landmarkText, 14]] as const) {
+      const { timeText, viewpointText, timeDot, viewpointDot } = sizes();
+      for (const [text, full] of [[timeText, 20], [viewpointText, 14]] as const) {
         expect(sizeAt(text, 11)).toBeCloseTo((full * 2) / 3, 2);
         expect(sizeAt(text, 12)).toBeCloseTo((full * 2) / 3, 2);
         expect(sizeAt(text, 16)).toBe(full);
@@ -508,9 +508,9 @@ describe("route map style options", () => {
       // today's radius times the curve's factor at each zoom.
       expect(sizeAt(timeDot, 8)).toBeCloseTo((3.5 * 2) / 3, 2);
       expect(sizeAt(timeDot, 16)).toBe(4.5);
-      expect(sizeAt(landmarkDot, 8)).toBeCloseTo((2.5 * 2) / 3, 2);
-      expect(sizeAt(landmarkDot, 16)).toBe(3.5);
-      for (const size of [timeText, landmarkText, timeDot, landmarkDot]) {
+      expect(sizeAt(viewpointDot, 8)).toBeCloseTo((2.5 * 2) / 3, 2);
+      expect(sizeAt(viewpointDot, 16)).toBe(3.5);
+      for (const size of [timeText, viewpointText, timeDot, viewpointDot]) {
         let previous = sizeAt(size, 6);
         for (let zoom = 6; zoom <= 20; zoom += 0.25) {
           const now = sizeAt(size, zoom);
@@ -526,26 +526,26 @@ describe("route map style options", () => {
       const large = sizes({ labelScale: 1.3 });
       for (const zoom of [8, 11, 12, 14, 16]) {
         expect(sizeAt(large.timeDot, zoom)).toBeCloseTo(sizeAt(unit.timeDot, zoom) * 1.3, 2);
-        expect(sizeAt(large.landmarkDot, zoom)).toBeCloseTo(sizeAt(unit.landmarkDot, zoom) * 1.3, 2);
+        expect(sizeAt(large.viewpointDot, zoom)).toBeCloseTo(sizeAt(unit.viewpointDot, zoom) * 1.3, 2);
       }
     });
 
     it("keeps the full sizes at every zoom on the flat curve", () => {
       const flat = sizes({ labelCurve: "flat" });
       expect(flat.timeText).toBe(20);
-      expect(flat.landmarkText).toBe(14);
+      expect(flat.viewpointText).toBe(14);
       expect(flat.timeDot).toEqual(["interpolate", ["linear"], ["zoom"], 8, 3.5, 14, 4.5]);
-      expect(flat.landmarkDot).toEqual(["interpolate", ["linear"], ["zoom"], 8, 2.5, 14, 3.5]);
+      expect(flat.viewpointDot).toEqual(["interpolate", ["linear"], ["zoom"], 8, 2.5, 14, 3.5]);
       const scaled = sizes({ labelCurve: "flat", labelScale: 1.3 });
       expect(scaled.timeText).toBe(26);
-      expect(scaled.landmarkText).toBe(18.2);
+      expect(scaled.viewpointText).toBe(18.2);
     });
   });
 
   it("sets labelMinZoom as the minzoom of the two text layers only", () => {
     const options = {
       timeLabels: [{ lat: 1, lng: 2, label: "5 min" }],
-      landmarks: [{ lat: 2, lng: 3, label: "Town Hall" }],
+      viewpoints: [{ lat: 2, lng: 3, label: "Town Hall" }],
     };
     const ids = ["route-landmarks", "route-time-labels", "route-landmark-dots", "route-time-label-dots"];
     const plain = buildStyle("light", BASE, PATH, MARKS, false, options);
@@ -574,7 +574,7 @@ describe("route map style options", () => {
         { lat: 46.875, lng: -114.015, label: "15m" },
         { lat: 46.885, lng: -114.005, label: "30m" },
       ],
-      landmarks: [
+      viewpoints: [
         { lat: 46.872, lng: -114.012, label: "Caras Park" },
         { lat: 46.882, lng: -114.008, label: "Depot", badge: true },
       ],
@@ -593,7 +593,7 @@ describe("route map style options", () => {
       const unlabelled = buildStyle(appearance, BASE, path, marks, false, {
         ...poster,
         timeLabels: [],
-        landmarks: [],
+        viewpoints: [],
       });
       expect(style.layers.slice(0, style.layers.length - overlay.length)).toEqual(
         unlabelled.layers.slice(0, unlabelled.layers.findIndex((l) => l.id === "route-line")),

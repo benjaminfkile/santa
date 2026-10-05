@@ -134,17 +134,17 @@
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
 }
 
-/* The landmark markers: an icon on a 28 px round badge in the panel colour
+/* The viewpoint markers: an icon on a 28 px round badge in the panel colour
    with a line ring and a shadow, readable over the light and the dark
-   basemap alike, and, for a landmark with a description, a button over
+   basemap alike, and, for a viewpoint with a description, a button over
    the badge or over the style's dot (a 24 px transparent target). */
-.routeLandmark {
+.routeViewpoint {
   pointer-events: none;
 }
 /* The name as a tooltip above the marker, on a hover device while the
    marker is hovered and the map host carries data-names="hidden" (the
    names are below their zoom). */
-.routeLandmarkTip {
+.routeViewpointTip {
   display: none;
   position: absolute;
   left: 50%;
@@ -164,10 +164,10 @@
   pointer-events: none;
 }
 @media (hover: hover) {
-  .routeLandmarkBadge { pointer-events: auto; }
-  [data-names="hidden"] .routeLandmark:hover .routeLandmarkTip { display: block; }
+  .routeViewpointBadge { pointer-events: auto; }
+  [data-names="hidden"] .routeViewpoint:hover .routeViewpointTip { display: block; }
 }
-.routeLandmarkBadge {
+.routeViewpointBadge {
   display: grid;
   place-items: center;
   width: 28px;
@@ -179,13 +179,13 @@
   border: 1.5px solid var(--line);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
 }
-.routeLandmarkBadge img,
-.routeLandmarkBadge svg {
+.routeViewpointBadge img,
+.routeViewpointBadge svg {
   display: block;
   max-width: 18px;
   max-height: 18px;
 }
-.routeLandmarkButton {
+.routeViewpointButton {
   appearance: none;
   display: block;
   padding: 0;
@@ -197,26 +197,26 @@
   cursor: pointer;
   pointer-events: auto;
 }
-.routeLandmarkButton:hover .routeLandmarkBadge,
-.routeLandmarkButton[aria-expanded="true"] .routeLandmarkBadge {
+.routeViewpointButton:hover .routeViewpointBadge,
+.routeViewpointButton[aria-expanded="true"] .routeViewpointBadge {
   border-color: var(--accent);
 }
-.routeLandmarkButton:focus-visible {
+.routeViewpointButton:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-.routeLandmarkDotButton {
+.routeViewpointDotButton {
   width: 24px;
   height: 24px;
 }
-.routeLandmarkDotButton[aria-expanded="true"] {
+.routeViewpointDotButton[aria-expanded="true"] {
   box-shadow: 0 0 0 2px var(--accent);
 }
 
-/* The landmark popover: a panel at the top left of the map frame, clear
+/* The viewpoint popover: a panel at the top left of the map frame, clear
    of the control stack, with the name, a close button, and the
    description. */
-.routeLandmarkPopover {
+.routeViewpointPopover {
   position: absolute;
   top: var(--space-3);
   left: var(--space-3);
@@ -232,13 +232,13 @@
   color: var(--text);
   box-shadow: 0 4px 16px rgb(0 0 0 / 0.3);
 }
-.routeLandmarkPopoverHead {
+.routeViewpointPopoverHead {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-2);
 }
-.routeLandmarkPopoverTitle {
+.routeViewpointPopoverTitle {
   margin: 0;
   padding-top: var(--space-2);
   font-family: var(--font-display);
@@ -247,11 +247,11 @@
   color: var(--text-bright);
   overflow-wrap: anywhere;
 }
-.routeLandmarkPopoverText {
+.routeViewpointPopoverText {
   margin: var(--space-2) 0 0;
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
-.routeLandmarkDirections {
+.routeViewpointDirections {
   margin-top: var(--space-3);
 }

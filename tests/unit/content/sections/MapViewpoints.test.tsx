@@ -1,8 +1,8 @@
-// docs/site.md sections 7.6 and 8.5. The live tracker's landmarks: with
-// landmarks in the site settings the tracker menu shows the Landmarks
+// docs/site.md sections 7.6 and 8.5. The live tracker's viewpoints: with
+// viewpoints in the site settings the tracker menu shows the Viewpoints
 // button, pressed by default, and the controller receives the toggle;
 // pressing it sends false; with `controls.landmarks` false the button is
-// absent and the controller still draws the landmarks.
+// absent and the controller still draws the viewpoints.
 
 import { useEffect } from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -16,7 +16,7 @@ const controller = {
   setMapType: vi.fn(),
   setToggles: vi.fn(),
   setFlightHistory: vi.fn(),
-  setLandmarks: vi.fn(),
+  setViewpoints: vi.fn(),
   setPois: vi.fn(),
   setLiveFix: vi.fn(),
   follow: vi.fn(),
@@ -90,35 +90,35 @@ afterEach(() => {
   resetTrackerTogglesForTests();
 });
 
-describe("Map section landmarks", () => {
-  it("with controls.landmarks absent the Landmarks button shows pressed and the controller receives landmarks: true", async () => {
+describe("Map section viewpoints", () => {
+  it("with controls.landmarks absent the Viewpoints button shows pressed and the controller receives landmarks: true", async () => {
     const utils = await renderMap({});
-    const button = utils.getByTestId("tracker-menu-landmarks");
+    const button = utils.getByTestId("tracker-menu-viewpoints");
     expect(button.getAttribute("aria-label")).toBe("Viewpoints");
     expect(button.getAttribute("aria-pressed")).toBe("true");
     expect(lastToggles().landmarks).toBe(true);
-    const list = controller.setLandmarks.mock.calls[controller.setLandmarks.mock.calls.length - 1][0] as {
+    const list = controller.setViewpoints.mock.calls[controller.setViewpoints.mock.calls.length - 1][0] as {
       name: string;
       icon?: unknown;
     }[];
     expect(list.map((l) => l.name)).toEqual(["Town Hall", "Fire Station"]);
-    // An icon that does not resolve leaves the landmark on the dot.
+    // An icon that does not resolve leaves the viewpoint on the dot.
     expect(list[0].icon).toBeNull();
   });
 
-  it("pressing the Landmarks button sends landmarks: false", async () => {
+  it("pressing the Viewpoints button sends landmarks: false", async () => {
     const utils = await renderMap({});
-    fireEvent.click(utils.getByTestId("tracker-menu-landmarks"));
-    expect(utils.getByTestId("tracker-menu-landmarks").getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(utils.getByTestId("tracker-menu-viewpoints"));
+    expect(utils.getByTestId("tracker-menu-viewpoints").getAttribute("aria-pressed")).toBe("false");
     expect(lastToggles().landmarks).toBe(false);
   });
 
   it("with controls.landmarks false the button is absent and the overlay still draws", async () => {
     const utils = await renderMap({ controls: { landmarks: false } });
     expect(utils.getByTestId("tracker-menu")).toBeTruthy();
-    expect(utils.queryByTestId("tracker-menu-landmarks")).toBeNull();
+    expect(utils.queryByTestId("tracker-menu-viewpoints")).toBeNull();
     expect(lastToggles().landmarks).toBe(true);
-    const calls = controller.setLandmarks.mock.calls;
+    const calls = controller.setViewpoints.mock.calls;
     expect((calls[calls.length - 1][0] as unknown[]).length).toBe(2);
   });
 });

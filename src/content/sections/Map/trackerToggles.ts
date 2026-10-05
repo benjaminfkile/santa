@@ -1,5 +1,5 @@
 // docs/site.md section 8.5. The viewer's tracker choices for the page load:
-// flight history, time labels, landmarks, the flight gauge shown or
+// flight history, time labels, viewpoints, the flight gauge shown or
 // hidden, and the cookie tally open or collapsed. The map section seeds its toggles from
 // here and falls back to its defaults only until the viewer has chosen, so
 // a remount of the section (a live flip, the unavailable panel's retry)

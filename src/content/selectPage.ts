@@ -23,7 +23,7 @@ const ROLE_BY_STATUS: Record<number, PageRole> = {
 // store replaces `snapshot` only when a new one is fetched, while the state
 // object itself changes on every live poll, so without this the selector
 // handed every reader a fresh bundle each poll and anything keyed on it (the
-// landmarks overlay above all) was torn down and rebuilt once a second.
+// viewpoints overlay above all) was torn down and rebuilt once a second.
 let bundleCache: { snapshot: SiteStore["snapshot"]; bundle: ContentBundle } | null = null;
 
 export function selectBundle(s: SiteStore): ContentBundle | null {

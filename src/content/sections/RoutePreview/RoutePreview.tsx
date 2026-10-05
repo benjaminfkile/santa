@@ -16,16 +16,16 @@
 // which speaks the start.
 // The display, the controls, and the POI kinds come from
 // `event.routeMapConfig` (routeMapConfig), each value falling back to its
-// default; a null config draws the default map. The landmarks come from
-// the site settings' `landmarks`; absent means none. The map carries a
+// default; a null config draws the default map. The viewpoints come from
+// the site settings' `viewpoints`; absent means none. The map carries a
 // fullscreen button and a terrain toggle unless `controls.fullscreen` or
 // `controls.terrain` is false. `pois.kinds` reaches the style as its POI
-// kind list and the landmarks as its landmarks, each name the label;
-// without them the style gets neither. A landmark with an icon or a
-// description also gets a marker and its popover (RouteLandmarks). The
+// kind list and the viewpoints as its viewpoints, each name the label;
+// without them the style gets neither. A viewpoint with an icon or a
+// description also gets a marker and its popover (RouteViewpoints). The
 // names and the time label text start at LABEL_MIN_ZOOM (`labelMinZoom`);
-// a click on a landmark's style dot opens the popover of the landmark at
-// that point, so every landmark opens its popover. The
+// a click on a viewpoint's style dot opens the popover of the viewpoint at
+// that point, so every viewpoint opens its popover. The
 // five display values (time label interval, arrows, arrow size, route
 // width, label size) reach the style as the label interval, `arrows`,
 // `arrowScale`, `routeWidthScale`, and `labelScale`. The section data
@@ -40,8 +40,8 @@ import { useStore } from "../../../store/useStore";
 import { routeMapPath, type LatLng } from "./routeMapPath";
 import { routeMapTimeline, routeTimeLabels, type TimelineLabel } from "./routeTimelineData";
 import { createRouteStartMarker } from "./routeStartMarker";
-import { useRouteLandmarks } from "./RouteLandmarks";
-import { resolveLandmarks, resolveRouteMapConfig } from "./routeMapConfig";
+import { useRouteViewpoints } from "./RouteViewpoints";
+import { resolveViewpoints, resolveRouteMapConfig } from "./routeMapConfig";
 import { useRouteMapFullscreen } from "./useRouteMapFullscreen";
 import { TakeoverPortal } from "../../../lib/TakeoverPortal";
 import { env } from "../../../config/env";
@@ -54,14 +54,14 @@ type RouteMapProps = {
   marks?: readonly LatLng[];
   timeLabels?: readonly TimelineLabel[];
   poiKinds?: readonly string[];
-  landmarks?: readonly { lat: number; lng: number; label: string; badge?: boolean }[];
-  landmarkMarkers?: readonly { lat: number; lng: number; element: HTMLElement }[];
+  viewpoints?: readonly { lat: number; lng: number; label: string; badge?: boolean }[];
+  viewpointMarkers?: readonly { lat: number; lng: number; element: HTMLElement }[];
   arrows?: boolean;
   arrowScale?: number;
   routeWidthScale?: number;
   labelScale?: number;
   labelMinZoom?: number;
-  onLandmarkClick?: (point: { lat: number; lng: number }) => void;
+  onViewpointClick?: (point: { lat: number; lng: number }) => void;
   startElement?: HTMLElement;
   ariaLabel?: string;
   fullscreenControl?: boolean;
@@ -72,7 +72,7 @@ type RouteMapProps = {
   onFail: () => void;
 };
 
-// The least zoom at which the landmark names and the time label text show.
+// The least zoom at which the viewpoint names and the time label text show.
 const LABEL_MIN_ZOOM = 12;
 
 const NO_MARKS: readonly LatLng[] = [];
@@ -125,16 +125,16 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
     () => (timeline === null ? NO_LABELS : routeTimeLabels(timeline, labelEvery)),
     [timeline, labelEvery],
   );
-  const settingsLandmarks = content?.settings?.landmarks;
-  const landmarkList = useMemo(() => resolveLandmarks(settingsLandmarks), [settingsLandmarks]);
-  const landmarks = useRouteLandmarks(landmarkList, bundle);
-  const { openIndex } = landmarks;
-  const onLandmarkClick = useCallback(
+  const settingsViewpoints = content?.settings?.landmarks;
+  const viewpointList = useMemo(() => resolveViewpoints(settingsViewpoints), [settingsViewpoints]);
+  const viewpoints = useRouteViewpoints(viewpointList, bundle);
+  const { openIndex } = viewpoints;
+  const onViewpointClick = useCallback(
     (point: { lat: number; lng: number }) => {
-      const index = landmarkList.findIndex((l) => l.lat === point.lat && l.lng === point.lng);
+      const index = viewpointList.findIndex((l) => l.lat === point.lat && l.lng === point.lng);
       if (index >= 0) openIndex(index);
     },
-    [landmarkList, openIndex],
+    [viewpointList, openIndex],
   );
   const [startElement] = useState(createRouteStartMarker);
 
@@ -177,14 +177,14 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
                   marks={marks}
                   timeLabels={timeLabels}
                   poiKinds={config.poiKinds}
-                  landmarks={landmarks.styleLandmarks}
-                  landmarkMarkers={landmarks.markers}
+                  viewpoints={viewpoints.styleViewpoints}
+                  viewpointMarkers={viewpoints.markers}
                   arrows={display.arrows}
                   arrowScale={display.arrowScale}
                   routeWidthScale={display.routeWidthScale}
                   labelScale={display.labelScale}
                   labelMinZoom={LABEL_MIN_ZOOM}
-                  onLandmarkClick={onLandmarkClick}
+                  onViewpointClick={onViewpointClick}
                   startElement={startElement}
                   ariaLabel={copy.map.routeMap.region}
                   fullscreenControl={config.controls.fullscreen}
@@ -195,11 +195,11 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
                   onFail={onMapFail}
                 />
               </Suspense>
-              {landmarks.popover}
+              {viewpoints.popover}
             </div>
           </div>
         </TakeoverPortal>
-        {landmarks.portals}
+        {viewpoints.portals}
       </div>
     );
   }

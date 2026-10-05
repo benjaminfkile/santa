@@ -45,20 +45,20 @@
 //    slategray instead of the ground colour. An empty list leaves the
 //    style without POI layers, and `details.landmarks` false still drops
 //    them.
-//  - `landmarks` adds, for each entry, a dot in the palette's landmark
+//  - `viewpoints` adds, for each entry, a dot in the palette's viewpoint
 //    fill and ring (`route-landmark-dots`) and its `label` beside it
 //    (`route-landmarks`) in Noto Sans Medium smaller than the time labels,
 //    with the same halo pair. Both are drawn at every zoom. MapLibre's
 //    collision handling places the labels; the time label layers sit
-//    above them, so a time label wins a collision with a landmark. A
-//    landmark with `badge` set has no dot (the map owner stands its own
-//    marker there) and its label sits LANDMARK_BADGE_OFFSET ems out, clear
-//    of that marker. Without a `badge` landmark both layers are exactly
+//    above them, so a time label wins a collision with a viewpoint. A
+//    viewpoint with `badge` set has no dot (the map owner stands its own
+//    marker there) and its label sits VIEWPOINT_BADGE_OFFSET ems out, clear
+//    of that marker. Without a `badge` viewpoint both layers are exactly
 //    as above.
 // `startCircle` false leaves the start circle out of the end markers
 // source, so only the end circle is drawn (the map owner stands its own
 // start marker there); absent or true keeps both circles.
-// The time label and landmark sizes (the text and the dots under it)
+// The time label and viewpoint sizes (the text and the dots under it)
 // follow the zoom: LABEL_CURVE multiplies each by LABEL_MIN_FACTOR at
 // LABEL_ZOOM_LOW and under (the fitted view of a whole route) and grows
 // it linearly to its full size at LABEL_ZOOM_HIGH and over (street
@@ -102,13 +102,13 @@ export const ARROWS_LAYER = "route-arrows";
 export const TIME_LABELS_SOURCE = "route-time-labels";
 export const TIME_LABEL_DOTS_LAYER = "route-time-label-dots";
 export const TIME_LABELS_LAYER = "route-time-labels";
-export const LANDMARKS_SOURCE = "route-landmarks";
-export const LANDMARK_DOTS_LAYER = "route-landmark-dots";
-export const LANDMARKS_LAYER = "route-landmarks";
+export const VIEWPOINTS_SOURCE = "route-landmarks";
+export const VIEWPOINT_DOTS_LAYER = "route-landmark-dots";
+export const VIEWPOINTS_LAYER = "route-landmarks";
 export const ROUTE_ARROW_ICON = "route-arrow";
 
 export type TimeLabel = { lat: number; lng: number; label: string };
-export type Landmark = { lat: number; lng: number; label: string; badge?: boolean };
+export type Viewpoint = { lat: number; lng: number; label: string; badge?: boolean };
 
 export type StyleOptions = {
   routeColor?: string;
@@ -118,7 +118,7 @@ export type StyleOptions = {
   timeLabels?: readonly TimeLabel[];
   details?: StyleDetails;
   poiKinds?: readonly string[];
-  landmarks?: readonly Landmark[];
+  viewpoints?: readonly Viewpoint[];
   labelScale?: number;
   labelCurve?: LabelCurve;
   startCircle?: boolean;
@@ -220,17 +220,17 @@ const ARROW_ICON_SIZE = 1;
 const ROUTE_WIDTH_Z8 = 3;
 const ROUTE_WIDTH_Z14 = 5;
 
-// The landmark label's offset in ems: beside the dot, and beside the owner's
-// marker (a badge about 28 px across) for a `badge` landmark.
-const LANDMARK_OFFSET = 0.5;
-const LANDMARK_BADGE_OFFSET = 1.3;
+// The viewpoint label's offset in ems: beside the dot, and beside the owner's
+// marker (a badge about 28 px across) for a `badge` viewpoint.
+const VIEWPOINT_OFFSET = 0.5;
+const VIEWPOINT_BADGE_OFFSET = 1.3;
 
 // The full label sizes: the text in pixels, and the dot radius in pixels
 // as [zoom, radius] stops.
 const TIME_LABEL_TEXT_SIZE = 20;
-const LANDMARK_TEXT_SIZE = 14;
+const VIEWPOINT_TEXT_SIZE = 14;
 const TIME_LABEL_DOT_STOPS: readonly Stop[] = [[8, 3.5], [14, 4.5]];
-const LANDMARK_DOT_STOPS: readonly Stop[] = [[8, 2.5], [14, 3.5]];
+const VIEWPOINT_DOT_STOPS: readonly Stop[] = [[8, 2.5], [14, 3.5]];
 
 // The zoom curve of the label sizes: LABEL_MIN_FACTOR of the full size at
 // LABEL_ZOOM_LOW and under, the full size at LABEL_ZOOM_HIGH and over, and
@@ -422,7 +422,7 @@ export function buildStyle(
   const palette = ROUTE_PALETTES[appearance];
   const routeColor = options.routeColor ?? palette.routeColor;
   const timeLabels = options.timeLabels ?? [];
-  const landmarks = options.landmarks ?? [];
+  const viewpoints = options.viewpoints ?? [];
   const arrowScale =
     options.arrowScale !== undefined && options.arrowScale > 0 ? options.arrowScale : 1;
   const routeWidthScale =
@@ -434,7 +434,7 @@ export function buildStyle(
   const labelCurve: LabelCurve = options.labelCurve === "flat" ? "flat" : "zoom";
   const textMinZoom =
     options.labelMinZoom !== undefined ? { minzoom: options.labelMinZoom } : {};
-  const badges = landmarks.some((landmark) => landmark.badge === true);
+  const badges = viewpoints.some((viewpoint) => viewpoint.badge === true);
   const coordinates = path.map((p) => [p.lng, p.lat]);
   const ends = path.length === 0
     ? []
@@ -505,13 +505,13 @@ export function buildStyle(
             },
           }
         : {}),
-      ...(landmarks.length > 0
+      ...(viewpoints.length > 0
         ? {
-            [LANDMARKS_SOURCE]: {
+            [VIEWPOINTS_SOURCE]: {
               type: "geojson" as const,
               data: {
                 type: "FeatureCollection" as const,
-                features: landmarks.map(({ lat, lng, label, badge }) => ({
+                features: viewpoints.map(({ lat, lng, label, badge }) => ({
                   type: "Feature" as const,
                   properties: badge === true ? { label, badge: true } : { label },
                   geometry: { type: "Point" as const, coordinates: [lng, lat] },
@@ -587,33 +587,33 @@ export function buildStyle(
           "circle-stroke-width": 2,
         },
       },
-      ...(landmarks.length > 0
+      ...(viewpoints.length > 0
         ? [
             {
-              id: LANDMARK_DOTS_LAYER,
+              id: VIEWPOINT_DOTS_LAYER,
               type: "circle" as const,
-              source: LANDMARKS_SOURCE,
+              source: VIEWPOINTS_SOURCE,
               ...(badges ? { filter: ["!", ["has", "badge"]] } : {}),
               paint: {
-                "circle-radius": labelSize(LANDMARK_DOT_STOPS, labelScale, labelCurve),
+                "circle-radius": labelSize(VIEWPOINT_DOT_STOPS, labelScale, labelCurve),
                 "circle-color": palette.landmarkFill,
                 "circle-stroke-color": palette.landmarkStroke,
                 "circle-stroke-width": 1,
               },
             } satisfies LayerSpecification,
             {
-              id: LANDMARKS_LAYER,
+              id: VIEWPOINTS_LAYER,
               type: "symbol" as const,
               ...textMinZoom,
-              source: LANDMARKS_SOURCE,
+              source: VIEWPOINTS_SOURCE,
               layout: {
                 "text-field": ["get", "label"],
                 "text-font": ["Noto Sans Medium"],
-                "text-size": labelSize([[0, LANDMARK_TEXT_SIZE]], labelScale, labelCurve),
+                "text-size": labelSize([[0, VIEWPOINT_TEXT_SIZE]], labelScale, labelCurve),
                 "text-variable-anchor": ["left", "right", "top", "bottom"],
                 "text-radial-offset": badges
-                  ? ["case", ["has", "badge"], LANDMARK_BADGE_OFFSET, LANDMARK_OFFSET]
-                  : LANDMARK_OFFSET,
+                  ? ["case", ["has", "badge"], VIEWPOINT_BADGE_OFFSET, VIEWPOINT_OFFSET]
+                  : VIEWPOINT_OFFSET,
                 "text-justify": "auto",
               },
               paint: {
