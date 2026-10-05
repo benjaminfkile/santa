@@ -19,7 +19,7 @@ export function SpeedDial({ speedMph }: SpeedDialProps) {
       unit="mph"
       label={copy.map.flightDock.speed}
       fraction={known ? speedMph / SPEED_SCALE_MPH : null}
-      testId="flight-dock-speed"
+      testId="flight-gauge-speed"
     />
   );
 }

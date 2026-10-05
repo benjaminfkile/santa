@@ -20,7 +20,7 @@ export function AirborneRing({ elapsedMs }: AirborneRingProps) {
       unit=""
       label={copy.map.flightDock.airborne}
       fraction={known ? elapsedMs / AIRBORNE_SCALE_MS : null}
-      testId="flight-dock-airborne"
+      testId="flight-gauge-airborne"
     />
   );
 }

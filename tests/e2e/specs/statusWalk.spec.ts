@@ -135,11 +135,16 @@ test("status walk", async ({ page }) => {
       console.warn("hub did not reach connected within 20 s; polling only");
     }
 
-    // The flight data dock (site.md 7.6) starts open above 760 px, so the
-    // desktop page shows the dock; a phone-width page in the same context
-    // starts with the dock collapsed to its handle pill above the sponsor tile.
-    await expect(page.locator('[data-testid="flight-dock"]')).toBeVisible();
-    await expect(page.locator('[data-testid="flight-dock-handle"]')).toHaveCount(0);
+    // The flight gauge (site.md 7.6) is one dial above the sponsor tile, the
+    // same at every width, opening on speed. The arrows step through the
+    // instruments and wrap.
+    const gauge = page.locator('[data-testid="flight-gauge"]');
+    await expect(gauge).toBeVisible();
+    await expect(gauge).toHaveAttribute("data-slot", "speed");
+    await page.locator('[data-testid="flight-gauge-next"]').click();
+    await expect(gauge).toHaveAttribute("data-slot", "altitude");
+    await page.locator('[data-testid="flight-gauge-prev"]').click();
+    await expect(gauge).toHaveAttribute("data-slot", "speed");
     const phone = await page.context().newPage();
     try {
       await phone.addLocatorHandler(phone.getByRole("button", { name: /i understand/i }), async (button) => {
@@ -148,9 +153,10 @@ test("status walk", async ({ page }) => {
       await phone.setViewportSize({ width: 390, height: 844 });
       await goto(phone, "/");
       await expect(phone.locator('[data-testid="map"]')).toBeVisible({ timeout: POLL_PLUS * 3 });
-      await expect(phone.locator('[data-testid="flight-dock-handle"]')).toBeVisible();
-      await expect(phone.locator('[data-testid="flight-dock-handle"]')).toHaveAttribute("aria-expanded", "false");
+      // Nothing spans the bottom of the map at phone width any more.
+      await expect(phone.locator('[data-testid="flight-gauge"]')).toBeVisible();
       await expect(phone.locator('[data-testid="flight-dock"]')).toHaveCount(0);
+      await expect(phone.locator('[data-testid="flight-dock-handle"]')).toHaveCount(0);
     } finally {
       await phone.close();
     }

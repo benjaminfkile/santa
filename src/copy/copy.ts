@@ -65,6 +65,10 @@ export const copy = {
       // The pill shows only the value; this is its accessible prefix.
       label: "Distance to Santa",
     },
+    flightGauge: {
+      previous: "Previous instrument",
+      next: "Next instrument",
+    },
     flightDock: {
       title: "Flight data",
       speed: "Speed",

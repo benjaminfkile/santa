@@ -21,7 +21,7 @@ export function AltitudeDial({ altitudeFt }: AltitudeDialProps) {
       unit="ft"
       label={copy.map.flightDock.altitude}
       fraction={known ? altitudeFt / ALTITUDE_SCALE_FT : null}
-      testId="flight-dock-altitude"
+      testId="flight-gauge-altitude"
     />
   );
 }

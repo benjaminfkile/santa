@@ -1,24 +1,32 @@
-/* docs/site.md section 7.6. The round gauge in the flight data dock: a
-   60 px dial (54 px at 760 px and below) with the track arc, the value
-   arc, the value and unit in the middle, and the label under the dial.
-   Every colour is a chrome token the map section rebinds. */
+/* docs/site.md section 7.6. The round dial inside the flight gauge: 100 px
+   (92 px at 760 px and below) with the track arc and its three marks, the
+   value arc, the value and unit in the middle, and the label under the
+   dial. Every colour is a chrome token the map section rebinds. */
 
 .gauge {
   display: block;
   flex: none;
-  width: 60px;
-  height: 60px;
+  width: 100px;
+  height: 100px;
   overflow: visible;
   user-select: none;
 }
 @media (max-width: 760px) {
-  .gauge { width: 54px; height: 54px; }
+  .gauge { width: 92px; height: 92px; }
 }
 
 .track {
   fill: none;
   stroke: var(--panel-2);
   stroke-width: 5;
+  stroke-linecap: round;
+}
+
+/* The marks at the arc's start, top and end. */
+.tick {
+  fill: none;
+  stroke: var(--text-dim);
+  stroke-width: 1;
   stroke-linecap: round;
 }
 
@@ -34,10 +42,12 @@
   .arc { transition: none; }
 }
 
+/* The size comes from `valueFontSize` on the element, so a long reading
+   fits the 54 unit box. */
 .value {
   font-family: var(--font-mono);
-  font-size: 12px;
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
   fill: var(--text-bright);
 }
 .unit {
@@ -47,7 +57,7 @@
 }
 .label {
   font-family: var(--font-mono);
-  font-size: 6.5px;
+  font-size: 7px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   fill: var(--text-dim);

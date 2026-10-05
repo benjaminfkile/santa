@@ -149,7 +149,6 @@ describe("Map section class coverage", () => {
       ".messagesPill",
       ".messagesDot",
       ".messagesShake",
-      ".lifted",
       ".liveIndicator",
       ".mapControls",
       ".menuButton",

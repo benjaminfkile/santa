@@ -41,9 +41,9 @@ export function HeadingCompass({ headingDeg }: HeadingCompassProps) {
       unit=""
       label={copy.map.flightDock.heading}
       track={false}
-      testId="flight-dock-heading"
+      testId="flight-gauge-heading"
     >
-      <circle className={styles.rose} cx={C} cy={C} r={R} data-testid="flight-dock-heading-rose" />
+      <circle className={styles.rose} cx={C} cy={C} r={R} data-testid="flight-gauge-heading-rose" />
       <g className={styles.ticks}>
         <line x1={C} y1={C - R} x2={C} y2={C - R + TICK_LENGTH} />
         <line x1={C + R} y1={C} x2={C + R - TICK_LENGTH} y2={C} />
@@ -54,7 +54,7 @@ export function HeadingCompass({ headingDeg }: HeadingCompassProps) {
         N
       </text>
       {heading !== null ? (
-        <g data-testid="flight-dock-heading-needle">
+        <g data-testid="flight-gauge-heading-needle">
           <line
             className={styles.needle}
             x1={C}
@@ -62,7 +62,7 @@ export function HeadingCompass({ headingDeg }: HeadingCompassProps) {
             x2={C}
             y2={C - NEEDLE_LENGTH}
             style={{ transform: `rotate(${needle.rotation}deg)` }}
-            data-testid="flight-dock-heading-needle-line"
+            data-testid="flight-gauge-heading-needle-line"
           />
           <circle className={styles.hub} cx={C} cy={C} r={2} />
         </g>

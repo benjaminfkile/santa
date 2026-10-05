@@ -36,7 +36,7 @@ import { copy } from "../../../copy/copy";
 import { DistancePill, FixStatus } from "./InfoOverlays";
 import { LiveIndicator } from "./LiveIndicator";
 import { MessagesPill } from "./MessagesPill";
-import { FlightDock, FlightDockHandle } from "./FlightDock";
+import { FlightGauge } from "./FlightGauge";
 import { MapControls } from "./MapControls";
 import { RouteDisclaimer } from "./RouteDisclaimer";
 import { TrackerMenu } from "./TrackerMenu";
@@ -183,18 +183,10 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     readTrackerToggle("flightDock", true),
   );
   // Open by default above 760 px, collapsed to the handle pill below.
-  const [flightDockExpanded, setFlightDockExpandedState] = useState<boolean>(() =>
-    readTrackerToggle("flightDockExpanded", typeof window === "undefined" || window.innerWidth > 760),
-  );
   const setFlightDockOn = useCallback((v: boolean) => {
     writeTrackerToggle("flightDock", v);
     setFlightDockOnState(v);
   }, []);
-  const setFlightDockExpanded = useCallback((v: boolean) => {
-    writeTrackerToggle("flightDockExpanded", v);
-    setFlightDockExpandedState(v);
-  }, []);
-  const [dockHeight, setDockHeight] = useState<number>(0);
   const [following, setFollowing] = useState<boolean>(true);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [cookieOpen, setCookieOpen] = useState<boolean>(false);
@@ -225,8 +217,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const flightPoints = useMemo(() => normalizePoints(flightHistory as FlightHistory | null), [flightHistory]);
   const flightHistoryAvailable = flightPoints !== null;
   const flightDockAvailable = overlays.flightDock || overlays.liftoffTimer;
-  const showDock = flightDockAvailable && flightDockOn && !menuOpen;
-  const dockOpen = showDock && flightDockExpanded;
+  const showGauge = flightDockAvailable && flightDockOn && !menuOpen;
   const shownDistance =
     overlays.distanceChip &&
     userState.enabled &&
@@ -362,12 +353,11 @@ export const Map: SectionComponent = ({ data, bundle }) => {
       "--tracker-panel": c.panel,
       "--tracker-tile-fg": c.tileFg,
       "--shadow": "0 1px 4px rgba(0, 0, 0, 0.3)",
-      ...(dockOpen ? { "--dock-height": `${dockHeight}px` } : {}),
     } as CSSProperties;
-  }, [theme, dockOpen, dockHeight]);
+  }, [theme]);
 
-  const bottomLeftClass = dockOpen ? `${styles.bottomLeft} ${styles.lifted}` : styles.bottomLeft;
-  const bottomRightClass = dockOpen ? `${styles.bottomRight} ${styles.lifted}` : styles.bottomRight;
+  const bottomLeftClass = styles.bottomLeft;
+  const bottomRightClass = styles.bottomRight;
 
   const rootClass = [
     styles.mapSection,
@@ -430,11 +420,10 @@ export const Map: SectionComponent = ({ data, bundle }) => {
               </div>
 
               <div className={bottomLeftClass} data-testid="map-bottom-left">
-                {showDock && !flightDockExpanded ? (
-                  <FlightDockHandle
+                {showGauge ? (
+                  <FlightGauge
                     showInstruments={overlays.flightDock}
                     showAirborne={overlays.liftoffTimer}
-                    onExpand={() => setFlightDockExpanded(true)}
                   />
                 ) : null}
                 {overlays.sponsorCarousel ? (
@@ -463,16 +452,6 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                   onZoomOut={() => controller?.zoomBy(-1)}
                 />
               </div>
-
-              {dockOpen ? (
-                <FlightDock
-                  showInstruments={overlays.flightDock}
-                  showAirborne={overlays.liftoffTimer}
-                  distanceMetres={shownDistance}
-                  onCollapse={() => setFlightDockExpanded(false)}
-                  onHeightChange={setDockHeight}
-                />
-              ) : null}
 
               <TrackerMenu
                 open={menuOpen}

@@ -1,12 +1,11 @@
 /* docs/site.md sections 7.6 and 8. The live screen, laid out as the legacy
    tracker was: the map owns the viewport; small pills top-left (live state,
-   the fix status, the messages); the tracker menu button, the bare
-   cookie tally, and the leave-a-cookie glyph top-right; the flight data
-   handle pill and the sponsor tile bottom-left; zoom or recenter
-   bottom-right; the flight data dock (FlightDock.module.css) across the
-   bottom while open. Every overlay sits 8 px from its corner and nothing
-   on the map is taller than 44 px except the tally column, the sponsor
-   tile, and the dock. */
+   the distance, the fix status, the messages); the tracker menu button,
+   the cookie tally, and the leave-a-cookie glyph top-right; the flight
+   gauge (FlightGauge.module.css) and the sponsor tile bottom-left; zoom or
+   recenter bottom-right. Every overlay sits 8 px from its corner, and
+   nothing spans the map: the tally column, the sponsor tile and the gauge
+   are the only things taller than 44 px. */
 
 .mapSection {
   position: relative;
@@ -60,8 +59,6 @@
 .topRight { top: 8px; right: 8px; align-items: flex-end; }
 .bottomLeft { bottom: 8px; left: 8px; align-items: flex-start; }
 .bottomRight { bottom: 8px; right: 8px; align-items: flex-end; }
-/* While the dock is open both bottom stacks sit 6 px above it. */
-.lifted { bottom: calc(8px + var(--dock-height, 0px) + 6px); }
 .menuOpen .topLeft,
 .menuOpen .bottomRight { display: none; }
 

@@ -9,7 +9,7 @@ import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "@testing-library/react";
 import { arcLength, arcPath } from "../../../../src/content/sections/Map/gauges/arc";
-import { GaugeFrame, GAUGE_RADIUS } from "../../../../src/content/sections/Map/gauges/GaugeFrame";
+import { GaugeFrame, GAUGE_RADIUS, valueFontSize } from "../../../../src/content/sections/Map/gauges/GaugeFrame";
 import { SpeedDial } from "../../../../src/content/sections/Map/gauges/SpeedDial";
 import { AltitudeDial } from "../../../../src/content/sections/Map/gauges/AltitudeDial";
 import { AirborneRing } from "../../../../src/content/sections/Map/gauges/AirborneRing";
@@ -70,6 +70,31 @@ describe("arcPath", () => {
   });
 });
 
+describe("valueFontSize", () => {
+  // The value sits in a 54 unit box. A short reading gets the full size; a
+  // long one has to come down or it runs through the dial's walls.
+  it("gives a short reading the full size", () => {
+    expect(valueFontSize("58")).toBe(16);
+    expect(valueFontSize("N/A")).toBe(16);
+  });
+
+  it("steps down as the reading gets longer", () => {
+    expect(valueFontSize("4.1k")).toBe(14);
+    expect(valueFontSize("12.3k")).toBe(12);
+    expect(valueFontSize("1h 12m")).toBe(10.5);
+    expect(valueFontSize("312° NW")).toBe(9);
+  });
+
+  it("keeps the longest reading inside the 54 unit box", () => {
+    // The mono face runs about 0.6 em per character, so the width is the
+    // size times 0.6 times the length.
+    for (const reading of ["58", "4.1k", "12.3k", "1h 12m", "312° NW", "359° NW"]) {
+      const width = valueFontSize(reading) * 0.6 * reading.length;
+      expect(width).toBeLessThan(54);
+    }
+  });
+});
+
 describe("GaugeFrame", () => {
   it("renders the track, the three texts, and the aria-label, with no value arc without a fraction", () => {
     const utils = render(<GaugeFrame value="42" unit="ft" label="Test" testId="g" />);
@@ -114,8 +139,8 @@ describe("GaugeFrame", () => {
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.arc \{ transition: none; \}/);
     expect(css).toMatch(/\.track \{[^}]*stroke: var\(--panel-2\);[^}]*stroke-width: 5;[^}]*stroke-linecap: round;/);
     expect(css).toMatch(/\.arc \{[^}]*stroke: var\(--accent\);/);
-    expect(css).toMatch(/\.gauge \{[^}]*width: 60px;[^}]*height: 60px;/);
-    expect(css).toMatch(/@media \(max-width: 760px\) \{\s*\.gauge \{ width: 54px; height: 54px; \}/);
+    expect(css).toContain("width: 100px;");
+    expect(css).toContain(".gauge { width: 92px; height: 92px; }");
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgb\(/);
   });
 });
@@ -126,9 +151,9 @@ describe("SpeedDial", () => {
     const utils = render(<SpeedDial speedMph={speedMph} />);
     return {
       utils,
-      value: utils.getByTestId("flight-dock-speed-value").textContent,
-      arc: utils.queryByTestId("flight-dock-speed-arc"),
-      label: utils.getByTestId("flight-dock-speed").getAttribute("aria-label"),
+      value: utils.getByTestId("flight-gauge-speed-value").textContent,
+      arc: utils.queryByTestId("flight-gauge-speed-arc"),
+      label: utils.getByTestId("flight-gauge-speed").getAttribute("aria-label"),
     };
   }
 
@@ -137,8 +162,8 @@ describe("SpeedDial", () => {
     expect(d.value).toBe("0");
     expect(Number(d.arc!.getAttribute("stroke-dashoffset"))).toBeCloseTo(length, 6);
     expect(d.label).toBe("Speed 0 mph");
-    expect(d.utils.getByTestId("flight-dock-speed-unit").textContent).toBe("mph");
-    expect(d.utils.getByTestId("flight-dock-speed-label").textContent).toBe("SPEED");
+    expect(d.utils.getByTestId("flight-gauge-speed-unit").textContent).toBe("mph");
+    expect(d.utils.getByTestId("flight-gauge-speed-label").textContent).toBe("SPEED");
   });
 
   it("at 58 shows whole mph and fills 58 of 120", () => {
@@ -164,7 +189,7 @@ describe("SpeedDial", () => {
     const d = dial(null);
     expect(d.value).toBe("N/A");
     expect(d.arc).toBeNull();
-    expect(d.utils.getByTestId("flight-dock-speed-track")).toBeInTheDocument();
+    expect(d.utils.getByTestId("flight-gauge-speed-track")).toBeInTheDocument();
   });
 });
 
@@ -172,13 +197,13 @@ describe("AltitudeDial", () => {
   const length = arcLength(GAUGE_RADIUS);
   function dial(altitudeFt: number | null) {
     const utils = render(<AltitudeDial altitudeFt={altitudeFt} />);
-    const arc = utils.queryByTestId("flight-dock-altitude-arc");
+    const arc = utils.queryByTestId("flight-gauge-altitude-arc");
     return {
       utils,
-      value: utils.getByTestId("flight-dock-altitude-value").textContent,
+      value: utils.getByTestId("flight-gauge-altitude-value").textContent,
       arc,
       offset: arc ? Number(arc.getAttribute("stroke-dashoffset")) : null,
-      label: utils.getByTestId("flight-dock-altitude").getAttribute("aria-label"),
+      label: utils.getByTestId("flight-gauge-altitude").getAttribute("aria-label"),
     };
   }
 
@@ -187,8 +212,8 @@ describe("AltitudeDial", () => {
     expect(d.value).toBe("0");
     expect(d.offset).toBeCloseTo(length, 6);
     expect(d.label).toBe("Altitude 0 ft");
-    expect(d.utils.getByTestId("flight-dock-altitude-unit").textContent).toBe("ft");
-    expect(d.utils.getByTestId("flight-dock-altitude-label").textContent).toBe("ALTITUDE");
+    expect(d.utils.getByTestId("flight-gauge-altitude-unit").textContent).toBe("ft");
+    expect(d.utils.getByTestId("flight-gauge-altitude-label").textContent).toBe("ALTITUDE");
   });
 
   it("at 4120 reads 4.1k and fills 4120 of 10000", () => {
@@ -220,7 +245,7 @@ describe("AltitudeDial", () => {
     const d = dial(null);
     expect(d.value).toBe("N/A");
     expect(d.arc).toBeNull();
-    expect(d.utils.getByTestId("flight-dock-altitude-track")).toBeInTheDocument();
+    expect(d.utils.getByTestId("flight-gauge-altitude-track")).toBeInTheDocument();
   });
 });
 
@@ -229,13 +254,13 @@ describe("AirborneRing", () => {
   const MIN = 60 * 1000;
   function ring(elapsedMs: number | null) {
     const utils = render(<AirborneRing elapsedMs={elapsedMs} />);
-    const arc = utils.queryByTestId("flight-dock-airborne-arc");
+    const arc = utils.queryByTestId("flight-gauge-airborne-arc");
     return {
       utils,
-      value: utils.getByTestId("flight-dock-airborne-value").textContent,
+      value: utils.getByTestId("flight-gauge-airborne-value").textContent,
       arc,
       offset: arc ? Number(arc.getAttribute("stroke-dashoffset")) : null,
-      label: utils.getByTestId("flight-dock-airborne").getAttribute("aria-label"),
+      label: utils.getByTestId("flight-gauge-airborne").getAttribute("aria-label"),
     };
   }
 
@@ -244,8 +269,8 @@ describe("AirborneRing", () => {
     expect(r.value).toBe("0m");
     expect(r.offset).toBeCloseTo(length, 6);
     expect(r.label).toBe("Airborne 0m");
-    expect(r.utils.getByTestId("flight-dock-airborne-unit").textContent).toBe("");
-    expect(r.utils.getByTestId("flight-dock-airborne-label").textContent).toBe("AIRBORNE");
+    expect(r.utils.getByTestId("flight-gauge-airborne-unit").textContent).toBe("");
+    expect(r.utils.getByTestId("flight-gauge-airborne-label").textContent).toBe("AIRBORNE");
   });
 
   it("at 72 minutes shows 1h 12m and fills 0.4 of the arc", () => {
@@ -271,20 +296,20 @@ describe("AirborneRing", () => {
     const r = ring(null);
     expect(r.value).toBe("N/A");
     expect(r.arc).toBeNull();
-    expect(r.utils.getByTestId("flight-dock-airborne-track")).toBeInTheDocument();
+    expect(r.utils.getByTestId("flight-gauge-airborne-track")).toBeInTheDocument();
   });
 });
 
 describe("HeadingCompass", () => {
   function compass(headingDeg: number | null) {
     const utils = render(<HeadingCompass headingDeg={headingDeg} />);
-    const line = utils.queryByTestId("flight-dock-heading-needle-line");
+    const line = utils.queryByTestId("flight-gauge-heading-needle-line");
     return {
       utils,
-      value: utils.getByTestId("flight-dock-heading-value").textContent,
+      value: utils.getByTestId("flight-gauge-heading-value").textContent,
       line,
       rotation: line ? line.style.transform : null,
-      label: utils.getByTestId("flight-dock-heading").getAttribute("aria-label"),
+      label: utils.getByTestId("flight-gauge-heading").getAttribute("aria-label"),
     };
   }
 
@@ -296,10 +321,10 @@ describe("HeadingCompass", () => {
 
   it("draws the rose, four ticks, and the N, with no track or value arc", () => {
     const c = compass(0);
-    const svg = c.utils.getByTestId("flight-dock-heading");
-    expect(c.utils.queryByTestId("flight-dock-heading-track")).toBeNull();
-    expect(c.utils.queryByTestId("flight-dock-heading-arc")).toBeNull();
-    const rose = c.utils.getByTestId("flight-dock-heading-rose");
+    const svg = c.utils.getByTestId("flight-gauge-heading");
+    expect(c.utils.queryByTestId("flight-gauge-heading-track")).toBeNull();
+    expect(c.utils.queryByTestId("flight-gauge-heading-arc")).toBeNull();
+    const rose = c.utils.getByTestId("flight-gauge-heading-rose");
     expect(rose.getAttribute("r")).toBe(String(GAUGE_RADIUS));
     const ticks = Array.from(svg.querySelectorAll("line")).filter((l) => !l.hasAttribute("data-testid"));
     expect(ticks).toHaveLength(4);
@@ -309,8 +334,8 @@ describe("HeadingCompass", () => {
       expect(Math.hypot(dx, dy)).toBe(3);
     }
     expect(Array.from(svg.querySelectorAll("text")).some((t) => t.textContent === "N")).toBe(true);
-    expect(c.utils.getByTestId("flight-dock-heading-label").textContent).toBe("HEADING");
-    expect(c.utils.getByTestId("flight-dock-heading-unit").textContent).toBe("");
+    expect(c.utils.getByTestId("flight-gauge-heading-label").textContent).toBe("HEADING");
+    expect(c.utils.getByTestId("flight-gauge-heading-unit").textContent).toBe("");
   });
 
   it("at 0 points the needle straight up and reads 0° N", () => {
@@ -352,13 +377,13 @@ describe("HeadingCompass", () => {
     const c = compass(null);
     expect(c.value).toBe("N/A");
     expect(c.line).toBeNull();
-    expect(c.utils.queryByTestId("flight-dock-heading-needle")).toBeNull();
-    expect(c.utils.getByTestId("flight-dock-heading-rose")).toBeInTheDocument();
+    expect(c.utils.queryByTestId("flight-gauge-heading-needle")).toBeNull();
+    expect(c.utils.getByTestId("flight-gauge-heading-rose")).toBeInTheDocument();
   });
 
   it("turns the short way from 350 to 10", () => {
     const utils = render(<HeadingCompass headingDeg={350} />);
-    const line = () => utils.getByTestId("flight-dock-heading-needle-line");
+    const line = () => utils.getByTestId("flight-gauge-heading-needle-line");
     expect(line().style.transform).toBe("rotate(350deg)");
     utils.rerender(<HeadingCompass headingDeg={10} />);
     expect(line().style.transform).toBe("rotate(370deg)");
@@ -369,9 +394,9 @@ describe("HeadingCompass", () => {
   it("keeps its rotation across a null and turns the short way after", () => {
     const utils = render(<HeadingCompass headingDeg={350} />);
     utils.rerender(<HeadingCompass headingDeg={null} />);
-    expect(utils.queryByTestId("flight-dock-heading-needle-line")).toBeNull();
+    expect(utils.queryByTestId("flight-gauge-heading-needle-line")).toBeNull();
     utils.rerender(<HeadingCompass headingDeg={10} />);
-    expect(utils.getByTestId("flight-dock-heading-needle-line").style.transform).toBe("rotate(370deg)");
+    expect(utils.getByTestId("flight-gauge-heading-needle-line").style.transform).toBe("rotate(370deg)");
   });
 
   it("shortestRotation moves at most half a turn either way", () => {
