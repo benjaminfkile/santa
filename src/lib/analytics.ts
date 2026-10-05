@@ -1,5 +1,5 @@
-// docs/site.md section 16. Gated GA4 loader plus the router page-view
-// hook. Three independent conditions must all hold for analytics to run:
+// docs/site.md sections 8.1 and 16. Gated GA4 loader, the router
+// page-view hook, and the `map_error` event. Three independent conditions must all hold for analytics to run:
 //
 //   1. `settings.analyticsEnabled` is true in the bundle captured at the
 //      first snapshot. A later publish that flips it off stops page views
@@ -7,8 +7,10 @@
 //   2. Both `VITE_ANALYTICS_ID` and `VITE_ANALYTICS_ORIGINS` are set.
 //   3. `window.location.origin` is in the origins list.
 //
-// No user identifier, email, or location is ever sent; events are page
-// views only.
+// Two events are sent: `page_view` per navigation, and `map_error` when
+// the map fails to load or throws, carrying only its source ("load" or
+// "render") and the error's description. No user identifier, email, or
+// location is ever sent.
 
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -58,6 +60,37 @@ export function sendPageView(path: string): void {
     page_path: path,
     send_to: env.ANALYTICS_ID,
   });
+}
+
+export function sendEvent(name: string, params: Record<string, string>): void {
+  if (!initialized || !window.gtag || !env.ANALYTICS_ID) return;
+  window.gtag("event", name, { ...params, send_to: env.ANALYTICS_ID });
+}
+
+const REASON_MAX = 160;
+
+// One line naming an error: an Error's name when it says more than "Error",
+// then its message; a non-empty string as it is; anything else "Unknown
+// error". Trimmed to 160 characters.
+export function describeError(error: unknown): string {
+  let text = "";
+  if (error instanceof Error) {
+    const message = error.message.trim();
+    const name = error.name && error.name !== "Error" ? error.name : "";
+    text = name && message ? `${name}: ${message}` : name || message;
+  } else if (typeof error === "string") {
+    text = error.trim();
+  }
+  if (text === "") text = "Unknown error";
+  return text.length > REASON_MAX ? text.slice(0, REASON_MAX) : text;
+}
+
+export type MapErrorSource = "load" | "render";
+
+export function reportMapError(source: MapErrorSource, error: unknown): void {
+  const reason = describeError(error);
+  console.error(`map_error ${source}: ${reason}`);
+  sendEvent("map_error", { map_error_source: source, map_error_reason: reason });
 }
 
 export function usePageViews(): void {

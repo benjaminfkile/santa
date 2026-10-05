@@ -48,7 +48,7 @@ export const copy = {
   },
   map: {
     unavailable: "Map unavailable",
-    retry: "Retry",
+    retry: "Reload the page",
     trackerMenu: "Tracker menu",
     messages: {
       label: "Latest message",
@@ -132,6 +132,7 @@ export const copy = {
     wait: (secs: number) => `Wait ${secs}s`,
     cancel: "Cancel",
     close: "Close",
+    retry: "Retry",
   },
   theme: {
     picker: "Theme",

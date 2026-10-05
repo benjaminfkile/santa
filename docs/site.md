@@ -696,6 +696,8 @@ Full-viewport map with overlays, each switched by `data.overlays` and each contr
 
 **Height.** Under the live takeover the section is fixed to the viewport (`100dvh`), in a preview session too. On an ordinary page (a `map` section outside the live takeover) it sits in the page flow at `height: min(80vh, 720px)` with a `min-height` of 480 px, and `MapView`'s root fills it through its CSS class (`position: absolute; inset: 0`) with no inline geometry, so the map, its overlays, and the tracker menu render inside that box.
 
+**Map unavailable.** When the map cannot be shown (8.1) the map area, or the whole section when the error boundary caught the failure, renders the panel `MapUnavailable` (`data-testid="map-unavailable"`, `role="alert"`) over `--panel`, centred: the title "Map unavailable" (`copy.map.unavailable`), under it the reason in one line (`.unavailableReason`, `data-testid="map-unavailable-reason"`: the mono font at 0.8125rem in `--text-dim`, `max-width: 32rem`, `overflow-wrap: anywhere`), and one button, "Reload the page" (`copy.map.retry`), which reloads the page.
+
 | Component | Reads | Behaviour |
 |---|---|---|
 | `MapView` + `mapController` (`Map.tsx`) | `live.lat`, `live.lng`, `snapshot.event.flightHistory`, `content.settings.landmarks`, theme, map type, `data.defaultCenter`, `data.defaultZoom`, `data.themes`, `data.defaultTheme`, `data.flightHistoryDefault`, `data.poiFilter`, `data.poiKinds` | Section 8. The map shows one marker at Santa's current position and nothing about where he has been. `data.poiFilter` (absent or null means false) and `data.poiKinds` choose the Google-supplied places: while the filter is off the map style keeps its own places; while it is on the map shows only the kinds in `poiKinds` (unknown kinds dropped, repeats removed, absent meaning none) and the section hands the controller `setPois({ kinds })`, and `setPois(null)` while it is off. The tracker menu has no control for this; it is the editor's choice |
@@ -797,18 +799,19 @@ Data row units: speed as mph from `speedMps`, heading as degrees plus cardinal f
 
 ```ts
 // src/map/loadMaps.ts
-import { Loader } from "@googlemaps/js-api-loader";
-let loader: Loader | null = null;
-export async function loadMaps() {
-  loader ??= new Loader({ apiKey: env.GOOGLE_MAPS_KEY, version: "weekly" });
-  const [maps, marker, geometry] = await Promise.all([
-    loader.importLibrary("maps"), loader.importLibrary("marker"), loader.importLibrary("geometry"),
-  ]);
+import { importLibrary, setOptions } from "@googlemaps/js-api-loader";
+export const LOAD_TIMEOUT_MS = 15_000;
+export async function loadMaps() {   // one attempt in flight; a failure clears it
+  setOptions({ key: env.GOOGLE_MAPS_KEY, v: "weekly" });   // once
+  const libs = Promise.all([importLibrary("maps"), importLibrary("marker"), importLibrary("geometry")]);
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("Google Maps did not answer in 15 s")), LOAD_TIMEOUT_MS));
+  const [maps, marker, geometry] = await Promise.race([libs, timeout]);   // the timer is cleared on settle
   return { maps, marker, geometry };
 }
 ```
 
-`src/map/**` is imported with `import()` from `sections/Map/Map.tsx` only; `route_preview` is the MapLibre route map of 8.9 and never loads Google Maps. A load failure retries by itself up to three times with doubling backoff from one second (`MapView`), so a network blip at the moment the live screen mounts heals without anyone noticing; only after those attempts does the map area render the "map unavailable" panel with a retry button, which starts a fresh set of attempts. The `map` section also sits inside an error boundary (`sections/Map/index.tsx`): a failed load of the `map` chunk, or any throw while the section renders or runs its effects (a live flip included), renders the same panel in the section's place (fixed over the viewport during the takeover) instead of a blank page, and its Retry requests the chunk again and mounts the section afresh. A load that settles after the section has unmounted builds nothing. The data row, leaderboard, message, carousel, and cookie control still work because they read the store, not the map. Google's console notice deprecating `google.maps.Marker` is expected and ignored (section 24: advanced markers require a cloud map id, which would move the six style arrays out of the repository), and a transient 500 from Google's internal `GetViewportInfo` telemetry call does not affect the map.
+`src/map/**` is imported with `import()` from `sections/Map/Map.tsx` only; `route_preview` is the MapLibre route map of 8.9 and never loads Google Maps. The three library imports race a 15 s timer (`LOAD_TIMEOUT_MS`), so a script that loads without Google's callback firing fails with "Google Maps did not answer in 15 s" instead of hanging; any failure clears the attempt in flight, so the next call starts a new one. A map can fail by two paths, and both end in the same "map unavailable" panel (7.6). **Load:** a library-load failure retries by itself up to three times with doubling backoff from one second (`MapView`), so a network blip at the moment the live screen mounts heals without anyone noticing; only after those attempts is the error surfaced, reported, and the map area renders the panel. **Render:** the `map` section sits inside an error boundary (`sections/Map/index.tsx`): a failed load of the `map` chunk, or any throw while the section renders or runs its effects (a live flip included), is reported and renders the panel in the section's place (fixed over the viewport during the takeover) instead of a blank page. The panel shows the reason in one line under its title (`describeError` in `src/lib/analytics.ts`: an `Error`'s name when it says more than "Error" plus its message, a non-empty string as it is, else "Unknown error", at most 160 characters), and its one button, "Reload the page", reloads the page (`reloadPage` in `src/lib/reload.ts`). There is no in-place retry: every browser keeps a failed dynamic import in its module map, so importing the chunk again rejects without a fetch, and a reload is the only cure. Each surfaced failure is reported once by `reportMapError(source, error)`: one `console.error` line and a `map_error` event (section 16) with `map_error_source` (`load` or `render`) and `map_error_reason` (the panel's reason line). The automatic retries are not reported. A load that settles after the section has unmounted builds nothing. The data row, leaderboard, message, carousel, and cookie control still work because they read the store, not the map. Google's console notice deprecating `google.maps.Marker` is expected and ignored (section 24: advanced markers require a cloud map id, which would move the six style arrays out of the repository), and a transient 500 from Google's internal `GetViewportInfo` telemetry call does not affect the map.
 
 ### 8.2 Map options
 
@@ -871,7 +874,7 @@ The thumbnails in the picker are unchanged (they show the map, not the chrome). 
 
 ### 8.5 Flight history overlay
 
-**Flight history.** Input: `snapshot.event.flightHistory.points` (`{ lat, lng, recordedAt }[]`, route order, already thinned by the API; contracts 1.3). It is a previous flight drawn as the projected route, the legacy tracker's "history" toggle; it is not where Santa has been tonight. Two toggles from the menu, `flightHistory` (initial state `data.flightHistoryDefault`, off by default) and `timeLabels` (on by default); both absent when `flightHistory` is null. The viewer's choice is kept for the page load (`sections/Map/trackerToggles.ts`, never persisted; the same store keeps `flightDock`, the flight gauge shown or hidden, first shown, and `cookieTally`, the cookie tally open or collapsed, first open, 7.6), so a remount of the section (a live flip, the unavailable panel's Retry) keeps it and off stays off; the content default applies only until the viewer has toggled. The button's `aria-pressed` and its accent underline always match the overlay (`data-flight-history` on the map root). The menu's toggles take the accent colour on hover only under a pointer that hovers (`@media (hover: hover)`), so a tap on a touch screen leaves no coloured button behind.
+**Flight history.** Input: `snapshot.event.flightHistory.points` (`{ lat, lng, recordedAt }[]`, route order, already thinned by the API; contracts 1.3). It is a previous flight drawn as the projected route, the legacy tracker's "history" toggle; it is not where Santa has been tonight. Two toggles from the menu, `flightHistory` (initial state `data.flightHistoryDefault`, off by default) and `timeLabels` (on by default); both absent when `flightHistory` is null. The viewer's choice is kept for the page load (`sections/Map/trackerToggles.ts`, never persisted; the same store keeps `flightDock`, the flight gauge shown or hidden, first shown, and `cookieTally`, the cookie tally open or collapsed, first open, 7.6), so a remount of the section (a live flip) keeps it and off stays off; the content default applies only until the viewer has toggled. The button's `aria-pressed` and its accent underline always match the overlay (`data-flight-history` on the map root). The menu's toggles take the accent colour on hover only under a pointer that hovers (`@media (hover: hover)`), so a tap on a touch screen leaves no coloured button behind.
 
 - **Line**: one geodesic `Polyline`, `strokeWeight 2`, `strokeColor theme.routeColor`, `strokeOpacity theme.routeOpacity`.
 - **Arrows**: a second `Polyline` with `strokeOpacity 0` and `icons[]` of `FORWARD_CLOSED_ARROW` symbols placed every `step` points, where `step` is 20 at zoom 15 and above, 40 at 13 to 14, 80 at 11 to 12, 150 at 9 to 10, 250 below; symbol scale 3 at zoom 9 and above, else 2.
@@ -1244,7 +1247,7 @@ export function initAnalytics(): boolean {
 }
 ```
 
-Enabled only when `settings.analyticsEnabled` is true in the current bundle (checked when the first snapshot is held; a later publish that turns it off stops page views at the next navigation), both `VITE_ANALYTICS_ID` and `VITE_ANALYTICS_ORIGINS` are set, and the page origin is in the list; both are set in the Vercel Production environment only, so preview deployments, PR previews on `*.vercel.app` hosts, and local runs send nothing. The router sends one `page_view` per navigation. No user identifier, email, or location is ever sent; events are page views only.
+Enabled only when `settings.analyticsEnabled` is true in the current bundle (checked when the first snapshot is held; a later publish that turns it off stops page views at the next navigation), both `VITE_ANALYTICS_ID` and `VITE_ANALYTICS_ORIGINS` are set, and the page origin is in the list; both are set in the Vercel Production environment only, so preview deployments, PR previews on `*.vercel.app` hosts, and local runs send nothing. The router sends one `page_view` per navigation. Beyond the page view there is one event: `map_error`, sent through `sendEvent(name, params)` behind the same gate when the map fails to load or throws (8.1). It carries `map_error_source` (`load` or `render`) and `map_error_reason` (the error's description from `describeError`, at most 160 characters) and nothing else. No user identifier, email, or location is ever sent.
 
 ---
 
@@ -1326,7 +1329,7 @@ Other rules:
 | `navigator.onLine === false` | Same banner immediately |
 | Hub never connects or keeps dropping | Live indicator shows "Polling" (and "Offline" once polls stop landing too); polling tightens while live; no banner |
 | Snapshot fetch failing | Old snapshot keeps rendering; the page still switches on the live object; small "refreshing details" note |
-| Maps script fails | "Map unavailable" panel with Retry; everything else on the live screen works |
+| Maps script fails | "Map unavailable" panel with the reason and "Reload the page" (8.1); everything else on the live screen works |
 | Geolocation error | Prompt reopens on the instructions section; distance chip hidden |
 | API call fails | Inline copy per code (sections 10, 13, 14); never the server's `message` |
 | Render error | Root `ErrorBoundary` renders a plain page with a Reload button; the data loop keeps running underneath |
