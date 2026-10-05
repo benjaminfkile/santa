@@ -191,22 +191,22 @@ describe("AltitudeDial", () => {
     expect(d.utils.getByTestId("flight-dock-altitude-label").textContent).toBe("ALTITUDE");
   });
 
-  it("at 4120 shows the thousands separator and fills 4120 of 10000", () => {
+  it("at 4120 reads 4.1k and fills 4120 of 10000", () => {
     const d = dial(4120);
-    expect(d.value).toBe("4,120");
+    expect(d.value).toBe("4.1k");
     expect(d.offset).toBeCloseTo(length * (1 - 4120 / 10000), 6);
-    expect(d.label).toBe("Altitude 4,120 ft");
+    expect(d.label).toBe("Altitude 4.1k ft");
   });
 
   it("at 10000 fills the arc", () => {
     const d = dial(10000);
-    expect(d.value).toBe("10,000");
+    expect(d.value).toBe("10k");
     expect(d.offset).toBeCloseTo(0, 6);
   });
 
   it("at 12500 keeps the arc full and the number exact", () => {
     const d = dial(12500);
-    expect(d.value).toBe("12,500");
+    expect(d.value).toBe("12.5k");
     expect(d.offset).toBeCloseTo(0, 6);
   });
 

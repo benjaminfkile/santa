@@ -2,6 +2,7 @@
 // the dials and the dock's collapsed handle pill.
 
 import { formatElapsed } from "../../../../lib/time";
+import { formatCount } from "../../../../lib/number";
 import { copy } from "../../../../copy/copy";
 import { headingToCardinal } from "../../../../lib/units";
 
@@ -9,14 +10,15 @@ function finite(n: number | null): n is number {
   return n !== null && Number.isFinite(n);
 }
 
-// Whole mph.
+// Whole mph, abbreviated from a thousand up like every other number on the
+// tracker.
 export function speedText(mph: number | null): string {
-  return finite(mph) ? String(Math.round(mph)) : copy.live.unavailablePlaceholder;
+  return finite(mph) ? formatCount(mph) : copy.live.unavailablePlaceholder;
 }
 
-// Whole feet with a thousands separator.
+// Whole feet, abbreviated from a thousand up: 4120 reads "4.1k".
 export function feetText(feet: number | null): string {
-  return finite(feet) ? Math.round(feet).toLocaleString("en-US") : copy.live.unavailablePlaceholder;
+  return finite(feet) ? formatCount(feet) : copy.live.unavailablePlaceholder;
 }
 
 // Rounded degrees in 0 to 359 with the degree sign, then the cardinal of

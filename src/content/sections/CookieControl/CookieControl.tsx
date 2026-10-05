@@ -13,6 +13,7 @@ import type { SectionComponent } from "../../registry";
 import type { ContentBundle } from "../../../store/types";
 import type { CookieType } from "../../../contracts";
 import { useStore } from "../../../store/useStore";
+import { formatCount } from "../../../lib/number";
 import { useAuth } from "../../../auth/AuthProvider";
 import { Inline } from "../../inline/Inline";
 import { Icon } from "../../primitives/Icon";
@@ -137,6 +138,9 @@ export function CookieDialog({
   const cookieTypes = useStore(
     (s) => (s.snapshot?.cookieTypes ?? []) as CookieType[],
   );
+  // The live tally, so each row says how many of that cookie Santa has
+  // been left so far, beside the visitor's own picks.
+  const tally = useStore((s) => s.live?.cookieTally ?? null);
   const { state: auth } = useAuth();
   const signedIn = auth.status === "signedIn";
   const onSignInRequired = useSignInHere();
@@ -362,7 +366,13 @@ export function CookieDialog({
               return (
                 <li key={id} className={styles.row} data-testid="cookie-row">
                   {renderTypeIcon(t.icon, bundle)}
-                  <span className={styles.rowName}>{t.name}</span>
+                  <span className={styles.rowText}>
+                    <span className={styles.rowName}>{t.name}</span>
+                    <span className={styles.rowTally} data-testid="cookie-row-tally">
+                      {formatCount(tally?.[String(id)] ?? 0)}
+                      <span className={styles.visuallyHidden}> left so far</span>
+                    </span>
+                  </span>
                   <span className={styles.stepper}>
                     <button
                       type="button"

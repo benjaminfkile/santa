@@ -1,5 +1,5 @@
 // docs/site.md section 7.6. The Live pill carries an eye and the count of
-// connected viewers from `live.onlineCount`, with a thousands separator,
+// connected viewers from `live.onlineCount`, abbreviated from a thousand up,
 // only while the transport is live and the count is known, and only while
 // `overlays.onlineCount` is on.
 
@@ -50,21 +50,21 @@ afterEach(() => {
 });
 
 describe("LiveIndicator watching count", () => {
-  it("renders 1204 beside Live with a thousands separator", () => {
+  it("renders 1204 beside Live as 1.2k", () => {
     setState("connected", 1204);
     const { getByTestId, getByRole } = render(<LiveIndicator />);
     const count = getByTestId("watching-count");
-    expect(count.firstChild?.textContent).toBe("1,204");
-    expect(count.textContent).toBe("1,204 watching");
+    expect(count.firstChild?.textContent).toBe("1.2k");
+    expect(count.textContent).toBe("1.2k watching");
     const pill = getByRole("status");
     expect(pill.querySelector("svg")?.getAttribute("width")).toBe("14");
     expect(pill.textContent?.startsWith("Live")).toBe(true);
   });
 
-  it("renders 12345 as 12,345", () => {
+  it("renders 12345 as 12.3k", () => {
     setState("connected", 12345);
     const { getByTestId } = render(<LiveIndicator />);
-    expect(getByTestId("watching-count").firstChild?.textContent).toBe("12,345");
+    expect(getByTestId("watching-count").firstChild?.textContent).toBe("12.3k");
   });
 
   it("puts the word watching in its own span inside the count", () => {

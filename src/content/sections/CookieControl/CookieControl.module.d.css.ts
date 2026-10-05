@@ -10,7 +10,10 @@ export const row: string;
 export const rowIcon: string;
 export const rowIconPlaceholder: string;
 export const rowName: string;
+export const rowTally: string;
+export const rowText: string;
 export const rows: string;
 export const stepBtn: string;
 export const stepper: string;
+export const visuallyHidden: string;
 

@@ -71,6 +71,32 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* The name with the running tally under it. Beside the name the tally cost
+   the name its width: on a 375 px phone "Chocolate chip" truncated to
+   "Chocolat...", so the two stack in one column instead. */
+.rowText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+/* How many of this cookie Santa has been left so far. Quieter than the
+   stepper's count, which is the number the visitor is choosing. */
+.rowTally {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 .stepper {
   display: inline-flex;
   align-items: center;

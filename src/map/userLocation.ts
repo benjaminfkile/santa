@@ -7,6 +7,7 @@
 // an `enable` whose permission query settles later.
 
 import { metresToFeet, metresToMiles } from "../lib/units";
+import { formatCount } from "../lib/number";
 import { readCssVar } from "./cssVars";
 import { subscribeScheme } from "../content/theme/colorScheme";
 import type { MapTheme } from "./themes";
@@ -34,10 +35,13 @@ export function formatDistanceMetres(m: number): string {
   if (!Number.isFinite(m) || m < 0) return "";
   if (m < ONE_MILE_M) {
     const feet = Math.round(metresToFeet(m));
-    return `${feet.toLocaleString("en-US")} ft`;
+    return `${formatCount(feet)} ft`;
   }
   const miles = metresToMiles(m);
   const rounded = Math.round(miles * 100) / 100;
+  // Under a thousand miles this is the exact two-decimal reading; past it
+  // the shared abbreviation takes over like everywhere else.
+  if (rounded >= 1000) return `${formatCount(rounded)} mi`;
   return `${rounded.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} mi`;
 }
 

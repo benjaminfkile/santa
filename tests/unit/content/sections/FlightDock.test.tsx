@@ -133,7 +133,7 @@ describe("the flight data dock", () => {
     ]);
     expect(value(utils, "speed")).toBe("100");
     expect(utils.getByTestId("flight-dock-speed").textContent).toContain("mph");
-    expect(value(utils, "altitude")).toBe("5,000");
+    expect(value(utils, "altitude")).toBe("5k");
     expect(utils.getByTestId("flight-dock-altitude").textContent).toContain("ft");
     expect(value(utils, "heading")).toBe("92° E");
     expect(value(utils, "airborne")).toBe(formatElapsed(72.5 * 60 * 1000));
@@ -176,7 +176,7 @@ describe("the flight data dock", () => {
     const utils = await renderMap();
     const altitude = utils.getByTestId("flight-dock-altitude");
     expect(altitude.tagName.toLowerCase()).toBe("svg");
-    expect(altitude.getAttribute("aria-label")).toBe("Altitude 5,000 ft");
+    expect(altitude.getAttribute("aria-label")).toBe("Altitude 5k ft");
     expect(utils.getByTestId("flight-dock-altitude-arc")).toBeInTheDocument();
     expect(utils.getByTestId("flight-dock-altitude-label").textContent).toBe("ALTITUDE");
   });

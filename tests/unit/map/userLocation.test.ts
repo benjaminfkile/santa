@@ -1,5 +1,6 @@
 // docs/site.md section 8.6 and S17f. `formatDistanceMetres`: feet under
-// one mile, miles to two decimals with commas otherwise. The user dot
+// one mile, miles to two decimals otherwise, both through the tracker's
+// shared abbreviation from a thousand up. The user dot
 // rebuilds its icon from the tokens on every colour-scheme change and
 // renders nothing until the tokens resolve.
 
@@ -15,9 +16,9 @@ describe("formatDistanceMetres", () => {
   it("uses feet under one mile", () => {
     expect(formatDistanceMetres(0)).toBe("0 ft");
     expect(formatDistanceMetres(1)).toBe("3 ft");
-    expect(formatDistanceMetres(304.8)).toBe("1,000 ft");
+    expect(formatDistanceMetres(304.8)).toBe("1k ft");
     // Just under a mile: still in feet.
-    expect(formatDistanceMetres(1609)).toBe("5,279 ft");
+    expect(formatDistanceMetres(1609)).toBe("5.3k ft");
   });
 
   it("uses miles at one mile and above with two decimals", () => {
@@ -26,7 +27,7 @@ describe("formatDistanceMetres", () => {
     expect(formatDistanceMetres(3.5 * 1609.344)).toBe("3.50 mi");
   });
 
-  it("groups miles with commas", () => {
-    expect(formatDistanceMetres(1000 * 1609.344)).toBe("1,000.00 mi");
+  it("abbreviates miles from a thousand up", () => {
+    expect(formatDistanceMetres(1000 * 1609.344)).toBe("1k mi");
   });
 });

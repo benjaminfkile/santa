@@ -11,6 +11,7 @@ import { useStore } from "../../../store/useStore";
 import { useNow } from "../../../lib/useNow";
 import { DEFAULT_POLL_INTERVAL_MS } from "../../../store/cadence";
 import { copy } from "../../../copy/copy";
+import { formatCount } from "../../../lib/number";
 import * as styles from "./Map.module.css";
 import { EyeGlyph } from "./glyphs";
 
@@ -84,7 +85,7 @@ export function LiveIndicator({ showCount = true }: { showCount?: boolean }) {
         <>
           <EyeGlyph size={14} />
           <span className={styles.liveIndicatorCount} data-testid="watching-count">
-            {count.toLocaleString("en-US")}
+            {formatCount(count)}
             <span className={styles.visuallyHidden}>{copy.live.watchingSuffix}</span>
           </span>
         </>

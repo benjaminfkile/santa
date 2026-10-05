@@ -14,6 +14,7 @@ import type { IconRef } from "../../../contracts";
 import type { ContentBundle } from "../../../store/types";
 import { useStore } from "../../../store/useStore";
 import { copy } from "../../../copy/copy";
+import { formatCount } from "../../../lib/number";
 import { ChevronGlyph } from "./glyphs";
 import { readTrackerToggle, writeTrackerToggle } from "./trackerToggles";
 import { Icon, iconResolves } from "../../primitives/Icon";
@@ -70,7 +71,7 @@ export function CookieTally({ bundle }: { bundle: ContentBundle }) {
             title={row.name ?? undefined}
           >
             <span className={styles.cookieTallyCount} data-testid="leaderboard-count">
-              {row.count}
+              {formatCount(row.count)}
               {row.name ? <span className={styles.visuallyHidden}> {row.name}</span> : null}
             </span>
             {icon !== null && iconResolves(icon, bundle) ? (

@@ -9,6 +9,7 @@ import { Inline } from "../../inline/Inline";
 import { Icon } from "../../primitives/Icon";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
+import { formatCount } from "../../../lib/number";
 import * as styles from "./Leaderboard.module.css";
 
 type LeaderboardData = {
@@ -109,7 +110,7 @@ export const Leaderboard: SectionComponent = ({ data, bundle }) => {
               />
             ) : null}
             <span className={styles.leaderboardCount} data-testid="leaderboard-count">
-              {row.count}
+              {formatCount(row.count)}
             </span>
           </li>
         ))}
