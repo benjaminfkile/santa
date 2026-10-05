@@ -131,8 +131,27 @@ describe("createMapController lifecycle", () => {
     expect(count()).toBe(0);
   });
 
+  it("opens the landmark popover in the container's parent when it has one", async () => {
+    const host = document.createElement("div");
+    const container = document.createElement("div");
+    host.appendChild(container);
+    const c = createMapController(fakeLibs(), container, options());
+    const map = FakeMap.instances[0];
+    const pane = map.panes.overlayMouseTarget;
+    c.setLandmarks([{ name: "Town Hall", lat: 40, lng: -105 }]);
+    map.setZoom(12);
+    await Promise.resolve();
+    pane.querySelector<HTMLButtonElement>('[data-testid="tracker-landmark-badge"]')?.click();
+    const popover = host.querySelector('[data-testid="tracker-landmark-popover"]');
+    expect(popover?.parentElement).toBe(host);
+    expect(container.querySelector('[data-testid="tracker-landmark-popover"]')).toBeNull();
+    c.destroy();
+    expect(host.querySelector('[data-testid="tracker-landmark-popover"]')).toBeNull();
+  });
+
   it("an equal landmark list keeps the badges and an open popover in place", async () => {
-    const c = createMapController(fakeLibs(), document.createElement("div"), options());
+    const container = document.createElement("div");
+    const c = createMapController(fakeLibs(), container, options());
     const map = FakeMap.instances[0];
     const pane = map.panes.overlayMouseTarget;
     const list = () => [
@@ -145,18 +164,18 @@ describe("createMapController lifecycle", () => {
     const badge = pane.querySelector<HTMLButtonElement>('[data-testid="tracker-landmark-badge"]');
     const first = pane.querySelector('[data-testid="tracker-landmark"]');
     badge?.click();
-    expect(pane.querySelectorAll('[data-testid="tracker-landmark-popover"]')).toHaveLength(1);
+    expect(container.querySelectorAll('[data-testid="tracker-landmark-popover"]')).toHaveLength(1);
     // The live poll hands the section a fresh array of the same landmarks.
     c.setLandmarks(list());
     await Promise.resolve();
     expect(pane.querySelector('[data-testid="tracker-landmark"]')).toBe(first);
-    expect(pane.querySelectorAll('[data-testid="tracker-landmark-popover"]')).toHaveLength(1);
+    expect(container.querySelectorAll('[data-testid="tracker-landmark-popover"]')).toHaveLength(1);
     // A real edit still rebuilds.
     c.setLandmarks([{ name: "Town Hall", lat: 40, lng: -105, description: "Repainted" }]);
     await Promise.resolve();
     expect(pane.querySelectorAll('[data-testid="tracker-landmark"]')).toHaveLength(1);
     expect(pane.querySelector('[data-testid="tracker-landmark"]')).not.toBe(first);
-    expect(pane.querySelectorAll('[data-testid="tracker-landmark-popover"]')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-testid="tracker-landmark-popover"]')).toHaveLength(0);
     c.destroy();
   });
 

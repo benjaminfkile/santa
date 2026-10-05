@@ -86,7 +86,10 @@ export function createMapController(
   });
 
   let overlay: FlightHistoryOverlay = createFlightHistoryOverlay(libs, map, null);
-  let landmarks: LandmarksOverlay = createLandmarksOverlay(libs, map, [], null);
+  // The landmark popover lives in the map view wrapper, whose box is the
+  // canvas's box, so the map's container pixels are its pixels.
+  const popoverHost = container.parentElement ?? container;
+  let landmarks: LandmarksOverlay = createLandmarksOverlay(libs, map, [], null, popoverHost);
   let landmarksKey = landmarksSignature([]);
 
   function updateLandmarks(): void {
@@ -168,7 +171,7 @@ export function createMapController(
       if (key === landmarksKey) return;
       landmarksKey = key;
       landmarks.destroy();
-      landmarks = createLandmarksOverlay(libs, map, list, opts.mountIcon ?? null);
+      landmarks = createLandmarksOverlay(libs, map, list, opts.mountIcon ?? null, popoverHost);
       updateLandmarks();
     },
     setToggles(t) {
