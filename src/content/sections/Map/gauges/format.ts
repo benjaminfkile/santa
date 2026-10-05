@@ -22,11 +22,19 @@ export function feetText(feet: number | null): string {
 }
 
 // Rounded degrees in 0 to 359 with the degree sign, then the cardinal of
-// the rounded heading: "312° NW", and 359.6 reads "0° N".
+// the rounded heading: "312° NW", and 359.6 reads "0° N". The tracker
+// menu's data row keeps this reading; the compass shows the cardinal alone.
 export function headingText(degrees: number | null): string {
   if (!finite(degrees)) return copy.live.unavailablePlaceholder;
   const whole = ((Math.round(degrees) % 360) + 360) % 360;
   return `${whole}° ${headingToCardinal(whole)}`;
+}
+
+// The cardinal of the rounded heading alone: "NW", and 359.6 reads "N".
+export function headingCardinalText(degrees: number | null): string {
+  if (!finite(degrees)) return copy.live.unavailablePlaceholder;
+  const whole = ((Math.round(degrees) % 360) + 360) % 360;
+  return headingToCardinal(whole);
 }
 
 // "1h 12m" via formatElapsed; empty while the time is not ready.

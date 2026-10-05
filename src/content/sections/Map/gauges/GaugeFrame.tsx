@@ -27,6 +27,9 @@ export type GaugeFrameProps = {
   // false leaves out the 270 degree track and its marks, for a dial that
   // draws its own face.
   track?: boolean;
+  // Overrides `valueFontSize`, for a dial whose face needs the middle
+  // kept clearer than the reading's length alone would leave it.
+  valueSize?: number;
   children?: ReactNode;
 };
 
@@ -46,7 +49,7 @@ export function valueFontSize(value: string): number {
   return 9;
 }
 
-export function GaugeFrame({ value, unit, label, fraction = null, testId, track = true, children }: GaugeFrameProps) {
+export function GaugeFrame({ value, unit, label, fraction = null, testId, track = true, valueSize, children }: GaugeFrameProps) {
   const length = arcLength(GAUGE_RADIUS);
   const full = arcPath(1, GAUGE_RADIUS, GAUGE_CENTER, GAUGE_CENTER);
   const hasArc = fraction !== null && Number.isFinite(fraction);
@@ -76,7 +79,7 @@ export function GaugeFrame({ value, unit, label, fraction = null, testId, track 
         className={styles.value}
         x={GAUGE_CENTER}
         y={29}
-        fontSize={valueFontSize(value)}
+        fontSize={valueSize ?? valueFontSize(value)}
         textAnchor="middle"
         data-testid={`${testId}-value`}
       >

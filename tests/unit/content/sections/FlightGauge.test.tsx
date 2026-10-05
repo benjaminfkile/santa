@@ -137,9 +137,10 @@ describe("the flight gauge", () => {
     expect(utils.getByTestId("flight-gauge-speed-arc")).toBeInTheDocument();
     expect(utils.getByTestId("flight-gauge-altitude").getAttribute("aria-label")).toBe("Altitude 5k ft");
     expect(utils.getByTestId("flight-gauge-altitude-label").textContent).toBe("ALTITUDE");
-    expect(utils.getByTestId("flight-gauge-heading").getAttribute("aria-label")).toBe("Heading 92° E");
+    // The compass reads the cardinal alone, with the needle at the heading.
+    expect(utils.getByTestId("flight-gauge-heading").getAttribute("aria-label")).toBe("Heading E");
     expect(utils.getByTestId("flight-gauge-heading-rose")).toBeInTheDocument();
-    expect(utils.getByTestId("flight-gauge-heading-needle-line").style.transform).toBe("rotate(92.4deg)");
+    expect(utils.getByTestId("flight-gauge-heading-needle").style.transform).toBe("rotate(92.4deg)");
 
     // Nothing to step with, and the airborne time is a pill, not a dial.
     expect(utils.queryByTestId("flight-gauge-next")).toBeNull();

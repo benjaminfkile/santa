@@ -1,7 +1,7 @@
-/* docs/site.md section 7.6. The heading compass in the flight data dock:
-   the rose circle and its four ticks in --panel-2, the "N" in the micro
-   style, and the accent needle that turns over 300 ms (not at all under
-   reduced motion) about the dial's centre. */
+/* docs/site.md section 7.6. The compass face in the flight gauge: the bezel
+   and its ticks in --panel-2, the N, E, S and W letters in the micro style
+   with north picked out in the accent, and the two-ended needle that turns
+   over 300 ms (not at all under reduced motion) about the dial's centre. */
 
 .rose {
   fill: none;
@@ -10,23 +10,32 @@
 }
 
 .ticks {
-  stroke: var(--panel-2);
-  stroke-width: 1.5;
+  stroke: var(--text-dim);
+  stroke-width: 1.25;
   stroke-linecap: round;
 }
 
-.north {
+.minorTicks {
+  stroke: var(--panel-2);
+  stroke-width: 1;
+  stroke-linecap: round;
+}
+
+.point {
   font-family: var(--font-mono);
-  font-size: 5.5px;
+  font-size: 4.5px;
   text-transform: uppercase;
   fill: var(--text-dim);
 }
 
+/* North is the one a compass marks out. */
+.north {
+  composes: point;
+  fill: var(--accent);
+}
+
 /* The needle rotates about the centre of the 54 by 54 viewBox. */
 .needle {
-  stroke: var(--accent);
-  stroke-width: 1.5;
-  stroke-linecap: round;
   transform-box: view-box;
   transform-origin: 27px 27px;
   transition: transform 300ms ease-out;
@@ -35,6 +44,11 @@
   .needle { transition: none; }
 }
 
-.hub {
+.needleHead {
   fill: var(--accent);
+}
+
+.needleTail {
+  fill: var(--text-dim);
+  opacity: 0.55;
 }
