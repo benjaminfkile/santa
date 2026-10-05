@@ -8,6 +8,8 @@
    are the only things taller than 44 px. */
 
 .mapSection {
+  /* 26 px of Google logo plus the 8 px gutter every overlay keeps. */
+  --map-bottom-inset: 34px;
   position: relative;
   width: 100%;
   min-height: 480px;
@@ -57,8 +59,12 @@
 .bottomRight > * { pointer-events: auto; }
 .topLeft { top: 8px; left: 8px; align-items: flex-start; max-width: calc(100% - 68px); }
 .topRight { top: 8px; right: 8px; align-items: flex-end; }
-.bottomLeft { bottom: 8px; left: 8px; align-items: flex-start; }
-.bottomRight { bottom: 8px; right: 8px; align-items: flex-end; }
+/* The bottom stacks clear Google's own furniture rather than hanging over
+   it: the logo block measures 26 px and the attribution strip 14 px, both
+   flush to the bottom of the map, so the stacks start 8 px above the taller
+   of the two. The top stacks have nothing to clear. */
+.bottomLeft { bottom: var(--map-bottom-inset); left: 8px; align-items: flex-start; }
+.bottomRight { bottom: var(--map-bottom-inset); right: 8px; align-items: flex-end; }
 .menuOpen .topLeft,
 .menuOpen .bottomRight { display: none; }
 
