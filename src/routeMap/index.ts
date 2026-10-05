@@ -17,24 +17,24 @@
 // its container and fits the path again (the fullscreen edges call it).
 // `timeLabels` hands the style's time label layers their dots and ready
 // made labels; a new set rebuilds the style through the same diff.
-// `poiKinds` and `landmarks` reach the style's options of the same names
+// `poiKinds` and `viewpoints` reach the style's options of the same names
 // only when given, and a changed list rebuilds the style the same way.
 // `arrows`, `arrowScale`, `routeWidthScale`, and `labelScale` reach the
 // style's options of the same names; a change rebuilds the style the
 // same way. The arrowhead image is added under ROUTE_ARROW_ICON whenever the style asks
-// for it. `landmarkMarkers` stands one MapLibre marker around each
-// caller's element on its point (the badges and buttons of the landmarks
+// for it. `viewpointMarkers` stands one MapLibre marker around each
+// caller's element on its point (the badges and buttons of the viewpoints
 // with an icon or a description); a changed list replaces them. The map
 // takes gestures directly: the scroll wheel zooms and one finger pans.
 // `labelMinZoom` reaches the style's option of the same name (the two
 // text layers start at it) and a change rebuilds the style the same way;
-// below it the names count as hidden. The handle listens on the landmark
+// below it the names count as hidden. The handle listens on the viewpoint
 // and time label dot layers by id, so the listeners outlive every style
 // diff: while the names are hidden, a pointer entering a dot shows a
 // Popup (TIP_CLASS, no close button) with the feature's `label` at the
 // feature and the pointer cursor, gone when the pointer leaves, and a
 // click on a time dot shows the same popup for TIP_PEEK_MS (a tap on a
-// touch screen). A click on a landmark dot calls `onLandmarkClick` with
+// touch screen). A click on a viewpoint dot calls `onViewpointClick` with
 // the feature's point at any zoom. The container carries `data-names`
 // ("hidden" or "shown") from the mount and on every zoom event, so the
 // caller's marker styles can follow it.
@@ -57,18 +57,18 @@ import {
   terrainUrl,
   ROUTE_ARROW_ICON,
   tilesUrl,
-  LANDMARK_DOTS_LAYER,
+  VIEWPOINT_DOTS_LAYER,
   TIME_LABEL_DOTS_LAYER,
-  type Landmark,
+  type Viewpoint,
   type LatLng,
   type StyleOptions,
   type TimeLabel,
 } from "./style";
 
 export type { Appearance } from "./flavors";
-export type { Landmark, LatLng, TimeLabel } from "./style";
+export type { Viewpoint, LatLng, TimeLabel } from "./style";
 
-export type LandmarkMarker = { lat: number; lng: number; element: HTMLElement };
+export type ViewpointMarker = { lat: number; lng: number; element: HTMLElement };
 
 export type RouteMapOptions = {
   container: HTMLElement;
@@ -78,15 +78,15 @@ export type RouteMapOptions = {
   terrain?: boolean;
   timeLabels?: readonly TimeLabel[];
   poiKinds?: readonly string[];
-  landmarks?: readonly Landmark[];
-  landmarkMarkers?: readonly LandmarkMarker[];
+  viewpoints?: readonly Viewpoint[];
+  viewpointMarkers?: readonly ViewpointMarker[];
   arrows?: boolean;
   arrowScale?: number;
   routeWidthScale?: number;
   labelScale?: number;
   labelMinZoom?: number;
   startElement?: HTMLElement;
-  onLandmarkClick?: (point: { lat: number; lng: number }) => void;
+  onViewpointClick?: (point: { lat: number; lng: number }) => void;
   onError: (error: unknown) => void;
 };
 
@@ -97,8 +97,8 @@ export type RouteMapUpdate = {
   terrain?: boolean;
   timeLabels?: readonly TimeLabel[];
   poiKinds?: readonly string[];
-  landmarks?: readonly Landmark[];
-  landmarkMarkers?: readonly LandmarkMarker[];
+  viewpoints?: readonly Viewpoint[];
+  viewpointMarkers?: readonly ViewpointMarker[];
   arrows?: boolean;
   arrowScale?: number;
   routeWidthScale?: number;
@@ -180,16 +180,16 @@ function sameKinds(a: readonly string[] | undefined, b: readonly string[] | unde
   return a.every((kind, i) => kind === b[i]);
 }
 
-function sameLandmarks(
-  a: readonly Landmark[] | undefined,
-  b: readonly Landmark[] | undefined,
+function sameViewpoints(
+  a: readonly Viewpoint[] | undefined,
+  b: readonly Viewpoint[] | undefined,
 ): boolean {
   if (a === b) return true;
   if (a === undefined || b === undefined) return false;
-  return sameLabels(a, b) && a.every((landmark, i) => landmark.badge === b[i].badge);
+  return sameLabels(a, b) && a.every((viewpoint, i) => viewpoint.badge === b[i].badge);
 }
 
-function sameMarkers(a: readonly LandmarkMarker[], b: readonly LandmarkMarker[]): boolean {
+function sameMarkers(a: readonly ViewpointMarker[], b: readonly ViewpointMarker[]): boolean {
   if (a === b) return true;
   if (a.length !== b.length) return false;
   return a.every(
@@ -215,7 +215,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
   let terrain = options.terrain ?? false;
   let timeLabels = options.timeLabels ?? [];
   let poiKinds = options.poiKinds;
-  let landmarks = options.landmarks;
+  let viewpoints = options.viewpoints;
   let arrows = options.arrows ?? false;
   let arrowScale = options.arrowScale;
   let routeWidthScale = options.routeWidthScale;
@@ -228,7 +228,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
       timeLabels,
       ...(startElement !== undefined ? { startCircle: false } : {}),
       ...(poiKinds !== undefined ? { poiKinds } : {}),
-      ...(landmarks !== undefined ? { landmarks } : {}),
+      ...(viewpoints !== undefined ? { viewpoints } : {}),
       ...(arrows ? { arrows } : {}),
       ...(arrowScale !== undefined ? { arrowScale } : {}),
       ...(routeWidthScale !== undefined ? { routeWidthScale } : {}),
@@ -299,19 +299,19 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
           .setLngLat([path[0].lng, path[0].lat])
           .addTo(map);
 
-  let landmarkMarkers: readonly LandmarkMarker[] = [];
-  let landmarkPins: Marker[] = [];
+  let viewpointMarkers: readonly ViewpointMarker[] = [];
+  let viewpointPins: Marker[] = [];
 
-  function placeLandmarkMarkers(next: readonly LandmarkMarker[]): void {
-    if (sameMarkers(landmarkMarkers, next)) return;
-    for (const marker of landmarkPins) marker.remove();
-    landmarkMarkers = next;
-    landmarkPins = next.map(({ lat, lng, element }) =>
+  function placeViewpointMarkers(next: readonly ViewpointMarker[]): void {
+    if (sameMarkers(viewpointMarkers, next)) return;
+    for (const marker of viewpointPins) marker.remove();
+    viewpointMarkers = next;
+    viewpointPins = next.map(({ lat, lng, element }) =>
       new Marker({ element, anchor: "center" }).setLngLat([lng, lat]).addTo(map),
     );
   }
 
-  placeLandmarkMarkers(options.landmarkMarkers ?? []);
+  placeViewpointMarkers(options.viewpointMarkers ?? []);
 
   function namesHidden(): boolean {
     return labelMinZoom !== undefined && map.getZoom() < labelMinZoom;
@@ -353,17 +353,17 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
   map.on("zoom", stampNames);
   stampNames();
 
-  map.on("mouseenter", LANDMARK_DOTS_LAYER, (event) => {
+  map.on("mouseenter", VIEWPOINT_DOTS_LAYER, (event) => {
     setCursor("pointer");
     if (namesHidden()) showTip(event);
   });
-  map.on("mouseleave", LANDMARK_DOTS_LAYER, () => {
+  map.on("mouseleave", VIEWPOINT_DOTS_LAYER, () => {
     setCursor("");
     hideTip();
   });
-  map.on("click", LANDMARK_DOTS_LAYER, (event) => {
+  map.on("click", VIEWPOINT_DOTS_LAYER, (event) => {
     const point = featurePoint(event);
-    if (point !== null) options.onLandmarkClick?.(point);
+    if (point !== null) options.onViewpointClick?.(point);
   });
   map.on("mouseenter", TIME_LABEL_DOTS_LAYER, (event) => {
     if (!namesHidden()) return;
@@ -381,7 +381,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
 
   return {
     update(next) {
-      placeLandmarkMarkers(next.landmarkMarkers ?? []);
+      placeViewpointMarkers(next.viewpointMarkers ?? []);
       const nextArrows = next.arrows ?? false;
       const nextMarks = next.marks ?? [];
       const pathChanged = !samePath(path, next.path);
@@ -393,7 +393,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
         !marksChanged &&
         sameLabels(timeLabels, nextLabels) &&
         sameKinds(poiKinds, next.poiKinds) &&
-        sameLandmarks(landmarks, next.landmarks) &&
+        sameViewpoints(viewpoints, next.viewpoints) &&
         next.appearance === appearance &&
         nextTerrain === terrain &&
         nextArrows === arrows &&
@@ -410,7 +410,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
       terrain = nextTerrain;
       timeLabels = nextLabels;
       poiKinds = next.poiKinds;
-      landmarks = next.landmarks;
+      viewpoints = next.viewpoints;
       arrows = nextArrows;
       arrowScale = next.arrowScale;
       routeWidthScale = next.routeWidthScale;
@@ -429,8 +429,8 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
     destroy() {
       hideTip();
       start?.remove();
-      for (const marker of landmarkPins) marker.remove();
-      landmarkPins = [];
+      for (const marker of viewpointPins) marker.remove();
+      viewpointPins = [];
       observer?.disconnect();
       observer = null;
       map.remove();

@@ -1,4 +1,4 @@
-// docs/site.md section 8.9. The route map's config, landmark markers,
+// docs/site.md section 8.9. The route map's config, viewpoint markers,
 // and gestures, with MapLibre and pmtiles mocked:
 //  - Every input comes from the event's `routeMapConfig`: each of the
 //    five display values (time label interval, arrows, arrow size, route
@@ -8,26 +8,26 @@
 //    arrow layer and its scale, the route line width, and the label
 //    sizes. The controls default to true and
 //    the POI kinds to none.
-//  - The landmarks come from the site settings' `landmarks`, none when
-//    absent; a raw config that still carries `landmarks` draws none.
+//  - The viewpoints come from the site settings' `viewpoints`, none when
+//    absent; a raw config that still carries `viewpoints` draws none.
 //  - A null or absent config renders the default map. Display, controls,
-//    landmarks, or POI kinds in the section data, or a routeMap block in
+//    viewpoints, or POI kinds in the section data, or a routeMap block in
 //    the site settings, change nothing.
 //  - The named sizes map to scales through one table.
-//  - A landmark with an icon stands a badge marker (a library icon
+//  - A viewpoint with an icon stands a badge marker (a library icon
 //    inline, a media icon through an image) and has no style dot; a
-//    landmark with a description stands a button that opens its popover,
+//    viewpoint with a description stands a button that opens its popover,
 //    one at a time, closed by its close button, Escape, a tap elsewhere,
-//    and its own button again; plain landmarks get no marker and stay as
+//    and its own button again; plain viewpoints get no marker and stay as
 //    the style draws them. The popover holds a "Get directions" link to
-//    the landmark's point in a new tab: Apple Maps on an Apple touch
+//    the viewpoint's point in a new tab: Apple Maps on an Apple touch
 //    device, Google Maps everywhere else.
 //  - The map is created without cooperativeGestures.
 //  - The section passes labelMinZoom 12: the handle listens on the
-//    landmark and time label dot layers; below zoom 12 a pointer on a dot
+//    viewpoint and time label dot layers; below zoom 12 a pointer on a dot
 //    shows a popup with its label until it leaves, a tap on a time dot
 //    shows it for 2.5 s, and the container carries data-names; a click on
-//    any landmark dot opens that landmark's popover, a plain landmark's
+//    any viewpoint dot opens that viewpoint's popover, a plain viewpoint's
 //    without a description paragraph.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -42,7 +42,7 @@ import { RoutePreview } from "../../../../src/content/sections/RoutePreview/Rout
 import {
   DISPLAY_DEFAULTS,
   DISPLAY_SCALES,
-  resolveLandmarks,
+  resolveViewpoints,
   resolveRouteMapConfig,
   resolveRouteMapDisplay,
 } from "../../../../src/content/sections/RoutePreview/routeMapConfig";
@@ -460,8 +460,8 @@ describe("route map config resolution", () => {
     });
   });
 
-  it("resolves the landmarks and POI kinds, keeping only well formed entries", () => {
-    const landmarks = resolveLandmarks([
+  it("resolves the viewpoints and POI kinds, keeping only well formed entries", () => {
+    const viewpoints = resolveViewpoints([
       { name: "Caras Park", lat: 46.87, lng: -113.99, icon: null, description: null },
       { name: "Mount Jumbo", lat: 46.88, lng: -113.96, icon: { source: "library", id: "tree" } },
       { name: "The Oval", lat: 46.86, lng: -113.98, description: "Where the reindeer rest." },
@@ -470,15 +470,15 @@ describe("route map config resolution", () => {
       { name: "No coordinates" },
     ]);
     const resolved = resolveRouteMapConfig({ pois: { kinds: ["peak", "museum"] } });
-    expect(landmarks).toEqual([
+    expect(viewpoints).toEqual([
       { name: "Caras Park", lat: 46.87, lng: -113.99 },
       { name: "Mount Jumbo", lat: 46.88, lng: -113.96, icon: { source: "library", id: "tree" } },
       { name: "The Oval", lat: 46.86, lng: -113.98, description: "Where the reindeer rest." },
       { name: "Bad icon", lat: 46.8, lng: -113.9 },
     ]);
     expect(resolved.poiKinds).toEqual(["peak", "museum"]);
-    expect(resolveLandmarks([])).toEqual([]);
-    expect(resolveLandmarks(undefined)).toBeUndefined();
+    expect(resolveViewpoints([])).toEqual([]);
+    expect(resolveViewpoints(undefined)).toBeUndefined();
     expect(resolveRouteMapConfig({ pois: { kinds: [] } })).toMatchObject({ poiKinds: [] });
   });
 
@@ -531,7 +531,7 @@ describe("route map config reaching the style", () => {
     expect(mocks.maps).toHaveLength(1);
     expectDefaultStyle();
     expectDefaultControls(container);
-    expect(landmarkMarkers()).toHaveLength(0);
+    expect(viewpointMarkers()).toHaveLength(0);
   });
 
   it("renders the default map for a config with every block null", async () => {
@@ -569,9 +569,9 @@ describe("route map config reaching the style", () => {
       await renderSection({ display: { labelSize } }, { settings: { landmarks: [PLAIN] } });
       const style = currentStyle();
       expect(timeLabelSize(style)).toEqual(labelSizeAt(scale));
-      const landmarkSize = layerOf(style, "route-landmarks")?.layout?.["text-size"] as unknown[];
-      expect(landmarkSize.slice(0, 3)).toEqual(["interpolate", ["linear"], ["zoom"]]);
-      expect(landmarkSize[landmarkSize.length - 1]).toBeCloseTo(14 * scale, 3);
+      const viewpointSize = layerOf(style, "route-landmarks")?.layout?.["text-size"] as unknown[];
+      expect(viewpointSize.slice(0, 3)).toEqual(["interpolate", ["linear"], ["zoom"]]);
+      expect(viewpointSize[viewpointSize.length - 1]).toBeCloseTo(14 * scale, 3);
     }
   });
 
@@ -593,7 +593,7 @@ describe("route map config reaching the style", () => {
     expect(q(container, "route-map-fullscreen")).toBeNull();
   });
 
-  it("ignores display, controls, landmarks, and POI kinds in the section data", async () => {
+  it("ignores display, controls, viewpoints, and POI kinds in the section data", async () => {
     const { container } = await renderSection(null, {
       data: {
         display: { timeLabelIntervalMinutes: 30, arrows: false, arrowSize: "xlarge", routeWidth: "thick" },
@@ -604,7 +604,7 @@ describe("route map config reaching the style", () => {
     });
     expectDefaultStyle();
     expectDefaultControls(container);
-    expect(landmarkMarkers()).toHaveLength(0);
+    expect(viewpointMarkers()).toHaveLength(0);
   });
 
   it("ignores a routeMap block in the site settings", async () => {
@@ -654,21 +654,21 @@ const TOLD_ICON = {
   description: "Chimes at midnight.",
 };
 
-function landmarkProperties(style: StyleShape): Record<string, unknown>[] {
+function viewpointProperties(style: StyleShape): Record<string, unknown>[] {
   const data = style.sources["route-landmarks"].data as { features: { properties: Record<string, unknown> }[] };
   return data.features.map((f) => f.properties);
 }
 
-function landmarkMarkers(): FakeMarkerInstance[] {
-  return mocks.markers.filter((m) => m.element?.getAttribute("data-testid") === "route-landmark");
+function viewpointMarkers(): FakeMarkerInstance[] {
+  return mocks.markers.filter((m) => m.element?.getAttribute("data-testid") === "route-viewpoint");
 }
 
 function popover(): HTMLElement | null {
-  return q(document, "route-landmark-popover");
+  return q(document, "route-viewpoint-popover");
 }
 
 function buttonFor(name: string): HTMLButtonElement {
-  const button = qa(document, "route-landmark-button").find(
+  const button = qa(document, "route-viewpoint-button").find(
     (b) => b.getAttribute("aria-label") === `About ${name}`,
   );
   expect(button, name).toBeDefined();
@@ -681,34 +681,34 @@ async function open(name: string): Promise<void> {
   });
 }
 
-describe("route map landmarks", () => {
-  it("draws a landmark from settings.landmarks", async () => {
+describe("route map viewpoints", () => {
+  it("draws a viewpoint from settings.landmarks", async () => {
     await renderSection(null, { settings: { landmarks: [PLAIN] } });
-    expect(landmarkProperties(currentStyle())).toEqual([{ label: "Caras Park" }]);
+    expect(viewpointProperties(currentStyle())).toEqual([{ label: "Caras Park" }]);
   });
 
-  it("draws no landmark from a config that still carries the key", async () => {
+  it("draws no viewpoint from a config that still carries the key", async () => {
     await renderSection({ landmarks: [PLAIN, TOLD, LIBRARY] });
     expect(currentStyle().sources["route-landmarks"]).toBeUndefined();
-    expect(landmarkMarkers()).toHaveLength(0);
-    expect(qa(document, "route-landmark-button")).toHaveLength(0);
+    expect(viewpointMarkers()).toHaveLength(0);
+    expect(qa(document, "route-viewpoint-button")).toHaveLength(0);
   });
 
-  it("keeps plain landmarks exactly as the style draws them, with no marker", async () => {
+  it("keeps plain viewpoints exactly as the style draws them, with no marker", async () => {
     await renderSection(null, { settings: { landmarks: [PLAIN, { ...PLAIN, name: "Rattlesnake", lat: 46.9 }] } });
     const style = currentStyle();
-    expect(landmarkProperties(style)).toEqual([{ label: "Caras Park" }, { label: "Rattlesnake" }]);
+    expect(viewpointProperties(style)).toEqual([{ label: "Caras Park" }, { label: "Rattlesnake" }]);
     expect(layerOf(style, "route-landmark-dots")?.filter).toBeUndefined();
     expect(layerOf(style, "route-landmarks")?.layout?.["text-radial-offset"]).toBe(0.5);
-    expect(landmarkMarkers()).toHaveLength(0);
+    expect(viewpointMarkers()).toHaveLength(0);
     expect(mocks.markers).toHaveLength(1);
-    expect(qa(document, "route-landmark")).toHaveLength(0);
+    expect(qa(document, "route-viewpoint")).toHaveLength(0);
   });
 
-  it("draws an icon landmark as a badge in place of the dot, the label beside it", async () => {
+  it("draws an icon viewpoint as a badge in place of the dot, the label beside it", async () => {
     await renderSection(null, { settings: { landmarks: [PLAIN, LIBRARY, MEDIA] } });
     const style = currentStyle();
-    expect(landmarkProperties(style)).toEqual([
+    expect(viewpointProperties(style)).toEqual([
       { label: "Caras Park" },
       { label: "Mount Jumbo", badge: true },
       { label: "Higgins Bridge", badge: true },
@@ -716,22 +716,22 @@ describe("route map landmarks", () => {
     expect(layerOf(style, "route-landmark-dots")?.filter).toEqual(["!", ["has", "badge"]]);
     expect(layerOf(style, "route-landmarks")).toBeDefined();
 
-    const markers = landmarkMarkers();
+    const markers = viewpointMarkers();
     expect(markers).toHaveLength(2);
     expect(markers[0].lngLats).toEqual([[LIBRARY.lng, LIBRARY.lat]]);
     expect(markers[1].lngLats).toEqual([[MEDIA.lng, MEDIA.lat]]);
 
-    const libraryBadge = q(markers[0].element!, "route-landmark-badge")!;
+    const libraryBadge = q(markers[0].element!, "route-viewpoint-badge")!;
     expect(libraryBadge.getAttribute("aria-hidden")).toBe("true");
     const svg = libraryBadge.querySelector('svg[data-icon-source="library"]');
     expect(svg?.getAttribute("data-icon-id")).toBe("tree");
     expect(libraryBadge.querySelector("img")).toBeNull();
 
-    const mediaBadge = q(markers[1].element!, "route-landmark-badge")!;
+    const mediaBadge = q(markers[1].element!, "route-viewpoint-badge")!;
     const img = mediaBadge.querySelector("img");
     expect(img?.getAttribute("src")).toBe("https://cdn.example/media/bridge.svg");
     expect(img?.getAttribute("data-icon-source")).toBe("media");
-    expect(qa(document, "route-landmark-button")).toHaveLength(0);
+    expect(qa(document, "route-viewpoint-button")).toHaveLength(0);
   });
 
   it("treats an icon that does not resolve as no icon", async () => {
@@ -739,21 +739,21 @@ describe("route map landmarks", () => {
     await renderSection(null, {
       settings: { landmarks: [{ ...MEDIA, icon: { source: "media", id: "22222222-2222-4222-8222-222222222222" } }] },
     });
-    expect(landmarkProperties(currentStyle())).toEqual([{ label: "Higgins Bridge" }]);
-    expect(landmarkMarkers()).toHaveLength(0);
+    expect(viewpointProperties(currentStyle())).toEqual([{ label: "Higgins Bridge" }]);
+    expect(viewpointMarkers()).toHaveLength(0);
   });
 
-  it("opens a description landmark's popover with its name and description, and closes it with the close button", async () => {
+  it("opens a description viewpoint's popover with its name and description, and closes it with the close button", async () => {
     await renderSection(null, { settings: { landmarks: [PLAIN, TOLD] } });
-    expect(landmarkProperties(currentStyle())).toEqual([{ label: "Caras Park" }, { label: "The Oval" }]);
-    const markers = landmarkMarkers();
+    expect(viewpointProperties(currentStyle())).toEqual([{ label: "Caras Park" }, { label: "The Oval" }]);
+    const markers = viewpointMarkers();
     expect(markers).toHaveLength(1);
     expect(markers[0].lngLats).toEqual([[TOLD.lng, TOLD.lat]]);
 
     const button = buttonFor("The Oval");
     expect(markers[0].element!.contains(button)).toBe(true);
     expect(button.getAttribute("aria-expanded")).toBe("false");
-    expect(q(button, "route-landmark-badge")).toBeNull();
+    expect(q(button, "route-viewpoint-badge")).toBeNull();
     expect(popover()).toBeNull();
 
     await open("The Oval");
@@ -767,7 +767,7 @@ describe("route map landmarks", () => {
     expect(button.getAttribute("aria-controls")).toBe(panel.id);
     expect(q(document, "route-map-frame")!.contains(panel)).toBe(true);
 
-    const close = q(panel, "route-landmark-popover-close")!;
+    const close = q(panel, "route-viewpoint-popover-close")!;
     expect(close.getAttribute("aria-label")).toBe("Close");
     expect(document.activeElement).toBe(close);
     await act(async () => {
@@ -822,7 +822,7 @@ describe("route map landmarks", () => {
     expect(popover()).toBeNull();
   });
 
-  it("closes the popover from its own landmark's button", async () => {
+  it("closes the popover from its own viewpoint's button", async () => {
     await renderSection(null, { settings: { landmarks: [TOLD] } });
     await open("The Oval");
     expect(popover()).not.toBeNull();
@@ -839,18 +839,18 @@ describe("route map landmarks", () => {
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
     );
     await renderSection(null, { settings: { landmarks: [TOLD, TOLD_ICON] } });
-    for (const landmark of [TOLD, TOLD_ICON]) {
-      await open(landmark.name);
+    for (const viewpoint of [TOLD, TOLD_ICON]) {
+      await open(viewpoint.name);
       const panel = popover()!;
-      const link = q(panel, "route-landmark-directions") as HTMLAnchorElement;
+      const link = q(panel, "route-viewpoint-directions") as HTMLAnchorElement;
       expect(link.tagName).toBe("A");
       expect(link.textContent).toBe("Get directions");
       expect(link.getAttribute("href")).toBe(
-        `https://www.google.com/maps/dir/?api=1&destination=${landmark.lat},${landmark.lng}`,
+        `https://www.google.com/maps/dir/?api=1&destination=${viewpoint.lat},${viewpoint.lng}`,
       );
       expect(link.getAttribute("target")).toBe("_blank");
       expect(link.getAttribute("rel")).toBe("noopener");
-      const text = Array.from(panel.querySelectorAll("p")).find((p) => p.textContent === landmark.description)!;
+      const text = Array.from(panel.querySelectorAll("p")).find((p) => p.textContent === viewpoint.description)!;
       expect(text.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     }
   });
@@ -861,7 +861,7 @@ describe("route map landmarks", () => {
     );
     await renderSection(null, { settings: { landmarks: [TOLD] } });
     await open(TOLD.name);
-    const link = q(popover()!, "route-landmark-directions")!;
+    const link = q(popover()!, "route-viewpoint-directions")!;
     expect(link.getAttribute("href")).toBe(`https://maps.apple.com/?daddr=${TOLD.lat},${TOLD.lng}`);
     expect(link.getAttribute("target")).toBe("_blank");
     expect(link.getAttribute("rel")).toBe("noopener");
@@ -874,26 +874,26 @@ describe("route map landmarks", () => {
       fireEvent.pointerDown(buttonFor("Clock Tower"));
     });
     await open("Clock Tower");
-    expect(qa(document, "route-landmark-popover")).toHaveLength(1);
+    expect(qa(document, "route-viewpoint-popover")).toHaveLength(1);
     expect(popover()!.textContent).toContain("Chimes at midnight.");
     expect(buttonFor("The Oval").getAttribute("aria-expanded")).toBe("false");
     expect(buttonFor("Clock Tower").getAttribute("aria-expanded")).toBe("true");
   });
 
-  it("makes an icon landmark with a description a button around its badge", async () => {
+  it("makes an icon viewpoint with a description a button around its badge", async () => {
     await renderSection(null, { settings: { landmarks: [TOLD_ICON] } });
-    expect(landmarkProperties(currentStyle())).toEqual([{ label: "Clock Tower", badge: true }]);
+    expect(viewpointProperties(currentStyle())).toEqual([{ label: "Clock Tower", badge: true }]);
     const button = buttonFor("Clock Tower");
-    const badge = q(button, "route-landmark-badge")!;
+    const badge = q(button, "route-viewpoint-badge")!;
     expect(badge.querySelector('svg[data-icon-id="bell"]')).not.toBeNull();
     await open("Clock Tower");
     expect(popover()!.textContent).toContain("Clock Tower");
     expect(popover()!.textContent).toContain("Chimes at midnight.");
   });
 
-  it("removes the landmark markers with the map", async () => {
+  it("removes the viewpoint markers with the map", async () => {
     const { unmount } = await renderSection(null, { settings: { landmarks: [LIBRARY, TOLD] } });
-    const markers = landmarkMarkers();
+    const markers = viewpointMarkers();
     expect(markers).toHaveLength(2);
     unmount();
     expect(markers.every((m) => m.removed)).toBe(true);
@@ -907,17 +907,17 @@ function dotEvent(label: string, lat: number, lng: number) {
 }
 
 describe("route map dot layer events", () => {
-  async function mount(onLandmarkClick = vi.fn()) {
+  async function mount(onViewpointClick = vi.fn()) {
     const container = document.createElement("div");
     const handle = await mountRouteMap({
       container,
       path: PATH,
       appearance: "light",
       labelMinZoom: 12,
-      onLandmarkClick,
+      onViewpointClick,
       onError: vi.fn(),
     });
-    return { container, handle, map: mocks.maps[0], onLandmarkClick };
+    return { container, handle, map: mocks.maps[0], onViewpointClick };
   }
 
   it("registers the listeners on both dot layers and stamps the container by the zoom", async () => {
@@ -954,11 +954,11 @@ describe("route map dot layer events", () => {
     expect(mocks.popups).toHaveLength(0);
   });
 
-  it("calls onLandmarkClick with the feature's point on a landmark dot click", async () => {
-    const { map, onLandmarkClick } = await mount();
+  it("calls onViewpointClick with the feature's point on a viewpoint dot click", async () => {
+    const { map, onViewpointClick } = await mount();
     map.zoom = 14;
     map.fireLayer("click", "route-landmark-dots", dotEvent("Caras Park", 46.87, -113.99));
-    expect(onLandmarkClick).toHaveBeenCalledWith({ lat: 46.87, lng: -113.99 });
+    expect(onViewpointClick).toHaveBeenCalledWith({ lat: 46.87, lng: -113.99 });
   });
 
   it("shows a time dot's popup for 2.5 s on a click", async () => {
@@ -978,7 +978,7 @@ describe("route map dot layer events", () => {
   });
 });
 
-describe("route map landmark dot clicks", () => {
+describe("route map viewpoint dot clicks", () => {
   it("passes labelMinZoom 12 to the style's two text layers", async () => {
     await renderSection(null, { settings: { landmarks: [PLAIN] } });
     const style = currentStyle() as unknown as { layers: { id: string; minzoom?: number }[] };
@@ -989,7 +989,7 @@ describe("route map landmark dot clicks", () => {
     ]);
   });
 
-  it("opens a plain landmark's popover from its dot with the name and the directions link, without a description", async () => {
+  it("opens a plain viewpoint's popover from its dot with the name and the directions link, without a description", async () => {
     await renderSection(null, { settings: { landmarks: [TOLD, PLAIN] } });
     expect(popover()).toBeNull();
     await act(async () => {
@@ -999,15 +999,15 @@ describe("route map landmark dot clicks", () => {
     expect(panel).not.toBeNull();
     expect(panel.querySelector("h3")?.textContent).toBe("Caras Park");
     expect(panel.querySelector("p")).toBeNull();
-    const link = q(panel, "route-landmark-directions")!;
+    const link = q(panel, "route-viewpoint-directions")!;
     expect(link.textContent).toBe("Get directions");
     expect(link.getAttribute("href")).toContain(`${PLAIN.lat},${PLAIN.lng}`);
   });
 
   it("puts the name in a tooltip span in every marker", async () => {
     await renderSection(null, { settings: { landmarks: [LIBRARY, TOLD] } });
-    const markers = landmarkMarkers();
-    expect(markers.map((m) => q(m.element!, "route-landmark-tip")?.textContent)).toEqual([
+    const markers = viewpointMarkers();
+    expect(markers.map((m) => q(m.element!, "route-viewpoint-tip")?.textContent)).toEqual([
       "Mount Jumbo",
       "The Oval",
     ]);

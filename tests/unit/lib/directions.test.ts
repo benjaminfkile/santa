@@ -1,4 +1,4 @@
-// docs/site.md section 8.9. The "Get directions" target of a landmark:
+// docs/site.md section 8.9. The "Get directions" target of a viewpoint:
 // Apple Maps on an Apple touch device (an iPhone, iPad, or iPod user
 // agent, or a Macintosh one with touch points), Google Maps directions
 // everywhere else, each with the point as latitude,longitude.

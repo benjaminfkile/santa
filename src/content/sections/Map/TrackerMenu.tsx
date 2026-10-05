@@ -3,9 +3,9 @@
 // with a nickname and an accent underline on the active one, then Terrain, Road, and Snow, then
 // the data row (a glyph and a value per item), then the footer row: the
 // account button (sign in or sign out) alone on the left, and flight data,
-// location, flight history, time labels, fit, landmarks, and close as
-// square buttons on the right. Landmarks shows while the site has
-// landmarks and the section's `controls.landmarks` is not false.
+// location, flight history, time labels, fit, viewpoints, and close as
+// square buttons on the right. Viewpoints shows while the site has
+// viewpoints and the section's `controls.landmarks` is not false.
 
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
@@ -65,9 +65,9 @@ export type TrackerMenuProps = {
   onFlightHistoryChange: (v: boolean) => void;
   timeLabels: boolean;
   onTimeLabelsChange: (v: boolean) => void;
-  landmarksAvailable?: boolean;
-  landmarks?: boolean;
-  onLandmarksChange?: (v: boolean) => void;
+  viewpointsAvailable?: boolean;
+  viewpoints?: boolean;
+  onViewpointsChange?: (v: boolean) => void;
   flightDockAvailable: boolean;
   flightDock: boolean;
   onFlightDockChange: (v: boolean) => void;
@@ -114,7 +114,7 @@ export function TrackerMenu(props: TrackerMenuProps) {
   const accuracyFt = accuracyM !== null ? metresToFeet(accuracyM) : null;
   const cardinal = headingDeg !== null ? headingToCardinal(headingDeg) : null;
   const showFlightHistory = props.controls.flightHistory && props.flightHistoryAvailable;
-  const showLandmarks = props.controls.landmarks !== false && props.landmarksAvailable === true;
+  const showViewpoints = props.controls.landmarks !== false && props.viewpointsAvailable === true;
 
   return (
     <div
@@ -329,16 +329,16 @@ export function TrackerMenu(props: TrackerMenuProps) {
                 ) : null}
               </div>
             ) : null}
-            {showLandmarks ? (
+            {showViewpoints ? (
               <div className={styles.footerItem}>
                 <span className={styles.footerLabel} aria-hidden>{copy.tracker.landmarks}</span>
                 <button
                   type="button"
                   className={styles.footerBtn}
-                  aria-pressed={props.landmarks === true}
+                  aria-pressed={props.viewpoints === true}
                   aria-label={copy.tracker.landmarks}
-                  onClick={() => props.onLandmarksChange?.(props.landmarks !== true)}
-                  data-testid="tracker-menu-landmarks"
+                  onClick={() => props.onViewpointsChange?.(props.viewpoints !== true)}
+                  data-testid="tracker-menu-viewpoints"
                 >
                   <ViewpointGlyph size={22} />
                 </button>

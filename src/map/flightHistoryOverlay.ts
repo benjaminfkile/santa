@@ -7,7 +7,7 @@
 // tooltip on hover); a click shows the full label for TIME_LABEL_PEEK_MS,
 // then the dot again.
 
-import { NAME_MIN_ZOOM } from "./landmarksOverlay";
+import { NAME_MIN_ZOOM } from "./viewpointsOverlay";
 import type { MapTheme } from "./themes";
 
 // How long a clicked time dot shows its full label.

@@ -48,10 +48,6 @@ export const HistoryGlyph = (p: GlyphProps) => (
 export const TimesGlyph = (p: GlyphProps) => (
   <Glyph {...p}><path d="M7 3h10M7 21h10M8 3c0 5 4 6 4 9s-4 4-4 9M16 3c0 5-4 6-4 9s4 4 4 9" /></Glyph>
 );
-// A flag on a pole over a ground line.
-export const LandmarkGlyph = (p: GlyphProps) => (
-  <Glyph {...p}><path d="M6 21V4M6 4h11l-2.5 4L17 12H6M3 21h8" /></Glyph>
-);
 // A route: two stops joined by a winding path, for the Route toggle. The
 // history clock it replaced said "the past", not "the way round".
 export const RouteGlyph = (p: GlyphProps) => (

@@ -11,7 +11,7 @@
 //  - A timeline of fewer than two entries keeps the path and the start
 //    marker and shows no marks.
 //  - The event's `routeMapConfig.pois.kinds` and the site settings'
-//    `landmarks` reach the style as its POI kind filter and its landmark
+//    `viewpoints` reach the style as its POI kind filter and its viewpoint
 //    labels; without them, or with them in the section data only, the
 //    style has neither.
 
@@ -416,8 +416,8 @@ describe("route map timeline", () => {
   });
 });
 
-describe("route map POI kinds and landmarks", () => {
-  it("passes the config's POI kinds and the settings' landmarks into the style", async () => {
+describe("route map POI kinds and viewpoints", () => {
+  it("passes the config's POI kinds and the settings' viewpoints into the style", async () => {
     setEvent(null, TIMELINE, { pois: { kinds: ["peak", "museum"] } });
     renderSection(undefined, {
       landmarks: [

@@ -16,9 +16,9 @@
 // The route palette also carries the time label pair of the poster's time
 // labels: dark text on a light halo for light, light text on a dark halo
 // for dark, so each label stands off the basemap in its own flavor. The
-// landmark labels share that pair; their dots have their own fill and
+// viewpoint labels share that pair; their dots have their own fill and
 // ring, the chrome secondary text colour ringed in the chrome background,
-// so a landmark never reads as a time label.
+// so a viewpoint never reads as a time label.
 // POI_COLOURS is the `pois` colour set of the @protomaps/basemaps flavor,
 // kept out of FLAVORS so the default style carries no POI layer; the
 // style adds it to the flavor only when a POI kind list is chosen. Light
@@ -36,8 +36,8 @@ export type RoutePalette = {
   endFill: string;      // the end marker fill
   labelText: string;    // the time label text
   labelHalo: string;    // the halo around the time label text
-  landmarkFill: string;   // the landmark dot
-  landmarkStroke: string; // the ring around the landmark dot
+  landmarkFill: string;   // the viewpoint dot
+  landmarkStroke: string; // the ring around the viewpoint dot
 };
 
 export type PoiColours = NonNullable<Flavor["pois"]>;

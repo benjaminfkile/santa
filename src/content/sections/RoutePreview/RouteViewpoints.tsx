@@ -1,19 +1,19 @@
-// docs/site.md section 8.9. The route map's landmarks from the site
-// settings. Each becomes a style landmark (its `name` the label). A landmark
+// docs/site.md section 8.9. The route map's viewpoints from the site
+// settings. Each becomes a style viewpoint (its `name` the label). A viewpoint
 // whose `icon` draws gets `badge` in the style (no dot, the label further
 // out) and a marker element holding the icon on a small round badge:
 // library icons inline, media icons through an image element, through
-// the Icon primitive. A landmark with a `description` gets a marker
+// the Icon primitive. A viewpoint with a `description` gets a marker
 // element holding a button, over its badge or, without one, over its dot;
 // the button's accessible name is "About <name>". The button opens the
-// landmark's popover (the name, the description, and a "Get directions"
-// link to the landmark's point, see directionsHref, opening in a new tab)
+// viewpoint's popover (the name, the description, and a "Get directions"
+// link to the viewpoint's point, see directionsHref, opening in a new tab)
 // in the map frame; its button closes an open one. One popover is open at a time; its close
 // button, Escape, and a tap anywhere outside the popover and the open
-// landmark's button close it, the first two returning focus to that
+// viewpoint's button close it, the first two returning focus to that
 // button. Escape here is marked handled, so a fullscreen map stays
-// fullscreen. A landmark with neither gets no marker and stays as the
-// style draws it. `openIndex` opens any landmark's popover by its index in
+// fullscreen. A viewpoint with neither gets no marker and stays as the
+// style draws it. `openIndex` opens any viewpoint's popover by its index in
 // the list (the section calls it for a click on a style dot); the popover
 // holds the description paragraph only when there is one, and always the
 // name and the directions link. Every marker also holds the name in a
@@ -31,7 +31,7 @@ import * as styles from "./RoutePreview.module.css";
 import * as ibtn from "../../../ui/IconButton.module.css";
 import * as btn from "../../../ui/Button.module.css";
 
-export type LandmarkData = {
+export type ViewpointData = {
   name: string;
   lat: number;
   lng: number;
@@ -39,54 +39,54 @@ export type LandmarkData = {
   description?: string | null;
 };
 
-type StyleLandmark = { lat: number; lng: number; label: string; badge?: boolean };
-type LandmarkMarker = { lat: number; lng: number; element: HTMLElement };
+type StyleViewpoint = { lat: number; lng: number; label: string; badge?: boolean };
+type ViewpointMarker = { lat: number; lng: number; element: HTMLElement };
 
 type Entry = {
   index: number;
-  landmark: LandmarkData;
+  viewpoint: ViewpointData;
   icon: IconRef | null;
   description: string | null;
   element: HTMLElement;
 };
 
-export type RouteLandmarks = {
-  styleLandmarks: readonly StyleLandmark[] | undefined;
-  markers: readonly LandmarkMarker[];
+export type RouteViewpoints = {
+  styleViewpoints: readonly StyleViewpoint[] | undefined;
+  markers: readonly ViewpointMarker[];
   portals: ReactNode;
   popover: ReactNode;
   openIndex: (index: number) => void;
 };
 
-const NO_MARKERS: readonly LandmarkMarker[] = [];
+const NO_MARKERS: readonly ViewpointMarker[] = [];
 
 function createMarkerElement(index: number): HTMLElement {
   const el = document.createElement("div");
-  el.className = styles.routeLandmark;
-  el.setAttribute("data-testid", "route-landmark");
-  el.setAttribute("data-landmark-index", String(index));
+  el.className = styles.routeViewpoint;
+  el.setAttribute("data-testid", "route-viewpoint");
+  el.setAttribute("data-viewpoint-index", String(index));
   return el;
 }
 
-export function useRouteLandmarks(
-  data: readonly LandmarkData[] | null | undefined,
+export function useRouteViewpoints(
+  data: readonly ViewpointData[] | null | undefined,
   bundle: ContentBundle,
-): RouteLandmarks {
+): RouteViewpoints {
   const entries = useMemo<Entry[]>(() => {
     const out: Entry[] = [];
-    (data ?? []).forEach((landmark, index) => {
-      const icon = landmark.icon && iconResolves(landmark.icon, bundle) ? landmark.icon : null;
+    (data ?? []).forEach((viewpoint, index) => {
+      const icon = viewpoint.icon && iconResolves(viewpoint.icon, bundle) ? viewpoint.icon : null;
       const description =
-        typeof landmark.description === "string" && landmark.description.trim() !== ""
-          ? landmark.description
+        typeof viewpoint.description === "string" && viewpoint.description.trim() !== ""
+          ? viewpoint.description
           : null;
       if (icon === null && description === null) return;
-      out.push({ index, landmark, icon, description, element: createMarkerElement(index) });
+      out.push({ index, viewpoint, icon, description, element: createMarkerElement(index) });
     });
     return out;
   }, [data, bundle]);
 
-  const styleLandmarks = useMemo(() => {
+  const styleViewpoints = useMemo(() => {
     if (data === null || data === undefined) return undefined;
     const badged = new Set(entries.filter((e) => e.icon !== null).map((e) => e.index));
     return data.map(({ name, lat, lng }, index) =>
@@ -98,22 +98,22 @@ export function useRouteLandmarks(
     () =>
       entries.length === 0
         ? NO_MARKERS
-        : entries.map(({ landmark, element }) => ({
-            lat: landmark.lat,
-            lng: landmark.lng,
+        : entries.map(({ viewpoint, element }) => ({
+            lat: viewpoint.lat,
+            lng: viewpoint.lng,
             element,
           })),
     [entries],
   );
 
   const [open, setOpen] = useState<number | null>(null);
-  const openLandmark = open === null ? null : (data?.[open] ?? null);
+  const openViewpoint = open === null ? null : (data?.[open] ?? null);
   const openEntry = entries.find((e) => e.index === open) ?? null;
   const openDescription =
-    openLandmark !== null &&
-    typeof openLandmark.description === "string" &&
-    openLandmark.description.trim() !== ""
-      ? openLandmark.description
+    openViewpoint !== null &&
+    typeof openViewpoint.description === "string" &&
+    openViewpoint.description.trim() !== ""
+      ? openViewpoint.description
       : null;
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
@@ -134,12 +134,12 @@ export function useRouteLandmarks(
   const openIndex = useCallback((index: number) => setOpen(index), []);
 
   useEffect(() => {
-    if (openLandmark === null) return;
+    if (openViewpoint === null) return;
     closeRef.current?.focus();
-  }, [openLandmark]);
+  }, [openViewpoint]);
 
   useEffect(() => {
-    if (openLandmark === null) return;
+    if (openViewpoint === null) return;
     function onKeyDown(event: KeyboardEvent): void {
       if (event.key !== "Escape") return;
       event.preventDefault();
@@ -157,12 +157,12 @@ export function useRouteLandmarks(
       document.removeEventListener("keydown", onKeyDown, true);
       document.removeEventListener("pointerdown", onPointerDown, true);
     };
-  }, [openLandmark, openEntry, close]);
+  }, [openViewpoint, openEntry, close]);
 
   const portals = entries.map((entry) => {
     const badge =
       entry.icon === null ? null : (
-        <span className={styles.routeLandmarkBadge} data-testid="route-landmark-badge" aria-hidden>
+        <span className={styles.routeViewpointBadge} data-testid="route-viewpoint-badge" aria-hidden>
           <Icon icon={entry.icon} bundle={bundle} decorative size={18} />
         </span>
       );
@@ -175,14 +175,14 @@ export function useRouteLandmarks(
           type="button"
           className={
             entry.icon === null
-              ? `${styles.routeLandmarkButton} ${styles.routeLandmarkDotButton}`
-              : styles.routeLandmarkButton
+              ? `${styles.routeViewpointButton} ${styles.routeViewpointDotButton}`
+              : styles.routeViewpointButton
           }
-          aria-label={copy.map.routeMap.landmark(entry.landmark.name)}
+          aria-label={copy.map.routeMap.viewpoint(entry.viewpoint.name)}
           aria-expanded={isOpen}
           aria-controls={isOpen ? popoverId : undefined}
           aria-haspopup="dialog"
-          data-testid="route-landmark-button"
+          data-testid="route-viewpoint-button"
           onClick={() => setOpen(isOpen ? null : entry.index)}
         >
           {badge}
@@ -191,56 +191,56 @@ export function useRouteLandmarks(
     return createPortal(
       <>
         {body}
-        <span className={styles.routeLandmarkTip} aria-hidden data-testid="route-landmark-tip">
-          {entry.landmark.name}
+        <span className={styles.routeViewpointTip} aria-hidden data-testid="route-viewpoint-tip">
+          {entry.viewpoint.name}
         </span>
       </>,
       entry.element,
-      `landmark-${entry.index}`,
+      `viewpoint-${entry.index}`,
     );
   });
 
   const popover =
-    openLandmark === null ? null : (
+    openViewpoint === null ? null : (
       <div
         ref={popoverRef}
         id={popoverId}
-        className={styles.routeLandmarkPopover}
+        className={styles.routeViewpointPopover}
         role="dialog"
         aria-labelledby={titleId}
-        data-testid="route-landmark-popover"
+        data-testid="route-viewpoint-popover"
       >
-        <div className={styles.routeLandmarkPopoverHead}>
-          <h3 id={titleId} className={styles.routeLandmarkPopoverTitle}>
-            {openLandmark.name}
+        <div className={styles.routeViewpointPopoverHead}>
+          <h3 id={titleId} className={styles.routeViewpointPopoverTitle}>
+            {openViewpoint.name}
           </h3>
           <button
             ref={closeRef}
             type="button"
             className={ibtn.ibtn}
-            aria-label={copy.map.routeMap.closeLandmark}
+            aria-label={copy.map.routeMap.closeViewpoint}
             onClick={() => close(true)}
-            data-testid="route-landmark-popover-close"
+            data-testid="route-viewpoint-popover-close"
           >
             {CLOSE_ICON}
           </button>
         </div>
         {openDescription === null ? null : (
-          <p className={styles.routeLandmarkPopoverText}>{openDescription}</p>
+          <p className={styles.routeViewpointPopoverText}>{openDescription}</p>
         )}
         <a
-          className={`${btn.btn} ${btn.btnSm} ${styles.routeLandmarkDirections}`}
-          href={directionsHref(openLandmark.lat, openLandmark.lng)}
+          className={`${btn.btn} ${btn.btnSm} ${styles.routeViewpointDirections}`}
+          href={directionsHref(openViewpoint.lat, openViewpoint.lng)}
           target="_blank"
           rel="noopener"
-          data-testid="route-landmark-directions"
+          data-testid="route-viewpoint-directions"
         >
           {copy.map.routeMap.directions}
         </a>
       </div>
     );
 
-  return { styleLandmarks, markers, portals, popover, openIndex };
+  return { styleViewpoints, markers, portals, popover, openIndex };
 }
 
 const CLOSE_ICON = (

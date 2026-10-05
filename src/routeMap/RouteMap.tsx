@@ -5,15 +5,15 @@
 // archive, the style, WebGL) is logged once and reported through
 // `onFail`, which hands the section back to the image rendering. The map
 // is destroyed on unmount. `marks` are drawn as dots on the path and
-// `timeLabels` as labelled dots beside them; `poiKinds`, `landmarks`,
+// `timeLabels` as labelled dots beside them; `poiKinds`, `viewpoints`,
 // `arrows`, `arrowScale`, `routeWidthScale`, and `labelScale` pass
-// through to the style options of the same names; `landmarkMarkers` stands each caller's
-// element on its point as a marker (the caller renders the landmark
+// through to the style options of the same names; `viewpointMarkers` stands each caller's
+// element on its point as a marker (the caller renders the viewpoint
 // badges and buttons into them); `startElement` stands as a marker on the
 // path's first point (the caller builds it, so this chunk imports neither
 // react-dom nor the icon modules). `labelMinZoom` passes through to the
-// map (the names hide below it) and `onLandmarkClick` is called, as it is
-// at the time, with the point of a clicked landmark dot.
+// map (the names hide below it) and `onViewpointClick` is called, as it is
+// at the time, with the point of a clicked viewpoint dot.
 // The control stack sits at the top right of the frame, each button
 // carrying `controlClassName` (the caller passes the icon button recipe,
 // which stays out of this chunk because the tracker shares it): a
@@ -34,8 +34,8 @@ import {
   mountRouteMap,
   probeTerrain,
   type Appearance,
-  type Landmark,
-  type LandmarkMarker,
+  type Viewpoint,
+  type ViewpointMarker,
   type LatLng,
   type RouteMapHandle,
   type TimeLabel,
@@ -50,21 +50,21 @@ function useAppearance(): Appearance {
 
 const NO_MARKS: readonly LatLng[] = [];
 const NO_LABELS: readonly TimeLabel[] = [];
-const NO_MARKERS: readonly LandmarkMarker[] = [];
+const NO_MARKERS: readonly ViewpointMarker[] = [];
 
 export type RouteMapProps = {
   path: readonly LatLng[];
   marks?: readonly LatLng[];
   timeLabels?: readonly TimeLabel[];
   poiKinds?: readonly string[];
-  landmarks?: readonly Landmark[];
-  landmarkMarkers?: readonly LandmarkMarker[];
+  viewpoints?: readonly Viewpoint[];
+  viewpointMarkers?: readonly ViewpointMarker[];
   arrows?: boolean;
   arrowScale?: number;
   routeWidthScale?: number;
   labelScale?: number;
   labelMinZoom?: number;
-  onLandmarkClick?: (point: { lat: number; lng: number }) => void;
+  onViewpointClick?: (point: { lat: number; lng: number }) => void;
   startElement?: HTMLElement;
   ariaLabel?: string;
   fullscreenControl?: boolean;
@@ -80,14 +80,14 @@ export function RouteMap({
   marks = NO_MARKS,
   timeLabels = NO_LABELS,
   poiKinds,
-  landmarks,
-  landmarkMarkers = NO_MARKERS,
+  viewpoints,
+  viewpointMarkers = NO_MARKERS,
   arrows = false,
   arrowScale,
   routeWidthScale,
   labelScale,
   labelMinZoom,
-  onLandmarkClick,
+  onViewpointClick,
   startElement,
   ariaLabel,
   fullscreenControl = false,
@@ -110,14 +110,14 @@ export function RouteMap({
     marks,
     timeLabels,
     poiKinds,
-    landmarks,
-    landmarkMarkers,
+    viewpoints,
+    viewpointMarkers,
     arrows,
     arrowScale,
     routeWidthScale,
     labelScale,
     labelMinZoom,
-    onLandmarkClick,
+    onViewpointClick,
     startElement,
     appearance,
     terrain,
@@ -130,14 +130,14 @@ export function RouteMap({
     marks,
     timeLabels,
     poiKinds,
-    landmarks,
-    landmarkMarkers,
+    viewpoints,
+    viewpointMarkers,
     arrows,
     arrowScale,
     routeWidthScale,
     labelScale,
     labelMinZoom,
-    onLandmarkClick,
+    onViewpointClick,
     startElement,
     appearance,
     terrain,
@@ -162,14 +162,14 @@ export function RouteMap({
       marks: latest.current.marks,
       timeLabels: latest.current.timeLabels,
       poiKinds: latest.current.poiKinds,
-      landmarks: latest.current.landmarks,
-      landmarkMarkers: latest.current.landmarkMarkers,
+      viewpoints: latest.current.viewpoints,
+      viewpointMarkers: latest.current.viewpointMarkers,
       arrows: latest.current.arrows,
       arrowScale: latest.current.arrowScale,
       routeWidthScale: latest.current.routeWidthScale,
       labelScale: latest.current.labelScale,
       labelMinZoom: latest.current.labelMinZoom,
-      onLandmarkClick: (point) => latest.current.onLandmarkClick?.(point),
+      onViewpointClick: (point) => latest.current.onViewpointClick?.(point),
       appearance: latest.current.appearance,
       terrain: latest.current.terrain,
       startElement: latest.current.startElement,
@@ -187,8 +187,8 @@ export function RouteMap({
           marks: now.marks,
           timeLabels: now.timeLabels,
           poiKinds: now.poiKinds,
-          landmarks: now.landmarks,
-          landmarkMarkers: now.landmarkMarkers,
+          viewpoints: now.viewpoints,
+          viewpointMarkers: now.viewpointMarkers,
           arrows: now.arrows,
           arrowScale: now.arrowScale,
           routeWidthScale: now.routeWidthScale,
@@ -224,8 +224,8 @@ export function RouteMap({
       marks,
       timeLabels,
       poiKinds,
-      landmarks,
-      landmarkMarkers,
+      viewpoints,
+      viewpointMarkers,
       arrows,
       arrowScale,
       routeWidthScale,
@@ -239,8 +239,8 @@ export function RouteMap({
     marks,
     timeLabels,
     poiKinds,
-    landmarks,
-    landmarkMarkers,
+    viewpoints,
+    viewpointMarkers,
     arrows,
     arrowScale,
     routeWidthScale,

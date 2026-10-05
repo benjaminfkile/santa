@@ -29,11 +29,11 @@ import type { MapTheme } from "../../../map/themes";
 import { resolveOfferedThemes, resolveInitialTheme } from "../../../map/themes";
 import { resolvePoiKinds } from "../../../map/poiStyles";
 import { acquire as acquireWakeLock, release as releaseWakeLock } from "../../../map/wakeLock";
-import type { MountIcon, TrackerLandmark } from "../../../map/landmarksOverlay";
+import type { MountIcon, TrackerViewpoint } from "../../../map/viewpointsOverlay";
 import type { IconRef, Snapshot } from "../../../contracts";
 import type { ContentBundle } from "../../../store/types";
 import { Icon, iconResolves } from "../../primitives/Icon";
-import { resolveLandmarks } from "../RoutePreview/routeMapConfig";
+import { resolveViewpoints } from "../RoutePreview/routeMapConfig";
 import { copy } from "../../../copy/copy";
 import { AirbornePill, DistancePill, FixStatus } from "./InfoOverlays";
 import { LiveIndicator } from "./LiveIndicator";
@@ -102,10 +102,10 @@ function normalizePoints(fh: FlightHistory | null): { lat: number; lng: number; 
   return filtered;
 }
 
-// The site settings' landmarks for the tracker, each icon kept only when it
-// draws, so a landmark whose icon does not resolve shows the dot.
-function trackerLandmarks(list: unknown, bundle: ContentBundle): TrackerLandmark[] {
-  return (resolveLandmarks(list) ?? []).map((l) =>
+// The site settings' viewpoints for the tracker, each icon kept only when it
+// draws, so a viewpoint whose icon does not resolve shows the dot.
+function trackerViewpoints(list: unknown, bundle: ContentBundle): TrackerViewpoint[] {
+  return (resolveViewpoints(list) ?? []).map((l) =>
     l.icon && !iconResolves(l.icon, bundle) ? { ...l, icon: null } : l,
   );
 }
@@ -173,12 +173,12 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const [timeLabels, setTimeLabelsState] = useState<boolean>(() =>
     readTrackerToggle("timeLabels", true),
   );
-  const [landmarksOn, setLandmarksOnState] = useState<boolean>(() =>
+  const [viewpointsOn, setViewpointsOnState] = useState<boolean>(() =>
     readTrackerToggle("landmarks", true),
   );
-  const setLandmarksOn = useCallback((v: boolean) => {
+  const setViewpointsOn = useCallback((v: boolean) => {
     writeTrackerToggle("landmarks", v);
-    setLandmarksOnState(v);
+    setViewpointsOnState(v);
   }, []);
   const setFlightHistoryOn = useCallback((v: boolean) => {
     writeTrackerToggle("flightHistory", v);
@@ -218,10 +218,10 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const { state: authState } = useAuth();
   const leaveLabel =
     authState.status === "signedOut" ? copy.cookies.signInToLeave : copy.cookies.leave;
-  const settingsLandmarks = bundle.content?.settings?.landmarks;
-  const landmarks = useMemo(
-    () => trackerLandmarks(settingsLandmarks, bundle),
-    [settingsLandmarks, bundle],
+  const settingsViewpoints = bundle.content?.settings?.landmarks;
+  const viewpoints = useMemo(
+    () => trackerViewpoints(settingsViewpoints, bundle),
+    [settingsViewpoints, bundle],
   );
   const flightPoints = useMemo(() => normalizePoints(flightHistory as FlightHistory | null), [flightHistory]);
   const flightHistoryAvailable = flightPoints !== null;
@@ -235,7 +235,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
       ? userState.distanceMetres
       : null;
 
-  // Landmark icons render through the Icon primitive into the overlay's
+  // Viewpoint icons render through the Icon primitive into the overlay's
   // badge, each in its own root, against the latest bundle.
   const bundleRef = useRef(bundle);
   bundleRef.current = bundle;
@@ -295,14 +295,14 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     controller.setToggles({
       flightHistory: flightHistoryOn && flightHistoryAvailable,
       timeLabels,
-      landmarks: landmarksOn,
+      landmarks: viewpointsOn,
     });
-  }, [controller, flightHistoryOn, flightHistoryAvailable, timeLabels, landmarksOn]);
+  }, [controller, flightHistoryOn, flightHistoryAvailable, timeLabels, viewpointsOn]);
 
   useEffect(() => {
     if (controller === null) return;
-    controller.setLandmarks(landmarks);
-  }, [controller, landmarks]);
+    controller.setViewpoints(viewpoints);
+  }, [controller, viewpoints]);
 
   useEffect(() => {
     if (controller === null) return;
@@ -479,9 +479,9 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 onFlightHistoryChange={setFlightHistoryOn}
                 timeLabels={timeLabels}
                 onTimeLabelsChange={setTimeLabels}
-                landmarksAvailable={landmarks.length > 0}
-                landmarks={landmarksOn}
-                onLandmarksChange={setLandmarksOn}
+                viewpointsAvailable={viewpoints.length > 0}
+                viewpoints={viewpointsOn}
+                onViewpointsChange={setViewpointsOn}
                 flightDockAvailable={flightDockAvailable}
                 flightDock={flightDockOn}
                 onFlightDockChange={setFlightDockOn}

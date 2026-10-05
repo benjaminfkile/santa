@@ -1,6 +1,6 @@
 // docs/site.md section 8.9. The route map's inputs. The event's
 // `routeMapConfig` in the snapshot gives the display, the controls, and
-// the POI kinds; the site settings give the landmarks. Each value
+// the POI kinds; the site settings give the viewpoints. Each value
 // resolves on its own: the config's value, else the default. A null or
 // absent config, block, or key reads as absent, and so does a value
 // outside its contract set.
@@ -10,13 +10,13 @@
 //  - `controls`: the fullscreen and terrain switches, each true unless
 //    the config says false.
 //  - `pois.kinds`: the string kinds; absent without a list.
-//  - resolveLandmarks: the site settings' `landmarks` entries with a name
+//  - resolveViewpoints: the site settings' `viewpoints` entries with a name
 //    and numeric coordinates, each with its icon when it is a well formed
 //    reference and its description when it is a string; absent without
 //    a list.
 
 import type { IconRef, Snapshot } from "../../../contracts";
-import type { LandmarkData } from "./RouteLandmarks";
+import type { ViewpointData } from "./RouteViewpoints";
 
 export type RouteMapConfig = NonNullable<NonNullable<Snapshot["event"]>["routeMapConfig"]>;
 
@@ -92,19 +92,19 @@ function asIcon(v: unknown): IconRef | null {
   return v as IconRef;
 }
 
-export function resolveLandmarks(list: unknown): LandmarkData[] | undefined {
+export function resolveViewpoints(list: unknown): ViewpointData[] | undefined {
   if (!Array.isArray(list)) return undefined;
-  const out: LandmarkData[] = [];
+  const out: ViewpointData[] = [];
   for (const item of list as unknown[]) {
     if (item === null || typeof item !== "object") continue;
     const entry = item as Record<string, unknown>;
     const { name, lat, lng, description } = entry;
     if (typeof name !== "string" || name === "" || !isCoordinate(lat) || !isCoordinate(lng)) continue;
-    const landmark: LandmarkData = { name, lat, lng };
+    const viewpoint: ViewpointData = { name, lat, lng };
     const icon = asIcon(entry.icon);
-    if (icon !== null) landmark.icon = icon;
-    if (typeof description === "string") landmark.description = description;
-    out.push(landmark);
+    if (icon !== null) viewpoint.icon = icon;
+    if (typeof description === "string") viewpoint.description = description;
+    out.push(viewpoint);
   }
   return out;
 }
