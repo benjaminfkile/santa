@@ -1,7 +1,8 @@
 // docs/site.md section 8.3. Owns the `google.maps.Map`, the Santa marker,
-// the flight history overlay, the landmarks overlay, and the user location. Subscribes to the
-// store once and moves the marker imperatively; React never re-renders on
-// a fix. `destroy` removes the map listeners and pending timers, and every
+// the flight history overlay, the landmarks overlay, the user location, and
+// the map styles (the theme's with the section's place filter on top).
+// Subscribes to the store once and moves the marker imperatively; React
+// never re-renders on a fix. `destroy` removes the map listeners and pending timers, and every
 // method is a no-op afterwards, so a late call or a late map event on a
 // disposed controller draws nothing and calls back into nothing.
 
@@ -21,6 +22,7 @@ import {
 import { createUserLocation, type UserLocation, type UserLocationState } from "./userLocation";
 import type { MapsLibs } from "./loadMaps";
 import type { MapTheme } from "./themes";
+import { poiStyles, type PoiFilter } from "./poiStyles";
 
 export type MapControllerOptions = {
   theme: MapTheme;
@@ -36,6 +38,7 @@ export type MapControllerOptions = {
 export type MapController = {
   map: google.maps.Map;
   setTheme(theme: MapTheme): void;
+  setPois(filter: PoiFilter): void;
   setMapType(type: "terrain" | "roadmap"): void;
   setFlightHistory(points: HistoryPoint[] | null): void;
   setLandmarks(list: readonly TrackerLandmark[]): void;
@@ -61,6 +64,7 @@ export function createMapController(
   opts: MapControllerOptions,
 ): MapController {
   let theme = opts.theme;
+  let pois: PoiFilter = null;
   let points: HistoryPoint[] | null = null;
   let toggles = { flightHistory: false, timeLabels: true, landmarks: true };
   let following = true;
@@ -136,9 +140,14 @@ export function createMapController(
     setTheme(t) {
       if (disposed) return;
       theme = t;
-      map.setOptions({ styles: theme.styles });
+      map.setOptions({ styles: poiStyles(theme.styles, pois) });
       overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
       userLoc?.setTheme(theme);
+    },
+    setPois(filter) {
+      if (disposed) return;
+      pois = filter;
+      map.setOptions({ styles: poiStyles(theme.styles, pois) });
     },
     setMapType(type) {
       if (disposed) return;

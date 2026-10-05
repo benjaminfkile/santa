@@ -7,6 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createMapController, type MapControllerOptions } from "../../../src/map/mapController";
 import { createUserLocation } from "../../../src/map/userLocation";
 import { resolveOfferedThemes } from "../../../src/map/themes";
+import { poiStyles } from "../../../src/map/poiStyles";
 import {
   FakeMap,
   FakeMapObject,
@@ -201,5 +202,34 @@ describe("createUserLocation after destroy", () => {
     loc.setSanta({ lat: 40, lng: -105 });
     expect(watchPosition).not.toHaveBeenCalled();
     expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
+describe("createMapController place filter", () => {
+  const night = resolveOfferedThemes(["night"])[0];
+
+  it("setPois sets the theme's styles plus the filter, and a theme change keeps it", () => {
+    const c = createMapController(fakeLibs(), document.createElement("div"), options());
+    const map = FakeMap.instances[0];
+    c.setPois({ kinds: ["park", "school"] });
+    expect(map.optionsCalls.at(-1)).toEqual({
+      styles: poiStyles(theme.styles, { kinds: ["park", "school"] }),
+    });
+    c.setTheme(night);
+    expect(map.optionsCalls.at(-1)).toEqual({
+      styles: poiStyles(night.styles, { kinds: ["park", "school"] }),
+    });
+    c.setPois(null);
+    expect((map.optionsCalls.at(-1) as { styles: unknown }).styles).toBe(night.styles);
+  });
+
+  it("every call after destroy is a no-op", () => {
+    const c = createMapController(fakeLibs(), document.createElement("div"), options());
+    const map = FakeMap.instances[0];
+    c.destroy();
+    c.setPois({ kinds: ["park"] });
+    c.setTheme(night);
+    c.setPois(null);
+    expect(map.optionsCalls).toEqual([]);
   });
 });
