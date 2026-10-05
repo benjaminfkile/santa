@@ -23,6 +23,12 @@
 //    the landmark's point in a new tab: Apple Maps on an Apple touch
 //    device, Google Maps everywhere else.
 //  - The map is created without cooperativeGestures.
+//  - The section passes labelMinZoom 12: the handle listens on the
+//    landmark and time label dot layers; below zoom 12 a pointer on a dot
+//    shows a popup with its label until it leaves, a tap on a time dot
+//    shows it for 2.5 s, and the container carries data-names; a click on
+//    any landmark dot opens that landmark's popover, a plain landmark's
+//    without a description paragraph.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, cleanup, act, fireEvent } from "@testing-library/react";
@@ -41,6 +47,7 @@ import {
   resolveRouteMapDisplay,
 } from "../../../../src/content/sections/RoutePreview/routeMapConfig";
 import { routeTimeLabels } from "../../../../src/content/sections/RoutePreview/routeTimelineData";
+import { mountRouteMap } from "../../../../src/routeMap/index";
 
 type Handler = (event: unknown) => void;
 
@@ -49,6 +56,18 @@ type FakeMapInstance = {
   setStyle: ReturnType<typeof vi.fn>;
   addImage: ReturnType<typeof vi.fn>;
   handlers: Map<string, Handler[]>;
+  layerHandlers: Map<string, Handler[]>;
+  zoom: number;
+  fire: (name: string, event?: unknown) => void;
+  fireLayer: (name: string, layerId: string, event?: unknown) => void;
+};
+
+type FakePopupInstance = {
+  options: Record<string, unknown>;
+  lngLats: [number, number][];
+  texts: string[];
+  added: boolean;
+  removed: boolean;
 };
 
 type FakeMarkerInstance = {
@@ -60,13 +79,17 @@ type FakeMarkerInstance = {
 const mocks = vi.hoisted(() => ({
   maps: [] as FakeMapInstance[],
   markers: [] as FakeMarkerInstance[],
+  popups: [] as FakePopupInstance[],
 }));
 
 vi.mock("maplibre-gl", () => {
   class FakeMap {
     options: Record<string, unknown>;
     handlers = new Map<string, Handler[]>();
+    layerHandlers = new Map<string, Handler[]>();
     images = new Set<string>();
+    zoom = 10;
+    canvas = document.createElement("canvas");
     setStyle = vi.fn();
     fitBounds = vi.fn();
     resize = vi.fn();
@@ -81,9 +104,26 @@ vi.mock("maplibre-gl", () => {
     hasImage(id: string) {
       return this.images.has(id);
     }
-    on(name: string, handler: Handler) {
-      this.handlers.set(name, [...(this.handlers.get(name) ?? []), handler]);
+    on(name: string, layerOrHandler: string | Handler, handler?: Handler) {
+      if (typeof layerOrHandler === "string") {
+        const key = `${name} ${layerOrHandler}`;
+        this.layerHandlers.set(key, [...(this.layerHandlers.get(key) ?? []), handler!]);
+      } else {
+        this.handlers.set(name, [...(this.handlers.get(name) ?? []), layerOrHandler]);
+      }
       return this;
+    }
+    fire(name: string, event: unknown = {}) {
+      for (const fn of this.handlers.get(name) ?? []) fn(event);
+    }
+    fireLayer(name: string, layerId: string, event: unknown = {}) {
+      for (const fn of this.layerHandlers.get(`${name} ${layerId}`) ?? []) fn(event);
+    }
+    getZoom() {
+      return this.zoom;
+    }
+    getCanvas() {
+      return this.canvas;
     }
     once() {
       return this;
@@ -110,7 +150,33 @@ vi.mock("maplibre-gl", () => {
       this.element?.remove();
     }
   }
-  return { Map: FakeMap, Marker: FakeMarker, addProtocol: vi.fn(), setWorkerUrl: vi.fn() };
+  class FakePopup {
+    options: Record<string, unknown>;
+    lngLats: [number, number][] = [];
+    texts: string[] = [];
+    added = false;
+    removed = false;
+    constructor(options: Record<string, unknown>) {
+      this.options = options;
+      mocks.popups.push(this);
+    }
+    setLngLat(lngLat: [number, number]) {
+      this.lngLats.push(lngLat);
+      return this;
+    }
+    setText(text: string) {
+      this.texts.push(text);
+      return this;
+    }
+    addTo() {
+      this.added = true;
+      return this;
+    }
+    remove() {
+      this.removed = true;
+    }
+  }
+  return { Map: FakeMap, Marker: FakeMarker, Popup: FakePopup, addProtocol: vi.fn(), setWorkerUrl: vi.fn() };
 });
 
 vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
@@ -268,6 +334,7 @@ function qa(root: ParentNode, id: string): HTMLElement[] {
 beforeEach(() => {
   mocks.maps.length = 0;
   mocks.markers.length = 0;
+  mocks.popups.length = 0;
   mutableEnv.ROUTE_BASEMAP_URL = "https://cdn.example/basemap";
   document.documentElement.setAttribute("data-theme", "light");
   setEvent();
@@ -830,5 +897,119 @@ describe("route map landmarks", () => {
     expect(markers).toHaveLength(2);
     unmount();
     expect(markers.every((m) => m.removed)).toBe(true);
+  });
+});
+
+function dotEvent(label: string, lat: number, lng: number) {
+  return {
+    features: [{ properties: { label }, geometry: { type: "Point", coordinates: [lng, lat] } }],
+  };
+}
+
+describe("route map dot layer events", () => {
+  async function mount(onLandmarkClick = vi.fn()) {
+    const container = document.createElement("div");
+    const handle = await mountRouteMap({
+      container,
+      path: PATH,
+      appearance: "light",
+      labelMinZoom: 12,
+      onLandmarkClick,
+      onError: vi.fn(),
+    });
+    return { container, handle, map: mocks.maps[0], onLandmarkClick };
+  }
+
+  it("registers the listeners on both dot layers and stamps the container by the zoom", async () => {
+    const { container, map } = await mount();
+    for (const name of ["mouseenter", "mouseleave", "click"]) {
+      expect(map.layerHandlers.get(`${name} route-landmark-dots`), name).toHaveLength(1);
+      expect(map.layerHandlers.get(`${name} route-time-label-dots`), name).toHaveLength(1);
+    }
+    expect(container.getAttribute("data-names")).toBe("hidden");
+    map.zoom = 12;
+    map.fire("zoom");
+    expect(container.getAttribute("data-names")).toBe("shown");
+  });
+
+  it("shows a popup with the label on a hover at zoom 10 and removes it on leave", async () => {
+    const { map } = await mount();
+    map.fireLayer("mouseenter", "route-landmark-dots", dotEvent("Caras Park", 46.87, -113.99));
+    expect(mocks.popups).toHaveLength(1);
+    const tip = mocks.popups[0];
+    expect(tip.options).toMatchObject({ closeButton: false, closeOnClick: false, offset: 10, className: "route-map-tip" });
+    expect(tip.texts).toEqual(["Caras Park"]);
+    expect(tip.lngLats).toEqual([[-113.99, 46.87]]);
+    expect(tip.added).toBe(true);
+    map.fireLayer("mouseleave", "route-landmark-dots");
+    expect(tip.removed).toBe(true);
+  });
+
+  it("shows no popup at zoom 14", async () => {
+    const { map } = await mount();
+    map.zoom = 14;
+    map.fireLayer("mouseenter", "route-landmark-dots", dotEvent("Caras Park", 46.87, -113.99));
+    map.fireLayer("mouseenter", "route-time-label-dots", dotEvent("20 min", 46.9, -113.95));
+    map.fireLayer("click", "route-time-label-dots", dotEvent("20 min", 46.9, -113.95));
+    expect(mocks.popups).toHaveLength(0);
+  });
+
+  it("calls onLandmarkClick with the feature's point on a landmark dot click", async () => {
+    const { map, onLandmarkClick } = await mount();
+    map.zoom = 14;
+    map.fireLayer("click", "route-landmark-dots", dotEvent("Caras Park", 46.87, -113.99));
+    expect(onLandmarkClick).toHaveBeenCalledWith({ lat: 46.87, lng: -113.99 });
+  });
+
+  it("shows a time dot's popup for 2.5 s on a click", async () => {
+    const { map } = await mount();
+    vi.useFakeTimers();
+    try {
+      map.fireLayer("click", "route-time-label-dots", dotEvent("20 min", 46.9, -113.95));
+      expect(mocks.popups).toHaveLength(1);
+      expect(mocks.popups[0].texts).toEqual(["20 min"]);
+      vi.advanceTimersByTime(2499);
+      expect(mocks.popups[0].removed).toBe(false);
+      vi.advanceTimersByTime(1);
+      expect(mocks.popups[0].removed).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("route map landmark dot clicks", () => {
+  it("passes labelMinZoom 12 to the style's two text layers", async () => {
+    await renderSection(null, { settings: { landmarks: [PLAIN] } });
+    const style = currentStyle() as unknown as { layers: { id: string; minzoom?: number }[] };
+    const gated = style.layers.filter((l) => l.minzoom !== undefined && l.id.startsWith("route-"));
+    expect(gated.map((l) => [l.id, l.minzoom])).toEqual([
+      ["route-landmarks", 12],
+      ["route-time-labels", 12],
+    ]);
+  });
+
+  it("opens a plain landmark's popover from its dot with the name and the directions link, without a description", async () => {
+    await renderSection(null, { settings: { landmarks: [TOLD, PLAIN] } });
+    expect(popover()).toBeNull();
+    await act(async () => {
+      mocks.maps[0].fireLayer("click", "route-landmark-dots", dotEvent("Caras Park", PLAIN.lat, PLAIN.lng));
+    });
+    const panel = popover()!;
+    expect(panel).not.toBeNull();
+    expect(panel.querySelector("h3")?.textContent).toBe("Caras Park");
+    expect(panel.querySelector("p")).toBeNull();
+    const link = q(panel, "route-landmark-directions")!;
+    expect(link.textContent).toBe("Get directions");
+    expect(link.getAttribute("href")).toContain(`${PLAIN.lat},${PLAIN.lng}`);
+  });
+
+  it("puts the name in a tooltip span in every marker", async () => {
+    await renderSection(null, { settings: { landmarks: [LIBRARY, TOLD] } });
+    const markers = landmarkMarkers();
+    expect(markers.map((m) => q(m.element!, "route-landmark-tip")?.textContent)).toEqual([
+      "Mount Jumbo",
+      "The Oval",
+    ]);
   });
 });

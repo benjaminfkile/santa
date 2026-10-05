@@ -2,9 +2,16 @@
 // second `Polyline` of arrow symbols, and time-label markers at fixed
 // elapsed intervals. Arrow step and label interval tables are pure and
 // unit-tested. The points come from `snapshot.event.flightHistory.points`
-// (route order, already thinned by the API).
+// (route order, already thinned by the API). Below NAME_MIN_ZOOM a time
+// label collapses to a dot marker titled with the label text (the native
+// tooltip on hover); a click shows the full label for TIME_LABEL_PEEK_MS,
+// then the dot again.
 
+import { NAME_MIN_ZOOM } from "./landmarksOverlay";
 import type { MapTheme } from "./themes";
+
+// How long a clicked time dot shows its full label.
+export const TIME_LABEL_PEEK_MS = 2500;
 
 export type HistoryPoint = { lat: number; lng: number; recordedAt?: string | null };
 
@@ -22,6 +29,10 @@ export function arrowScaleForZoom(zoom: number): number {
 
 export function labelIntervalMinutesForZoom(zoom: number): number {
   return zoom > 12 ? 5 : 20;
+}
+
+export function timeLabelsCollapsedForZoom(zoom: number): boolean {
+  return zoom < NAME_MIN_ZOOM;
 }
 
 export function formatLabelText(minutes: number): string {
@@ -82,6 +93,14 @@ export function timeLabelSvgDataUri(text: string, theme: MapTheme): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
+export function timeDotSvgDataUri(theme: MapTheme): string {
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">` +
+    `<circle cx="6" cy="6" r="5.5" fill="${theme.routeColor}" stroke="${theme.timeLabelFg}" stroke-opacity="0.4"/>` +
+    `</svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
 export type FlightHistoryOverlay = {
   redraw(theme: MapTheme, zoom: number, opts: { flightHistory: boolean; timeLabels: boolean }): void;
   destroy(): void;
@@ -95,8 +114,11 @@ export function createFlightHistoryOverlay(
   let line: google.maps.Polyline | null = null;
   let arrows: google.maps.Polyline | null = null;
   let labels: google.maps.Marker[] = [];
+  const timers = new Map<google.maps.Marker, ReturnType<typeof setTimeout>>();
 
   function clear() {
+    for (const t of timers.values()) clearTimeout(t);
+    timers.clear();
     line?.setMap(null);
     line = null;
     arrows?.setMap(null);
@@ -151,14 +173,40 @@ export function createFlightHistoryOverlay(
       if (opts.timeLabels) {
         const intervalMin = labelIntervalMinutesForZoom(zoom);
         const labelPts = pickLabelPoints(filtered, intervalMin);
+        const collapsed = timeLabelsCollapsedForZoom(zoom);
+        const dotUrl = collapsed ? timeDotSvgDataUri(theme) : "";
         for (const l of labelPts) {
           const url = timeLabelSvgDataUri(l.labelText, theme);
+          const full = { url, anchor: new google.maps.Point(0, 12) };
+          if (!collapsed) {
+            const marker = new libs.marker.Marker({
+              position: { lat: l.lat, lng: l.lng },
+              map,
+              icon: full,
+              title: l.labelText,
+              clickable: false,
+            });
+            labels.push(marker);
+            continue;
+          }
+          const dot = { url: dotUrl, anchor: new google.maps.Point(6, 6) };
           const marker = new libs.marker.Marker({
             position: { lat: l.lat, lng: l.lng },
             map,
-            icon: { url, anchor: new google.maps.Point(0, 12) },
+            icon: dot,
             title: l.labelText,
-            clickable: false,
+            clickable: true,
+          });
+          marker.addListener("click", () => {
+            clearTimeout(timers.get(marker));
+            marker.setIcon(full);
+            timers.set(
+              marker,
+              setTimeout(() => {
+                timers.delete(marker);
+                marker.setIcon(dot);
+              }, TIME_LABEL_PEEK_MS),
+            );
           });
           labels.push(marker);
         }

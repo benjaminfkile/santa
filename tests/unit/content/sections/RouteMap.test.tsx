@@ -54,10 +54,17 @@ vi.mock("maplibre-gl", () => {
       this.options = options;
       mocks.maps.push(this as unknown as FakeMapInstance);
     }
-    on(event: string, fn: Handler) {
-      (this.handlers[event] ??= []).push(fn);
+    on(event: string, fn: Handler | string) {
+      if (typeof fn === "function") (this.handlers[event] ??= []).push(fn);
       return this;
     }
+    getZoom() {
+      return 10;
+    }
+    getCanvas() {
+      return this.canvas;
+    }
+    canvas = document.createElement("canvas");
     once(event: string, fn: Handler) {
       (this.onceHandlers[event] ??= []).push(fn);
       return this;
@@ -77,7 +84,19 @@ vi.mock("maplibre-gl", () => {
     }
     remove() {}
   }
-  return { Map: FakeMap, Marker: FakeMarker, addProtocol: vi.fn(), setWorkerUrl: vi.fn() };
+  class FakePopup {
+    setLngLat() {
+      return this;
+    }
+    setText() {
+      return this;
+    }
+    addTo() {
+      return this;
+    }
+    remove() {}
+  }
+  return { Map: FakeMap, Marker: FakeMarker, Popup: FakePopup, addProtocol: vi.fn(), setWorkerUrl: vi.fn() };
 });
 
 vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({

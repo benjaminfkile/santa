@@ -141,6 +141,32 @@
 .routeLandmark {
   pointer-events: none;
 }
+/* The name as a tooltip above the marker, on a hover device while the
+   marker is hovered and the map host carries data-names="hidden" (the
+   names are below their zoom). */
+.routeLandmarkTip {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  box-shadow: var(--shadow);
+  color: var(--text-bright);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .routeLandmarkBadge { pointer-events: auto; }
+  [data-names="hidden"] .routeLandmark:hover .routeLandmarkTip { display: block; }
+}
 .routeLandmarkBadge {
   display: grid;
   place-items: center;

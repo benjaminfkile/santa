@@ -542,6 +542,26 @@ describe("route map style options", () => {
     });
   });
 
+  it("sets labelMinZoom as the minzoom of the two text layers only", () => {
+    const options = {
+      timeLabels: [{ lat: 1, lng: 2, label: "5 min" }],
+      landmarks: [{ lat: 2, lng: 3, label: "Town Hall" }],
+    };
+    const ids = ["route-landmarks", "route-time-labels", "route-landmark-dots", "route-time-label-dots"];
+    const plain = buildStyle("light", BASE, PATH, MARKS, false, options);
+    for (const l of plain.layers.filter((x) => x.id.startsWith("route-"))) expect(l.minzoom, l.id).toBeUndefined();
+    for (const id of ids) expect(layer<{ minzoom?: number }>(plain, id).minzoom).toBeUndefined();
+    const gated = buildStyle("light", BASE, PATH, MARKS, false, { ...options, labelMinZoom: 12 });
+    expect(layer<{ minzoom?: number }>(gated, "route-landmarks").minzoom).toBe(12);
+    expect(layer<{ minzoom?: number }>(gated, "route-time-labels").minzoom).toBe(12);
+    expect(gated.layers.filter((l) => l.minzoom !== undefined && l.id.startsWith("route-")).map((l) => l.id)).toEqual([
+      "route-landmarks",
+      "route-time-labels",
+    ]);
+    expect(layer<{ minzoom?: number }>(gated, "route-landmark-dots").minzoom).toBeUndefined();
+    expect(layer<{ minzoom?: number }>(gated, "route-time-label-dots").minzoom).toBeUndefined();
+  });
+
   it("keeps the poster's route overlay byte for byte with the poster's label options", () => {
     const path = [{ lat: 46.87, lng: -114.02 }, { lat: 46.88, lng: -114.01 }, { lat: 46.89, lng: -114.0 }];
     const marks = [{ lat: 46.875, lng: -114.015 }];

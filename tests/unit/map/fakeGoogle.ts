@@ -128,7 +128,21 @@ export class FakeMapObject {
   }
   setOptions() {}
   setPath() {}
-  setIcon() {}
+  // Every `setIcon` argument, in order.
+  icons: unknown[] = [];
+  setIcon(icon: unknown) {
+    this.icons.push(icon);
+  }
+  listeners = new Map<string, Listener[]>();
+  addListener(name: string, fn: Listener) {
+    const list = this.listeners.get(name) ?? [];
+    list.push(fn);
+    this.listeners.set(name, list);
+    return { remove: () => list.splice(list.indexOf(fn), 1) };
+  }
+  trigger(name: string) {
+    for (const fn of [...(this.listeners.get(name) ?? [])]) fn();
+  }
   setPosition() {}
   setVisible() {}
 }

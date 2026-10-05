@@ -23,6 +23,9 @@
 // kind list and the landmarks as its landmarks, each name the label;
 // without them the style gets neither. A landmark with an icon or a
 // description also gets a marker and its popover (RouteLandmarks). The
+// names and the time label text start at LABEL_MIN_ZOOM (`labelMinZoom`);
+// a click on a landmark's style dot opens the popover of the landmark at
+// that point, so every landmark opens its popover. The
 // five display values (time label interval, arrows, arrow size, route
 // width, label size) reach the style as the label interval, `arrows`,
 // `arrowScale`, `routeWidthScale`, and `labelScale`. The section data
@@ -57,6 +60,8 @@ type RouteMapProps = {
   arrowScale?: number;
   routeWidthScale?: number;
   labelScale?: number;
+  labelMinZoom?: number;
+  onLandmarkClick?: (point: { lat: number; lng: number }) => void;
   startElement?: HTMLElement;
   ariaLabel?: string;
   fullscreenControl?: boolean;
@@ -66,6 +71,9 @@ type RouteMapProps = {
   onToggleFullscreen?: () => void;
   onFail: () => void;
 };
+
+// The least zoom at which the landmark names and the time label text show.
+const LABEL_MIN_ZOOM = 12;
 
 const NO_MARKS: readonly LatLng[] = [];
 const NO_LABELS: readonly TimelineLabel[] = [];
@@ -120,6 +128,14 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   const settingsLandmarks = content?.settings?.landmarks;
   const landmarkList = useMemo(() => resolveLandmarks(settingsLandmarks), [settingsLandmarks]);
   const landmarks = useRouteLandmarks(landmarkList, bundle);
+  const { openIndex } = landmarks;
+  const onLandmarkClick = useCallback(
+    (point: { lat: number; lng: number }) => {
+      const index = landmarkList.findIndex((l) => l.lat === point.lat && l.lng === point.lng);
+      if (index >= 0) openIndex(index);
+    },
+    [landmarkList, openIndex],
+  );
   const [startElement] = useState(createRouteStartMarker);
 
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -167,6 +183,8 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
                   arrowScale={display.arrowScale}
                   routeWidthScale={display.routeWidthScale}
                   labelScale={display.labelScale}
+                  labelMinZoom={LABEL_MIN_ZOOM}
+                  onLandmarkClick={onLandmarkClick}
                   startElement={startElement}
                   ariaLabel={copy.map.routeMap.region}
                   fullscreenControl={config.controls.fullscreen}

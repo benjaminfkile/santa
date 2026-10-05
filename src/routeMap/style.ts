@@ -68,6 +68,10 @@
 // times the scale) and the dots keep their own zoom stops times the
 // scale; POSTER_LABELS (a scale of 1 on the flat curve) gives exactly
 // the poster's label sizes.
+// `labelMinZoom`, when set, gives the two text layers (`route-landmarks`
+// and `route-time-labels`) that `minzoom`, so the names and times hide
+// below it while the dot layers stay at every zoom. Without it no layer
+// carries a `minzoom`.
 
 import { layers } from "@protomaps/basemaps";
 import type {
@@ -118,6 +122,7 @@ export type StyleOptions = {
   labelScale?: number;
   labelCurve?: LabelCurve;
   startCircle?: boolean;
+  labelMinZoom?: number;
 };
 
 export type LabelCurve = "zoom" | "flat";
@@ -427,6 +432,8 @@ export function buildStyle(
   const labelScale =
     options.labelScale !== undefined && options.labelScale > 0 ? options.labelScale : 1;
   const labelCurve: LabelCurve = options.labelCurve === "flat" ? "flat" : "zoom";
+  const textMinZoom =
+    options.labelMinZoom !== undefined ? { minzoom: options.labelMinZoom } : {};
   const badges = landmarks.some((landmark) => landmark.badge === true);
   const coordinates = path.map((p) => [p.lng, p.lat]);
   const ends = path.length === 0
@@ -597,6 +604,7 @@ export function buildStyle(
             {
               id: LANDMARKS_LAYER,
               type: "symbol" as const,
+              ...textMinZoom,
               source: LANDMARKS_SOURCE,
               layout: {
                 "text-field": ["get", "label"],
@@ -632,6 +640,7 @@ export function buildStyle(
             {
               id: TIME_LABELS_LAYER,
               type: "symbol" as const,
+              ...textMinZoom,
               source: TIME_LABELS_SOURCE,
               layout: {
                 "text-field": ["get", "label"],
