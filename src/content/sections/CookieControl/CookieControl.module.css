@@ -74,6 +74,17 @@
 /* The name with the running tally under it. Beside the name the tally cost
    the name its width: on a 375 px phone "Chocolate chip" truncated to
    "Chocolat...", so the two stack in one column instead. */
+/* The notice above the list in the signed-out dialog: the reason the rows
+   have no steppers. */
+.signInNotice {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--text-bright);
+  font-size: 0.9375rem;
+}
+
 .rowText {
   display: flex;
   flex-direction: column;

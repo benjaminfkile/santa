@@ -52,6 +52,25 @@ export const TimesGlyph = (p: GlyphProps) => (
 export const LandmarkGlyph = (p: GlyphProps) => (
   <Glyph {...p}><path d="M6 21V4M6 4h11l-2.5 4L17 12H6M3 21h8" /></Glyph>
 );
+// A route: two stops joined by a winding path, for the Route toggle. The
+// history clock it replaced said "the past", not "the way round".
+export const RouteGlyph = (p: GlyphProps) => (
+  <Glyph {...p}>
+    <circle cx="6" cy="19" r="2.5" />
+    <circle cx="18" cy="5" r="2.5" />
+    <path d="M8.5 19h6a3.5 3.5 0 0 0 0-7h-5a3.5 3.5 0 0 1 0-7h6" />
+  </Glyph>
+);
+// Binoculars, the map convention for a lookout, for the Viewpoints toggle.
+export const ViewpointGlyph = (p: GlyphProps) => (
+  <Glyph {...p}>
+    <circle cx="6.5" cy="15" r="4" />
+    <circle cx="17.5" cy="15" r="4" />
+    <path d="M10.5 15h3" />
+    <path d="M6 11V6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5" />
+    <path d="M18 11V6a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v5" />
+  </Glyph>
+);
 export const FitGlyph = (p: GlyphProps) => (
   <Glyph {...p}><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></Glyph>
 );

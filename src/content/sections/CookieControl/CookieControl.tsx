@@ -12,6 +12,7 @@ import { useLocation } from "react-router-dom";
 import type { SectionComponent } from "../../registry";
 import type { ContentBundle } from "../../../store/types";
 import type { CookieType } from "../../../contracts";
+import type { ReactNode } from "react";
 import { useStore } from "../../../store/useStore";
 import { formatCount } from "../../../lib/number";
 import { useAuth } from "../../../auth/AuthProvider";
@@ -128,6 +129,44 @@ type Ready = Extract<DialogState, { kind: "ready" }>;
 // The cookie dialog. Signed in it loads `GET /me/cookies` and shows the
 // picker; signed out it shows the sign-in copy with Sign in and Close and
 // calls nothing; while auth is unknown it shows its loading state.
+// The cookie list: one row per type, the icon, the name with the running
+// tally under it, and whatever the caller puts at the end of the row. The
+// signed-in dialog passes its stepper; the signed-out one passes nothing,
+// so a visitor who cannot leave cookies yet still sees what there is to
+// leave and how many of each Santa has.
+function CookieRows({
+  types,
+  tally,
+  bundle,
+  trailing,
+}: {
+  types: CookieType[];
+  tally: Record<string, number> | null;
+  bundle: ContentBundle;
+  trailing?: (type: CookieType, id: number) => ReactNode;
+}) {
+  return (
+    <ul className={styles.rows}>
+      {types.map((t) => {
+        const id = num(t.id);
+        return (
+          <li key={id} className={styles.row} data-testid="cookie-row">
+            {renderTypeIcon(t.icon, bundle)}
+            <span className={styles.rowText}>
+              <span className={styles.rowName}>{t.name}</span>
+              <span className={styles.rowTally} data-testid="cookie-row-tally">
+                {formatCount(tally?.[String(id)] ?? 0)}
+                <span className={styles.visuallyHidden}> left so far</span>
+              </span>
+            </span>
+            {trailing ? trailing(t, id) : null}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export function CookieDialog({
   bundle,
   onClose,
@@ -312,10 +351,17 @@ export function CookieDialog({
 
   const body = (() => {
     if (auth.status !== "unknown" && !signedIn) {
+      // The same list as the signed-in dialog, so a visitor who is not
+      // signed in still sees the cookies and how many of each Santa has;
+      // the steppers are what they are missing, and the notice above the
+      // list and the Sign in action say why.
       return (
         <>
-          <div className={dlg.scroll}>
-            <p className={dlg.copy} data-testid="cookie-dialog-signed-out">{copy.cookies.signInToLeave}</p>
+          <div className={dlg.scroll} data-testid="cookie-dialog-scroll">
+            <p className={styles.signInNotice} data-testid="cookie-dialog-signed-out">
+              {copy.cookies.signInToLeave}
+            </p>
+            <CookieRows types={cookieTypes} tally={tally} bundle={bundle} />
           </div>
           <div className={dlg.actions}>
             <button type="button" className={btn.btnQuiet} onClick={close}>{copy.cookies.close}</button>
@@ -359,49 +405,41 @@ export function CookieDialog({
     return (
       <>
         <div className={dlg.scroll} data-testid="cookie-dialog-scroll">
-          <ul className={styles.rows}>
-            {types.map((t) => {
-              const id = num(t.id);
+          <CookieRows
+            types={types}
+            tally={tally}
+            bundle={bundle}
+            trailing={(t, id) => {
               const count = state.counts[id] ?? 0;
               return (
-                <li key={id} className={styles.row} data-testid="cookie-row">
-                  {renderTypeIcon(t.icon, bundle)}
-                  <span className={styles.rowText}>
-                    <span className={styles.rowName}>{t.name}</span>
-                    <span className={styles.rowTally} data-testid="cookie-row-tally">
-                      {formatCount(tally?.[String(id)] ?? 0)}
-                      <span className={styles.visuallyHidden}> left so far</span>
-                    </span>
+                <span className={styles.stepper}>
+                  <button
+                    type="button"
+                    className={styles.stepBtn}
+                    aria-label={copy.cookies.fewer(t.name ?? "")}
+                    disabled={count === 0 || state.submitting}
+                    onClick={() => bump(id, -1)}
+                    data-testid="cookie-minus"
+                  >
+                    <MinusGlyph size={20} strokeWidth={2.5} />
+                  </button>
+                  <span className={`${styles.count}${count > 0 ? " " + styles.countOn : ""}`} aria-live="polite" data-testid="cookie-count">
+                    {count}
                   </span>
-                  <span className={styles.stepper}>
-                    <button
-                      type="button"
-                      className={styles.stepBtn}
-                      aria-label={copy.cookies.fewer(t.name ?? "")}
-                      disabled={count === 0 || state.submitting}
-                      onClick={() => bump(id, -1)}
-                      data-testid="cookie-minus"
-                    >
-                      <MinusGlyph size={20} strokeWidth={2.5} />
-                    </button>
-                    <span className={`${styles.count}${count > 0 ? " " + styles.countOn : ""}`} aria-live="polite" data-testid="cookie-count">
-                      {count}
-                    </span>
-                    <button
-                      type="button"
-                      className={styles.stepBtn}
-                      aria-label={copy.cookies.more(t.name ?? "")}
-                      disabled={!canAdd}
-                      onClick={() => bump(id, 1)}
-                      data-testid="cookie-type"
-                    >
-                      <PlusGlyph size={20} strokeWidth={2.5} />
-                    </button>
-                  </span>
-                </li>
+                  <button
+                    type="button"
+                    className={styles.stepBtn}
+                    aria-label={copy.cookies.more(t.name ?? "")}
+                    disabled={!canAdd}
+                    onClick={() => bump(id, 1)}
+                    data-testid="cookie-type"
+                  >
+                    <PlusGlyph size={20} strokeWidth={2.5} />
+                  </button>
+                </span>
               );
-            })}
-          </ul>
+            }}
+          />
           <label className={field.field}>
             <span className={field.label}>{copy.cookies.noteLabel}</span>
             <textarea

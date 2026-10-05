@@ -21,9 +21,9 @@ import {
   AltitudeGlyph,
   CloseGlyph,
   CompassGlyph,
-  LandmarkGlyph,
+  ViewpointGlyph,
   GaugeGlyph,
-  HistoryGlyph,
+  RouteGlyph,
   LocationGlyph,
   PersonPinGlyph,
   RoadGlyph,
@@ -306,7 +306,7 @@ export function TrackerMenu(props: TrackerMenuProps) {
                     onClick={() => props.onFlightHistoryChange(!props.flightHistory)}
                     data-testid="tracker-menu-flight-history"
                   >
-                    <HistoryGlyph size={22} />
+                    <RouteGlyph size={22} />
                   </button>
                 </div>
                 {props.flightHistory ? (
@@ -337,7 +337,7 @@ export function TrackerMenu(props: TrackerMenuProps) {
                   onClick={() => props.onLandmarksChange?.(props.landmarks !== true)}
                   data-testid="tracker-menu-landmarks"
                 >
-                  <LandmarkGlyph size={22} />
+                  <ViewpointGlyph size={22} />
                 </button>
               </div>
             ) : null}

@@ -13,6 +13,7 @@ export const rowName: string;
 export const rowTally: string;
 export const rowText: string;
 export const rows: string;
+export const signInNotice: string;
 export const stepBtn: string;
 export const stepper: string;
 export const visuallyHidden: string;
