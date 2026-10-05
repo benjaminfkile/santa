@@ -1,4 +1,4 @@
-// docs/site.md section 7.6. The dock's heading slot: a compass rose drawn
+// docs/site.md section 7.6. The gauge's heading dial: a compass rose drawn
 // in the gauge frame's children with no track arc and no value arc. A full
 // circle, ticks at north, east, south, and west, an "N" at the top, and a
 // needle from the centre at the heading (0 at the top, clockwise). The

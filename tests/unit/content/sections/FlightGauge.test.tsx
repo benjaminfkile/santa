@@ -1,8 +1,7 @@
-// docs/site.md sections 7.6 and 8.5. The flight gauge: one dial at a time
-// with the converted units, the arrows that step through speed, altitude
-// and heading and wrap, the remembered choice, the airborne and distance
-// pills in the top-left stack (neither is in the cycle), the tracker menu's
-// hide toggle, and hiding while the menu is open.
+// docs/site.md sections 7.6 and 8.5. The flight gauge: three dials stacked
+// above the sponsor tile with the converted units, the airborne and
+// distance pills in the top-left stack (neither is a dial), the tracker
+// menu's hide toggle, and hiding while the menu is open.
 
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -117,60 +116,43 @@ afterEach(() => {
 });
 
 describe("the flight gauge", () => {
-  const slotOf = (u: ReturnType<typeof render>) =>
-    u.getByTestId("flight-gauge").getAttribute("data-slot");
-  const next = (u: ReturnType<typeof render>) => fireEvent.click(u.getByTestId("flight-gauge-next"));
-  const prev = (u: ReturnType<typeof render>) => fireEvent.click(u.getByTestId("flight-gauge-prev"));
-
-  it("opens on the speed dial, in the bottom-left stack above the sponsor tile", async () => {
+  it("stacks speed, altitude and heading, all three up, above the sponsor tile", async () => {
     seed(FULL);
     const utils = await renderMap();
-    expect(utils.getByTestId("map-bottom-left").contains(utils.getByTestId("flight-gauge"))).toBe(true);
-    expect(slotOf(utils)).toBe("speed");
-    const speed = utils.getByTestId("flight-gauge-speed");
-    expect(speed.tagName.toLowerCase()).toBe("svg");
-    expect(speed.getAttribute("aria-label")).toBe("Speed 100 mph");
+    const gauge = utils.getByTestId("flight-gauge");
+    expect(utils.getByTestId("map-bottom-left").contains(gauge)).toBe(true);
+
+    // All three are drawn at once, in order, each in its own glass face.
+    const dials = Array.from(gauge.querySelectorAll('[data-testid$="-value"]')).map((el) =>
+      el.getAttribute("data-testid"),
+    );
+    expect(dials).toEqual([
+      "flight-gauge-speed-value",
+      "flight-gauge-altitude-value",
+      "flight-gauge-heading-value",
+    ]);
+    expect(gauge.children).toHaveLength(3);
+
+    expect(utils.getByTestId("flight-gauge-speed").getAttribute("aria-label")).toBe("Speed 100 mph");
     expect(utils.getByTestId("flight-gauge-speed-arc")).toBeInTheDocument();
-    // One instrument at a time: the other three are not drawn.
-    expect(utils.queryByTestId("flight-gauge-altitude")).toBeNull();
-    expect(utils.queryByTestId("flight-gauge-heading")).toBeNull();
-    expect(utils.queryByTestId("flight-gauge-airborne")).toBeNull();
-  });
-
-  it("the arrows step through speed, altitude and heading and wrap both ways", async () => {
-    seed(FULL);
-    const utils = await renderMap();
-    expect(slotOf(utils)).toBe("speed");
-
-    next(utils);
-    expect(slotOf(utils)).toBe("altitude");
     expect(utils.getByTestId("flight-gauge-altitude").getAttribute("aria-label")).toBe("Altitude 5k ft");
     expect(utils.getByTestId("flight-gauge-altitude-label").textContent).toBe("ALTITUDE");
-
-    next(utils);
-    expect(slotOf(utils)).toBe("heading");
     expect(utils.getByTestId("flight-gauge-heading").getAttribute("aria-label")).toBe("Heading 92° E");
     expect(utils.getByTestId("flight-gauge-heading-rose")).toBeInTheDocument();
     expect(utils.getByTestId("flight-gauge-heading-needle-line").style.transform).toBe("rotate(92.4deg)");
 
-    // Forward from the last wraps to the first, back from the first to the last.
-    next(utils);
-    expect(slotOf(utils)).toBe("speed");
-    prev(utils);
-    expect(slotOf(utils)).toBe("heading");
-    // The airborne time is never a stop in the cycle; it is a pill.
+    // Nothing to step with, and the airborne time is a pill, not a dial.
+    expect(utils.queryByTestId("flight-gauge-next")).toBeNull();
+    expect(utils.queryByTestId("flight-gauge-prev")).toBeNull();
     expect(utils.queryByTestId("flight-gauge-airborne")).toBeNull();
   });
 
-  it("remembers the chosen instrument across a remount", async () => {
+  it("reads thousands the way the rest of the tracker does", async () => {
+    // 1524 m is 5000 ft, so the dial abbreviates like every other number.
     seed(FULL);
     const utils = await renderMap();
-    next(utils);
-    next(utils);
-    expect(slotOf(utils)).toBe("heading");
-    cleanup();
-    const again = await renderMap();
-    expect(again.getByTestId("flight-gauge").getAttribute("data-slot")).toBe("heading");
+    expect(value(utils, "altitude")).toBe("5k");
+    expect(utils.getByTestId("flight-gauge-altitude").getAttribute("aria-label")).toBe("Altitude 5k ft");
   });
 
   it("shows the placeholder and no arc for a null reading", async () => {
@@ -178,9 +160,7 @@ describe("the flight gauge", () => {
     const utils = await renderMap();
     expect(value(utils, "speed")).toBe("N/A");
     expect(utils.queryByTestId("flight-gauge-speed-arc")).toBeNull();
-    next(utils);
     expect(value(utils, "altitude")).toBe("N/A");
-    next(utils);
     expect(value(utils, "heading")).toBe("N/A");
   });
 
@@ -193,7 +173,7 @@ describe("the flight gauge", () => {
     const ids = Array.from(stack.children).map((el) => el.getAttribute("data-testid") ?? el.className);
     expect(ids[0]).toContain("liveIndicator");
     expect(ids[1]).toBe("airborne-pill");
-    // Not in the gauge, at any point in the cycle.
+    // Not one of the dials.
     expect(utils.queryByTestId("flight-gauge-airborne")).toBeNull();
   });
 
@@ -209,16 +189,11 @@ describe("the flight gauge", () => {
     expect(utils.getByTestId("airborne-pill").textContent).toContain("1h 12m");
   });
 
-  it("liftoffTimer off removes the airborne pill and leaves the cycle alone", async () => {
+  it("liftoffTimer off removes the airborne pill and leaves the dials alone", async () => {
     seed(FULL);
     const utils = await renderMap({ liftoffTimer: false });
     expect(utils.queryByTestId("airborne-pill")).toBeNull();
-    expect(slotOf(utils)).toBe("speed");
-    next(utils);
-    next(utils);
-    expect(slotOf(utils)).toBe("heading");
-    next(utils);
-    expect(slotOf(utils)).toBe("speed");
+    expect(utils.getByTestId("flight-gauge").children).toHaveLength(3);
   });
 
   it("flightDock off removes the gauge and its menu button, the airborne pill staying", async () => {

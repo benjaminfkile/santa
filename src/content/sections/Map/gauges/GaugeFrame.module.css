@@ -1,18 +1,19 @@
-/* docs/site.md section 7.6. The round dial inside the flight gauge: 100 px
-   (92 px at 760 px and below) with the track arc and its three marks, the
-   value arc, the value and unit in the middle, and the label under the
-   dial. Every colour is a chrome token the map section rebinds. */
+/* docs/site.md section 7.6. The round dial inside one of the flight
+   gauge's faces: 70 px (64 px at 760 px and below) with the track arc and
+   its three marks, the value arc, the value and unit in the middle, and the
+   label under the dial. Every colour is a chrome token the map section
+   rebinds. */
 
 .gauge {
   display: block;
   flex: none;
-  width: 100px;
-  height: 100px;
+  width: 70px;
+  height: 70px;
   overflow: visible;
   user-select: none;
 }
 @media (max-width: 760px) {
-  .gauge { width: 92px; height: 92px; }
+  .gauge { width: 64px; height: 64px; }
 }
 
 .track {
@@ -55,10 +56,14 @@
   font-size: 6px;
   fill: var(--text-dim);
 }
+/* Sized to stay inside the glass circle: the label sits near the bottom of
+   the 54 unit box, where the face has narrowed to about half its width, so
+   a long one like ALTITUDE has to be small enough not to poke out the
+   sides. */
 .label {
   font-family: var(--font-mono);
-  font-size: 7px;
-  letter-spacing: 0.12em;
+  font-size: 6px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   fill: var(--text-dim);
 }

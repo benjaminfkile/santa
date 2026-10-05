@@ -137,8 +137,8 @@ describe("GaugeFrame", () => {
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.arc \{ transition: none; \}/);
     expect(css).toMatch(/\.track \{[^}]*stroke: var\(--panel-2\);[^}]*stroke-width: 5;[^}]*stroke-linecap: round;/);
     expect(css).toMatch(/\.arc \{[^}]*stroke: var\(--accent\);/);
-    expect(css).toContain("width: 100px;");
-    expect(css).toContain(".gauge { width: 92px; height: 92px; }");
+    expect(css).toContain("width: 70px;");
+    expect(css).toContain(".gauge { width: 64px; height: 64px; }");
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgb\(/);
   });
 });

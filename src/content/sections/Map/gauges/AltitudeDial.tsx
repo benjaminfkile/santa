@@ -1,5 +1,5 @@
-// docs/site.md section 7.6. The dock's altitude slot: whole feet with a
-// thousands separator on a 0 to 10,000 ft dial. A higher altitude fills
+// docs/site.md section 7.6. The gauge's altitude dial: feet through
+// formatCount on a 0 to 10,000 ft dial. A higher altitude fills
 // the arc and keeps its exact number; a negative altitude shows its number
 // over an empty arc; an unavailable altitude shows the placeholder and no
 // value arc.

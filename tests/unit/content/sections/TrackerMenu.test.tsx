@@ -198,6 +198,11 @@ describe("TrackerMenu data row", () => {
       </MemoryRouter>,
     );
     expect(getByTestId("data-row-liftoff").textContent).toContain(formatEventTime("2026-12-24T01:00:00Z"));
+    // Every number in the row reads like the rest of the tracker: 100 m is
+    // 328 ft here, and a four-figure reading would abbreviate.
+    const row = getByTestId("tracker-menu-data-row").textContent ?? "";
+    expect(row).toContain("328 ft");
+    expect(getByTestId("data-row-speed").textContent).toBe("45 mph");
     // Liftoff is the only time in the data row; the fix diagnostics are gone.
     expect(queryByTestId("data-row-recorded")).toBeNull();
     expect(queryByTestId("data-row-received")).toBeNull();

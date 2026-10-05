@@ -1,52 +1,26 @@
-/* docs/site.md section 7.6. The flight gauge: a round glass face with the
-   dial inside and one arrow tight against each side. It lives in the
-   bottom-left stack above the sponsor tile; nothing about it spans the
-   map, so neither bottom stack is lifted any more. */
+/* docs/site.md section 7.6. The flight gauge: three round glass faces
+   stacked above the sponsor tile, packed as tight as the circles allow.
+   Nothing about it spans the map, so neither bottom stack is lifted. */
 
 .flightGauge {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  /* Tight: the circles nearly touch. */
   gap: 2px;
 }
 
 /* The watch face: the glass recipe as a circle around the dial. */
 .gaugeFace {
   composes: glass from "./Map.module.css";
-  width: 110px;
-  height: 110px;
+  width: 78px;
+  height: 78px;
   border-radius: 50%;
   display: grid;
   place-items: center;
   flex: none;
 }
 
-/* Tight against the face, so the three read as one control. */
-.gaugeArrow {
-  appearance: none;
-  width: 32px;
-  height: 32px;
-  flex: none;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-control);
-  background: transparent;
-  color: var(--text-bright);
-  display: inline-grid;
-  place-items: center;
-  cursor: pointer;
-  /* The same halo the other bare map controls carry, so the arrows read
-     over whatever the map puts under them. */
-  filter: drop-shadow(0 0 1px var(--panel)) drop-shadow(0 0 4px var(--panel))
-    drop-shadow(0 0 8px var(--panel));
-  transition: var(--hover-transition);
-}
-@media (hover: hover) {
-  .gaugeArrow:hover { color: var(--accent); }
-}
-/* The chevron points down; a quarter turn each way makes the pair. */
-.gaugeArrow svg { transform: rotate(90deg); }
-.gaugeArrowNext svg { transform: rotate(-90deg); }
-
 @media (max-width: 760px) {
-  .gaugeFace { width: 102px; height: 102px; }
+  .gaugeFace { width: 72px; height: 72px; }
 }

@@ -13,6 +13,7 @@ import { useAuth } from "../../../auth/AuthProvider";
 import { useStore } from "../../../store/useStore";
 import { mpsToMph, metresToFeet, headingToCardinal } from "../../../lib/units";
 import { formatEventTime } from "../../../lib/time";
+import { formatCountWithUnit } from "../../../lib/number";
 import { formatDistanceMetres } from "../../../map/userLocation";
 import { copy } from "../../../copy/copy";
 import type { MapTheme } from "../../../map/themes";
@@ -77,9 +78,11 @@ export type TrackerMenuProps = {
   distanceMetres: number | null;
 };
 
-function fmt(value: number | null | undefined, unit: string, digits = 0): string {
+// The data row reads like every other number on the tracker: abbreviated
+// from a thousand up, so altitude is "4.1k ft" here as well as on the dial.
+function fmt(value: number | null | undefined, unit: string): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return copy.live.unavailablePlaceholder;
-  return `${value.toFixed(digits)} ${unit}`;
+  return formatCountWithUnit(value, unit);
 }
 
 export function TrackerMenu(props: TrackerMenuProps) {
@@ -189,7 +192,7 @@ export function TrackerMenu(props: TrackerMenuProps) {
           <dl className={styles.dataRow} data-testid="tracker-menu-data-row">
             <div>
               <dt><SpeedGlyph /><span>Speed</span></dt>
-              <dd data-testid="data-row-speed">{fmt(speedMph, "mph", 0)}</dd>
+              <dd data-testid="data-row-speed">{fmt(speedMph, "mph")}</dd>
             </div>
             <div>
               <dt><CompassGlyph /><span>Heading</span></dt>
@@ -201,11 +204,11 @@ export function TrackerMenu(props: TrackerMenuProps) {
             </div>
             <div>
               <dt><AltitudeGlyph /><span>Altitude</span></dt>
-              <dd>{fmt(altitudeFt, "ft", 0)}</dd>
+              <dd>{fmt(altitudeFt, "ft")}</dd>
             </div>
             <div>
               <dt><AccuracyGlyph /><span>Accuracy</span></dt>
-              <dd>{fmt(accuracyFt, "ft", 0)}</dd>
+              <dd>{fmt(accuracyFt, "ft")}</dd>
             </div>
             <div>
               <dt><PersonPinGlyph /><span>Distance</span></dt>

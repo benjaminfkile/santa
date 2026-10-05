@@ -1,4 +1,4 @@
-// docs/site.md section 7.6. The dock's speed slot: whole mph on a 0 to
+// docs/site.md section 7.6. The gauge's speed dial: whole mph on a 0 to
 // 120 mph dial. A faster speed fills the arc and keeps its exact number;
 // an unavailable speed shows the placeholder and no value arc.
 
