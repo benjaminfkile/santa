@@ -1,6 +1,7 @@
-// docs/site.md section 7.6. The map section's place filter: `poiFilter`
-// and `poiKinds` reach the controller as `setPois`, null while the filter is
-// off and the known kinds while it is on.
+// docs/site.md section 7.6. The map section's place filter: the site
+// settings' `places.tracker` reaches the controller as `setPois`, null while
+// it is absent and the known kinds in its `kinds` while it is present. The
+// section's own data never changes it.
 
 import { useEffect } from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -47,28 +48,31 @@ vi.mock("../../../../src/map/MapView", () => ({
   },
 }));
 
-const bundle = {
-  content: {
-    pages: [],
-    nav: [],
-    settings: {
-      landmarks: [],
-    },
-  } as unknown,
-  media: {},
-  icons: {},
-} as ContentBundle;
+function buildBundle(settings: Record<string, unknown> = {}): ContentBundle {
+  return {
+    content: {
+      pages: [],
+      nav: [],
+      settings: {
+        landmarks: [],
+        ...settings,
+      },
+    } as unknown,
+    media: {},
+    icons: {},
+  } as ContentBundle;
+}
 
 function lastPois(): unknown {
   const calls = controller.setPois.mock.calls;
   return calls[calls.length - 1][0];
 }
 
-async function renderMap(data: Record<string, unknown>) {
+async function renderMap(data: Record<string, unknown>, settings: Record<string, unknown> = {}) {
   const { Map } = await import("../../../../src/content/sections/Map/Map");
   return render(
     <MemoryRouter>
-      <Map data={data} items={[]} bundle={bundle} />
+      <Map data={data} items={[]} bundle={buildBundle(settings)} />
     </MemoryRouter>,
   );
 }
@@ -84,23 +88,37 @@ afterEach(() => {
 });
 
 describe("Map section place filter", () => {
-  it("with poiFilter on it sends the section's kinds", async () => {
-    await renderMap({ poiFilter: true, poiKinds: ["park", "school"] });
+  it("sends the settings' tracker kinds", async () => {
+    await renderMap({}, { places: { tracker: { kinds: ["park", "school"] } } });
     expect(lastPois()).toEqual({ kinds: ["park", "school"] });
   });
 
-  it("with poiFilter absent it sends null", async () => {
-    await renderMap({ poiKinds: ["park"] });
+  it("sends null without the settings' places", async () => {
+    await renderMap({});
     expect(lastPois()).toBeNull();
   });
 
-  it("with poiFilter on and no poiKinds it sends no kinds", async () => {
-    await renderMap({ poiFilter: true });
+  it("sends null with places that have no tracker part", async () => {
+    await renderMap({}, { places: { routeMap: { kinds: ["peak"] } } });
+    expect(lastPois()).toBeNull();
+  });
+
+  it("sends no kinds for an empty tracker list", async () => {
+    await renderMap({}, { places: { tracker: { kinds: [] } } });
     expect(lastPois()).toEqual({ kinds: [] });
   });
 
   it("drops unknown and repeated kinds", async () => {
-    await renderMap({ poiFilter: true, poiKinds: ["park", "zoo", "park"] });
+    await renderMap({}, { places: { tracker: { kinds: ["park", "zoo", "park"] } } });
     expect(lastPois()).toEqual({ kinds: ["park"] });
+  });
+
+  it("ignores a poiFilter and poiKinds in the section data", async () => {
+    await renderMap({ poiFilter: true, poiKinds: ["park", "school"] });
+    expect(lastPois()).toBeNull();
+    cleanup();
+    controller.setPois.mockClear();
+    await renderMap({ poiFilter: true, poiKinds: ["park"] }, { places: { tracker: { kinds: ["school"] } } });
+    expect(lastPois()).toEqual({ kinds: ["school"] });
   });
 });

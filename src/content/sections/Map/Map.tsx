@@ -33,7 +33,7 @@ import type { MountIcon, TrackerViewpoint } from "../../../map/viewpointsOverlay
 import type { IconRef, Snapshot } from "../../../contracts";
 import type { ContentBundle } from "../../../store/types";
 import { Icon, iconResolves } from "../../primitives/Icon";
-import { resolveViewpoints } from "../RoutePreview/routeMapConfig";
+import { resolvePlaces, resolveViewpoints } from "../RoutePreview/routeMapConfig";
 import { copy } from "../../../copy/copy";
 import { AirbornePill, DistancePill, FixStatus } from "./InfoOverlays";
 import { LiveIndicator } from "./LiveIndicator";
@@ -79,8 +79,6 @@ type MapSectionData = {
     onlineCount?: boolean;
     flightDock?: boolean;
   };
-  poiFilter?: boolean | null;
-  poiKinds?: readonly string[];
 };
 
 type FlightHistory = NonNullable<NonNullable<Snapshot["event"]>["flightHistory"]>;
@@ -157,10 +155,14 @@ export const Map: SectionComponent = ({ data, bundle }) => {
 
   const flightHistoryDefault = d.flightHistoryDefault === true;
 
-  // The Google-supplied places the map shows: every kind the theme keeps
-  // while `poiFilter` is off, only the known kinds in `poiKinds` while it is on.
-  const poiFilter = d.poiFilter === true;
-  const poiKinds = useMemo(() => resolvePoiKinds(d.poiKinds), [d.poiKinds]);
+  // The Google-supplied places the map shows, from the site settings'
+  // `places.tracker`: every kind the theme keeps while it is absent, only
+  // the known kinds in its `kinds` while it is present.
+  const settingsPlaces = bundle.content?.settings?.places;
+  const poiFilter = useMemo(() => {
+    const tracker = resolvePlaces(settingsPlaces).tracker;
+    return tracker === undefined ? null : { kinds: resolvePoiKinds(tracker) };
+  }, [settingsPlaces]);
 
   const [theme, setTheme] = useState<MapTheme>(initialTheme);
   const [mapType, setMapType] = useState<"terrain" | "roadmap">("terrain");
@@ -282,8 +284,8 @@ export const Map: SectionComponent = ({ data, bundle }) => {
 
   useEffect(() => {
     if (controller === null) return;
-    controller.setPois(poiFilter ? { kinds: poiKinds } : null);
-  }, [controller, poiFilter, poiKinds]);
+    controller.setPois(poiFilter);
+  }, [controller, poiFilter]);
 
   useEffect(() => {
     if (controller === null) return;

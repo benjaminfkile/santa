@@ -6468,7 +6468,6 @@ export interface components {
         RouteMapConfig: {
             display?: null | components["schemas"]["RouteMapDisplay"];
             controls?: null | components["schemas"]["RouteMapControls"];
-            pois?: null | components["schemas"]["RouteMapPois"];
         };
         RouteMapControls: {
             fullscreen?: null | boolean;
@@ -6487,9 +6486,6 @@ export interface components {
             lat?: number | string;
             /** Format: double */
             lng?: number | string;
-        };
-        RouteMapPois: {
-            kinds?: string[];
         };
         RouteMapResponse: {
             routeMap?: null | components["schemas"]["RouteMap"];

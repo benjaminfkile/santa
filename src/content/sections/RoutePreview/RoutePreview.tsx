@@ -14,12 +14,13 @@
 // rendered through TakeoverPortal so the takeover sits under
 // document.body. The map region is labelled `copy.map.routeMap.region`,
 // which speaks the start.
-// The display, the controls, and the POI kinds come from
-// `event.routeMapConfig` (routeMapConfig), each value falling back to its
-// default; a null config draws the default map. The viewpoints come from
-// the site settings' `viewpoints`; absent means none. The map carries a
-// fullscreen button and a terrain toggle unless `controls.fullscreen` or
-// `controls.terrain` is false. `pois.kinds` reaches the style as its POI
+// The display and the controls come from `event.routeMapConfig`
+// (routeMapConfig), each value falling back to its default; a null config
+// draws the default map. The viewpoints come from the site settings'
+// `landmarks` and the places from `places.routeMap`; absent means none.
+// The map carries a fullscreen button and a terrain toggle unless
+// `controls.fullscreen` or `controls.terrain` is false. The
+// `places.routeMap.kinds` list reaches the style as its POI
 // kind list and the viewpoints as its viewpoints, each name the label;
 // without them the style gets neither. A viewpoint with an icon or a
 // description also gets a marker and its popover (RouteViewpoints). The
@@ -41,7 +42,7 @@ import { routeMapPath, type LatLng } from "./routeMapPath";
 import { routeMapTimeline, routeTimeLabels, type TimelineLabel } from "./routeTimelineData";
 import { createRouteStartMarker } from "./routeStartMarker";
 import { useRouteViewpoints } from "./RouteViewpoints";
-import { resolveViewpoints, resolveRouteMapConfig } from "./routeMapConfig";
+import { resolvePlaces, resolveViewpoints, resolveRouteMapConfig } from "./routeMapConfig";
 import { useRouteMapFullscreen } from "./useRouteMapFullscreen";
 import { TakeoverPortal } from "../../../lib/TakeoverPortal";
 import { env } from "../../../config/env";
@@ -127,6 +128,8 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   );
   const settingsViewpoints = content?.settings?.landmarks;
   const viewpointList = useMemo(() => resolveViewpoints(settingsViewpoints), [settingsViewpoints]);
+  const settingsPlaces = content?.settings?.places;
+  const routeMapPlaces = useMemo(() => resolvePlaces(settingsPlaces).routeMap, [settingsPlaces]);
   const viewpoints = useRouteViewpoints(viewpointList, bundle);
   const { openIndex } = viewpoints;
   const onViewpointClick = useCallback(
@@ -176,7 +179,7 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
                   path={path}
                   marks={marks}
                   timeLabels={timeLabels}
-                  poiKinds={config.poiKinds}
+                  poiKinds={routeMapPlaces}
                   viewpoints={viewpoints.styleViewpoints}
                   viewpointMarkers={viewpoints.markers}
                   arrows={display.arrows}

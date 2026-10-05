@@ -1,6 +1,6 @@
 // docs/site.md section 8.9. The route map's inputs. The event's
-// `routeMapConfig` in the snapshot gives the display, the controls, and
-// the POI kinds; the site settings give the viewpoints. Each value
+// `routeMapConfig` in the snapshot gives the display and the controls;
+// the site settings give the viewpoints and the places. Each value
 // resolves on its own: the config's value, else the default. A null or
 // absent config, block, or key reads as absent, and so does a value
 // outside its contract set.
@@ -9,11 +9,13 @@
 //    The named sizes become the style's scales through DISPLAY_SCALES.
 //  - `controls`: the fullscreen and terrain switches, each true unless
 //    the config says false.
-//  - `pois.kinds`: the string kinds; absent without a list.
 //  - resolveViewpoints: the site settings' `viewpoints` entries with a name
 //    and numeric coordinates, each with its icon when it is a well formed
 //    reference and its description when it is a string; absent without
 //    a list.
+//  - resolvePlaces: the site settings' `places`, one string kind list per
+//    map (`tracker` and `routeMap`), each absent unless that part is an
+//    object whose `kinds` is a list.
 
 import type { IconRef, Snapshot } from "../../../contracts";
 import type { ViewpointData } from "./RouteViewpoints";
@@ -62,7 +64,11 @@ export type ResolvedRouteMapDisplay = {
 export type ResolvedRouteMapConfig = {
   display: ResolvedRouteMapDisplay;
   controls: { fullscreen: boolean; terrain: boolean };
-  poiKinds: string[] | undefined;
+};
+
+export type ResolvedPlaces = {
+  tracker: string[] | undefined;
+  routeMap: string[] | undefined;
 };
 
 function isInterval(v: unknown): v is TimeLabelInterval {
@@ -109,9 +115,16 @@ export function resolveViewpoints(list: unknown): ViewpointData[] | undefined {
   return out;
 }
 
-function resolvePoiKinds(list: unknown): string[] | undefined {
-  if (!Array.isArray(list)) return undefined;
-  return (list as unknown[]).filter((k): k is string => typeof k === "string");
+function placeKinds(part: unknown): string[] | undefined {
+  if (part === null || typeof part !== "object") return undefined;
+  const kinds = (part as { kinds?: unknown }).kinds;
+  if (!Array.isArray(kinds)) return undefined;
+  return (kinds as unknown[]).filter((k): k is string => typeof k === "string");
+}
+
+export function resolvePlaces(places: unknown): ResolvedPlaces {
+  const p = places !== null && typeof places === "object" ? (places as Record<string, unknown>) : {};
+  return { tracker: placeKinds(p.tracker), routeMap: placeKinds(p.routeMap) };
 }
 
 export function resolveRouteMapDisplay(display: RouteMapConfig["display"]): ResolvedRouteMapDisplay {
@@ -137,6 +150,5 @@ export function resolveRouteMapConfig(config: RouteMapConfig | null | undefined)
       fullscreen: config?.controls?.fullscreen !== false,
       terrain: config?.controls?.terrain !== false,
     },
-    poiKinds: resolvePoiKinds(config?.pois?.kinds),
   };
 }

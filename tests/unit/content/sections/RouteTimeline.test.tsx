@@ -10,10 +10,10 @@
 //  - The marks source holds every timeline entry.
 //  - A timeline of fewer than two entries keeps the path and the start
 //    marker and shows no marks.
-//  - The event's `routeMapConfig.pois.kinds` and the site settings'
-//    `viewpoints` reach the style as its POI kind filter and its viewpoint
-//    labels; without them, or with them in the section data only, the
-//    style has neither.
+//  - The site settings' `places.routeMap.kinds` and `landmarks` reach the
+//    style as its POI kind filter and its viewpoint labels; without them,
+//    with them in the section data only, or with `pois` in the event's
+//    config, the style has neither.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, cleanup, act } from "@testing-library/react";
@@ -417,9 +417,10 @@ describe("route map timeline", () => {
 });
 
 describe("route map POI kinds and viewpoints", () => {
-  it("passes the config's POI kinds and the settings' viewpoints into the style", async () => {
-    setEvent(null, TIMELINE, { pois: { kinds: ["peak", "museum"] } });
+  it("passes the settings' places and viewpoints into the style", async () => {
+    setEvent(null, TIMELINE);
     renderSection(undefined, {
+      places: { routeMap: { kinds: ["peak", "museum"] } },
       landmarks: [
         { name: "Mount Jumbo", lat: 46.88, lng: -113.96 },
         { name: "Caras Park", lat: 46.87, lng: -113.99 },
@@ -443,13 +444,13 @@ describe("route map POI kinds and viewpoints", () => {
   });
 
   it("drops the POI layers for an empty kind list", async () => {
-    setEvent(null, TIMELINE, { pois: { kinds: [] } });
-    renderSection();
+    setEvent(null, TIMELINE);
+    renderSection(undefined, { places: { routeMap: { kinds: [] } } });
     await settle();
     expect(currentStyle().layers.some((l) => l.id === "pois")).toBe(false);
   });
 
-  it("passes neither without them in the config and the settings", async () => {
+  it("passes neither without them in the settings", async () => {
     setEvent(null, TIMELINE);
     renderSection();
     await settle();
@@ -469,5 +470,12 @@ describe("route map POI kinds and viewpoints", () => {
     const style = currentStyle();
     expect(style.layers.some((l) => l.id === "pois")).toBe(false);
     expect(style.sources["route-landmarks"]).toBeUndefined();
+  });
+
+  it("passes no POI kinds from the event's config", async () => {
+    setEvent(null, TIMELINE, { pois: { kinds: ["peak"] } });
+    renderSection();
+    await settle();
+    expect(currentStyle().layers.some((l) => l.id === "pois")).toBe(false);
   });
 });

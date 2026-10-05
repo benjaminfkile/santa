@@ -48,9 +48,6 @@ export interface Snapshot {
         fullscreen?: boolean | null;
         terrain?: boolean | null;
       } | null;
-      pois?: {
-        kinds?: string[];
-      } | null;
     } | null;
     latestMessage?: {
       id?: number;

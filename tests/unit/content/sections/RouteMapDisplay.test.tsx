@@ -1,15 +1,18 @@
 // docs/site.md section 8.9. The route map's config, viewpoint markers,
 // and gestures, with MapLibre and pmtiles mocked:
-//  - Every input comes from the event's `routeMapConfig`: each of the
+//  - The display and the controls come from the event's `routeMapConfig`: each of the
 //    five display values (time label interval, arrows, arrow size, route
 //    width, label size) resolves from the config's `display`, then the
 //    default (15, true, medium, normal, medium), and reaches the style:
 //    the labels at the interval's interior multiples (none at 0), the
 //    arrow layer and its scale, the route line width, and the label
-//    sizes. The controls default to true and
-//    the POI kinds to none.
-//  - The viewpoints come from the site settings' `viewpoints`, none when
+//    sizes. The controls default to true.
+//  - The viewpoints come from the site settings' `landmarks`, none when
 //    absent; a raw config that still carries `viewpoints` draws none.
+//  - The POI kinds come from the site settings' `places.routeMap.kinds`,
+//    none when absent, whatever the event's config carries;
+//    resolvePlaces keeps each part's string kinds when that part is an
+//    object with a `kinds` list.
 //  - A null or absent config renders the default map. Display, controls,
 //    viewpoints, or POI kinds in the section data, or a routeMap block in
 //    the site settings, change nothing.
@@ -42,6 +45,7 @@ import { RoutePreview } from "../../../../src/content/sections/RoutePreview/Rout
 import {
   DISPLAY_DEFAULTS,
   DISPLAY_SCALES,
+  resolvePlaces,
   resolveViewpoints,
   resolveRouteMapConfig,
   resolveRouteMapDisplay,
@@ -436,12 +440,11 @@ describe("route map config resolution", () => {
     const defaults = {
       display: DEFAULT_DISPLAY,
       controls: { fullscreen: true, terrain: true },
-      poiKinds: undefined,
     };
     expect(resolveRouteMapConfig(null)).toEqual(defaults);
     expect(resolveRouteMapConfig(undefined)).toEqual(defaults);
     expect(resolveRouteMapConfig({})).toEqual(defaults);
-    expect(resolveRouteMapConfig({ display: null, controls: null, pois: null })).toEqual(defaults);
+    expect(resolveRouteMapConfig({ display: null, controls: null })).toEqual(defaults);
   });
 
   it("resolves the controls from the config, each true unless false", () => {
@@ -460,7 +463,7 @@ describe("route map config resolution", () => {
     });
   });
 
-  it("resolves the viewpoints and POI kinds, keeping only well formed entries", () => {
+  it("resolves the viewpoints, keeping only well formed entries", () => {
     const viewpoints = resolveViewpoints([
       { name: "Caras Park", lat: 46.87, lng: -113.99, icon: null, description: null },
       { name: "Mount Jumbo", lat: 46.88, lng: -113.96, icon: { source: "library", id: "tree" } },
@@ -469,17 +472,42 @@ describe("route map config resolution", () => {
       { lat: 46.8, lng: -113.9 },
       { name: "No coordinates" },
     ]);
-    const resolved = resolveRouteMapConfig({ pois: { kinds: ["peak", "museum"] } });
     expect(viewpoints).toEqual([
       { name: "Caras Park", lat: 46.87, lng: -113.99 },
       { name: "Mount Jumbo", lat: 46.88, lng: -113.96, icon: { source: "library", id: "tree" } },
       { name: "The Oval", lat: 46.86, lng: -113.98, description: "Where the reindeer rest." },
       { name: "Bad icon", lat: 46.8, lng: -113.9 },
     ]);
-    expect(resolved.poiKinds).toEqual(["peak", "museum"]);
     expect(resolveViewpoints([])).toEqual([]);
     expect(resolveViewpoints(undefined)).toBeUndefined();
-    expect(resolveRouteMapConfig({ pois: { kinds: [] } })).toMatchObject({ poiKinds: [] });
+  });
+
+  it("reads no POI kinds from the config", () => {
+    expect(resolveRouteMapConfig({ pois: { kinds: ["peak"] } } as never)).not.toHaveProperty("poiKinds");
+  });
+
+  it("resolves the places: absent, null, or a part without kinds reads as absent", () => {
+    const none = { tracker: undefined, routeMap: undefined };
+    expect(resolvePlaces(undefined)).toEqual(none);
+    expect(resolvePlaces(null)).toEqual(none);
+    expect(resolvePlaces({})).toEqual(none);
+    expect(resolvePlaces({ tracker: null, routeMap: null })).toEqual(none);
+    expect(resolvePlaces({ tracker: {}, routeMap: { kinds: "park" } })).toEqual(none);
+  });
+
+  it("resolves each part of the places on its own", () => {
+    expect(resolvePlaces({ tracker: { kinds: ["park", "school"] } })).toEqual({
+      tracker: ["park", "school"],
+      routeMap: undefined,
+    });
+    expect(resolvePlaces({ routeMap: { kinds: ["peak"] } })).toEqual({ tracker: undefined, routeMap: ["peak"] });
+    expect(resolvePlaces({ tracker: { kinds: [] }, routeMap: { kinds: [] } })).toEqual({ tracker: [], routeMap: [] });
+  });
+
+  it("keeps only the string kinds of the places", () => {
+    expect(
+      resolvePlaces({ tracker: { kinds: ["park", 3, null] }, routeMap: { kinds: [{}, "peak", true, "museum"] } }),
+    ).toEqual({ tracker: ["park"], routeMap: ["peak", "museum"] });
   });
 
   it("keeps labels on the interior multiples of the interval, and none at 0", () => {
@@ -605,6 +633,25 @@ describe("route map config reaching the style", () => {
     expectDefaultStyle();
     expectDefaultControls(container);
     expect(viewpointMarkers()).toHaveLength(0);
+  });
+
+  it("passes the settings' route map places to the route map as its POI kinds", async () => {
+    await renderSection(null, { settings: { places: { routeMap: { kinds: ["peak", "museum"] } } } });
+    const pois = layerOf(currentStyle(), "pois");
+    expect(pois).toBeDefined();
+    expect(JSON.stringify(pois?.filter)).toContain('["literal",["peak","museum"]]');
+  });
+
+  it("passes the settings' route map places whatever the event's config carries", async () => {
+    await renderSection({ pois: { kinds: ["school"] } }, { settings: { places: { routeMap: { kinds: ["peak"] } } } });
+    const filter = JSON.stringify(layerOf(currentStyle(), "pois")?.filter);
+    expect(filter).toContain('["literal",["peak"]]');
+    expect(filter).not.toContain("school");
+  });
+
+  it("passes no POI kinds without the settings' route map places, whatever the event's config carries", async () => {
+    await renderSection({ pois: { kinds: ["peak"] } }, { settings: { places: { tracker: { kinds: ["park"] } } } });
+    expect(layerOf(currentStyle(), "pois")).toBeUndefined();
   });
 
   it("ignores a routeMap block in the site settings", async () => {

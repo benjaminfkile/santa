@@ -122,6 +122,533 @@ export interface SiteSettings {
    * @maxItems 50
    */
   landmarks?: Landmark[];
+  places?: {
+    tracker?: {
+      /**
+       * @minItems 0
+       * @maxItems 9
+       */
+      kinds:
+        | []
+        | [
+            | "attraction"
+            | "business"
+            | "government"
+            | "medical"
+            | "park"
+            | "place_of_worship"
+            | "school"
+            | "sports_complex"
+            | "transit"
+          ]
+        | [
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            )
+          ]
+        | [
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            )
+          ]
+        | [
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            )
+          ]
+        | [
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            )
+          ]
+        | [
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            )
+          ]
+        | [
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            )
+          ]
+        | [
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            )
+          ]
+        | [
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            ),
+            (
+              | "attraction"
+              | "business"
+              | "government"
+              | "medical"
+              | "park"
+              | "place_of_worship"
+              | "school"
+              | "sports_complex"
+              | "transit"
+            )
+          ];
+    };
+    routeMap?: {
+      /**
+       * @maxItems 100
+       */
+      kinds: string[];
+    };
+  };
 }
 export interface Display {
   sizePx?: number;
