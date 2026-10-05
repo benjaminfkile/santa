@@ -91,6 +91,7 @@ export function MapView({ options, onController, onLibs, className, children }: 
       <div
         ref={containerRef}
         className={styles.mapViewCanvas}
+        data-map-canvas=""
         style={{ position: "absolute", inset: 0 }}
         aria-label="Santa tracker map"
         role="region"

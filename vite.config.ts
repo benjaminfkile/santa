@@ -69,14 +69,15 @@ export default defineConfig({
             { name: "signalr", test: /@microsoft[\\/]signalr/, priority: 20 },
             { name: "auth", test: /amazon-cognito-identity-js|[\\/]src[\\/]auth[\\/]cognito|[\\/]src[\\/]pages[\\/]Auth[\\/]/, priority: 20 },
             // Pin the colour-scheme module (and its inputs), the shared
-            // Santa pin image module, the directions link helper, and the
-            // number format to a shared "theme" chunk so both the map chunk
-            // and the index chunk import from it rather than each other.
+            // Santa pin image module, the directions link helper, the
+            // analytics module, and the number format to a shared "theme"
+            // chunk so both the map chunk and the index chunk import from it
+            // rather than each other.
             // Priority higher than the map rule. A shared helper left out of
             // this list lands in whichever chunk reaches it first: lib/number
             // went into the map chunk and made index import the whole map,
             // which chunk.test.ts catches only against a fresh build.
-            { name: "theme", test: /[\\/]src[\\/]content[\\/]theme[\\/]colorScheme|[\\/]src[\\/]lib[\\/](storage|directions|number)|[\\/]src[\\/]map[\\/]santa(Pin\.ts|-pin\.png)/, priority: 30 },
+            { name: "theme", test: /[\\/]src[\\/]content[\\/]theme[\\/]colorScheme|[\\/]src[\\/]lib[\\/](storage|directions|number|analytics)|[\\/]src[\\/]map[\\/]santa(Pin\.ts|-pin\.png)/, priority: 30 },
             { name: "map", test: /@googlemaps[\\/]js-api-loader|[\\/]src[\\/]map[\\/]/, priority: 20 },
             { name: "alerts", test: /[\\/]src[\\/]pages[\\/]Alerts[\\/]/, priority: 20 },
             { name: "routemap", test: /[\\/]maplibre-gl[\\/]|[\\/]pmtiles[\\/]|@protomaps[\\/]basemaps|[\\/]src[\\/]routeMap[\\/]/, priority: 20 },
