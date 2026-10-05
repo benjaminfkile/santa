@@ -10,7 +10,8 @@
 // and releases everything an open panel holds: the focus trap, the
 // outside press listeners, and the hidden menu button.
 // While the event is live the shell steps aside: the live screen owns the
-// viewport and nothing else on the site renders or scrolls.
+// viewport and nothing else on the site renders or scrolls, and the page
+// zoom guard cancels a pinch outside the map.
 
 import {
   useCallback,
@@ -46,6 +47,7 @@ import { formatClock } from "../lib/time";
 import { PriorityNav } from "./PriorityNav";
 import { AlertsBell } from "../alerts/AlertsBell";
 import { HeaderLinks } from "./HeaderLinks";
+import { installPageZoomGuard } from "../lib/pageZoomGuard";
 import * as styles from "./Shell.module.css";
 
 export type ShellProps = { children: ReactNode };
@@ -63,9 +65,16 @@ export function Shell({ children }: ShellProps) {
 
   useEffect(() => {
     const root = document.documentElement;
-    if (takeover) root.setAttribute("data-takeover", "live");
-    else root.removeAttribute("data-takeover");
-    return () => root.removeAttribute("data-takeover");
+    if (!takeover) {
+      root.removeAttribute("data-takeover");
+      return;
+    }
+    root.setAttribute("data-takeover", "live");
+    const uninstallZoomGuard = installPageZoomGuard();
+    return () => {
+      uninstallZoomGuard();
+      root.removeAttribute("data-takeover");
+    };
   }, [takeover]);
 
   if (schemaMismatch) return <ReloadPrompt />;

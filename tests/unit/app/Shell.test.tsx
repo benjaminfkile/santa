@@ -14,6 +14,14 @@ import { store } from "../../../src/store/useStore";
 import { initialStore } from "../../../src/store/types";
 import type { ContentDocument } from "../../../src/contracts";
 
+const zoomGuard = vi.hoisted(() => {
+  const uninstall = vi.fn();
+  return { uninstall, install: vi.fn(() => uninstall) };
+});
+vi.mock("../../../src/lib/pageZoomGuard", () => ({
+  installPageZoomGuard: zoomGuard.install,
+}));
+
 function makeContent(): ContentDocument {
   return {
     schemaVersion: 1,
@@ -252,6 +260,30 @@ describe("Shell structure", () => {
     expect(queryByText("WMSFO Test")).toBeNull();
     expect(queryByTestId("site-footer")).toBeNull();
     expect(document.documentElement.getAttribute("data-takeover")).toBe("live");
+  });
+
+  it("installs the page zoom guard while the takeover is on and uninstalls it after", () => {
+    zoomGuard.install.mockClear();
+    zoomGuard.uninstall.mockClear();
+    seed(makeContent(), true);
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <AuthProvider>
+          <Shell>
+            <main id="main" data-page-role="live" />
+          </Shell>
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+    expect(zoomGuard.install).toHaveBeenCalledTimes(1);
+    expect(zoomGuard.uninstall).not.toHaveBeenCalled();
+    act(() => {
+      const live = store.getState().live;
+      store.setState({ live: live ? { ...live, eventStatusId: 4 } : live });
+    });
+    expect(zoomGuard.uninstall).toHaveBeenCalledTimes(1);
+    expect(zoomGuard.install).toHaveBeenCalledTimes(1);
+    expect(document.documentElement.hasAttribute("data-takeover")).toBe(false);
   });
 
   it("keeps the preview banner floating over the live takeover", () => {

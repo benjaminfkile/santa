@@ -98,6 +98,7 @@ export function createLandmarksOverlay(
   const entries: Entry[] = landmarks.map((landmark, index) => {
     const element = document.createElement("div");
     element.className = styles.landmark;
+    element.setAttribute("data-map-overlay", "");
     element.setAttribute("data-testid", "tracker-landmark");
     element.setAttribute("data-landmark-index", String(index));
 
