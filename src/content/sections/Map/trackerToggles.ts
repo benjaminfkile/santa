@@ -35,7 +35,7 @@ export function resetTrackerTogglesForTests(): void {
 // Which instrument the flight gauge is showing. Kept beside the toggles
 // and reset with them; the gauge falls back to the first instrument its
 // flags leave on when the remembered one is off.
-export type GaugeSlotKey = "speed" | "altitude" | "heading" | "airborne";
+export type GaugeSlotKey = "speed" | "altitude" | "heading";
 
 let gaugeSlot: GaugeSlotKey | null = null;
 

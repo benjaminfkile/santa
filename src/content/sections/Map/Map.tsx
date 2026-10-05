@@ -1,7 +1,7 @@
 // docs/site.md sections 7.6 and 8. The live screen, laid out as the legacy
 // tracker: the map fills the viewport; pills top-left (live state with the
-// viewers, the distance from Santa, the fix status, and the messages pill
-// last); the tracker menu button,
+// viewers, the airborne time, the distance from Santa, the fix status, and
+// the messages pill last); the tracker menu button,
 // the bare cookie tally, and the leave-a-cookie glyph top-right; the flight
 // data dock's handle pill (while collapsed) above the sponsor tile
 // bottom-left; zoom while following and recenter after a drag bottom-right;
@@ -33,7 +33,7 @@ import type { ContentBundle } from "../../../store/types";
 import { Icon, iconResolves } from "../../primitives/Icon";
 import { resolveLandmarks } from "../RoutePreview/routeMapConfig";
 import { copy } from "../../../copy/copy";
-import { DistancePill, FixStatus } from "./InfoOverlays";
+import { AirbornePill, DistancePill, FixStatus } from "./InfoOverlays";
 import { LiveIndicator } from "./LiveIndicator";
 import { MessagesPill } from "./MessagesPill";
 import { FlightGauge } from "./FlightGauge";
@@ -216,7 +216,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   );
   const flightPoints = useMemo(() => normalizePoints(flightHistory as FlightHistory | null), [flightHistory]);
   const flightHistoryAvailable = flightPoints !== null;
-  const flightDockAvailable = overlays.flightDock || overlays.liftoffTimer;
+  const flightDockAvailable = overlays.flightDock;
   const showGauge = flightDockAvailable && flightDockOn && !menuOpen;
   const shownDistance =
     overlays.distanceChip &&
@@ -388,6 +388,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
             <>
               <div className={styles.topLeft}>
                 {overlays.liveIndicator ? <LiveIndicator showCount={overlays.onlineCount} /> : null}
+                {overlays.liftoffTimer ? <AirbornePill /> : null}
                 {shownDistance !== null ? <DistancePill metres={shownDistance} /> : null}
                 <FixStatus />
                 {/* The messages pill is last in the stack, whatever else is in it. */}
@@ -420,12 +421,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
               </div>
 
               <div className={bottomLeftClass} data-testid="map-bottom-left">
-                {showGauge ? (
-                  <FlightGauge
-                    showInstruments={overlays.flightDock}
-                    showAirborne={overlays.liftoffTimer}
-                  />
-                ) : null}
+                {showGauge ? <FlightGauge showInstruments={overlays.flightDock} /> : null}
                 {overlays.sponsorCarousel ? (
                   <div className={styles.sponsorOverlay}>
                     <SponsorCarousel

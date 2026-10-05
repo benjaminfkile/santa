@@ -113,8 +113,12 @@
 .infoOverlaysStatusSignalLost { color: var(--err); }
 .infoOverlaysStatusSignalLost svg { color: var(--err); }
 
-/* The distance pill: the visitor's distance from Santa, directly under
-   the live pill. */
+/* The airborne pill: how long Santa has been flying, directly under the
+   live pill. */
+.airbornePill { composes: pill; }
+
+/* The distance pill: the visitor's distance from Santa, under the airborne
+   pill. */
 .distancePill { composes: pill; }
 
 /* The messages pill under the fix status: the pill recipe as a button

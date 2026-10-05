@@ -61,6 +61,10 @@ export const copy = {
       hide: "Hide the cookie counts",
       show: "Show the cookie counts",
     },
+    airborne: {
+      // The pill shows only the elapsed time; this is its accessible prefix.
+      label: "Airborne for",
+    },
     distance: {
       // The pill shows only the value; this is its accessible prefix.
       label: "Distance to Santa",

@@ -1,7 +1,7 @@
 // docs/site.md section 7.6. The shared gauge recipe of the flight data
 // dock: the 270 degree arc helper, the gauge frame, the speed dial on its
 // 0 to 120 mph scale, the altitude dial on its 0 to 10,000 ft scale, the
-// heading compass with its short-way needle, and the airborne ring on its
+// heading compass with its short-way needle, on its
 // three hour scale.
 
 import { readFileSync } from "node:fs";
@@ -12,8 +12,6 @@ import { arcLength, arcPath } from "../../../../src/content/sections/Map/gauges/
 import { GaugeFrame, GAUGE_RADIUS, valueFontSize } from "../../../../src/content/sections/Map/gauges/GaugeFrame";
 import { SpeedDial } from "../../../../src/content/sections/Map/gauges/SpeedDial";
 import { AltitudeDial } from "../../../../src/content/sections/Map/gauges/AltitudeDial";
-import { AirborneRing } from "../../../../src/content/sections/Map/gauges/AirborneRing";
-import { formatElapsed } from "../../../../src/lib/time";
 import {
   HeadingCompass,
   NEEDLE_LENGTH,
@@ -246,57 +244,6 @@ describe("AltitudeDial", () => {
     expect(d.value).toBe("N/A");
     expect(d.arc).toBeNull();
     expect(d.utils.getByTestId("flight-gauge-altitude-track")).toBeInTheDocument();
-  });
-});
-
-describe("AirborneRing", () => {
-  const length = arcLength(GAUGE_RADIUS);
-  const MIN = 60 * 1000;
-  function ring(elapsedMs: number | null) {
-    const utils = render(<AirborneRing elapsedMs={elapsedMs} />);
-    const arc = utils.queryByTestId("flight-gauge-airborne-arc");
-    return {
-      utils,
-      value: utils.getByTestId("flight-gauge-airborne-value").textContent,
-      arc,
-      offset: arc ? Number(arc.getAttribute("stroke-dashoffset")) : null,
-      label: utils.getByTestId("flight-gauge-airborne").getAttribute("aria-label"),
-    };
-  }
-
-  it("at 0 shows 0m and an empty arc, with no unit and the AIRBORNE label", () => {
-    const r = ring(0);
-    expect(r.value).toBe("0m");
-    expect(r.offset).toBeCloseTo(length, 6);
-    expect(r.label).toBe("Airborne 0m");
-    expect(r.utils.getByTestId("flight-gauge-airborne-unit").textContent).toBe("");
-    expect(r.utils.getByTestId("flight-gauge-airborne-label").textContent).toBe("AIRBORNE");
-  });
-
-  it("at 72 minutes shows 1h 12m and fills 0.4 of the arc", () => {
-    const r = ring(72 * MIN);
-    expect(r.value).toBe("1h 12m");
-    expect(r.offset).toBeCloseTo(length * (1 - 0.4), 6);
-  });
-
-  it("at 3 hours fills the arc", () => {
-    const r = ring(180 * MIN);
-    expect(r.value).toBe("3h 0m");
-    expect(r.offset).toBeCloseTo(0, 6);
-  });
-
-  it("at 4 hours keeps the arc full and the time counting", () => {
-    const r = ring(240 * MIN);
-    expect(r.value).toBe(formatElapsed(240 * MIN));
-    expect(r.value).toBe("4h 0m");
-    expect(r.offset).toBeCloseTo(0, 6);
-  });
-
-  it("null shows the placeholder and no value arc", () => {
-    const r = ring(null);
-    expect(r.value).toBe("N/A");
-    expect(r.arc).toBeNull();
-    expect(r.utils.getByTestId("flight-gauge-airborne-track")).toBeInTheDocument();
   });
 });
 

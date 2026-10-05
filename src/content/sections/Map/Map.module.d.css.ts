@@ -1,4 +1,5 @@
 export const __esModule: true;
+export const airbornePill: string;
 export const bottomLeft: string;
 export const bottomRight: string;
 export const cookieLeave: string;
@@ -16,7 +17,6 @@ export const envelopeShake: string;
 export const glass: string;
 export const infoOverlaysStatus: string;
 export const infoOverlaysStatusSignalLost: string;
-export const lifted: string;
 export const liveIndicator: string;
 export const liveIndicatorAgo: string;
 export const liveIndicatorAgoStale: string;

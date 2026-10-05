@@ -1,8 +1,8 @@
 // docs/site.md sections 7.6 and 8.5. The flight gauge: one dial at a time
-// with the converted units, the arrows that step through the instruments
-// and wrap, the remembered choice, the airborne dial's blank and flag
-// states, the distance pill in the top-left stack, the tracker menu's hide
-// toggle, and hiding while the menu is open.
+// with the converted units, the arrows that step through speed, altitude
+// and heading and wrap, the remembered choice, the airborne and distance
+// pills in the top-left stack (neither is in the cycle), the tracker menu's
+// hide toggle, and hiding while the menu is open.
 
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -15,7 +15,6 @@ import type { ContentBundle } from "../../../../src/store/types";
 import type { LiveObject, Snapshot } from "../../../../src/contracts";
 import type { UserLocationState } from "../../../../src/map/userLocation";
 import { resetTrackerTogglesForTests } from "../../../../src/content/sections/Map/trackerToggles";
-import { formatElapsed } from "../../../../src/lib/time";
 
 // CSS processing is off in unit tests, so the Map module's classes map to
 // their own names here; the rules themselves are read from the file.
@@ -138,7 +137,7 @@ describe("the flight gauge", () => {
     expect(utils.queryByTestId("flight-gauge-airborne")).toBeNull();
   });
 
-  it("the arrows step through speed, altitude, heading, airborne and wrap both ways", async () => {
+  it("the arrows step through speed, altitude and heading and wrap both ways", async () => {
     seed(FULL);
     const utils = await renderMap();
     expect(slotOf(utils)).toBe("speed");
@@ -154,17 +153,13 @@ describe("the flight gauge", () => {
     expect(utils.getByTestId("flight-gauge-heading-rose")).toBeInTheDocument();
     expect(utils.getByTestId("flight-gauge-heading-needle-line").style.transform).toBe("rotate(92.4deg)");
 
-    next(utils);
-    expect(slotOf(utils)).toBe("airborne");
-    expect(value(utils, "airborne")).toBe(formatElapsed(72.5 * 60 * 1000));
-    expect(value(utils, "airborne")).toBe("1h 12m");
-    expect(utils.getByTestId("flight-gauge-airborne-arc")).toBeInTheDocument();
-
     // Forward from the last wraps to the first, back from the first to the last.
     next(utils);
     expect(slotOf(utils)).toBe("speed");
     prev(utils);
-    expect(slotOf(utils)).toBe("airborne");
+    expect(slotOf(utils)).toBe("heading");
+    // The airborne time is never a stop in the cycle; it is a pill.
+    expect(utils.queryByTestId("flight-gauge-airborne")).toBeNull();
   });
 
   it("remembers the chosen instrument across a remount", async () => {
@@ -189,27 +184,35 @@ describe("the flight gauge", () => {
     expect(value(utils, "heading")).toBe("N/A");
   });
 
-  it("the airborne dial is blank until timeReady and while wentLiveAt is null or unparseable", async () => {
-    seed(FULL, { timeReady: false });
-    const utils = await renderMap();
-    next(utils);
-    next(utils);
-    next(utils);
-    expect(slotOf(utils)).toBe("airborne");
-    expect(value(utils, "airborne")).toBe("N/A");
-    expect(utils.queryByTestId("flight-gauge-airborne-arc")).toBeNull();
-    seed(FULL, { wentLiveAt: null });
-    expect(value(utils, "airborne")).toBe("N/A");
-    seed(FULL, { wentLiveAt: "not a time" });
-    expect(value(utils, "airborne")).toBe("N/A");
+  it("the airborne pill is up the whole time, directly under the live pill", async () => {
     seed(FULL);
-    expect(value(utils, "airborne")).toBe("1h 12m");
-    expect(utils.getByTestId("flight-gauge-airborne-arc")).toBeInTheDocument();
+    const utils = await renderMap({ liveIndicator: true });
+    const pill = utils.getByTestId("airborne-pill");
+    expect(pill.textContent).toContain("1h 12m");
+    const stack = utils.container.querySelector(".topLeft")!;
+    const ids = Array.from(stack.children).map((el) => el.getAttribute("data-testid") ?? el.className);
+    expect(ids[0]).toContain("liveIndicator");
+    expect(ids[1]).toBe("airborne-pill");
+    // Not in the gauge, at any point in the cycle.
+    expect(utils.queryByTestId("flight-gauge-airborne")).toBeNull();
   });
 
-  it("liftoffTimer off drops airborne from the cycle", async () => {
+  it("the airborne pill is absent until timeReady and without a liftoff time", async () => {
+    seed(FULL, { timeReady: false });
+    const utils = await renderMap();
+    expect(utils.queryByTestId("airborne-pill")).toBeNull();
+    seed(FULL, { wentLiveAt: null });
+    expect(utils.queryByTestId("airborne-pill")).toBeNull();
+    seed(FULL, { wentLiveAt: "not a time" });
+    expect(utils.queryByTestId("airborne-pill")).toBeNull();
+    seed(FULL);
+    expect(utils.getByTestId("airborne-pill").textContent).toContain("1h 12m");
+  });
+
+  it("liftoffTimer off removes the airborne pill and leaves the cycle alone", async () => {
     seed(FULL);
     const utils = await renderMap({ liftoffTimer: false });
+    expect(utils.queryByTestId("airborne-pill")).toBeNull();
     expect(slotOf(utils)).toBe("speed");
     next(utils);
     next(utils);
@@ -218,30 +221,11 @@ describe("the flight gauge", () => {
     expect(slotOf(utils)).toBe("speed");
   });
 
-  it("flightDock off leaves airborne alone, with no arrows to step with", async () => {
+  it("flightDock off removes the gauge and its menu button, the airborne pill staying", async () => {
     seed(FULL);
     const utils = await renderMap({ flightDock: false });
-    expect(slotOf(utils)).toBe("airborne");
-    expect(value(utils, "airborne")).toBe("1h 12m");
-    // One instrument, so the arrows would do nothing and are not drawn.
-    expect(utils.queryByTestId("flight-gauge-next")).toBeNull();
-    expect(utils.queryByTestId("flight-gauge-prev")).toBeNull();
-  });
-
-  it("falls back to what is left when a flag turns the remembered instrument off", async () => {
-    seed(FULL);
-    const utils = await renderMap();
-    next(utils);
-    expect(slotOf(utils)).toBe("altitude");
-    cleanup();
-    const again = await renderMap({ flightDock: false });
-    expect(again.getByTestId("flight-gauge").getAttribute("data-slot")).toBe("airborne");
-  });
-
-  it("with every governing flag off there is no gauge and no menu button", async () => {
-    seed(FULL);
-    const utils = await renderMap({ flightDock: false, liftoffTimer: false });
     expect(utils.queryByTestId("flight-gauge")).toBeNull();
+    expect(utils.getByTestId("airborne-pill")).toBeInTheDocument();
     fireEvent.click(utils.getByRole("button", { name: "Tracker menu" }));
     expect(utils.queryByTestId("tracker-menu-flight-dock")).toBeNull();
   });
@@ -281,7 +265,8 @@ describe("the flight gauge", () => {
     // pill last.
     const order = ids();
     expect(order[0]).toContain("liveIndicator");
-    expect(order[1]).toBe("distance-pill");
+    expect(order[1]).toBe("airborne-pill");
+    expect(order[2]).toBe("distance-pill");
     expect(order[order.length - 1]).toBe("messages-pill");
   });
 
