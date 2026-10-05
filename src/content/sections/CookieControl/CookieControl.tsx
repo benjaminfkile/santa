@@ -372,7 +372,7 @@ export function CookieDialog({
                       onClick={() => bump(id, -1)}
                       data-testid="cookie-minus"
                     >
-                      <MinusGlyph size={20} strokeWidth={2.25} />
+                      <MinusGlyph size={20} strokeWidth={2.5} />
                     </button>
                     <span className={`${styles.count}${count > 0 ? " " + styles.countOn : ""}`} aria-live="polite" data-testid="cookie-count">
                       {count}
@@ -385,7 +385,7 @@ export function CookieDialog({
                       onClick={() => bump(id, 1)}
                       data-testid="cookie-type"
                     >
-                      <PlusGlyph size={20} strokeWidth={2.25} />
+                      <PlusGlyph size={20} strokeWidth={2.5} />
                     </button>
                   </span>
                 </li>

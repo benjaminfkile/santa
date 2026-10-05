@@ -36,11 +36,16 @@
 .cookieControlOpen { align-self: flex-start; }
 
 /* The dialog's rows. */
+/* flex: none matters: the list is a flex child of the dialog's scroll area,
+   so without it the list shrinks and, with overflow hidden for its rounded
+   corners, clips its last row instead of letting the area scroll. On a short
+   phone that cut the last cookie in half with no way to reach it. */
 .rows {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
+  flex: none;
   flex-direction: column;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
@@ -71,21 +76,47 @@
   align-items: center;
   gap: var(--space-2);
 }
-/* A round icon button on the quiet recipe: 36px square, the glyph centred.
-   The plus and the minus are bare strokes, so they take the bright text
-   colour and a heavier stroke than the other glyphs: at the quiet recipe's
-   --text on --panel-2 they read as almost nothing. */
+/* The stepper buttons are icon buttons, written out rather than composed
+   from the text-button recipe. Composing it put .btn's `padding: 0.4rem 1rem`
+   after this rule in the sheet, so the override never won and the glyph was
+   squeezed into 36px minus two 1rem sides: a 4px wide sliver, which is why
+   the plus and the minus read as specks whatever their size or colour.
+   Nothing here depends on another rule's order. */
 .stepBtn {
-  composes: btnQuiet from "../../../ui/Button.module.css";
+  appearance: none;
   width: 36px;
   height: 36px;
   min-height: 36px;
   padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--panel-2);
   color: var(--text-bright);
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  transition: var(--hover-transition);
 }
-/* The shared disabled wash at 0.5 takes these two below legible; a plus
-   that cannot be pressed still has to be readable. */
-.stepBtn:disabled { opacity: 0.65; }
+.stepBtn svg {
+  width: 20px;
+  height: 20px;
+}
+.stepBtn:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+/* Disabled is the common state here, not the exception: every plus is
+   disabled once the visitor has no cookies left, and every minus is
+   disabled at zero. A 0.5 wash made a dialog full of them look like a
+   dialog of empty circles, so these dim by colour and keep full opacity. */
+.stepBtn:disabled {
+  opacity: 1;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: not-allowed;
+}
+
 .count {
   min-width: 1.5ch;
   text-align: center;
