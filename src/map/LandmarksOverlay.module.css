@@ -2,15 +2,16 @@
    badge on the glass recipe holding the landmark's icon or an 8 px accent
    dot, centred on the point, the name beside it in the map's label style
    (small sans text with a halo in the panel colour), and the popover
-   above the badge. The element sits in the overlay mouse target pane and
-   takes the tracker's chrome tokens from the map section. */
+   above the badge. The element sits in the overlay mouse target pane; the
+   popover sits in the map view host beside the corner stacks, above them
+   and below the tracker menu. Both take the tracker's chrome tokens from
+   the map section. */
 
 .landmark {
   position: absolute;
   width: 0;
   height: 0;
 }
-.landmark[data-open="true"] { z-index: 1; }
 .badge {
   composes: glass from "../content/sections/Map/Map.module.css";
   appearance: none;
@@ -75,12 +76,12 @@
 }
 
 /* The popover: a panel centred above the badge, the name, a close
-   button, the description, and the directions link. */
+   button, the description, and the directions link. Its top and left are
+   the anchor point above the badge in host pixels, set by the overlay. */
 .popover {
   position: absolute;
-  left: 0;
-  bottom: 22px;
-  transform: translateX(-50%);
+  z-index: 3;
+  transform: translate(-50%, -100%);
   box-sizing: border-box;
   width: max-content;
   max-width: min(20rem, 80vw);

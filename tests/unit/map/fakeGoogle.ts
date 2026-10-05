@@ -64,8 +64,11 @@ export class FakeMap {
 
 // Like the real API, `setMap` attaches later: `onAdd` and the first `draw`
 // run on a microtask, once the map's panes exist.
+// The projection maps a point to (lng * 10, lat * 10) plus `shift`, for
+// both div and container pixels; a test moves the map by changing `shift`.
 export class FakeOverlayView {
   static instances: FakeOverlayView[] = [];
+  static shift = { x: 0, y: 0 };
   static preventMapHitsAndGesturesFrom(): void {}
   private map: FakeMap | null = null;
   private added = false;
@@ -80,9 +83,11 @@ export class FakeOverlayView {
   }
   getProjection() {
     if (!this.added) return undefined;
-    return {
-      fromLatLngToDivPixel: (p: google.maps.LatLngLiteral) => ({ x: p.lng * 10, y: p.lat * 10 }),
-    };
+    const pixel = (p: google.maps.LatLngLiteral) => ({
+      x: p.lng * 10 + FakeOverlayView.shift.x,
+      y: p.lat * 10 + FakeOverlayView.shift.y,
+    });
+    return { fromLatLngToDivPixel: pixel, fromLatLngToContainerPixel: pixel };
   }
   getMap() {
     return this.map;
@@ -175,6 +180,7 @@ export function installFakeGoogle(): void {
 export function resetFakeGoogle(): void {
   FakeMap.instances = [];
   FakeOverlayView.instances = [];
+  FakeOverlayView.shift = { x: 0, y: 0 };
   FakeMapObject.live.clear();
 }
 

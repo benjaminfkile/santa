@@ -6,7 +6,11 @@
 // badge is a button whose accessible name is "About <name>"; a click opens
 // the landmark's popover above the badge (the name, the description when
 // there is one, and a "Get directions" link to the point, see
-// directionsHref, opening in a new tab). One popover is open at a time;
+// directionsHref, opening in a new tab). The popover lives in the popover
+// host (the map view wrapper beside the corner stacks), not in Google's
+// pane, so it paints above the stacks and is not clipped by the map; it is
+// placed from the point's container pixel and moved on every draw, kept
+// POPOVER_EDGE px inside the host's width. One popover is open at a time;
 // its close button, Escape, and a pointer press anywhere outside it and
 // the open badge close it. The overlays are on the map only while the
 // toggle is on and the zoom is at least LANDMARKS_MIN_ZOOM.
@@ -18,6 +22,10 @@ import * as styles from "./LandmarksOverlay.module.css";
 import * as btn from "../ui/Button.module.css";
 
 export const LANDMARKS_MIN_ZOOM = 10;
+// The gap between the point and the popover's bottom edge, clear of the badge.
+export const POPOVER_GAP = 22;
+// The least distance between the popover and either side of the host.
+export const POPOVER_EDGE = 8;
 
 export type TrackerLandmark = {
   name: string;
@@ -51,6 +59,7 @@ export function createLandmarksOverlay(
   map: google.maps.Map,
   landmarks: readonly TrackerLandmark[],
   mountIcon: MountIcon | null,
+  popoverHost: HTMLElement,
 ): LandmarksOverlay {
   let shown = false;
   let open: Entry | null = null;
@@ -62,7 +71,6 @@ export function createLandmarksOverlay(
     open = null;
     popover?.remove();
     popover = null;
-    entry.element.removeAttribute("data-open");
     entry.badge.setAttribute("aria-expanded", "false");
     document.removeEventListener("keydown", onKeyDown, true);
     document.removeEventListener("pointerdown", onPointerDown, true);
@@ -83,12 +91,33 @@ export function createLandmarksOverlay(
     closePopover(false);
   }
 
+  // Places the open popover's bottom centre POPOVER_GAP px above the
+  // entry's point in host pixels, clamped inside the host's width when both
+  // the host and the popover have a measured width.
+  function positionPopover(entry: Entry): void {
+    if (open !== entry || popover === null) return;
+    const point = entry.overlay
+      .getProjection()
+      ?.fromLatLngToContainerPixel({ lat: entry.landmark.lat, lng: entry.landmark.lng });
+    if (!point) return;
+    let x = point.x;
+    const hostWidth = popoverHost.clientWidth;
+    const half = popover.offsetWidth / 2;
+    if (hostWidth > 0 && half > 0) {
+      const min = POPOVER_EDGE + half;
+      const max = hostWidth - POPOVER_EDGE - half;
+      x = min > max ? hostWidth / 2 : Math.min(Math.max(x, min), max);
+    }
+    popover.style.left = `${x}px`;
+    popover.style.top = `${point.y - POPOVER_GAP}px`;
+  }
+
   function openPopover(entry: Entry): void {
     closePopover(false);
     open = entry;
     popover = buildPopover(entry.landmark, () => closePopover(true));
-    entry.element.appendChild(popover);
-    entry.element.setAttribute("data-open", "true");
+    popoverHost.appendChild(popover);
+    positionPopover(entry);
     entry.badge.setAttribute("aria-expanded", "true");
     document.addEventListener("keydown", onKeyDown, true);
     document.addEventListener("pointerdown", onPointerDown, true);
@@ -143,6 +172,7 @@ export function createLandmarksOverlay(
         if (!point) return;
         element.style.left = `${point.x}px`;
         element.style.top = `${point.y}px`;
+        positionPopover(entry);
       }
       onRemove() {
         element.remove();
