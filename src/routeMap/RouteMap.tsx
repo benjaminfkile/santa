@@ -11,7 +11,9 @@
 // element on its point as a marker (the caller renders the landmark
 // badges and buttons into them); `startElement` stands as a marker on the
 // path's first point (the caller builds it, so this chunk imports neither
-// react-dom nor the icon modules).
+// react-dom nor the icon modules). `labelMinZoom` passes through to the
+// map (the names hide below it) and `onLandmarkClick` is called, as it is
+// at the time, with the point of a clicked landmark dot.
 // The control stack sits at the top right of the frame, each button
 // carrying `controlClassName` (the caller passes the icon button recipe,
 // which stays out of this chunk because the tracker shares it): a
@@ -61,6 +63,8 @@ export type RouteMapProps = {
   arrowScale?: number;
   routeWidthScale?: number;
   labelScale?: number;
+  labelMinZoom?: number;
+  onLandmarkClick?: (point: { lat: number; lng: number }) => void;
   startElement?: HTMLElement;
   ariaLabel?: string;
   fullscreenControl?: boolean;
@@ -82,6 +86,8 @@ export function RouteMap({
   arrowScale,
   routeWidthScale,
   labelScale,
+  labelMinZoom,
+  onLandmarkClick,
   startElement,
   ariaLabel,
   fullscreenControl = false,
@@ -110,6 +116,8 @@ export function RouteMap({
     arrowScale,
     routeWidthScale,
     labelScale,
+    labelMinZoom,
+    onLandmarkClick,
     startElement,
     appearance,
     terrain,
@@ -128,6 +136,8 @@ export function RouteMap({
     arrowScale,
     routeWidthScale,
     labelScale,
+    labelMinZoom,
+    onLandmarkClick,
     startElement,
     appearance,
     terrain,
@@ -158,6 +168,8 @@ export function RouteMap({
       arrowScale: latest.current.arrowScale,
       routeWidthScale: latest.current.routeWidthScale,
       labelScale: latest.current.labelScale,
+      labelMinZoom: latest.current.labelMinZoom,
+      onLandmarkClick: (point) => latest.current.onLandmarkClick?.(point),
       appearance: latest.current.appearance,
       terrain: latest.current.terrain,
       startElement: latest.current.startElement,
@@ -181,6 +193,7 @@ export function RouteMap({
           arrowScale: now.arrowScale,
           routeWidthScale: now.routeWidthScale,
           labelScale: now.labelScale,
+          labelMinZoom: now.labelMinZoom,
           appearance: now.appearance,
           terrain: now.terrain,
         });
@@ -217,6 +230,7 @@ export function RouteMap({
       arrowScale,
       routeWidthScale,
       labelScale,
+      labelMinZoom,
       appearance,
       terrain,
     });
@@ -231,6 +245,7 @@ export function RouteMap({
     arrowScale,
     routeWidthScale,
     labelScale,
+    labelMinZoom,
     appearance,
     terrain,
   ]);

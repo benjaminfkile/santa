@@ -13,7 +13,12 @@
 // landmark's button close it, the first two returning focus to that
 // button. Escape here is marked handled, so a fullscreen map stays
 // fullscreen. A landmark with neither gets no marker and stays as the
-// style draws it.
+// style draws it. `openIndex` opens any landmark's popover by its index in
+// the list (the section calls it for a click on a style dot); the popover
+// holds the description paragraph only when there is one, and always the
+// name and the directions link. Every marker also holds the name in a
+// tooltip span after its badge or button, shown on a hover device while
+// the marker is hovered and the map host carries `data-names="hidden"`.
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -50,6 +55,7 @@ export type RouteLandmarks = {
   markers: readonly LandmarkMarker[];
   portals: ReactNode;
   popover: ReactNode;
+  openIndex: (index: number) => void;
 };
 
 const NO_MARKERS: readonly LandmarkMarker[] = [];
@@ -101,7 +107,14 @@ export function useRouteLandmarks(
   );
 
   const [open, setOpen] = useState<number | null>(null);
-  const openEntry = entries.find((e) => e.index === open && e.description !== null) ?? null;
+  const openLandmark = open === null ? null : (data?.[open] ?? null);
+  const openEntry = entries.find((e) => e.index === open) ?? null;
+  const openDescription =
+    openLandmark !== null &&
+    typeof openLandmark.description === "string" &&
+    openLandmark.description.trim() !== ""
+      ? openLandmark.description
+      : null;
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const baseId = useId();
@@ -118,13 +131,15 @@ export function useRouteLandmarks(
     [openEntry],
   );
 
-  useEffect(() => {
-    if (openEntry === null) return;
-    closeRef.current?.focus();
-  }, [openEntry]);
+  const openIndex = useCallback((index: number) => setOpen(index), []);
 
   useEffect(() => {
-    if (openEntry === null) return;
+    if (openLandmark === null) return;
+    closeRef.current?.focus();
+  }, [openLandmark]);
+
+  useEffect(() => {
+    if (openLandmark === null) return;
     function onKeyDown(event: KeyboardEvent): void {
       if (event.key !== "Escape") return;
       event.preventDefault();
@@ -132,8 +147,8 @@ export function useRouteLandmarks(
     }
     function onPointerDown(event: PointerEvent): void {
       const target = event.target as Node | null;
-      if (target === null || openEntry === null) return;
-      if (popoverRef.current?.contains(target) || openEntry.element.contains(target)) return;
+      if (target === null) return;
+      if (popoverRef.current?.contains(target) || openEntry?.element.contains(target)) return;
       close(false);
     }
     document.addEventListener("keydown", onKeyDown, true);
@@ -142,7 +157,7 @@ export function useRouteLandmarks(
       document.removeEventListener("keydown", onKeyDown, true);
       document.removeEventListener("pointerdown", onPointerDown, true);
     };
-  }, [openEntry, close]);
+  }, [openLandmark, openEntry, close]);
 
   const portals = entries.map((entry) => {
     const badge =
@@ -173,11 +188,20 @@ export function useRouteLandmarks(
           {badge}
         </button>
       );
-    return createPortal(body, entry.element, `landmark-${entry.index}`);
+    return createPortal(
+      <>
+        {body}
+        <span className={styles.routeLandmarkTip} aria-hidden data-testid="route-landmark-tip">
+          {entry.landmark.name}
+        </span>
+      </>,
+      entry.element,
+      `landmark-${entry.index}`,
+    );
   });
 
   const popover =
-    openEntry === null ? null : (
+    openLandmark === null ? null : (
       <div
         ref={popoverRef}
         id={popoverId}
@@ -188,7 +212,7 @@ export function useRouteLandmarks(
       >
         <div className={styles.routeLandmarkPopoverHead}>
           <h3 id={titleId} className={styles.routeLandmarkPopoverTitle}>
-            {openEntry.landmark.name}
+            {openLandmark.name}
           </h3>
           <button
             ref={closeRef}
@@ -201,10 +225,12 @@ export function useRouteLandmarks(
             {CLOSE_ICON}
           </button>
         </div>
-        <p className={styles.routeLandmarkPopoverText}>{openEntry.description}</p>
+        {openDescription === null ? null : (
+          <p className={styles.routeLandmarkPopoverText}>{openDescription}</p>
+        )}
         <a
           className={`${btn.btn} ${btn.btnSm} ${styles.routeLandmarkDirections}`}
-          href={directionsHref(openEntry.landmark.lat, openEntry.landmark.lng)}
+          href={directionsHref(openLandmark.lat, openLandmark.lng)}
           target="_blank"
           rel="noopener"
           data-testid="route-landmark-directions"
@@ -214,7 +240,7 @@ export function useRouteLandmarks(
       </div>
     );
 
-  return { styleLandmarks, markers, portals, popover };
+  return { styleLandmarks, markers, portals, popover, openIndex };
 }
 
 const CLOSE_ICON = (

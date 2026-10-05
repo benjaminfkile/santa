@@ -2,7 +2,10 @@
    badge on the glass recipe holding the landmark's icon or an 8 px accent
    dot, centred on the point, the name beside it in the map's label style
    (small sans text with a halo in the panel colour), and the popover
-   above the badge. The element sits in the overlay mouse target pane; the
+   above the badge. Below the name zoom the element carries
+   data-name="hidden": the name hides, and on a hover device it shows as a
+   tooltip on the glass recipe above the badge while the badge is hovered
+   or focus-visible. The element sits in the overlay mouse target pane; the
    popover sits in the map view host beside the corner stacks, above them
    and below the tracker menu. Both take the tracker's chrome tokens from
    the map section. */
@@ -73,6 +76,24 @@
     0 0 2px var(--panel),
     0 0 3px var(--panel);
   pointer-events: none;
+}
+
+.landmark[data-name="hidden"] .label { display: none; }
+@media (hover: hover) {
+  .landmark[data-name="hidden"] .badge:hover + .label,
+  .landmark[data-name="hidden"] .badge:focus-visible + .label {
+    display: block;
+    left: 0;
+    top: -20px;
+    transform: translate(-50%, -100%);
+    padding: 2px 8px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    background: color-mix(in srgb, var(--panel) 94%, transparent);
+    box-shadow: var(--shadow);
+    text-shadow: none;
+    z-index: 1;
+  }
 }
 
 /* The popover: a panel centred above the badge, the name, a close

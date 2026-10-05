@@ -57,6 +57,13 @@ vi.mock("maplibre-gl", () => {
     on() {
       return this;
     }
+    getZoom() {
+      return 10;
+    }
+    getCanvas() {
+      return this.canvas;
+    }
+    canvas = document.createElement("canvas");
     once() {
       return this;
     }
@@ -70,7 +77,19 @@ vi.mock("maplibre-gl", () => {
     }
     remove() {}
   }
-  return { Map: FakeMap, Marker: FakeMarker, addProtocol: vi.fn(), setWorkerUrl: vi.fn() };
+  class FakePopup {
+    setLngLat() {
+      return this;
+    }
+    setText() {
+      return this;
+    }
+    addTo() {
+      return this;
+    }
+    remove() {}
+  }
+  return { Map: FakeMap, Marker: FakeMarker, Popup: FakePopup, addProtocol: vi.fn(), setWorkerUrl: vi.fn() };
 });
 
 vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({

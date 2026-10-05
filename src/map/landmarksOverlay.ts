@@ -13,7 +13,11 @@
 // POPOVER_EDGE px inside the host's width. One popover is open at a time;
 // its close button, Escape, and a pointer press anywhere outside it and
 // the open badge close it. The overlays are on the map only while the
-// toggle is on and the zoom is at least LANDMARKS_MIN_ZOOM.
+// toggle is on and the zoom is at least LANDMARKS_MIN_ZOOM. Below
+// NAME_MIN_ZOOM each element carries `data-name="hidden"` and the name
+// hides, shown instead as a tooltip above the badge while the badge is
+// hovered or focused on a hover device; at or above it `data-name="shown"`.
+// A click opens the popover at any zoom.
 
 import type { IconRef } from "../contracts";
 import { copy } from "../copy/copy";
@@ -22,6 +26,8 @@ import * as styles from "./LandmarksOverlay.module.css";
 import * as btn from "../ui/Button.module.css";
 
 export const LANDMARKS_MIN_ZOOM = 10;
+// The least zoom at which the viewpoint names and the time label text show.
+export const NAME_MIN_ZOOM = 12;
 // The gap between the point and the popover's bottom edge, clear of the badge.
 export const POPOVER_GAP = 22;
 // The least distance between the popover and either side of the host.
@@ -189,6 +195,8 @@ export function createLandmarksOverlay(
 
   return {
     update({ visible, zoom }) {
+      const name = zoom >= NAME_MIN_ZOOM ? "shown" : "hidden";
+      for (const e of entries) e.element.setAttribute("data-name", name);
       const next = visible && zoom >= LANDMARKS_MIN_ZOOM;
       if (next === shown) return;
       shown = next;

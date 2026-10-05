@@ -26,13 +26,25 @@
 // caller's element on its point (the badges and buttons of the landmarks
 // with an icon or a description); a changed list replaces them. The map
 // takes gestures directly: the scroll wheel zooms and one finger pans.
+// `labelMinZoom` reaches the style's option of the same name (the two
+// text layers start at it) and a change rebuilds the style the same way;
+// below it the names count as hidden. The handle listens on the landmark
+// and time label dot layers by id, so the listeners outlive every style
+// diff: while the names are hidden, a pointer entering a dot shows a
+// Popup (TIP_CLASS, no close button) with the feature's `label` at the
+// feature and the pointer cursor, gone when the pointer leaves, and a
+// click on a time dot shows the same popup for TIP_PEEK_MS (a tap on a
+// touch screen). A click on a landmark dot calls `onLandmarkClick` with
+// the feature's point at any zoom. The container carries `data-names`
+// ("hidden" or "shown") from the mount and on every zoom event, so the
+// caller's marker styles can follow it.
 // `probeTerrain` reads the header of `<base>/terrain.pmtiles` once per
 // page load and resolves whether the archive exists; a missing or failing
 // archive logs once and resolves false.
 
 import "./maplibre.css";
-import { Map as MapLibreMap, Marker, addProtocol, setWorkerUrl } from "maplibre-gl";
-import type { AddProtocolAction } from "maplibre-gl";
+import { Map as MapLibreMap, Marker, Popup, addProtocol, setWorkerUrl } from "maplibre-gl";
+import type { AddProtocolAction, MapLayerMouseEvent } from "maplibre-gl";
 import { PMTiles, Protocol } from "pmtiles";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { env } from "../config/env";
@@ -45,6 +57,8 @@ import {
   terrainUrl,
   ROUTE_ARROW_ICON,
   tilesUrl,
+  LANDMARK_DOTS_LAYER,
+  TIME_LABEL_DOTS_LAYER,
   type Landmark,
   type LatLng,
   type StyleOptions,
@@ -70,7 +84,9 @@ export type RouteMapOptions = {
   arrowScale?: number;
   routeWidthScale?: number;
   labelScale?: number;
+  labelMinZoom?: number;
   startElement?: HTMLElement;
+  onLandmarkClick?: (point: { lat: number; lng: number }) => void;
   onError: (error: unknown) => void;
 };
 
@@ -87,6 +103,7 @@ export type RouteMapUpdate = {
   arrowScale?: number;
   routeWidthScale?: number;
   labelScale?: number;
+  labelMinZoom?: number;
 };
 
 export type RouteMapHandle = {
@@ -96,6 +113,10 @@ export type RouteMapHandle = {
 };
 
 const FIT_PADDING = 40;
+// The class of the dot tooltip popup (maplibre.css).
+export const TIP_CLASS = "route-map-tip";
+// How long a tapped time dot shows its label.
+export const TIP_PEEK_MS = 2500;
 
 let protocol: Protocol | null = null;
 
@@ -176,6 +197,14 @@ function sameMarkers(a: readonly LandmarkMarker[], b: readonly LandmarkMarker[])
   );
 }
 
+// The point of the event's first feature when it is a point.
+function featurePoint(event: MapLayerMouseEvent): LatLng | null {
+  const geometry = event.features?.[0]?.geometry;
+  if (geometry?.type !== "Point") return null;
+  const [lng, lat] = geometry.coordinates;
+  return typeof lat === "number" && typeof lng === "number" ? { lat, lng } : null;
+}
+
 export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapHandle> {
   const base = env.ROUTE_BASEMAP_URL;
   if (base === "") throw new Error("VITE_ROUTE_BASEMAP_URL is not set");
@@ -191,6 +220,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
   let arrowScale = options.arrowScale;
   let routeWidthScale = options.routeWidthScale;
   let labelScale = options.labelScale;
+  let labelMinZoom = options.labelMinZoom;
   const startElement = options.startElement;
 
   function styleOptions(): StyleOptions {
@@ -203,6 +233,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
       ...(arrowScale !== undefined ? { arrowScale } : {}),
       ...(routeWidthScale !== undefined ? { routeWidthScale } : {}),
       ...(labelScale !== undefined ? { labelScale } : {}),
+      ...(labelMinZoom !== undefined ? { labelMinZoom } : {}),
     };
   }
 
@@ -282,6 +313,72 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
 
   placeLandmarkMarkers(options.landmarkMarkers ?? []);
 
+  function namesHidden(): boolean {
+    return labelMinZoom !== undefined && map.getZoom() < labelMinZoom;
+  }
+
+  function stampNames(): void {
+    container.setAttribute("data-names", namesHidden() ? "hidden" : "shown");
+  }
+
+  let tip: Popup | null = null;
+  let tipTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function hideTip(): void {
+    if (tipTimer !== null) clearTimeout(tipTimer);
+    tipTimer = null;
+    tip?.remove();
+    tip = null;
+  }
+
+  // Shows the tooltip popup with the event's first feature's label at
+  // that feature's point; returns false when the feature has none.
+  function showTip(event: MapLayerMouseEvent): boolean {
+    const feature = event.features?.[0];
+    const label: unknown = feature?.properties?.label;
+    const point = featurePoint(event);
+    if (typeof label !== "string" || point === null) return false;
+    hideTip();
+    tip = new Popup({ closeButton: false, closeOnClick: false, offset: 10, className: TIP_CLASS })
+      .setLngLat([point.lng, point.lat])
+      .setText(label)
+      .addTo(map);
+    return true;
+  }
+
+  function setCursor(cursor: string): void {
+    map.getCanvas().style.cursor = cursor;
+  }
+
+  map.on("zoom", stampNames);
+  stampNames();
+
+  map.on("mouseenter", LANDMARK_DOTS_LAYER, (event) => {
+    setCursor("pointer");
+    if (namesHidden()) showTip(event);
+  });
+  map.on("mouseleave", LANDMARK_DOTS_LAYER, () => {
+    setCursor("");
+    hideTip();
+  });
+  map.on("click", LANDMARK_DOTS_LAYER, (event) => {
+    const point = featurePoint(event);
+    if (point !== null) options.onLandmarkClick?.(point);
+  });
+  map.on("mouseenter", TIME_LABEL_DOTS_LAYER, (event) => {
+    if (!namesHidden()) return;
+    setCursor("pointer");
+    showTip(event);
+  });
+  map.on("mouseleave", TIME_LABEL_DOTS_LAYER, () => {
+    setCursor("");
+    hideTip();
+  });
+  map.on("click", TIME_LABEL_DOTS_LAYER, (event) => {
+    if (!namesHidden() || !showTip(event)) return;
+    tipTimer = setTimeout(hideTip, TIP_PEEK_MS);
+  });
+
   return {
     update(next) {
       placeLandmarkMarkers(next.landmarkMarkers ?? []);
@@ -302,7 +399,8 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
         nextArrows === arrows &&
         next.arrowScale === arrowScale &&
         next.routeWidthScale === routeWidthScale &&
-        next.labelScale === labelScale
+        next.labelScale === labelScale &&
+        next.labelMinZoom === labelMinZoom
       ) {
         return;
       }
@@ -317,6 +415,8 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
       arrowScale = next.arrowScale;
       routeWidthScale = next.routeWidthScale;
       labelScale = next.labelScale;
+      labelMinZoom = next.labelMinZoom;
+      stampNames();
       map.setStyle(buildStyle(appearance, base, path, marks, terrain, styleOptions()), {
         diff: true,
       });
@@ -327,6 +427,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
     },
     refit,
     destroy() {
+      hideTip();
       start?.remove();
       for (const marker of landmarkPins) marker.remove();
       landmarkPins = [];

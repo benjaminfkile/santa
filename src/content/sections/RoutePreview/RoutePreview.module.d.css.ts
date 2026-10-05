@@ -14,6 +14,7 @@ export const routeLandmarkPopover: string;
 export const routeLandmarkPopoverHead: string;
 export const routeLandmarkPopoverText: string;
 export const routeLandmarkPopoverTitle: string;
+export const routeLandmarkTip: string;
 export const routeMap: string;
 export const routeMapStage: string;
 export const routeMapStageTakeover: string;

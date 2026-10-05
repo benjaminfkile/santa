@@ -1,6 +1,8 @@
 /* docs/site.md section 8.9. The part of MapLibre's stylesheet the route
    map uses (the canvas, the control corners, the attribution, the
-   markers), with the attribution on the site's panel and text tokens.
+   markers, the popup), with the attribution on the site's panel and text
+   tokens and the dot tooltip popup (.route-map-tip) on the glass recipe
+   in small sans text.
    MapLibre's own sheet is not loaded: most of its weight is icons for
    controls the route map does not show. */
 
@@ -44,3 +46,32 @@
 .maplibregl-ctrl-attrib a:focus-visible { text-decoration: underline; }
 
 .maplibregl-marker { position: absolute; top: 0; left: 0; will-change: transform; }
+
+.maplibregl-popup {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  will-change: transform;
+  pointer-events: none;
+  z-index: 3;
+}
+.maplibregl-popup-anchor-top,
+.maplibregl-popup-anchor-top-left,
+.maplibregl-popup-anchor-top-right { flex-direction: column; }
+.maplibregl-popup-anchor-bottom,
+.maplibregl-popup-anchor-bottom-left,
+.maplibregl-popup-anchor-bottom-right { flex-direction: column-reverse; }
+.maplibregl-popup-anchor-left { flex-direction: row; }
+.maplibregl-popup-anchor-right { flex-direction: row-reverse; }
+.route-map-tip .maplibregl-popup-tip { display: none; }
+.route-map-tip .maplibregl-popup-content {
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control, 999px);
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  box-shadow: var(--shadow);
+  color: var(--text-bright);
+  font: 500 0.75rem/1.2 var(--font-sans, sans-serif);
+  white-space: nowrap;
+}

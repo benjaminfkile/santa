@@ -4,12 +4,14 @@
 // with the name, the description, and the directions link in the popover
 // host, placed from the point's container pixel and moved on every draw;
 // Escape and a press elsewhere close it; the overlays leave the map below
-// zoom 10 and while the toggle is off.
+// zoom 10 and while the toggle is off; below zoom 12 every element carries
+// data-name="hidden" and the popover still opens on a click.
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   createLandmarksOverlay,
   LANDMARKS_MIN_ZOOM,
+  NAME_MIN_ZOOM,
   POPOVER_GAP,
   type MountIcon,
 } from "../../../src/map/landmarksOverlay";
@@ -167,6 +169,20 @@ describe("createLandmarksOverlay", () => {
     expect(pane.querySelectorAll('[data-testid="tracker-landmark"]')).toHaveLength(2);
     overlay.update({ visible: false, zoom: 14 });
     expect(pane.querySelectorAll('[data-testid="tracker-landmark"]')).toHaveLength(0);
+  });
+
+  it("marks the names hidden below zoom 12 and shown from 12, and still opens the popover at 11", async () => {
+    const { overlay, pane, host } = setup();
+    expect(NAME_MIN_ZOOM).toBe(12);
+    overlay.update({ visible: true, zoom: 11 });
+    await Promise.resolve();
+    const elements = Array.from(pane.querySelectorAll('[data-testid="tracker-landmark"]'));
+    expect(elements).toHaveLength(2);
+    for (const e of elements) expect(e.getAttribute("data-name")).toBe("hidden");
+    pane.querySelector<HTMLButtonElement>('[data-testid="tracker-landmark-badge"]')!.click();
+    expect(host.querySelector('[data-testid="tracker-landmark-popover"] h3')?.textContent).toBe("Town Hall");
+    overlay.update({ visible: true, zoom: 12 });
+    for (const e of elements) expect(e.getAttribute("data-name")).toBe("shown");
   });
 
   it("destroy detaches every element, removes the open popover from the host, and unmounts the icons", async () => {
