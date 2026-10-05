@@ -1,9 +1,12 @@
 // docs/site.md sections 8.1 - 8.3. React host for the map element: loads
 // the Google Maps libraries, builds the controller, and passes it to
-// children through a render prop. A load failure hands the caller an
-// `error` so it can render the "map unavailable" panel.
+// children through a render prop. A load failure that outlasts the
+// automatic retries is reported as a `map_error` with the source "load"
+// and handed to the caller as `error` so it can render the "map
+// unavailable" panel.
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { reportMapError } from "../lib/analytics";
 import { loadMaps } from "./loadMaps";
 import { createMapController, type MapController, type MapControllerOptions } from "./mapController";
 import type { MapsLibs } from "./loadMaps";
@@ -18,8 +21,8 @@ export type MapViewProps = {
 };
 
 // A transient library-load failure (a network blip at the moment the live
-// screen mounts) retries by itself before the "map unavailable" panel and
-// its manual Retry appear.
+// screen mounts) retries by itself before the error is surfaced. `retry`
+// starts a fresh set of attempts.
 const AUTO_RETRIES = 3;
 const AUTO_RETRY_BASE_MS = 1000;
 
@@ -64,6 +67,7 @@ export function MapView({ options, onController, onLibs, className, children }: 
           autoRetriesLeftRef.current -= 1;
           retryTimer = window.setTimeout(() => setAttempt((n) => n + 1), backoff);
         } else {
+          reportMapError("load", e);
           setError(e);
         }
       }

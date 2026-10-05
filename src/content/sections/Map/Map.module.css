@@ -322,6 +322,15 @@
   text-align: center;
 }
 
+.unavailableReason {
+  max-width: 32rem;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 760px) {
   .topLeft { max-width: calc(100% - 64px); }
 }

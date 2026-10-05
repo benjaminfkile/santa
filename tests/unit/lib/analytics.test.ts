@@ -60,3 +60,32 @@ describe("initAnalytics", () => {
     expect(document.head.querySelectorAll("script").length).toBe(1);
   });
 });
+
+describe("describeError", () => {
+  it("names an Error by its name and message when the name says more than Error", async () => {
+    const { describeError } = await import("../../../src/lib/analytics");
+    expect(describeError(new TypeError("Failed to fetch dynamically imported module"))).toBe(
+      "TypeError: Failed to fetch dynamically imported module",
+    );
+  });
+
+  it("gives a bare Error's message alone", async () => {
+    const { describeError } = await import("../../../src/lib/analytics");
+    expect(describeError(new Error("Google Maps did not answer in 15 s"))).toBe(
+      "Google Maps did not answer in 15 s",
+    );
+  });
+
+  it("gives a non-empty string as it is, trimmed to 160 characters", async () => {
+    const { describeError } = await import("../../../src/lib/analytics");
+    expect(describeError("script blocked")).toBe("script blocked");
+    expect(describeError("x".repeat(200))).toHaveLength(160);
+  });
+
+  it("calls anything else an unknown error", async () => {
+    const { describeError } = await import("../../../src/lib/analytics");
+    expect(describeError({ code: 1 })).toBe("Unknown error");
+    expect(describeError(undefined)).toBe("Unknown error");
+    expect(describeError("")).toBe("Unknown error");
+  });
+});

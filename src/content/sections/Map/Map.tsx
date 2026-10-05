@@ -18,6 +18,7 @@ import { store, useStore } from "../../../store/useStore";
 import { selectLiveState } from "../../../store/liveState";
 import { selectTakeover } from "../../selectPage";
 import { storageGet, storageSet } from "../../../lib/storage";
+import { describeError } from "../../../lib/analytics";
 import { setSnowOverride, useSnowEnabled } from "../../theme/seasonalLayers";
 import { SponsorCarousel } from "../SponsorCarousel/SponsorCarousel";
 import { CookieDialog } from "../CookieControl/CookieControl";
@@ -394,9 +395,9 @@ export const Map: SectionComponent = ({ data, bundle }) => {
         options={mapOptions}
         onController={setController}
       >
-        {({ error, retry }) =>
+        {({ error }) =>
           error !== null ? (
-            <MapUnavailable onRetry={retry} />
+            <MapUnavailable reason={describeError(error)} />
           ) : (
             <>
               <div className={styles.topLeft}>

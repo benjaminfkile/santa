@@ -392,7 +392,7 @@ export function CookieDialog({
           </div>
           <div className={dlg.actions}>
             <button type="button" className={btn.btnQuiet} onClick={close}>{copy.cookies.close}</button>
-            <button type="button" className={btn.btn} onClick={() => void load()}>{copy.map.retry}</button>
+            <button type="button" className={btn.btn} onClick={() => void load()}>{copy.cookies.retry}</button>
           </div>
         </>
       );

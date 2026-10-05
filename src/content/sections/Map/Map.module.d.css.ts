@@ -42,6 +42,7 @@ export const sponsorOverlay: string;
 export const topLeft: string;
 export const topRight: string;
 export const unavailable: string;
+export const unavailableReason: string;
 export const visuallyHidden: string;
 export const zoomGroup: string;
 
