@@ -142,7 +142,8 @@ describe("CookieControl", () => {
     setLiveStatus(3);
     setCookieTypes([{ id: 10, name: "Chocolate chip" }]);
     const { getByTestId } = await openWith(5, 5, 0);
-    expect(getByTestId("cookie-remaining").textContent).toBe("0 of 5 left");
+    // The counter reads what has been left for Santa, not what is unused.
+    expect(getByTestId("cookie-remaining").textContent).toBe("5 of 5 left");
     expect(getByTestId("cookie-submit")).toBeDisabled();
     // Nothing can be added when nothing is left.
     expect(getByTestId("cookie-type")).toBeDisabled();
@@ -203,7 +204,7 @@ describe("CookieControl", () => {
     await userEvent.click(plus[0]);
     await userEvent.click(plus[1]);
     await userEvent.click(getByTestId("cookie-submit"));
-    await waitFor(() => expect(getByTestId("cookie-remaining").textContent).toBe("2 of 5 left"));
+    await waitFor(() => expect(getByTestId("cookie-remaining").textContent).toBe("3 of 5 left"));
     expect(getByTestId("cookie-confirmation").textContent).toContain("3 cookies");
     expect(cookiesApi.leaveCookies).toHaveBeenCalledTimes(1);
     expect(cookiesApi.leaveCookies).toHaveBeenCalledWith({
@@ -224,7 +225,7 @@ describe("CookieControl", () => {
     const { getByTestId, queryByText } = await openWith(3, 3, 1);
     await userEvent.click(getByTestId("cookie-type"));
     await userEvent.click(getByTestId("cookie-submit"));
-    await waitFor(() => expect(getByTestId("cookie-remaining").textContent).toBe("0 of 3 left"));
+    await waitFor(() => expect(getByTestId("cookie-remaining").textContent).toBe("3 of 3 left"));
     expect(getByTestId("cookie-error").textContent).toMatch(/all your cookies/);
     expect(getByTestId("cookie-submit")).toBeDisabled();
     expect(queryByText(/server text should be ignored/)).toBeNull();
@@ -241,7 +242,7 @@ describe("CookieControl", () => {
     await userEvent.click(getByTestId("cookie-type"));
     await userEvent.click(getByTestId("cookie-type"));
     await userEvent.click(getByTestId("cookie-submit"));
-    await waitFor(() => expect(getByTestId("cookie-remaining").textContent).toBe("2 of 10 left"));
+    await waitFor(() => expect(getByTestId("cookie-remaining").textContent).toBe("8 of 10 left"));
     expect(getByTestId("cookie-error").textContent).toMatch(/only have 2 cookies left/);
     expect(getByTestId("cookie-count").textContent).toBe("0");
     expect(getByTestId("cookie-type")).not.toBeDisabled();

@@ -223,12 +223,13 @@ test("status walk", async ({ page }) => {
     await expect(page.locator('[data-testid="cookie-tally-leave"]')).toBeVisible();
     await personSignIn(page);
     await page.locator('[data-testid="cookie-tally-leave"]').click();
-    const remainingText = await page.locator('[data-testid="cookie-remaining"]').textContent();
-    // The control reads "9 of 10 left": the first number is what remains.
-    const remaining = Number((remainingText ?? "").match(/\d+/)?.[0] ?? "0");
+    const leftText = await page.locator('[data-testid="cookie-remaining"]').textContent();
+    // The control reads "1 of 10 left": the first number is what the visitor
+    // has left for Santa so far, so it counts up with each cookie.
+    const leftSoFar = Number((leftText ?? "").match(/[0-9]+/)?.[0] ?? "0");
     await page.locator('[data-testid="cookie-type"]').first().click();
     await page.locator('[data-testid="cookie-submit"]').click();
-    await expect(page.locator('[data-testid="cookie-remaining"]')).toContainText(String(remaining - 1));
+    await expect(page.locator('[data-testid="cookie-remaining"]')).toContainText(String(leftSoFar + 1));
     await expect(page.locator('[data-testid="leaderboard-count"]').first()).toContainText(/\d+/, {
       timeout: 2 * POLL_INTERVAL_MS + 2000,
     });

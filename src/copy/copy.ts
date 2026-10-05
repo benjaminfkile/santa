@@ -110,7 +110,11 @@ export const copy = {
     leave: "Leave cookies",
     signInToLeave: "Sign in to leave cookies",
     title: "Leave cookies for Santa",
-    remaining: (remaining: number, limit: number) => `${remaining} of ${limit} left`,
+    // What the visitor has left FOR SANTA so far, out of their limit. It
+    // used to count the other way, the unused ones, and "left" reads as the
+    // past tense of the dialog's own verb: having given all ten, "0 of 10
+    // left" looked like none had been left at all.
+    left: (given: number, limit: number) => `${given} of ${limit} left`,
     more: (name: string) => `One more ${name}`,
     fewer: (name: string) => `One fewer ${name}`,
     noteLabel: "Note (optional)",

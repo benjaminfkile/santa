@@ -497,7 +497,7 @@ export function CookieDialog({
           <h2 id="cookie-dialog-title" className={dlg.title}>{copy.cookies.title}</h2>
           {signedIn && state.kind === "ready" ? (
             <span className={dlg.meta} data-testid="cookie-remaining">
-              {copy.cookies.remaining(state.remaining, state.limit)}
+              {copy.cookies.left(state.limit - state.remaining, state.limit)}
             </span>
           ) : null}
           <button

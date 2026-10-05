@@ -253,7 +253,7 @@ describe("the tally and the leave glyph on the live screen", () => {
     vi.mocked(cookiesApi.getMyCookies).mockResolvedValueOnce({ limit: 5, used: 1, remaining: 4, items: [] } as never);
     const utils = await renderMap({ leaderboardPanel: true, cookieControl: true }, signedIn);
     fireEvent.click(utils.getByTestId("cookie-tally-leave"));
-    await waitFor(() => expect(utils.getByTestId("cookie-remaining").textContent).toBe("4 of 5 left"));
+    await waitFor(() => expect(utils.getByTestId("cookie-remaining").textContent).toBe("1 of 5 left"));
     expect(cookiesApi.getMyCookies).toHaveBeenCalledTimes(1);
     expect(utils.getAllByTestId("cookie-row").length).toBe(3);
     expect(utils.queryByTestId("cookie-dialog-signed-out")).toBeNull();
