@@ -17,6 +17,7 @@ const controller = {
   setToggles: vi.fn(),
   setFlightHistory: vi.fn(),
   setLandmarks: vi.fn(),
+  setPois: vi.fn(),
   setLiveFix: vi.fn(),
   follow: vi.fn(),
   recenter: vi.fn(),

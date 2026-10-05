@@ -26,6 +26,7 @@ import type { MapController } from "../../../map/mapController";
 import type { UserLocationState } from "../../../map/userLocation";
 import type { MapTheme } from "../../../map/themes";
 import { resolveOfferedThemes, resolveInitialTheme } from "../../../map/themes";
+import { resolvePoiKinds } from "../../../map/poiStyles";
 import { acquire as acquireWakeLock, release as releaseWakeLock } from "../../../map/wakeLock";
 import type { MountIcon, TrackerLandmark } from "../../../map/landmarksOverlay";
 import type { IconRef, Snapshot } from "../../../contracts";
@@ -77,6 +78,8 @@ type MapSectionData = {
     onlineCount?: boolean;
     flightDock?: boolean;
   };
+  poiFilter?: boolean | null;
+  poiKinds?: readonly string[];
 };
 
 type FlightHistory = NonNullable<NonNullable<Snapshot["event"]>["flightHistory"]>;
@@ -152,6 +155,11 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   };
 
   const flightHistoryDefault = d.flightHistoryDefault === true;
+
+  // The Google-supplied places the map shows: every kind the theme keeps
+  // while `poiFilter` is off, only the known kinds in `poiKinds` while it is on.
+  const poiFilter = d.poiFilter === true;
+  const poiKinds = useMemo(() => resolvePoiKinds(d.poiKinds), [d.poiKinds]);
 
   const [theme, setTheme] = useState<MapTheme>(initialTheme);
   const [mapType, setMapType] = useState<"terrain" | "roadmap">("terrain");
@@ -270,6 +278,11 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     if (controller === null) return;
     controller.setTheme(theme);
   }, [controller, theme]);
+
+  useEffect(() => {
+    if (controller === null) return;
+    controller.setPois(poiFilter ? { kinds: poiKinds } : null);
+  }, [controller, poiFilter, poiKinds]);
 
   useEffect(() => {
     if (controller === null) return;

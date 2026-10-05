@@ -41,7 +41,11 @@ export class FakeMap {
     for (const set of this.listeners.values()) n += set.size;
     return n;
   }
-  setOptions() {}
+  // Every `setOptions` argument, in order.
+  optionsCalls: Record<string, unknown>[] = [];
+  setOptions(opts: Record<string, unknown>) {
+    this.optionsCalls.push(opts);
+  }
   getZoom() {
     return this.zoom;
   }
