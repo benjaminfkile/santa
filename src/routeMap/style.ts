@@ -72,6 +72,9 @@
 // and `route-time-labels`) that `minzoom`, so the names and times hide
 // below it while the dot layers stay at every zoom. Without it no layer
 // carries a `minzoom`.
+// The basemap is either one base URL (the tiles, terrain, and glyphs under
+// it) or the three URLs given apart (`BasemapUrls`); a null terrain URL
+// leaves the terrain source and the hillshade out whatever `terrain` says.
 
 import { layers } from "@protomaps/basemaps";
 import type {
@@ -360,6 +363,13 @@ export function glyphsUrl(base: string): string {
   return `${base}/glyphs/{fontstack}/{range}.pbf`;
 }
 
+export type BasemapUrls = { tiles: string; terrain: string | null; glyphs: string };
+
+export function basemapUrls(basemap: string | BasemapUrls): BasemapUrls {
+  if (typeof basemap !== "string") return basemap;
+  return { tiles: tilesUrl(basemap), terrain: terrainUrl(basemap), glyphs: glyphsUrl(basemap) };
+}
+
 // [[west, south], [east, north]] around the path, or null when it is empty.
 export function pathBounds(path: readonly LatLng[]): [[number, number], [number, number]] | null {
   if (path.length === 0) return null;
@@ -413,12 +423,14 @@ function basemapLayers(
 
 export function buildStyle(
   appearance: Appearance,
-  base: string,
+  basemap: string | BasemapUrls,
   path: readonly LatLng[],
   marks: readonly LatLng[] = [],
-  terrain = false,
+  terrainWanted = false,
   options: StyleOptions = {},
 ): StyleSpecification {
+  const urls = basemapUrls(basemap);
+  const terrain = terrainWanted && urls.terrain !== null;
   const palette = ROUTE_PALETTES[appearance];
   const routeColor = options.routeColor ?? palette.routeColor;
   const timeLabels = options.timeLabels ?? [];
@@ -444,18 +456,18 @@ export function buildStyle(
       ];
   return {
     version: 8,
-    glyphs: glyphsUrl(base),
+    glyphs: urls.glyphs,
     sources: {
       [BASEMAP_SOURCE]: {
         type: "vector",
-        url: `pmtiles://${tilesUrl(base)}`,
+        url: `pmtiles://${urls.tiles}`,
         attribution: OSM_ATTRIBUTION,
       },
       ...(terrain
         ? {
             [TERRAIN_SOURCE]: {
               type: "raster-dem" as const,
-              url: `pmtiles://${terrainUrl(base)}`,
+              url: `pmtiles://${urls.terrain}`,
               encoding: "terrarium" as const,
             },
           }

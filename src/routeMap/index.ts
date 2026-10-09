@@ -1,5 +1,7 @@
-// docs/site.md section 8.9. The route map: MapLibre over the CDN basemap
-// (VITE_ROUTE_BASEMAP_URL), in its own `routemap` chunk with its React
+// docs/site.md section 8.9. The route map: MapLibre over the event's map
+// (`basemap`: the tiles and terrain archive URLs of
+// `snapshot.event.trackerMap`, with the glyphs under the CDN's
+// `basemap/glyphs`), in its own `routemap` chunk with its React
 // host (RouteMap.tsx), which the `map` style of `route_preview` imports
 // when it mounts. The pmtiles archive header is read first, so an
 // unreachable archive rejects the mount before a map exists, and its zoom
@@ -38,9 +40,10 @@
 // the feature's point at any zoom. The container carries `data-names`
 // ("hidden" or "shown") from the mount and on every zoom event, so the
 // caller's marker styles can follow it.
-// `probeTerrain` reads the header of `<base>/terrain.pmtiles` once per
+// `probeTerrain` reads the header of the given terrain archive once per
 // page load and resolves whether the archive exists; a missing or failing
-// archive logs once and resolves false.
+// archive logs once and resolves false, and a null URL resolves false
+// with no request. Without a terrain URL the style has no terrain layers.
 
 import "./maplibre.css";
 import { Map as MapLibreMap, Marker, Popup, addProtocol, setWorkerUrl } from "maplibre-gl";
@@ -52,11 +55,11 @@ import type { Appearance } from "./flavors";
 import {
   OSM_ATTRIBUTION,
   buildStyle,
+  glyphsUrl,
   makeRouteArrowImage,
   pathBounds,
-  terrainUrl,
   ROUTE_ARROW_ICON,
-  tilesUrl,
+  type BasemapUrls,
   VIEWPOINT_DOTS_LAYER,
   TIME_LABEL_DOTS_LAYER,
   type Viewpoint,
@@ -70,8 +73,12 @@ export type { Viewpoint, LatLng, TimeLabel } from "./style";
 
 export type ViewpointMarker = { lat: number; lng: number; element: HTMLElement };
 
+// The event's map archives (`snapshot.event.trackerMap`).
+export type RouteBasemap = { tilesUrl: string; terrainUrl: string | null };
+
 export type RouteMapOptions = {
   container: HTMLElement;
+  basemap: RouteBasemap;
   path: readonly LatLng[];
   marks?: readonly LatLng[];
   appearance: Appearance;
@@ -139,21 +146,27 @@ function archiveAt(url: string): PMTiles {
   return archive;
 }
 
-let terrainProbe: Promise<boolean> | null = null;
+const terrainProbes = new Map<string, Promise<boolean>>();
 
-export function probeTerrain(): Promise<boolean> {
-  if (terrainProbe === null) {
-    const base = env.ROUTE_BASEMAP_URL;
-    terrainProbe = (async () => {
-      if (base === "") return false;
-      await archiveAt(terrainUrl(base)).getHeader();
+export function probeTerrain(url: string | null): Promise<boolean> {
+  if (url === null || url === "") return Promise.resolve(false);
+  let probe = terrainProbes.get(url);
+  if (probe === undefined) {
+    probe = (async () => {
+      await archiveAt(url).getHeader();
       return true;
     })().catch((error: unknown) => {
       console.warn("route map: no terrain archive, the terrain view is off", error);
       return false;
     });
+    terrainProbes.set(url, probe);
   }
-  return terrainProbe;
+  return probe;
+}
+
+// The glyph template on the CDN; the fonts do not depend on the map.
+function glyphTemplate(): string {
+  return glyphsUrl(`${env.CDN_BASE_URL}/basemap`);
 }
 
 function samePath(a: readonly LatLng[], b: readonly LatLng[]): boolean {
@@ -206,9 +219,13 @@ function featurePoint(event: MapLayerMouseEvent): LatLng | null {
 }
 
 export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapHandle> {
-  const base = env.ROUTE_BASEMAP_URL;
-  if (base === "") throw new Error("VITE_ROUTE_BASEMAP_URL is not set");
   const { container, onError } = options;
+  const base: BasemapUrls = {
+    tiles: options.basemap.tilesUrl,
+    terrain: options.basemap.terrainUrl,
+    glyphs: glyphTemplate(),
+  };
+  if (base.tiles === "") throw new Error("The event's map has no tiles");
   let path = options.path;
   let marks = options.marks ?? [];
   let appearance = options.appearance;
@@ -237,7 +254,7 @@ export async function mountRouteMap(options: RouteMapOptions): Promise<RouteMapH
     };
   }
 
-  const header = await archiveAt(tilesUrl(base)).getHeader();
+  const header = await archiveAt(base.tiles).getHeader();
 
   function padding(): number {
     const { clientWidth, clientHeight } = container;

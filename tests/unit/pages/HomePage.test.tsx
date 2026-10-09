@@ -104,7 +104,8 @@ function setSnapshot(statusId: number | null) {
         content: makeContent() as unknown,
         media: {},
         icons: {},
-        event: statusId === null ? null : { statusId },
+        event: statusId === null ? null : { statusId, trackerBbox: {}, trackerMap: null },
+        trackerThemes: [],
       },
       snapshotUrl: "https://cdn/snap.json",
     }));

@@ -30,7 +30,7 @@ function setStore(patch: {
 }) {
   const s = store.getState();
   const nextSnapshot: Snapshot = {
-    ...(s.snapshot ?? { schemaVersion: 1 }),
+    ...(s.snapshot ?? { schemaVersion: 1, trackerThemes: [] }),
     cookieTypes: patch.cookieTypes,
   };
   const nextLive: LiveObject = {

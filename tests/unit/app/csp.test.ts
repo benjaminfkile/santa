@@ -16,7 +16,6 @@ describe("index.html", () => {
     expect(INDEX_HTML).toContain("%VITE_API_BASE_URL%");
     expect(INDEX_HTML).toContain("%VITE_HUB_URL%");
     expect(INDEX_HTML).toContain("%COGNITO_IDP_URL%");
-    expect(INDEX_HTML).toContain("%ROUTE_BASEMAP_ORIGIN%");
     expect(INDEX_HTML).not.toContain("%VITE_COGNITO_AUTHORITY%");
     expect(INDEX_HTML).not.toContain("%VITE_COGNITO_DOMAIN%");
     expect(INDEX_HTML).toContain("https://maps.googleapis.com");
@@ -24,6 +23,11 @@ describe("index.html", () => {
     expect(INDEX_HTML).toContain("frame-src 'none'");
     expect(INDEX_HTML).toContain("object-src 'none'");
     expect(INDEX_HTML).toContain("base-uri 'self'");
+  });
+
+  it("names no basemap origin beyond the CDN base", () => {
+    expect(INDEX_HTML).not.toContain("VITE_ROUTE_BASEMAP_URL");
+    expect(INDEX_HTML).not.toContain("ROUTE_BASEMAP_ORIGIN");
   });
 
   it("carries the preconnect to the CDN base", () => {

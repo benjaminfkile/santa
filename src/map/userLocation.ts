@@ -5,12 +5,16 @@
 // colour-scheme change and renders nothing until the tokens resolve.
 // After `destroy` nothing starts a watch, draws, or reports a change, even
 // an `enable` whose permission query settles later.
+// With the event box given, the marker and both ends of the line are drawn
+// clamped to it, so a visitor outside the box shows at its edge, while the
+// distance is always measured between the true positions.
 
 import { metresToFeet, metresToMiles } from "../lib/units";
 import { formatCount } from "../lib/number";
 import { readCssVar } from "./cssVars";
 import { subscribeScheme } from "../content/theme/colorScheme";
 import type { MapTheme } from "./themes";
+import { clampToBbox, type Bbox } from "./bounds";
 
 type UserPalette = {
   fill: string;
@@ -72,8 +76,15 @@ export function createUserLocation(
   map: google.maps.Map,
   initialTheme: MapTheme,
   onChange: (s: UserLocationState) => void,
+  bbox: Bbox | null = null,
 ): UserLocation {
   let theme = initialTheme;
+
+  // Where a position is drawn: on the box edge when it lies outside.
+  function drawn(p: google.maps.LatLngLiteral): google.maps.LatLngLiteral {
+    return bbox === null ? p : clampToBbox(p, bbox);
+  }
+
   let santa: google.maps.LatLngLiteral | null = null;
   let state: UserLocationState = {
     enabled: false,
@@ -120,11 +131,11 @@ export function createUserLocation(
       userMarker = new libs.marker.Marker({
         map,
         icon,
-        position: state.position,
+        position: drawn(state.position),
       });
     } else {
       userMarker.setIcon(icon);
-      userMarker.setPosition(state.position);
+      userMarker.setPosition(drawn(state.position));
       if (userMarker.getMap() === null) userMarker.setMap(map);
     }
     if (!prefersReducedMotion() && pulseTimer === null && typeof window !== "undefined") {
@@ -154,16 +165,16 @@ export function createUserLocation(
       return;
     }
     if (line !== null) {
-      line.setPath([santa, state.position]);
+      line.setPath([drawn(santa), drawn(state.position)]);
       line.setOptions({
         icons: [
           {
             icon: {
               path: google.maps.SymbolPath.CIRCLE,
               scale: 2,
-              fillColor: theme.routeColor,
+              fillColor: theme.overlay.routeColor,
               fillOpacity: 1,
-              strokeColor: theme.routeColor,
+              strokeColor: theme.overlay.routeColor,
             },
             offset: "0",
             repeat: "10px",
@@ -174,16 +185,16 @@ export function createUserLocation(
     }
     line = new libs.maps.Polyline({
       map,
-      path: [santa, state.position],
+      path: [drawn(santa), drawn(state.position)],
       strokeOpacity: 0,
       icons: [
         {
           icon: {
             path: google.maps.SymbolPath.CIRCLE,
             scale: 2,
-            fillColor: theme.routeColor,
+            fillColor: theme.overlay.routeColor,
             fillOpacity: 1,
-            strokeColor: theme.routeColor,
+            strokeColor: theme.overlay.routeColor,
           },
           offset: "0",
           repeat: "10px",

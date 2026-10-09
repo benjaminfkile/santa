@@ -4,9 +4,9 @@
 
 import { describe, it, expect } from "vitest";
 import { POI_KINDS, poiStyles, resolvePoiKinds } from "../../../src/map/poiStyles";
-import { THEMES } from "../../../src/map/themes";
+import { seededStyle } from "./themeFixtures";
 
-const base = THEMES.standard.styles;
+const base = seededStyle("standard");
 
 describe("poiStyles", () => {
   it("keeps the theme's rules first and unchanged", () => {

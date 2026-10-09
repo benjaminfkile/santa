@@ -649,6 +649,9 @@ export interface SiteSettings {
       kinds: string[];
     };
   };
+  tracker?: {
+    defaultBbox: Bbox;
+  };
 }
 export interface Display {
   sizePx?: number;
@@ -699,6 +702,12 @@ export interface Landmark {
         display?: Display | null;
       };
   description?: string;
+}
+export interface Bbox {
+  west: number;
+  south: number;
+  east: number;
+  north: number;
 }
 export interface Presentation {
   width: "full" | "wide" | "narrow";

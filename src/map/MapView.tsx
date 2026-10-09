@@ -1,6 +1,7 @@
-// docs/site.md sections 8.1 - 8.3. React host for the map element: loads
-// the Google Maps libraries, builds the controller, and passes it to
-// children through a render prop. A load failure that outlasts the
+// docs/site.md sections 8.1 - 8.4. React host for the map element: loads
+// the Google Maps libraries and the starting theme's style body in
+// parallel, builds the controller once both are in hand, and passes it to
+// children through a render prop. A failure of either is a load failure. A load failure that outlasts the
 // automatic retries is reported as a `map_error` with the source "load"
 // and handed to the caller as `error` so it can render the "map
 // unavailable" panel.
@@ -10,10 +11,17 @@ import { reportMapError } from "../lib/analytics";
 import { loadMaps } from "./loadMaps";
 import { createMapController, type MapController, type MapControllerOptions } from "./mapController";
 import type { MapsLibs } from "./loadMaps";
+import type { MapTheme } from "./themes";
 import * as styles from "./MapView.module.css";
 
+// The controller's options without the style body, which MapView fetches;
+// a null theme (the event enables no theme for this renderer) fails the load.
+export type MapViewOptions = Omit<MapControllerOptions, "theme" | "style"> & {
+  theme: MapTheme | null;
+};
+
 export type MapViewProps = {
-  options: MapControllerOptions;
+  options: MapViewOptions;
   onController?: (c: MapController | null) => void;
   onLibs?: (libs: MapsLibs) => void;
   className?: string;
@@ -47,10 +55,12 @@ export function MapView({ options, onController, onLibs, className, children }: 
     if (el === null) return;
     (async () => {
       try {
-        const libs = await loadMaps();
+        const theme = options.theme;
+        if (theme === null) throw new Error("The event has no map theme");
+        const [libs, style] = await Promise.all([loadMaps(), theme.getStyle()]);
         if (cancelled) return;
         onLibs?.(libs);
-        const c = createMapController(libs, el, options);
+        const c = createMapController(libs, el, { ...options, theme, style });
         controllerRef.current = c;
         if (!cancelled) {
           autoRetriesLeftRef.current = AUTO_RETRIES;

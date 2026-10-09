@@ -16,11 +16,11 @@ const bundle: ContentBundle = {
   icons: {},
 };
 
-function setState(live: Partial<LiveObject>, event: Snapshot["event"]) {
+function setState(live: Partial<LiveObject>, event: Partial<NonNullable<Snapshot["event"]>> | null) {
   act(() =>
     store.setState({
       live: { schemaVersion: 1, publishedAt: "", ...live } as LiveObject,
-      snapshot: { schemaVersion: 1, event } as Snapshot,
+      snapshot: { schemaVersion: 1, event } as unknown as Snapshot,
     }),
   );
 }

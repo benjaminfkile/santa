@@ -1,6 +1,7 @@
-// docs/site.md section 8.9. The route map flavors derive from the tracker
-// themes: every dark colour is a value of night.ts, the light labels and
-// the route palettes come from standard.ts and night.ts, and the built
+// docs/site.md section 8.9. The route map flavors derive from the seeded
+// tracker themes (contracts/fixtures/themes: the seed rows and the style
+// arrays): every dark colour is a value of `night`, the light labels and
+// the route palettes come from `standard` and `night`, and the built
 // style needs no sprite.
 
 import { describe, it, expect } from "vitest";
@@ -12,8 +13,29 @@ import {
   ROUTE_PALETTES,
 } from "../../../src/routeMap/flavors";
 import { buildStyle, pathBounds } from "../../../src/routeMap/style";
-import { nightTheme } from "../../../src/map/themes/night";
-import { standardTheme } from "../../../src/map/themes/standard";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+const SEED_DIR = resolve(__dirname, "..", "..", "..", "contracts", "fixtures", "themes");
+
+type SeedRow = {
+  key: string;
+  renderer: string;
+  chrome: Record<string, string>;
+  overlay: Record<string, string | number> & { routeColor: string; routeOpacity: number };
+};
+
+// A seeded Google theme: its overlay palette, its chrome, and its style array.
+function seededTheme(key: string) {
+  const rows = JSON.parse(readFileSync(resolve(SEED_DIR, "seed.json"), "utf8")) as SeedRow[];
+  const row = rows.find((r) => r.key === key && r.renderer === "google");
+  if (row === undefined) throw new Error(`no seeded google theme ${key}`);
+  const styles: unknown = JSON.parse(readFileSync(resolve(SEED_DIR, `${key}.json`), "utf8"));
+  return { ...row.overlay, chrome: row.chrome, styles };
+}
+
+const nightTheme = seededTheme("night");
+const standardTheme = seededTheme("standard");
 
 describe("route map flavors", () => {
   it("takes every dark colour from the night tracker theme", () => {

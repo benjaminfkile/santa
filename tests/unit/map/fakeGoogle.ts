@@ -18,8 +18,11 @@ export class FakeMap {
     overlayMouseTarget: document.createElement("div"),
   };
   container: HTMLElement;
+  // The options the map was built with.
+  createOptions: Record<string, unknown>;
   constructor(container: HTMLElement, opts: { zoom?: number; center?: google.maps.LatLngLiteral }) {
     this.container = container;
+    this.createOptions = opts as Record<string, unknown>;
     this.zoom = opts.zoom ?? 8;
     this.center = opts.center ?? { lat: 0, lng: 0 };
     FakeMap.instances.push(this);
@@ -59,7 +62,11 @@ export class FakeMap {
   setMapTypeId(t: string) {
     this.mapTypeId = t;
   }
-  fitBounds() {}
+  // Every `fitBounds` argument, in order.
+  fitBoundsCalls: unknown[] = [];
+  fitBounds(bounds: unknown) {
+    this.fitBoundsCalls.push(bounds);
+  }
 }
 
 // Like the real API, `setMap` attaches later: `onAdd` and the first `draw`
@@ -161,7 +168,9 @@ export function fakeLibs() {
 
 export function installFakeGoogle(): void {
   class LatLngBounds {
-    extend() {
+    points: google.maps.LatLngLiteral[] = [];
+    extend(p: google.maps.LatLngLiteral) {
+      this.points.push(p);
       return this;
     }
   }

@@ -60,6 +60,16 @@
   border-radius: 50%;
   object-fit: cover;
 }
+.themeSwatch {
+  display: block;
+  box-sizing: border-box;
+  width: 54px;
+  height: 54px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--swatch-bg);
+  border: 4px solid var(--swatch-ring);
+}
 .themeLabel { font-size: 0.8125rem; color: var(--tracker-tile-fg); }
 .themeSelected .themeLabel { color: var(--tracker-tile-fg); }
 .onMark::after {

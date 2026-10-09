@@ -30,8 +30,8 @@ const presentation: Presentation = {
   anchor: null,
 };
 
-function setSnapshot(event: Snapshot["event"]) {
-  act(() => store.setState({ snapshot: { schemaVersion: 1, event } as Snapshot }));
+function setSnapshot(event: Partial<NonNullable<Snapshot["event"]>> | null) {
+  act(() => store.setState({ snapshot: { schemaVersion: 1, event } as unknown as Snapshot }));
 }
 
 beforeEach(() => {

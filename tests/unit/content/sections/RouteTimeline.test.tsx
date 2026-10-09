@@ -22,7 +22,6 @@ import { MemoryRouter } from "react-router-dom";
 import { store } from "../../../../src/store/useStore";
 import { initialStore, type ContentBundle } from "../../../../src/store/types";
 import type { ContentDocument, Snapshot } from "../../../../src/contracts";
-import { env } from "../../../../src/config/env";
 import { RoutePreview } from "../../../../src/content/sections/RoutePreview/RoutePreview";
 import {
   formatElapsed,
@@ -165,8 +164,12 @@ const LONG_TIMELINE = [
 
 const SCHEDULED_AT = "2026-12-22T01:00:00.000Z";
 
-const mutableEnv = env as unknown as { ROUTE_BASEMAP_URL: string };
-const originalBasemap = mutableEnv.ROUTE_BASEMAP_URL;
+// The event's map, `snapshot.event.trackerMap`.
+const TRACKER_MAP = {
+  id: 3,
+  tilesUrl: "https://cdn.example/basemap/tiles.pmtiles",
+  terrainUrl: "https://cdn.example/basemap/terrain.pmtiles",
+};
 function buildBundle(settings: Record<string, unknown> = {}): ContentBundle {
   return {
     content: { pages: [], nav: [], settings } as unknown as ContentDocument,
@@ -189,6 +192,7 @@ function setEvent(
         scheduledAt,
         routeMap: { path: PATH, timeline, durationMinutes: 72, timed: true },
         routeMapConfig,
+        trackerMap: TRACKER_MAP,
       },
     } as unknown as Snapshot,
   }));
@@ -237,14 +241,12 @@ function markCoordinates(style: StyleShape): number[][] {
 beforeEach(() => {
   mocks.maps.length = 0;
   mocks.markers.length = 0;
-  mutableEnv.ROUTE_BASEMAP_URL = "https://cdn.example/basemap";
   document.documentElement.setAttribute("data-theme", "light");
 });
 
 afterEach(() => {
   cleanup();
   store.setState(() => ({ ...initialStore }));
-  mutableEnv.ROUTE_BASEMAP_URL = originalBasemap;
   document.documentElement.removeAttribute("data-theme");
   vi.restoreAllMocks();
 });

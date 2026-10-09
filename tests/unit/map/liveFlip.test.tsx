@@ -93,7 +93,32 @@ const snapshot = {
         { lat: 42, lng: -107, recordedAt: "2023-12-24T03:00:00Z" },
       ],
     },
+    trackerBbox: { west: -110, south: 35, east: -100, north: 45 },
+    trackerMap: null,
   },
+  trackerThemes: [
+    {
+      id: 1,
+      renderer: "google",
+      key: "standard",
+      name: "Standard",
+      styleUrl: "https://cdn.example/themes/live-flip-standard.json",
+      spriteUrl: null,
+      thumbnailMediaId: null,
+      chrome: { bg: "white", fg: "gray", text: "black", tile: "silver", tileFg: "black", panel: "white", accent: "blue" },
+      overlay: {
+        routeColor: "blue",
+        routeOpacity: 0.9,
+        arrowColor: "white",
+        timeLabelBg: "black",
+        timeLabelFg: "white",
+        timeLabelOpacity: 0.8,
+        userColor: "red",
+      },
+      defaultLightMode: true,
+      defaultDarkMode: false,
+    },
+  ],
 };
 
 function setStatus(status: number, seq: number | null = null) {
@@ -130,6 +155,7 @@ beforeEach(async () => {
     errors.push(args);
   });
   loadMapsMock.mockReset();
+  vi.stubGlobal("fetch", vi.fn(async () => new Response("[]", { status: 200 })));
   act(() => {
     store.setState({ ...initialStore, snapshot: snapshot as never, live: live(2, null) });
   });
@@ -142,6 +168,7 @@ afterEach(() => {
   cleanup();
   window.removeEventListener("error", onWindowError);
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   vi.useRealTimers();
   act(() => {
     store.setState({ ...initialStore });

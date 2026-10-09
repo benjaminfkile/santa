@@ -144,8 +144,6 @@ let RoutePreview: ComponentType<SectionProps>;
 let HILLSHADE_PAINTS: typeof import("../../../../src/routeMap/flavors").HILLSHADE_PAINTS;
 let store: typeof import("../../../../src/store/useStore").store;
 let initialStore: typeof import("../../../../src/store/types").initialStore;
-let mutableEnv: { ROUTE_BASEMAP_URL: string };
-let originalBasemap = "";
 
 function buildBundle(): ContentBundle {
   return {
@@ -155,7 +153,10 @@ function buildBundle(): ContentBundle {
   } as unknown as ContentBundle;
 }
 
-function setEvent(routeMapConfig: Record<string, unknown> | null = null): void {
+function setEvent(
+  routeMapConfig: Record<string, unknown> | null = null,
+  terrainUrl: string | null = TERRAIN_URL,
+): void {
   store.setState((s) => ({
     ...s,
     snapshot: {
@@ -164,6 +165,7 @@ function setEvent(routeMapConfig: Record<string, unknown> | null = null): void {
         id: 1,
         routeMap: { path: PATH, timeline: TIMELINE, durationMinutes: 10, timed: true },
         routeMapConfig,
+        trackerMap: { id: 3, tilesUrl: `${BASEMAP}/tiles.pmtiles`, terrainUrl },
       },
     } as unknown as Snapshot,
   }));
@@ -178,8 +180,12 @@ async function settle(): Promise<void> {
 
 // Renders a `map` section with `config` as the event's `routeMapConfig`
 // and `data` added to the section data.
-async function renderSection(config: Record<string, unknown> | null = null, data: Record<string, unknown> = {}) {
-  setEvent(config);
+async function renderSection(
+  config: Record<string, unknown> | null = null,
+  data: Record<string, unknown> = {},
+  terrainUrl: string | null = TERRAIN_URL,
+) {
+  setEvent(config, terrainUrl);
   const result = render(
     <MemoryRouter>
       <RoutePreview data={data} items={[]} bundle={buildBundle()} />
@@ -245,10 +251,6 @@ beforeEach(async () => {
   ({ HILLSHADE_PAINTS } = await import("../../../../src/routeMap/flavors"));
   ({ store } = await import("../../../../src/store/useStore"));
   ({ initialStore } = await import("../../../../src/store/types"));
-  const { env } = await import("../../../../src/config/env");
-  mutableEnv = env as unknown as { ROUTE_BASEMAP_URL: string };
-  originalBasemap = mutableEnv.ROUTE_BASEMAP_URL;
-  mutableEnv.ROUTE_BASEMAP_URL = BASEMAP;
   setEvent();
 });
 
@@ -256,7 +258,6 @@ afterEach(() => {
   cleanup();
   removeFullscreenApi();
   store.setState(() => ({ ...initialStore }));
-  mutableEnv.ROUTE_BASEMAP_URL = originalBasemap;
   document.documentElement.removeAttribute("data-theme");
   document.body.style.overflow = "";
   vi.restoreAllMocks();
@@ -318,6 +319,20 @@ describe("route map control stack", () => {
 
     await renderSection();
     expect(warn).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows no terrain toggle and no terrain layers when the event's map has no terrain archive", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    // A probe of any terrain archive would fail and log; none runs.
+    mocks.failing.add(TERRAIN_URL);
+    const { container } = await renderSection(null, {}, null);
+    expect(q(container, "route-map")).not.toBeNull();
+    expect(q(container, "route-map-terrain")).toBeNull();
+    expect(q(container, "route-map-fullscreen")).not.toBeNull();
+    const style = lastStyle(mocks.maps[0]);
+    expect(hasHillshade(style)).toBe(false);
+    expect(style.sources.terrain).toBeUndefined();
+    expect(warn).not.toHaveBeenCalled();
   });
 });
 

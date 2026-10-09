@@ -40,13 +40,6 @@ function readOptional(name: string): string {
   return raw(name);
 }
 
-// An optional URL: empty when unset, validated and without a trailing
-// slash when set.
-function readOptionalUrl(name: string, protocol: string): string {
-  if (raw(name) === "") return "";
-  return readUrl(name, protocol);
-}
-
 export const env = {
   ENV: read("VITE_ENV", /^(production|preview)$/) as "production" | "preview",
   CDN_BASE_URL: readUrl("VITE_CDN_BASE_URL", "https:"),
@@ -61,7 +54,6 @@ export const env = {
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean),
-  ROUTE_BASEMAP_URL: readOptionalUrl("VITE_ROUTE_BASEMAP_URL", "https:"),
 } as const;
 
 export const LIVE_URL = `${env.CDN_BASE_URL}/live/location.json`;

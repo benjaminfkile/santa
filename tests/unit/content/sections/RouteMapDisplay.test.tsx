@@ -40,7 +40,6 @@ import { MemoryRouter } from "react-router-dom";
 import { store } from "../../../../src/store/useStore";
 import { initialStore, type ContentBundle } from "../../../../src/store/types";
 import type { ContentDocument, Snapshot } from "../../../../src/contracts";
-import { env } from "../../../../src/config/env";
 import { RoutePreview } from "../../../../src/content/sections/RoutePreview/RoutePreview";
 import {
   DISPLAY_DEFAULTS,
@@ -226,8 +225,12 @@ const TIMELINE = [
   { minutes: 93, lat: 47.0, lng: -113.8 },
 ];
 
-const mutableEnv = env as unknown as { ROUTE_BASEMAP_URL: string };
-const originalBasemap = mutableEnv.ROUTE_BASEMAP_URL;
+// The event's map, `snapshot.event.trackerMap`.
+const TRACKER_MAP = {
+  id: 3,
+  tilesUrl: "https://cdn.example/basemap/tiles.pmtiles",
+  terrainUrl: "https://cdn.example/basemap/terrain.pmtiles",
+};
 
 type Config = Record<string, unknown>;
 
@@ -258,6 +261,7 @@ function setEvent(routeMapConfig?: Config | null): void {
         id: 1,
         scheduledAt: null,
         routeMap: { path: PATH, timeline: TIMELINE, durationMinutes: 93, timed: true },
+        trackerMap: TRACKER_MAP,
         ...(routeMapConfig === undefined ? {} : { routeMapConfig }),
       },
     } as unknown as Snapshot,
@@ -339,7 +343,6 @@ beforeEach(() => {
   mocks.maps.length = 0;
   mocks.markers.length = 0;
   mocks.popups.length = 0;
-  mutableEnv.ROUTE_BASEMAP_URL = "https://cdn.example/basemap";
   document.documentElement.setAttribute("data-theme", "light");
   setEvent();
 });
@@ -347,7 +350,6 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   store.setState(() => ({ ...initialStore }));
-  mutableEnv.ROUTE_BASEMAP_URL = originalBasemap;
   document.documentElement.removeAttribute("data-theme");
   document.body.style.overflow = "";
   vi.restoreAllMocks();
@@ -958,6 +960,7 @@ describe("route map dot layer events", () => {
     const container = document.createElement("div");
     const handle = await mountRouteMap({
       container,
+      basemap: TRACKER_MAP,
       path: PATH,
       appearance: "light",
       labelMinZoom: 12,

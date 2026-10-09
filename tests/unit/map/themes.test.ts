@@ -1,191 +1,197 @@
-// docs/site.md sections 8.4, 22.1. The theme registry mirrors the contract's
-// enum; `resolveOfferedThemes` filters unknown keys and falls back to the
-// whole registry on an empty result; `resolveDefaultTheme` picks the
-// requested key when it is offered; `resolveInitialTheme` resolves the stored
-// key, then the appearance, then `defaultTheme`, then the first offered. Every theme's chrome text on chrome bg
-// and tile text on tile background clear WCAG 4.5:1.
+// docs/site.md sections 8.4, 22.1. The themes loader over the snapshot's
+// `trackerThemes`: every field maps, in list order; `getStyle` fetches the
+// style body once and keeps it, and a rejected fetch is retried on the
+// next call; `themesFor` filters by renderer; `resolveInitialTheme` picks
+// the stored key when it names an enabled theme of the renderer, then the
+// holder of the appearance's default flag, then the first in list order.
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import {
-  THEMES,
-  THEME_KEYS,
-  resolveOfferedThemes,
-  resolveDefaultTheme,
+  loadThemes,
   resolveInitialTheme,
+  themesFor,
+  THEME_STORAGE_KEY,
 } from "../../../src/map/themes";
+import type { Snapshot } from "../../../src/contracts";
 
-type Rgb = { r: number; g: number; b: number; a: number };
+type Row = Snapshot["trackerThemes"][number];
 
-function parseHex(hex: string): Rgb {
-  const s = hex.startsWith("#") ? hex.slice(1) : hex;
-  if (s.length === 3) {
-    return {
-      r: parseInt(s[0] + s[0], 16),
-      g: parseInt(s[1] + s[1], 16),
-      b: parseInt(s[2] + s[2], 16),
-      a: 1,
-    };
-  }
-  if (s.length === 6) {
-    return {
-      r: parseInt(s.slice(0, 2), 16),
-      g: parseInt(s.slice(2, 4), 16),
-      b: parseInt(s.slice(4, 6), 16),
-      a: 1,
-    };
-  }
-  if (s.length === 8) {
-    return {
-      r: parseInt(s.slice(0, 2), 16),
-      g: parseInt(s.slice(2, 4), 16),
-      b: parseInt(s.slice(4, 6), 16),
-      a: parseInt(s.slice(6, 8), 16) / 255,
-    };
-  }
-  throw new Error(`bad hex: ${hex}`);
-}
+let urlSeq = 0;
 
-function overOpaque(fg: Rgb, bg: Rgb): Rgb {
-  const a = fg.a;
+function row(over: Partial<Row> = {}): Row {
+  urlSeq += 1;
   return {
-    r: Math.round(fg.r * a + bg.r * (1 - a)),
-    g: Math.round(fg.g * a + bg.g * (1 - a)),
-    b: Math.round(fg.b * a + bg.b * (1 - a)),
-    a: 1,
+    id: urlSeq,
+    renderer: "google",
+    key: `theme-${urlSeq}`,
+    name: `Theme ${urlSeq}`,
+    styleUrl: `https://cdn.example/themes/${urlSeq}.json`,
+    spriteUrl: null,
+    thumbnailMediaId: null,
+    chrome: {
+      bg: "#ffffff",
+      fg: "#5f6368",
+      text: "#202124",
+      tile: "#e8f0fe",
+      tileFg: "#1a56c4",
+      panel: "#ffffffe6",
+      accent: "#1a56c4",
+    },
+    overlay: {
+      routeColor: "#1a56c4",
+      routeOpacity: 0.9,
+      arrowColor: "#ffffff",
+      timeLabelBg: "#1c1c1e",
+      timeLabelFg: "#ffffff",
+      timeLabelOpacity: 0.8,
+      userColor: "#c62828",
+    },
+    defaultLightMode: false,
+    defaultDarkMode: false,
+    ...over,
   };
 }
 
-function relativeLuminance({ r, g, b }: Rgb): number {
-  const chan = (c: number) => {
-    const s = c / 255;
-    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-  };
-  return 0.2126 * chan(r) + 0.7152 * chan(g) + 0.0722 * chan(b);
+function jsonResponse(body: unknown): Response {
+  return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
 }
 
-function contrastRatio(a: Rgb, b: Rgb): number {
-  const la = relativeLuminance(a);
-  const lb = relativeLuminance(b);
-  const [hi, lo] = la >= lb ? [la, lb] : [lb, la];
-  return (hi + 0.05) / (lo + 0.05);
-}
+afterEach(() => {
+  window.localStorage.removeItem(THEME_STORAGE_KEY);
+  vi.unstubAllGlobals();
+});
 
-describe("theme registry", () => {
-  it("has all six keys", () => {
-    expect([...THEME_KEYS]).toEqual([
-      "standard",
-      "expedition",
-      "blizzard",
-      "charcoal",
-      "night",
-      "nebula",
-    ]);
-    for (const k of THEME_KEYS) expect(THEMES[k]?.key).toBe(k);
+describe("loadThemes", () => {
+  it("maps every snapshot field, in list order", () => {
+    const a = row({
+      renderer: "maplibre",
+      key: "route-light",
+      name: "Route light",
+      spriteUrl: "https://cdn.example/themes/7/sprites/abc/sprite",
+      thumbnailMediaId: "m-1",
+      defaultLightMode: true,
+    });
+    const b = row({ key: "night", name: "Night", defaultDarkMode: true });
+    const [first, second] = loadThemes({ trackerThemes: [a, b] });
+    expect(first).toMatchObject({
+      key: "route-light",
+      renderer: "maplibre",
+      name: "Route light",
+      styleUrl: a.styleUrl,
+      spriteUrl: "https://cdn.example/themes/7/sprites/abc/sprite",
+      thumbnailMediaId: "m-1",
+      defaultLightMode: true,
+      defaultDarkMode: false,
+      overlay: a.overlay,
+      chrome: a.chrome,
+    });
+    expect(second).toMatchObject({
+      key: "night",
+      renderer: "google",
+      name: "Night",
+      spriteUrl: null,
+      thumbnailMediaId: null,
+      defaultLightMode: false,
+      defaultDarkMode: true,
+    });
+    expect(typeof first.getStyle).toBe("function");
+  });
+
+  it("gives an empty list for no snapshot or no themes", () => {
+    expect(loadThemes(null)).toEqual([]);
+    expect(loadThemes({ trackerThemes: [] })).toEqual([]);
   });
 });
 
-describe("resolveOfferedThemes", () => {
-  it("returns the whole registry when no keys are supplied", () => {
-    const list = resolveOfferedThemes(null);
-    expect(list.map((t) => t.key)).toEqual([...THEME_KEYS]);
+describe("getStyle", () => {
+  it("fetches the style body once and keeps it", async () => {
+    const body = [{ featureType: "poi", stylers: [{ visibility: "off" }] }];
+    const fetchMock = vi.fn(async () => jsonResponse(body));
+    vi.stubGlobal("fetch", fetchMock);
+    const r = row();
+    const [theme] = loadThemes({ trackerThemes: [r] });
+    expect(await theme.getStyle()).toEqual(body);
+    expect(await theme.getStyle()).toEqual(body);
+    // A fresh load of the same row reuses the body too.
+    const [again] = loadThemes({ trackerThemes: [r] });
+    expect(await again.getStyle()).toEqual(body);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(r.styleUrl);
   });
 
-  it("filters unknown keys", () => {
-    const list = resolveOfferedThemes(["standard", "unknown", "night"] as string[]);
-    expect(list.map((t) => t.key)).toEqual(["standard", "night"]);
-  });
-
-  it("falls back to the whole registry when no known keys remain", () => {
-    const list = resolveOfferedThemes(["nope"] as string[]);
-    expect(list.map((t) => t.key)).toEqual([...THEME_KEYS]);
+  it("retries a rejected fetch on the next call", async () => {
+    const body = [{ elementType: "geometry", stylers: [{ color: "#242f3e" }] }];
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockResolvedValueOnce(new Response("nope", { status: 503 }))
+      .mockResolvedValueOnce(jsonResponse(body));
+    vi.stubGlobal("fetch", fetchMock);
+    const [theme] = loadThemes({ trackerThemes: [row()] });
+    await expect(theme.getStyle()).rejects.toThrow("offline");
+    await expect(theme.getStyle()).rejects.toThrow(/503/);
+    expect(await theme.getStyle()).toEqual(body);
+    expect(await theme.getStyle()).toEqual(body);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 });
 
-describe("resolveDefaultTheme", () => {
-  it("returns the requested key when offered", () => {
-    const offered = resolveOfferedThemes(["standard", "night"] as string[]);
-    expect(resolveDefaultTheme("night", offered).key).toBe("night");
-  });
-
-  it("falls back to the first offered when the key is missing", () => {
-    const offered = resolveOfferedThemes(["standard", "night"] as string[]);
-    expect(resolveDefaultTheme("blizzard", offered).key).toBe("standard");
-  });
-
-  it("falls back to the first offered when the key is null", () => {
-    const offered = resolveOfferedThemes(["night", "charcoal"] as string[]);
-    expect(resolveDefaultTheme(null, offered).key).toBe("night");
+describe("themesFor", () => {
+  it("keeps the themes of one renderer in list order", () => {
+    const themes = loadThemes({
+      trackerThemes: [
+        row({ key: "g1" }),
+        row({ key: "m1", renderer: "maplibre" }),
+        row({ key: "g2" }),
+      ],
+    });
+    expect(themesFor(themes, "google").map((t) => t.key)).toEqual(["g1", "g2"]);
+    expect(themesFor(themes, "maplibre").map((t) => t.key)).toEqual(["m1"]);
   });
 });
 
 describe("resolveInitialTheme", () => {
-  const all = resolveOfferedThemes(null);
-
-  it("picks night for a dark appearance when nothing is stored", () => {
-    expect(
-      resolveInitialTheme({ stored: null, appearance: "dark", defaultTheme: "blizzard" }, all).key,
-    ).toBe("night");
+  const themes = loadThemes({
+    trackerThemes: [
+      row({ key: "expedition" }),
+      row({ key: "standard", defaultLightMode: true }),
+      row({ key: "night", defaultDarkMode: true }),
+      row({ key: "route-light", renderer: "maplibre", defaultLightMode: true }),
+      row({ key: "route-dark", renderer: "maplibre", defaultDarkMode: true }),
+    ],
   });
 
-  it("picks standard for a light appearance when nothing is stored", () => {
-    expect(
-      resolveInitialTheme({ stored: null, appearance: "light", defaultTheme: "blizzard" }, all).key,
-    ).toBe("standard");
+  it("picks the stored key when it names an enabled theme of the renderer", () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, "expedition");
+    expect(resolveInitialTheme(themes, "google", "dark")?.key).toBe("expedition");
+    expect(resolveInitialTheme(themes, "google", "light")?.key).toBe("expedition");
   });
 
-  it("lets a stored key beat the appearance", () => {
-    expect(
-      resolveInitialTheme({ stored: "charcoal", appearance: "dark", defaultTheme: null }, all).key,
-    ).toBe("charcoal");
-    expect(
-      resolveInitialTheme({ stored: "nebula", appearance: "light", defaultTheme: null }, all).key,
-    ).toBe("nebula");
+  it("picks the appearance's flag holder when nothing is stored", () => {
+    expect(resolveInitialTheme(themes, "google", "light")?.key).toBe("standard");
+    expect(resolveInitialTheme(themes, "google", "dark")?.key).toBe("night");
+    expect(resolveInitialTheme(themes, "maplibre", "light")?.key).toBe("route-light");
+    expect(resolveInitialTheme(themes, "maplibre", "dark")?.key).toBe("route-dark");
   });
 
-  it("skips a stored key that is not offered", () => {
-    const offered = resolveOfferedThemes(["standard", "night"] as string[]);
-    expect(
-      resolveInitialTheme({ stored: "charcoal", appearance: "dark", defaultTheme: null }, offered).key,
-    ).toBe("night");
+  it("ignores a stored key of the other renderer", () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, "route-dark");
+    expect(resolveInitialTheme(themes, "google", "light")?.key).toBe("standard");
   });
 
-  it("falls through to defaultTheme when the appearance's key is not offered", () => {
-    const offered = resolveOfferedThemes(["expedition", "blizzard", "charcoal"] as string[]);
-    expect(
-      resolveInitialTheme({ stored: null, appearance: "dark", defaultTheme: "charcoal" }, offered).key,
-    ).toBe("charcoal");
-    expect(
-      resolveInitialTheme({ stored: null, appearance: "light", defaultTheme: "blizzard" }, offered).key,
-    ).toBe("blizzard");
+  it("ignores a stored key the event no longer enables", () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, "nebula");
+    expect(resolveInitialTheme(themes, "google", "dark")?.key).toBe("night");
   });
 
-  it("falls through to the first offered when neither the appearance nor defaultTheme is offered", () => {
-    const offered = resolveOfferedThemes(["expedition", "blizzard"] as string[]);
-    expect(
-      resolveInitialTheme({ stored: null, appearance: "dark", defaultTheme: "nebula" }, offered).key,
-    ).toBe("expedition");
-    expect(
-      resolveInitialTheme({ stored: null, appearance: "light", defaultTheme: null }, offered).key,
-    ).toBe("expedition");
+  it("picks the first in list order when no theme carries the flag", () => {
+    const plain = loadThemes({ trackerThemes: [row({ key: "blizzard" }), row({ key: "charcoal" })] });
+    expect(resolveInitialTheme(plain, "google", "dark")?.key).toBe("blizzard");
+    expect(resolveInitialTheme(plain, "google", "light")?.key).toBe("blizzard");
   });
-});
 
-describe("theme chrome contrast", () => {
-  const THRESHOLD = 4.5;
-  for (const key of THEME_KEYS) {
-    it(`${key}: chrome.text on chrome.bg and chrome.tileFg on chrome.tile are at 4.5:1 or better`, () => {
-      const { chrome } = THEMES[key];
-      const bg = parseHex(chrome.bg);
-      const text = parseHex(chrome.text);
-      const compositedText = text.a < 1 ? overOpaque(text, bg) : text;
-      const textRatio = contrastRatio(compositedText, bg);
-      expect(textRatio, `${key}: chrome.text on chrome.bg = ${textRatio.toFixed(2)}`).toBeGreaterThanOrEqual(THRESHOLD);
-
-      const tile = parseHex(chrome.tile);
-      const tileFg = parseHex(chrome.tileFg);
-      const compositedTileFg = tileFg.a < 1 ? overOpaque(tileFg, tile) : tileFg;
-      const tileRatio = contrastRatio(compositedTileFg, tile);
-      expect(tileRatio, `${key}: chrome.tileFg on chrome.tile = ${tileRatio.toFixed(2)}`).toBeGreaterThanOrEqual(THRESHOLD);
-    });
-  }
+  it("is null when the renderer has no theme", () => {
+    const googleOnly = themesFor(themes, "google");
+    expect(resolveInitialTheme(googleOnly, "maplibre", "light")).toBeNull();
+  });
 });

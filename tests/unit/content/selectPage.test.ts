@@ -100,6 +100,7 @@ function stateFor(statusId: number | null): SiteStore {
       content: makeContent() as unknown,
       media: {},
       icons: {},
+      trackerThemes: [],
     },
     snapshotUrl: "https://cdn/snap.json",
   };
@@ -152,7 +153,7 @@ describe("selectHome", () => {
   it("falls back to the planned page for status 6 when no postponed page is published", () => {
     const content = makeContent();
     content.pages = content.pages.filter((p) => p.role !== "postponed");
-    const s: SiteStore = { ...stateFor(6), snapshot: { schemaVersion: 1, content, media: {}, icons: {} } };
+    const s: SiteStore = { ...stateFor(6), snapshot: { schemaVersion: 1, content, media: {}, icons: {}, trackerThemes: [] } };
     const r = selectHome(s);
     expect(r.kind).toBe("page");
     if (r.kind === "page") expect(r.page.role).toBe("planned");

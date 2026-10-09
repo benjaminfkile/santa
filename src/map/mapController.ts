@@ -5,6 +5,13 @@
 // never re-renders on a fix. `destroy` removes the map listeners and pending timers, and every
 // method is a no-op afterwards, so a late call or a late map event on a
 // disposed controller draws nothing and calls back into nothing.
+// The map is locked to the event box (8.2): a strict restriction to it, a
+// minimum zoom that fits it in the canvas (recomputed when the canvas
+// resizes), and every pan the controller makes clamped to it. A fix
+// outside the box draws Santa on its edge and pans there; a flight history
+// point outside it is drawn but left out of `fitHistory`. `setTheme`
+// awaits the theme's style body before applying it; a later call wins over
+// an earlier one still waiting.
 
 import type { LiveState } from "../store/liveState";
 import { createSantaMarker, type SantaMarker } from "./santaMarker";
@@ -21,11 +28,15 @@ import {
 } from "./viewpointsOverlay";
 import { createUserLocation, type UserLocation, type UserLocationState } from "./userLocation";
 import type { MapsLibs } from "./loadMaps";
-import type { MapTheme } from "./themes";
+import type { MapTheme, ThemeStyle } from "./themes";
 import { poiStyles, type PoiFilter } from "./poiStyles";
+import { clampToBbox, fittedMinZoom, inBox, MIN_ZOOM_FLOOR, type Bbox } from "./bounds";
 
 export type MapControllerOptions = {
   theme: MapTheme;
+  // The starting theme's style body, already fetched.
+  style: ThemeStyle;
+  bbox: Bbox | null;
   defaultCenter: google.maps.LatLngLiteral;
   defaultZoom: number;
   showSantaMarker: boolean;
@@ -36,8 +47,7 @@ export type MapControllerOptions = {
 };
 
 export type MapController = {
-  map: google.maps.Map;
-  setTheme(theme: MapTheme): void;
+  setTheme(theme: MapTheme): Promise<void>;
   setPois(filter: PoiFilter): void;
   setMapType(type: "terrain" | "roadmap"): void;
   setFlightHistory(points: HistoryPoint[] | null): void;
@@ -72,18 +82,46 @@ export function createMapController(
   let userLoc: UserLocation | null = null;
   let zoomDebounce: number | null = null;
   let disposed = false;
+  let themeRequest = 0;
+  let styles = googleStyles(opts.style);
+  const bbox = opts.bbox;
+
+  function clamp(p: google.maps.LatLngLiteral): google.maps.LatLngLiteral {
+    return bbox === null ? p : clampToBbox(p, bbox);
+  }
+
+  function minZoom(): number {
+    if (bbox === null) return MIN_ZOOM_FLOOR;
+    return fittedMinZoom(bbox, { width: container.clientWidth, height: container.clientHeight });
+  }
 
   const map = new libs.maps.Map(container, {
-    center: opts.defaultCenter,
+    center: clamp(opts.defaultCenter),
     zoom: opts.defaultZoom,
-    minZoom: 5,
+    ...(bbox !== null
+      ? { restriction: { latLngBounds: bbox, strictBounds: true } }
+      : {}),
+    minZoom: minZoom(),
     mapTypeId: "terrain",
     disableDefaultUI: true,
     gestureHandling: "greedy",
     clickableIcons: false,
     keyboardShortcuts: true,
-    styles: theme.styles,
+    styles,
   });
+
+  let resizeObserver: ResizeObserver | null = null;
+  if (bbox !== null && typeof ResizeObserver !== "undefined") {
+    let lastMinZoom = minZoom();
+    resizeObserver = new ResizeObserver(() => {
+      if (disposed) return;
+      const next = minZoom();
+      if (next === lastMinZoom) return;
+      lastMinZoom = next;
+      map.setOptions({ minZoom: next });
+    });
+    resizeObserver.observe(container);
+  }
 
   let overlay: FlightHistoryOverlay = createFlightHistoryOverlay(libs, map, null);
   // The viewpoint popover lives in the map view wrapper, whose box is the
@@ -104,11 +142,18 @@ export function createMapController(
     }
 
     if (opts.showUserLocation) {
-      userLoc = createUserLocation(libs, map, theme, (s) => {
-        opts.onUserLocationChange?.(s);
-      });
+      userLoc = createUserLocation(
+        libs,
+        map,
+        theme,
+        (s) => {
+          opts.onUserLocationChange?.(s);
+        },
+        bbox,
+      );
     }
   } catch (err) {
+    resizeObserver?.disconnect();
     overlay.destroy();
     santa?.destroy();
     userLoc?.destroy();
@@ -139,18 +184,21 @@ export function createMapController(
   overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
 
   return {
-    map,
-    setTheme(t) {
+    async setTheme(t) {
       if (disposed) return;
+      const request = ++themeRequest;
+      const style = await t.getStyle();
+      if (disposed || request !== themeRequest) return;
       theme = t;
-      map.setOptions({ styles: poiStyles(theme.styles, pois) });
+      styles = googleStyles(style);
+      map.setOptions({ styles: poiStyles(styles, pois) });
       overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
       userLoc?.setTheme(theme);
     },
     setPois(filter) {
       if (disposed) return;
       pois = filter;
-      map.setOptions({ styles: poiStyles(theme.styles, pois) });
+      map.setOptions({ styles: poiStyles(styles, pois) });
     },
     setMapType(type) {
       if (disposed) return;
@@ -186,9 +234,10 @@ export function createMapController(
     },
     setLiveFix(state, pos, seqChanged) {
       if (disposed) return;
-      santa?.setState(state, pos);
+      const shown = pos === null ? null : clamp(pos);
+      santa?.setState(state, shown);
       userLoc?.setSanta(pos);
-      if (following && seqChanged && pos !== null) map.panTo(pos);
+      if (following && seqChanged && shown !== null) map.panTo(shown);
     },
     follow(on) {
       if (disposed) return;
@@ -197,7 +246,7 @@ export function createMapController(
     },
     recenter(pos) {
       if (disposed) return;
-      if (pos !== null) map.panTo(pos);
+      if (pos !== null) map.panTo(clamp(pos));
       following = true;
       opts.onFollowChange?.(true);
     },
@@ -209,7 +258,10 @@ export function createMapController(
     fitHistory() {
       if (disposed) return;
       const pts = (points ?? []).filter(
-        (p) => typeof p.lat === "number" && typeof p.lng === "number",
+        (p) =>
+          typeof p.lat === "number" &&
+          typeof p.lng === "number" &&
+          (bbox === null || inBox(p, bbox)),
       );
       if (pts.length === 0) return;
       const bounds = new google.maps.LatLngBounds();
@@ -222,6 +274,8 @@ export function createMapController(
     destroy() {
       if (disposed) return;
       disposed = true;
+      resizeObserver?.disconnect();
+      resizeObserver = null;
       for (const l of listeners) l.remove();
       listeners.length = 0;
       overlay.destroy();
@@ -236,6 +290,11 @@ export function createMapController(
       }
     },
   };
+}
+
+// A Google theme's body is a JSON style array; anything else styles nothing.
+function googleStyles(style: ThemeStyle): google.maps.MapTypeStyle[] {
+  return Array.isArray(style) ? style : [];
 }
 
 // What the overlay draws from a viewpoint: its place, its name, its icon, and

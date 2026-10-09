@@ -4845,6 +4845,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/themes/{id}/impact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeleteImpactDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/maps/{id}/impact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeleteImpactDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/posters": {
         parameters: {
             query?: never;
@@ -4972,6 +5042,601 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["PosterDto"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/admin/help": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ItemsResponseOfHelpTopicDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/help/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PutHelpTopicRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HelpTopicDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/help/{key}/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HelpTopicDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/themes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ItemsResponseOfTrackerThemeDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateTrackerThemeRequest"];
+                    "multipart/form-data": components["schemas"]["CreateTrackerThemeRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrackerThemeDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/themes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["DeleteTrackerThemeRequest"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PatchTrackerThemeRequest"];
+                    "multipart/form-data": components["schemas"]["PatchTrackerThemeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrackerThemeDto"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/admin/themes/{id}/sprite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SpriteTicketsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SpriteTicketsDto"];
+                    };
+                };
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SpriteTicketsDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/themes/{id}/sprite/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SpriteConfirmRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrackerThemeDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/themes/{id}/default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SetThemeDefaultRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrackerThemeDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/maps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ItemsResponseOfTrackerMapDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateTrackerMapRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrackerMapUploadDto"];
+                    };
+                };
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrackerMapUploadDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/maps/{id}/parts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["TrackerMapPartsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrackerMapPartsDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/maps/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["TrackerMapCompleteRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrackerMapDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/maps/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrackerMapDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/maps/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["DeleteTrackerMapRequest"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PatchTrackerMapRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrackerMapDto"];
                     };
                 };
             };
@@ -5222,6 +5887,16 @@ export interface components {
             /** Format: date-time */
             at?: string;
         };
+        Bbox: {
+            /** Format: double */
+            west?: number | string;
+            /** Format: double */
+            south?: number | string;
+            /** Format: double */
+            east?: number | string;
+            /** Format: double */
+            north?: number | string;
+        };
         BeaconDto: {
             /** Format: int64 */
             id?: number | string;
@@ -5306,10 +5981,20 @@ export interface components {
             notify?: boolean;
             message?: null | string;
         };
+        Chrome: {
+            bg?: string;
+            fg?: string;
+            text?: string;
+            tile?: string;
+            tileFg?: string;
+            panel?: string;
+            accent?: string;
+        };
         CloneEventCopy: {
             sponsors?: boolean;
             route?: boolean;
             routeMapConfig?: boolean;
+            tracker?: boolean;
         };
         CloneEventRequest: {
             /** Format: int32 */
@@ -5461,6 +6146,7 @@ export interface components {
             routeId?: null | number | string;
             inheritRoute?: boolean;
             scheduleTimeZone?: null | string;
+            trackerBbox?: components["schemas"]["JsonElement"];
         };
         CreatePageRequest: {
             slug?: string;
@@ -5511,11 +6197,41 @@ export interface components {
             channel?: string;
             address?: string;
         };
+        CreateTrackerMapRequest: {
+            name?: string;
+            bbox?: components["schemas"]["Bbox"];
+            /** Format: int32 */
+            minZoom?: number | string;
+            /** Format: int32 */
+            maxZoom?: number | string;
+            /** Format: int32 */
+            terrainMaxZoom?: null | number | string;
+            sourceBuild?: null | string;
+        };
+        CreateTrackerThemeRequest: {
+            renderer?: string;
+            key?: string;
+            name?: string;
+            /** Format: int32 */
+            sortOrder?: null | number | string;
+            style?: components["schemas"]["JsonElement"];
+            chrome?: components["schemas"]["JsonElement"];
+            overlay?: components["schemas"]["JsonElement"];
+            thumbnailMediaId?: components["schemas"]["JsonElement"];
+        };
         DeleteImpactDto: {
             blocked?: null | string;
             deletes?: components["schemas"]["ImpactGroupDto"][];
             unlinks?: components["schemas"]["ImpactGroupDto"][];
             warnings?: string[];
+        };
+        DeleteTrackerMapRequest: {
+            /** Format: int64 */
+            replacementId?: null | number | string;
+        };
+        DeleteTrackerThemeRequest: {
+            /** Format: int64 */
+            replacementId?: null | number | string;
         };
         EmailQuota: {
             available?: boolean;
@@ -5581,6 +6297,10 @@ export interface components {
             routeId?: null | number | string;
             routeUrl?: null | string;
             routeMapConfig?: null | components["schemas"]["RouteMapConfig"];
+            trackerBbox?: components["schemas"]["Bbox"];
+            /** Format: int64 */
+            trackerMapId?: null | number | string;
+            trackerThemeIds?: (number | string)[];
             createdBy?: string;
             /** Format: date-time */
             createdAt?: string;
@@ -5629,6 +6349,26 @@ export interface components {
             /** Format: date-time */
             serverTime?: string;
         };
+        HelpLinkDto: {
+            label?: string;
+            to?: string;
+        };
+        HelpTopicDto: {
+            key?: string;
+            page?: string;
+            label?: string;
+            title?: string;
+            body?: string;
+            links?: components["schemas"]["HelpLinkDto"][];
+            edited?: boolean;
+            editedBy?: null | string;
+            /** Format: date-time */
+            editedAt?: null | string;
+            defaultChanged?: boolean;
+            /** Format: date-time */
+            updatedAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
+        };
         IconInfoDto: {
             id?: string;
             name?: string;
@@ -5670,6 +6410,9 @@ export interface components {
         ItemsResponseOfEventMessageDto: {
             items?: components["schemas"]["EventMessageDto"][];
         };
+        ItemsResponseOfHelpTopicDto: {
+            items?: components["schemas"]["HelpTopicDto"][];
+        };
         ItemsResponseOfIconInfoDto: {
             items?: components["schemas"]["IconInfoDto"][];
         };
@@ -5708,6 +6451,12 @@ export interface components {
         };
         ItemsResponseOfSubscriptionDto: {
             items?: components["schemas"]["SubscriptionDto"][];
+        };
+        ItemsResponseOfTrackerMapDto: {
+            items?: components["schemas"]["TrackerMapDto"][];
+        };
+        ItemsResponseOfTrackerThemeDto: {
+            items?: components["schemas"]["TrackerThemeDto"][];
         };
         JsonElement: unknown;
         KindInfoDto: {
@@ -5905,6 +6654,7 @@ export interface components {
             versionCount?: number | string;
             sponsors?: components["schemas"]["MediaUsageSponsorRef"][];
             cookieTypes?: components["schemas"]["MediaUsageCookieTypeRef"][];
+            themes?: components["schemas"]["MediaUsageThemeRef"][];
             siteSettings?: boolean;
             darkVersionOf?: components["schemas"]["MediaUsageMediaRef"][];
         };
@@ -5919,6 +6669,11 @@ export interface components {
             title?: string;
         };
         MediaUsageSponsorRef: {
+            /** Format: int64 */
+            id?: number | string;
+            name?: string;
+        };
+        MediaUsageThemeRef: {
             /** Format: int64 */
             id?: number | string;
             name?: string;
@@ -6000,6 +6755,17 @@ export interface components {
             pageId?: null | number | string;
             slug?: null | string;
             url?: null | string;
+        };
+        Overlay: {
+            routeColor?: string;
+            /** Format: double */
+            routeOpacity?: number | string;
+            arrowColor?: string;
+            timeLabelBg?: string;
+            timeLabelFg?: string;
+            /** Format: double */
+            timeLabelOpacity?: number | string;
+            userColor?: string;
         };
         PageAdminDto: {
             /** Format: int64 */
@@ -6103,6 +6869,9 @@ export interface components {
             routeId?: null | number | string;
             scheduleTimeZone?: components["schemas"]["JsonElement"];
             routeMapConfig?: components["schemas"]["JsonElement"];
+            trackerBbox?: components["schemas"]["JsonElement"];
+            trackerMapId?: components["schemas"]["JsonElement"];
+            trackerThemeIds?: components["schemas"]["JsonElement"];
         };
         PatchPageRequest: {
             slug?: null | string;
@@ -6158,6 +6927,19 @@ export interface components {
             fbUrl?: null | string;
             igUrl?: null | string;
             logoMediaId?: null | string;
+        };
+        PatchTrackerMapRequest: {
+            name?: string;
+        };
+        PatchTrackerThemeRequest: {
+            key?: null | string;
+            name?: null | string;
+            /** Format: int32 */
+            sortOrder?: null | number | string;
+            style?: components["schemas"]["JsonElement"];
+            chrome?: components["schemas"]["JsonElement"];
+            overlay?: components["schemas"]["JsonElement"];
+            thumbnailMediaId?: components["schemas"]["JsonElement"];
         };
         PersonDto: {
             /** Format: int64 */
@@ -6325,6 +7107,15 @@ export interface components {
         };
         PublishContentRequest: {
             label?: null | string;
+        };
+        PutHelpLinkRequest: {
+            label?: null | string;
+            to?: null | string;
+        };
+        PutHelpTopicRequest: {
+            title?: null | string;
+            body?: null | string;
+            links?: null | components["schemas"]["PutHelpLinkRequest"][];
         };
         PutPlaceLocationRequest: {
             /** Format: double */
@@ -6554,6 +7345,10 @@ export interface components {
                 [key: string]: number | string;
             };
         };
+        SetThemeDefaultRequest: {
+            light?: null | boolean;
+            dark?: null | boolean;
+        };
         SettingDto: {
             key?: string;
             value?: components["schemas"]["JsonElement"];
@@ -6650,6 +7445,26 @@ export interface components {
             /** Format: date-time */
             registeredAt?: string;
         };
+        SpriteConfirmRequest: {
+            indexSha256?: string;
+        };
+        SpriteTicketsDto: {
+            indexSha256?: string;
+            uploads?: components["schemas"]["SpriteUploadDto"][];
+        };
+        SpriteTicketsRequest: {
+            indexSha256?: string;
+        };
+        SpriteUploadDto: {
+            file?: string;
+            uploadUrl?: string;
+            method?: string;
+            headers?: {
+                [key: string]: string;
+            };
+            /** Format: date-time */
+            expiresAt?: string;
+        };
         StatusHistoryDto: {
             /** Format: int64 */
             id?: number | string;
@@ -6714,6 +7529,105 @@ export interface components {
         SubscriptionVerifyResponse: {
             /** Format: date-time */
             verifiedAt?: string;
+        };
+        TrackerMapCompletePartDto: {
+            /** Format: int32 */
+            partNumber?: number | string;
+            etag?: string;
+        };
+        TrackerMapCompleteRequest: {
+            file?: string;
+            parts?: components["schemas"]["TrackerMapCompletePartDto"][];
+        };
+        TrackerMapDto: {
+            /** Format: int64 */
+            id?: number | string;
+            name?: string;
+            packageKey?: string;
+            prefix?: string;
+            bbox?: components["schemas"]["Bbox"];
+            /** Format: int32 */
+            minZoom?: number | string;
+            /** Format: int32 */
+            maxZoom?: number | string;
+            /** Format: int32 */
+            terrainMaxZoom?: null | number | string;
+            /** Format: int64 */
+            tilesBytes?: null | number | string;
+            /** Format: int64 */
+            terrainBytes?: null | number | string;
+            sourceBuild?: null | string;
+            state?: string;
+            /** Format: date-time */
+            builtAt?: null | string;
+            tilesUrl?: string;
+            terrainUrl?: null | string;
+            /** Format: int32 */
+            eventCount?: number | string;
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            updatedBy?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
+        };
+        TrackerMapPartsDto: {
+            file?: string;
+            parts?: components["schemas"]["TrackerMapPartUrlDto"][];
+            /** Format: date-time */
+            expiresAt?: string;
+        };
+        TrackerMapPartsRequest: {
+            file?: string;
+            partNumbers?: (number | string)[];
+        };
+        TrackerMapPartUrlDto: {
+            /** Format: int32 */
+            partNumber?: number | string;
+            url?: string;
+        };
+        TrackerMapUploadDto: {
+            /** Format: int64 */
+            id?: number | string;
+            packageKey?: string;
+            uploads?: components["schemas"]["TrackerMapUploadsDto"];
+        };
+        TrackerMapUploadIdDto: {
+            uploadId?: string;
+        };
+        TrackerMapUploadsDto: {
+            tiles?: components["schemas"]["TrackerMapUploadIdDto"];
+            terrain?: null | components["schemas"]["TrackerMapUploadIdDto"];
+        };
+        TrackerThemeDto: {
+            /** Format: int64 */
+            id?: number | string;
+            renderer?: string;
+            key?: string;
+            name?: string;
+            /** Format: int32 */
+            sortOrder?: number | string;
+            styleUrl?: string;
+            styleSha256?: string;
+            /** Format: int32 */
+            styleBytes?: number | string;
+            spriteSha256?: null | string;
+            spriteUrl?: null | string;
+            chrome?: components["schemas"]["Chrome"];
+            overlay?: components["schemas"]["Overlay"];
+            thumbnailMediaId?: null | string;
+            defaultLightMode?: boolean;
+            defaultDarkMode?: boolean;
+            /** Format: int32 */
+            eventCount?: number | string;
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            updatedBy?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            audit?: null | components["schemas"]["AuditStampDto"];
         };
         UploadRouteRequest: {
             name?: string;

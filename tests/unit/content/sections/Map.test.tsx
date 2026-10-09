@@ -3,6 +3,10 @@
 // module. tsc catches an unknown export at compile time. This test keeps
 // the render-smoke check and confirms the Map.module.css sidecar carries
 // the classes the map section references at runtime.
+// The map styles come from the snapshot's `trackerThemes` (the event's
+// enabled Google themes), never from the section data's `themes` or
+// `defaultTheme`, and mounting reports the renderer choice as the `live`
+// surface.
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -18,6 +22,10 @@ const trackerModulePath = resolve(here, "../../../../src/content/sections/Map/Tr
 
 // Rendering the Map section pulls in Google Maps through MapView; mock the
 // module so the test exercises the JSX without a network load.
+vi.mock("../../../../src/map/renderer", () => ({
+  reportRenderer: vi.fn(() => "google"),
+}));
+
 vi.mock("../../../../src/map/MapView", () => ({
   MapView: (props: {
     className?: string;
@@ -171,5 +179,102 @@ describe("Map section class coverage", () => {
     ]) {
       expect(trackerCss).toContain(name);
     }
+  });
+});
+
+describe("Map section themes", () => {
+  function themeRow(key: string, renderer: string, flags: { light?: boolean; dark?: boolean } = {}) {
+    return {
+      id: key.length,
+      renderer,
+      key,
+      name: key.toUpperCase(),
+      styleUrl: `https://cdn.example/themes/${key}.json`,
+      spriteUrl: null,
+      thumbnailMediaId: null,
+      chrome: { bg: "white", fg: "gray", text: "black", tile: "silver", tileFg: "black", panel: "white", accent: "blue" },
+      overlay: {
+        routeColor: "blue",
+        routeOpacity: 1,
+        arrowColor: "white",
+        timeLabelBg: "black",
+        timeLabelFg: "white",
+        timeLabelOpacity: 1,
+        userColor: "red",
+      },
+      defaultLightMode: flags.light === true,
+      defaultDarkMode: flags.dark === true,
+    };
+  }
+
+  async function renderWithThemes(data: Record<string, unknown>) {
+    const { store } = await import("../../../../src/store/useStore");
+    const { initialStore } = await import("../../../../src/store/types");
+    store.setState({
+      ...initialStore,
+      snapshot: {
+        schemaVersion: 1,
+        media: {},
+        icons: {},
+        event: { id: 1, trackerBbox: { west: -114.3, south: 46.75, east: -113.8, north: 47.05 }, trackerMap: null },
+        trackerThemes: [
+          themeRow("expedition", "google"),
+          themeRow("standard", "google", { light: true }),
+          themeRow("night", "google", { dark: true }),
+          themeRow("route-light", "maplibre", { light: true }),
+        ],
+      } as never,
+    });
+    const { Map } = await import("../../../../src/content/sections/Map/Map");
+    const bundle = { content: null as unknown, media: {}, icons: {} } as import("../../../../src/store/types").ContentBundle;
+    return render(
+      <MemoryRouter>
+        <Map data={data} items={[]} bundle={bundle} />
+      </MemoryRouter>,
+    );
+  }
+
+  it("offers the snapshot's Google themes and starts from the appearance's flag, ignoring data.themes and data.defaultTheme", async () => {
+    document.documentElement.setAttribute("data-theme", "light");
+    const utils = await renderWithThemes({
+      themes: ["nebula", "charcoal"],
+      defaultTheme: "charcoal",
+      controls: { themePicker: true },
+    });
+    expect(utils.getByTestId("map").getAttribute("data-theme-key")).toBe("standard");
+    (utils.container.querySelector('button[aria-label="Tracker menu"]') as HTMLButtonElement).click();
+    const keys = await utils.findAllByRole("radio");
+    const themeKeys = keys
+      .map((b) => b.getAttribute("data-testid"))
+      .filter((id): id is string => id !== null && id.startsWith("tracker-menu-theme-"));
+    expect(themeKeys).toEqual([
+      "tracker-menu-theme-expedition",
+      "tracker-menu-theme-standard",
+      "tracker-menu-theme-night",
+    ]);
+    cleanup();
+    document.documentElement.removeAttribute("data-theme");
+  });
+
+  it("starts from the dark flag holder on a dark page", async () => {
+    document.documentElement.setAttribute("data-theme", "dark");
+    const utils = await renderWithThemes({ defaultTheme: "expedition" });
+    expect(utils.getByTestId("map").getAttribute("data-theme-key")).toBe("night");
+    cleanup();
+    document.documentElement.removeAttribute("data-theme");
+  });
+
+  it("reports the renderer choice as the live surface on mount", async () => {
+    const { reportRenderer } = await import("../../../../src/map/renderer");
+    vi.mocked(reportRenderer).mockClear();
+    await renderWithThemes({});
+    expect(reportRenderer).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(reportRenderer).mock.calls[0][0]).toBe("live");
+    cleanup();
+  });
+
+  it("reads neither themes nor defaultTheme from the section data", () => {
+    const src = readFileSync(resolve(here, "../../../../src/content/sections/Map/Map.tsx"), "utf8");
+    expect(src).not.toMatch(/d\.themes|d\.defaultTheme|defaultTheme\?:|themes\?:/);
   });
 });

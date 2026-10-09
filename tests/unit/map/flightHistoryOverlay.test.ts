@@ -18,7 +18,7 @@ import {
   pickLabelPoints,
   type HistoryPoint,
 } from "../../../src/map/flightHistoryOverlay";
-import { THEMES } from "../../../src/map/themes";
+import { SEEDED } from "./themeFixtures";
 import { FakeMap, FakeMapObject, fakeLibs, installFakeGoogle, resetFakeGoogle } from "./fakeGoogle";
 
 describe("arrowStepForZoom", () => {
@@ -134,7 +134,7 @@ describe("timeLabelsCollapsedForZoom", () => {
 });
 
 describe("createFlightHistoryOverlay time labels", () => {
-  const theme = THEMES.night;
+  const theme = SEEDED.night;
   const points: HistoryPoint[] = Array.from({ length: 41 }, (_, i) => ({
     lat: 40 + i * 0.01,
     lng: -105 + i * 0.01,
