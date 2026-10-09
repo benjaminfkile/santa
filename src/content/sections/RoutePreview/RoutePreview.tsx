@@ -11,10 +11,12 @@
 // page's appearance (`<html data-theme>`), else the first one, re-resolved
 // on every scheme change. The theme's style body is fetched as soon as the
 // theme is known, alongside the host's chunk. The host draws on the chosen
-// renderer (MapLibre, or Google primitives on `google`). With no theme
-// for that renderer, or when the host fails (the chunk, the theme, the
-// style, the tiles, the Google libraries), the section renders the
-// heading and `emptyText`. The start marker (routeStartMarker:
+// renderer (MapLibre, or Google primitives on `google`). A MapLibre
+// failure (the host's chunk, the style body or the style, a lost WebGL
+// context) falls back once to the same view on Google, with one
+// `map_renderer_fallback` event. With no theme for the renderer, or when
+// the Google host fails (its libraries, its theme), the section renders
+// the heading and `emptyText`. The start marker (routeStartMarker:
 // a gold star flag and a "Starts here" label) stands on the path's first
 // point and the end keeps its circle; nothing on the map moves. With two
 // or more `event.routeMap.timeline` entries the map also carries a dot at
@@ -65,7 +67,12 @@ import { resolvePlaces, resolveViewpoints, resolveRouteMapConfig } from "./route
 import { useRouteMapFullscreen } from "./useRouteMapFullscreen";
 import { TakeoverPortal } from "../../../lib/TakeoverPortal";
 import { getResolved, subscribeScheme } from "../../theme/colorScheme";
-import { reportRenderer, type Renderer } from "../../../map/renderer";
+import {
+  reportRenderer,
+  reportRendererFallback,
+  type FallbackReason,
+  type Renderer,
+} from "../../../map/renderer";
 import type { MapHostProps } from "../../../mapHost/MapHost";
 import { copy } from "../../../copy/copy";
 import * as styles from "./RoutePreview.module.css";
@@ -93,7 +100,7 @@ const LazyMapHost = lazy(() =>
       default: function MapHostUnavailable({ onFail }: MapHostProps) {
         useEffect(() => {
           console.warn("route map: the map chunk did not load", error);
-          onFail();
+          onFail("chunk_failed");
         }, [onFail]);
         return null;
       },
@@ -129,7 +136,19 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   const event = useSnapshotEvent();
   const content = bundle.content;
   const [mapFailed, setMapFailed] = useState(false);
-  const onMapFail = useCallback(() => setMapFailed(true), []);
+  const [fellBack, setFellBack] = useState(false);
+  const rendererRef = useRef<Renderer | null>(null);
+  // A MapLibre failure falls back to Google once; any other failure ends
+  // in the empty text.
+  const onMapFail = useCallback((reason?: FallbackReason) => {
+    if (reason !== undefined && rendererRef.current === "maplibre") {
+      reportRendererFallback("route", reason);
+      rendererRef.current = "google";
+      setFellBack(true);
+      return;
+    }
+    setMapFailed(true);
+  }, []);
 
   const path = useMemo(() => routeMapPath(routeMap), [routeMap]);
   const parsedTimeline = useMemo(() => routeMapTimeline(routeMap), [routeMap]);
@@ -164,10 +183,14 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   const fullscreen = useRouteMapFullscreen(stageRef);
 
   const canMap = path.length >= 2;
-  const [renderer, setRenderer] = useState<Renderer | null>(null);
+  const [chosen, setChosen] = useState<Renderer | null>(null);
   useLayoutEffect(() => {
-    setRenderer(canMap ? reportRenderer("route", store.getState().snapshot) : null);
+    setChosen(canMap ? reportRenderer("route", store.getState().snapshot) : null);
   }, [canMap, rawTrackerMap, themeRows]);
+  const renderer: Renderer | null = chosen !== null && fellBack ? "google" : chosen;
+  useLayoutEffect(() => {
+    rendererRef.current = renderer;
+  }, [renderer]);
 
   // The theme loader, imported alongside the host's chunk.
   const [themesModule, setThemesModule] = useState<ThemesModule | null>(null);
@@ -236,6 +259,7 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
               {theme !== null ? (
                 <Suspense fallback={null}>
                   <LazyMapHost
+                    key={renderer ?? "maplibre"}
                     mode="route"
                     renderer={renderer ?? "maplibre"}
                     theme={theme}

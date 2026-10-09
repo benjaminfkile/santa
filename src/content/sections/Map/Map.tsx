@@ -9,10 +9,17 @@
 // stacks above it.
 // While the event is live the section is fixed to the viewport and nothing
 // else on the site renders.
-// The map styles are the event's enabled Google themes from the snapshot's
-// `trackerThemes` (8.4); the map is locked to `event.trackerBbox` (8.2).
 // The renderer choice of 8.1 is made and reported as the `live` surface on
-// mount; the section builds the Google controller whatever the answer.
+// mount: `maplibre` builds the MapLibre controller from the
+// `tracker-maplibre` chunk, imported here, and `google` the Google one;
+// both are the same interface, so nothing else here knows the renderer.
+// The map styles are the event's enabled themes of that renderer from the
+// snapshot's `trackerThemes` (8.4); the map is locked to
+// `event.trackerBbox` (8.2). When MapLibre fails at runtime the section
+// falls back to Google once (8.1): one `map_renderer_fallback` event, the
+// viewer's stored theme key kept when a Google theme has it and the
+// default resolved otherwise, and the toggles, the overlays, the store
+// subscription, and the viewer's location applied to the new controller.
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
@@ -26,7 +33,7 @@ import { describeError } from "../../../lib/analytics";
 import { setSnowOverride, useSnowEnabled } from "../../theme/seasonalLayers";
 import { SponsorCarousel } from "../SponsorCarousel/SponsorCarousel";
 import { CookieDialog } from "../CookieControl/CookieControl";
-import { MapView } from "../../../map/MapView";
+import { MapView, type MapViewOptions } from "../../../map/MapView";
 import type { MapController } from "../../../map/mapController";
 import type { UserLocationState } from "../../../map/userLocation";
 import type { MapTheme } from "../../../map/themes";
@@ -37,7 +44,12 @@ import {
   THEME_STORAGE_KEY,
 } from "../../../map/themes";
 import { toBbox } from "../../../map/bounds";
-import { reportRenderer } from "../../../map/renderer";
+import {
+  reportRenderer,
+  reportRendererFallback,
+  type FallbackReason,
+  type Renderer,
+} from "../../../map/renderer";
 import { resolvePoiKinds } from "../../../map/poiStyles";
 import { acquire as acquireWakeLock, release as releaseWakeLock } from "../../../map/wakeLock";
 import type { MountIcon, TrackerViewpoint } from "../../../map/viewpointsOverlay";
@@ -115,6 +127,24 @@ function trackerViewpoints(list: unknown, bundle: ContentBundle): TrackerViewpoi
   );
 }
 
+// The MapLibre controller, in the `tracker-maplibre` chunk.
+function loadMaplibreController() {
+  return import("../../../mapHost/maplibreController");
+}
+
+// The event's map (`snapshot.event.trackerMap`) as the MapLibre controller
+// reads it.
+function trackerMapOf(
+  raw: { tilesUrl?: string | null; terrainUrl?: string | null; minZoom?: number | null; maxZoom?: number | null } | null | undefined,
+) {
+  return {
+    tilesUrl: raw?.tilesUrl ?? "",
+    terrainUrl: raw?.terrainUrl ?? null,
+    minZoom: raw?.minZoom ?? undefined,
+    maxZoom: raw?.maxZoom ?? undefined,
+  };
+}
+
 // The site's effective appearance: the root's `data-theme`, dark or light.
 function readAppearance(): "light" | "dark" {
   return typeof document !== "undefined" &&
@@ -128,15 +158,15 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const trackerThemes = useStore((s) => s.snapshot?.trackerThemes ?? null);
   const trackerBbox = useStore((s) => s.snapshot?.event?.trackerBbox ?? null);
   const themes = useMemo(() => loadThemes({ trackerThemes: trackerThemes ?? [] }), [trackerThemes]);
-  const offered = useMemo(() => themesFor(themes, "google"), [themes]);
-  const [initialTheme] = useState<MapTheme | null>(() =>
-    resolveInitialTheme(themes, "google", readAppearance()),
+  const themesRef = useRef(themes);
+  themesRef.current = themes;
+  const [renderer, setRenderer] = useState<Renderer>(() =>
+    reportRenderer("live", store.getState().snapshot),
   );
-
-  useEffect(() => {
-    const s = store.getState().snapshot;
-    reportRenderer("live", s);
-  }, []);
+  const offered = useMemo(() => themesFor(themes, renderer), [themes, renderer]);
+  const [initialTheme] = useState<MapTheme | null>(() =>
+    resolveInitialTheme(themes, renderer, readAppearance()),
+  );
 
   const controls: Required<NonNullable<MapSectionData["controls"]>> = {
     themePicker: d.controls?.themePicker ?? false,
@@ -260,9 +290,32 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const defaultCenter = d.defaultCenter ?? { lat: 39.7392, lng: -104.9903 };
   const defaultZoom = d.defaultZoom ?? 8;
 
-  const mapOptions = useMemo(
+  // MapLibre failed: one event, then the Google theme the map falls back
+  // to, the stored key first.
+  const onFallback = useCallback((reason: FallbackReason): MapTheme | null => {
+    reportRendererFallback("live", reason);
+    const next = resolveInitialTheme(themesRef.current, "google", readAppearance());
+    themeRef.current = next;
+    setRenderer("google");
+    setTheme(next);
+    return next;
+  }, []);
+
+  const mapOptions = useMemo<MapViewOptions>(
     () => ({
       theme,
+      renderer,
+      maplibre: {
+        load: loadMaplibreController,
+        trackerMap: trackerMapOf(store.getState().snapshot?.event?.trackerMap),
+        fix: () => {
+          const live = store.getState().live;
+          return live !== null && live.lat !== null && live.lng !== null
+            ? { lat: live.lat, lng: live.lng }
+            : null;
+        },
+        onFallback,
+      },
       bbox: toBbox(trackerBbox),
       defaultCenter,
       defaultZoom,
@@ -301,6 +354,15 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     if (controller === null) return;
     controller.setPois(poiFilter);
   }, [controller, poiFilter]);
+
+  // A controller built after a fallback takes over the viewer's location.
+  const userStateRef = useRef(userState);
+  userStateRef.current = userState;
+  useEffect(() => {
+    if (controller === null || !userStateRef.current.enabled) return;
+    if (controller.getUserLocation()?.enabled === true) return;
+    void controller.enableUserLocation();
+  }, [controller]);
 
   useEffect(() => {
     if (controller === null) return;

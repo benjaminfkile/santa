@@ -42,6 +42,7 @@ vi.mock("../../../../src/mapHost/MapHost", () => {
 });
 
 vi.mock("../../../../src/map/renderer", () => ({
+  reportRendererFallback: vi.fn(),
   reportRenderer: vi.fn(() => mocks.renderer),
 }));
 

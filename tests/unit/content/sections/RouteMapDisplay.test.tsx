@@ -202,6 +202,7 @@ vi.mock("pmtiles", () => {
 });
 
 vi.mock("../../../../src/map/renderer", () => ({
+  reportRendererFallback: vi.fn(),
   reportRenderer: vi.fn(() => "maplibre"),
 }));
 

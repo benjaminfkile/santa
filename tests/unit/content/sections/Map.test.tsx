@@ -23,6 +23,7 @@ const trackerModulePath = resolve(here, "../../../../src/content/sections/Map/Tr
 // Rendering the Map section pulls in Google Maps through MapView; mock the
 // module so the test exercises the JSX without a network load.
 vi.mock("../../../../src/map/renderer", () => ({
+  reportRendererFallback: vi.fn(),
   reportRenderer: vi.fn(() => "google"),
 }));
 

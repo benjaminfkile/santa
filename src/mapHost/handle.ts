@@ -7,8 +7,9 @@
 // (`trackerBbox`) is the pan limit and sets the least zoom to the zoom
 // that fits it, never under the map row's `minZoom`; the row's `maxZoom`
 // is the most. A style, glyph, or tile error before the first complete
-// render reports through `onError`; later errors (a tile dropped while
-// panning) do not. The path is fitted with padding on mount and on every
+// render reports through `onError` as `style_failed`; later errors (a
+// tile dropped while panning) do not. A lost WebGL context that is not
+// restored within CONTEXT_RESTORE_MS reports as `context_lost`. The path is fitted with padding on mount and on every
 // container resize, its bounds clamped to the box only where they leave
 // it. `update` swaps the style as a diff: a new theme of the same shape
 // changes paint properties only, so the basemap tiles stay on screen.
@@ -94,8 +95,16 @@ export type RouteMapOptions = RouteMapUpdate & {
   bbox: Bbox | null;
   startElement?: HTMLElement;
   onViewpointClick?: (point: { lat: number; lng: number }) => void;
-  onError: (error: unknown) => void;
+  onError: (error: unknown, reason: MapLibreFailure) => void;
 };
+
+// Why a MapLibre map gave up: its style (the body, glyphs, or tiles before
+// the first complete render) or its WebGL context.
+export type MapLibreFailure = "style_failed" | "context_lost";
+
+// How long a lost WebGL context has to come back before the map counts as
+// failed.
+export const CONTEXT_RESTORE_MS = 5000;
 
 export type RouteMapHandle = {
   update: (next: RouteMapUpdate) => void;
@@ -114,7 +123,8 @@ export const OSM_ATTRIBUTION =
 
 let protocolAdded = false;
 
-function ensureProtocol(): void {
+// MapLibre's bundled worker and the `pmtiles://` protocol, once per page.
+export function ensureProtocol(): void {
   if (protocolAdded) return;
   protocolAdded = true;
   setWorkerUrl(workerUrl);
@@ -314,7 +324,12 @@ export function mountRouteMap(options: RouteMapOptions): RouteMapHandle {
   map.on("error", (event) => {
     if (settled || failed) return;
     failed = true;
-    onError(event.error);
+    onError(event.error, "style_failed");
+  });
+  const stopContextWatch = watchContext(map, (error) => {
+    if (failed) return;
+    failed = true;
+    onError(error, "context_lost");
   });
 
   function refit(): void {
@@ -435,6 +450,7 @@ export function mountRouteMap(options: RouteMapOptions): RouteMapHandle {
     },
     refit,
     destroy() {
+      stopContextWatch();
       hideTip();
       start?.remove();
       for (const marker of viewpointPins) marker.remove();
@@ -443,5 +459,31 @@ export function mountRouteMap(options: RouteMapOptions): RouteMapHandle {
       observer = null;
       map.remove();
     },
+  };
+}
+
+// Calls `onLost` when the map's WebGL context is lost and not restored
+// within CONTEXT_RESTORE_MS; returns the cleanup that stops watching.
+export function watchContext(
+  map: Pick<MapLibreMap, "on">,
+  onLost: (error: Error) => void,
+): () => void {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  let stopped = false;
+  const clear = () => {
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+  };
+  map.on("webglcontextlost", () => {
+    if (stopped || timer !== null) return;
+    timer = setTimeout(() => {
+      timer = null;
+      if (!stopped) onLost(new Error("The map's WebGL context was lost"));
+    }, CONTEXT_RESTORE_MS);
+  });
+  map.on("webglcontextrestored", clear);
+  return () => {
+    stopped = true;
+    clear();
   };
 }

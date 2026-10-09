@@ -5,7 +5,9 @@
 // ready. The cycle never throws, never leaves a map, overlay, marker, or
 // listener behind, and never calls back into an unmounted section. The
 // tracker menu's flight history toggle and the overlay always agree, and
-// off stays off across a remount of the section.
+// off stays off across a remount of the section. The same flips on the
+// `maplibre` renderer (a mocked `maplibre-gl`) leave one MapLibre map and
+// its Santa pin while live and nothing once the section is gone.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
@@ -25,8 +27,25 @@ import {
   installFakeGoogle,
   resetFakeGoogle,
 } from "./fakeGoogle";
+import { FakeMarker, FakeMlMap, resetFakeMaplibre } from "../mapHost/fakeMaplibre";
+import { ROUTE_THEME_ROWS, stubThemeFetch } from "../mapHost/routeThemes";
 
 vi.mock("../../../src/map/loadMaps", () => ({ loadMaps: vi.fn() }));
+const flipMocks = vi.hoisted(() => ({ renderer: "google" as "google" | "maplibre" }));
+vi.mock("../../../src/map/renderer", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../../src/map/renderer")>();
+  return { ...actual, reportRenderer: vi.fn(() => flipMocks.renderer) };
+});
+vi.mock("maplibre-gl", async () => (await import("../mapHost/fakeMaplibre")).fakeMaplibreModule);
+vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
+  default: "/assets/maplibre-gl-worker.js",
+}));
+vi.mock("pmtiles", () => {
+  class Protocol {
+    tile = vi.fn();
+  }
+  return { Protocol };
+});
 
 const loadMapsMock = vi.mocked(loadMaps);
 
@@ -374,6 +393,89 @@ describe("the flight history toggle", () => {
     expect(menuToggle(utils).getAttribute("aria-pressed")).toBe("false");
     expect(utils.getByTestId("map").dataset.flightHistory).toBe("off");
     expect(historyLines()).toBe(0);
+    expect(errors).toEqual([]);
+  });
+});
+
+describe("the live flip on maplibre", () => {
+  const TRACKER_MAP = {
+    id: 3,
+    name: "Valley",
+    minZoom: 0,
+    maxZoom: 15,
+    tilesUrl: "https://cdn.example/basemap/tiles.pmtiles",
+    terrainUrl: null,
+  };
+
+  beforeEach(() => {
+    flipMocks.renderer = "maplibre";
+    resetFakeMaplibre();
+    stubThemeFetch();
+    act(() => {
+      store.setState({
+        snapshot: {
+          ...snapshot,
+          event: { ...snapshot.event, trackerMap: TRACKER_MAP },
+          trackerThemes: [...snapshot.trackerThemes, ...ROUTE_THEME_ROWS],
+        } as never,
+      });
+    });
+  });
+
+  afterEach(() => {
+    flipMocks.renderer = "google";
+  });
+
+  function liveMlMaps(): FakeMlMap[] {
+    return FakeMlMap.instances.filter((m) => !m.removed);
+  }
+
+  function pins(): FakeMarker[] {
+    return [...FakeMarker.live].filter((m) => m.element.getAttribute("data-testid") === "santa-marker");
+  }
+
+  it("runs clean through several flips, never loads Google, and leaves nothing behind", async () => {
+    const utils = mount();
+    await utils.findByTestId("map");
+    for (let i = 0; i < 4; i++) {
+      setStatus(3, i);
+      await flush();
+      setStatus(2);
+      await flush();
+    }
+    setStatus(3, 9);
+    await flush();
+    await act(async () => {
+      await vi.dynamicImportSettled();
+    });
+    await flush();
+    expect(errors).toEqual([]);
+    expect(loadMapsMock).not.toHaveBeenCalled();
+    expect(FakeMap.instances).toHaveLength(0);
+    expect(liveMlMaps()).toHaveLength(1);
+    expect(pins()).toHaveLength(1);
+    expect(pins()[0].lngLat).toEqual([-105, 40.09]);
+    utils.unmount();
+    await flush();
+    expect(liveMlMaps()).toHaveLength(0);
+    expect(FakeMarker.live.size).toBe(0);
+  });
+
+  it("the flight history toggle and the overlay agree on maplibre too", async () => {
+    setStatus(3, 1);
+    const utils = mount();
+    await utils.findByTestId("map");
+    await act(async () => {
+      await vi.dynamicImportSettled();
+    });
+    await flush();
+    const map = liveMlMaps()[0];
+    const has = () => map.style().layers.some((l) => l.id === "flight-history-line");
+    expect(has()).toBe(true);
+    fireEvent.click(utils.getByRole("button", { name: "Tracker menu" }));
+    fireEvent.click(utils.getByTestId("tracker-menu-flight-history"));
+    expect(utils.getByTestId("map").dataset.flightHistory).toBe("off");
+    expect(has()).toBe(false);
     expect(errors).toEqual([]);
   });
 });

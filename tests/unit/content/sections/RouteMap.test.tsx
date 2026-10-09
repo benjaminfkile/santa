@@ -10,8 +10,10 @@
 //  - The style is the seeded theme of the site appearance, including a
 //    live switch that diffs the style on the same map.
 //  - Every fallback (no route map, no `trackerMap`, an unreadable style
-//    body, a style or tile error) renders the heading and `emptyText`,
-//    never an `<img>`, and logs once.
+//    body or a style or tile error on an event with no Google theme to
+//    fall back to) renders the heading and `emptyText`, never an `<img>`,
+//    and logs once; a MapLibre failure reports `map_renderer_fallback`
+//    with `style_failed`.
 //  - The map host chunk is imported only when a section with a recording
 //    mounts.
 //  - A section with a recording reports the renderer choice as the
@@ -28,7 +30,7 @@ import { store } from "../../../../src/store/useStore";
 import { initialStore, type ContentBundle } from "../../../../src/store/types";
 import type { ContentDocument, Snapshot } from "../../../../src/contracts";
 import { RoutePreview } from "../../../../src/content/sections/RoutePreview/RoutePreview";
-import { reportRenderer } from "../../../../src/map/renderer";
+import { reportRenderer, reportRendererFallback } from "../../../../src/map/renderer";
 import { loadMaps } from "../../../../src/map/loadMaps";
 import { FakeMap, installFakeGoogle, resetFakeGoogle } from "../../map/fakeGoogle";
 import {
@@ -115,6 +117,7 @@ vi.mock("maplibre-gl", () => {
 });
 
 vi.mock("../../../../src/map/renderer", () => ({
+  reportRendererFallback: vi.fn(),
   reportRenderer: vi.fn((_surface: string, snapshot: { event?: { trackerMap?: unknown } } | null) =>
     snapshot?.event?.trackerMap == null ? "google" : mocks.renderer,
   ),
@@ -460,7 +463,8 @@ describe("route_preview map fallbacks", () => {
     expect(mocks.maps).toHaveLength(0);
   });
 
-  it("renders emptyText and logs once when the theme's style body cannot be read", async () => {
+  it("falls back, then renders emptyText with no Google theme, when the style body cannot be read", async () => {
+    vi.mocked(reportRendererFallback).mockClear();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const missing = ROUTE_THEME_ROWS.map((row) => ({
       ...row,
@@ -472,9 +476,11 @@ describe("route_preview map fallbacks", () => {
     expectEmptyView(container);
     expect(mocks.maps).toHaveLength(0);
     expect(warn).toHaveBeenCalledTimes(1);
+    expect(reportRendererFallback).toHaveBeenCalledWith("route", "style_failed");
   });
 
-  it("renders emptyText and logs once when the style or tiles fail to load", async () => {
+  it("falls back, then renders emptyText with no Google theme, when the style or tiles fail to load", async () => {
+    vi.mocked(reportRendererFallback).mockClear();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     setEvent(routeMapOf(PATH));
     const { container } = renderSection({ emptyText: EMPTY });
@@ -488,6 +494,8 @@ describe("route_preview map fallbacks", () => {
     expectEmptyView(container);
     expect(map.remove).toHaveBeenCalledTimes(1);
     expect(warn).toHaveBeenCalledTimes(1);
+    expect(reportRendererFallback).toHaveBeenCalledTimes(1);
+    expect(reportRendererFallback).toHaveBeenCalledWith("route", "style_failed");
   });
 
   it("keeps the map when a tile fails after the first complete render", async () => {

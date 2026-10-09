@@ -3,7 +3,10 @@
 // transient library-load failure retries by itself before the unavailable
 // panel appears, and the surfaced failure is reported with the source
 // "load". The controller is built only once both the Maps libraries and
-// the starting theme's style body are in hand, with that body.
+// the starting theme's style body are in hand, with that body. On the
+// `maplibre` renderer it loads the host's chunk and the theme's body in
+// parallel, builds the MapLibre controller with that body, and never
+// loads Google.
 
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { act, cleanup, render, waitFor } from "@testing-library/react";
@@ -210,5 +213,47 @@ describe("MapView", () => {
     }
     expect(createMock).not.toHaveBeenCalled();
     expect(String(seen[seen.length - 1])).toContain("no map theme");
+  });
+
+  it("on maplibre loads the host chunk and the body in parallel and never loads Google", async () => {
+    let releaseChunk: (m: unknown) => void = () => {};
+    let releaseStyle: (v: unknown) => void = () => {};
+    const getStyle = vi.fn(() => new Promise((res) => (releaseStyle = res)));
+    const load = vi.fn(() => new Promise((res) => (releaseChunk = res)));
+    const createMaplibreController = vi.fn(() => ({ destroy: vi.fn() }));
+    const theme = { ...SEEDED.standard, renderer: "maplibre" as const, getStyle } as never;
+    const seen: unknown[] = [];
+    render(
+      <MapView
+        options={{
+          ...OPTIONS,
+          theme,
+          renderer: "maplibre",
+          maplibre: {
+            load: load as never,
+            trackerMap: { tilesUrl: "https://cdn.example/tiles.pmtiles", terrainUrl: null },
+            fix: () => ({ lat: 46.9, lng: -114 }),
+            onFallback: vi.fn(() => null),
+          },
+        }}
+        onController={(c) => seen.push(c)}
+        className="host"
+      />,
+    );
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(getStyle).toHaveBeenCalledTimes(1);
+    const body = { version: 8, sources: {}, layers: [] };
+    await act(async () => {
+      releaseStyle(body);
+      releaseChunk({ createMaplibreController });
+      for (let i = 0; i < 5; i++) await Promise.resolve();
+    });
+    expect(createMaplibreController).toHaveBeenCalledTimes(1);
+    const opts = (createMaplibreController.mock.calls[0] as unknown[])[1] as Record<string, unknown>;
+    expect(opts.style).toBe(body);
+    expect(opts.fix).toEqual({ lat: 46.9, lng: -114 });
+    expect(loadMapsMock).not.toHaveBeenCalled();
+    expect(createMock).not.toHaveBeenCalled();
+    expect(seen[seen.length - 1]).not.toBeNull();
   });
 });

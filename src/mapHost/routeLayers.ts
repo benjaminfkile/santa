@@ -438,3 +438,137 @@ export function routeLayers(
   ];
   return { sources, layers };
 }
+
+// The live tracker's flight history (site.md 8.5 and 8.10) as one GeoJSON
+// source and three layers: the line in `overlay.routeColor` at
+// `routeOpacity`, 2 px wide; the arrowheads (ROUTE_ARROW_ICON, tinted
+// `overlay.arrowColor`) at the given points, each turned to its `bearing`
+// in degrees clockwise from north; and the time labels, each label's text
+// in `overlay.timeLabelFg` on a `timeLabelBg` halo. The caller picks the
+// arrow points and the labels from the tables of 8.5 for the zoom, and the
+// arrow size (`arrowSize`, the icon size).
+export const FLIGHT_HISTORY_SOURCE = "flight-history";
+export const FLIGHT_HISTORY_LINE_LAYER = "flight-history-line";
+export const FLIGHT_HISTORY_ARROWS_LAYER = "flight-history-arrows";
+export const FLIGHT_HISTORY_LABELS_LAYER = "flight-history-labels";
+
+export type FlightHistoryArrow = LatLng & { bearing: number };
+
+export function flightHistoryLayers(
+  palette: OverlayPalette,
+  path: readonly LatLng[],
+  arrows: readonly FlightHistoryArrow[],
+  labels: readonly TimeLabel[],
+  arrowSize: number,
+): RouteLayers {
+  const { overlay } = palette;
+  const features = [
+    {
+      type: "Feature" as const,
+      properties: { part: "line" },
+      geometry: { type: "LineString" as const, coordinates: path.map((p) => [p.lng, p.lat]) },
+    },
+    ...arrows.map((a) => ({
+      type: "Feature" as const,
+      // The arrowhead image points east; MapLibre turns it clockwise.
+      properties: { part: "arrow", rotate: round(a.bearing - 90) },
+      geometry: { type: "Point" as const, coordinates: [a.lng, a.lat] },
+    })),
+    ...labels.map((l) => ({
+      type: "Feature" as const,
+      properties: { part: "label", label: l.label },
+      geometry: { type: "Point" as const, coordinates: [l.lng, l.lat] },
+    })),
+  ];
+  return {
+    sources: {
+      [FLIGHT_HISTORY_SOURCE]: { type: "geojson", data: { type: "FeatureCollection", features } },
+    },
+    layers: [
+      {
+        id: FLIGHT_HISTORY_LINE_LAYER,
+        type: "line",
+        source: FLIGHT_HISTORY_SOURCE,
+        filter: ["==", ["get", "part"], "line"],
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint: {
+          "line-color": overlay.routeColor,
+          "line-opacity": overlay.routeOpacity,
+          "line-width": 2,
+        },
+      },
+      {
+        id: FLIGHT_HISTORY_ARROWS_LAYER,
+        type: "symbol",
+        source: FLIGHT_HISTORY_SOURCE,
+        filter: ["==", ["get", "part"], "arrow"],
+        layout: {
+          "icon-image": ROUTE_ARROW_ICON,
+          "icon-size": arrowSize,
+          "icon-rotate": ["get", "rotate"],
+          "icon-rotation-alignment": "map",
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true,
+        },
+        paint: { "icon-color": overlay.arrowColor },
+      },
+      {
+        id: FLIGHT_HISTORY_LABELS_LAYER,
+        type: "symbol",
+        source: FLIGHT_HISTORY_SOURCE,
+        filter: ["==", ["get", "part"], "label"],
+        layout: {
+          "text-field": ["get", "label"],
+          "text-font": ["Noto Sans Medium"],
+          "text-size": 12,
+          "text-anchor": "left",
+          "text-offset": [0.6, 0],
+        },
+        paint: {
+          "text-color": overlay.timeLabelFg,
+          "text-halo-color": overlay.timeLabelBg,
+          "text-halo-width": 3,
+          "text-opacity": overlay.timeLabelOpacity,
+        },
+      },
+    ],
+  };
+}
+
+// The dotted line from Santa to the viewer (site.md 8.6): one GeoJSON line
+// in `overlay.routeColor`, round dots 10 px apart.
+export const USER_LINE_SOURCE = "user-line";
+export const USER_LINE_LAYER = "user-line";
+
+export function userLineLayers(palette: OverlayPalette, from: LatLng, to: LatLng): RouteLayers {
+  return {
+    sources: {
+      [USER_LINE_SOURCE]: {
+        type: "geojson",
+        data: {
+          type: "Feature",
+          properties: {},
+          geometry: {
+            type: "LineString",
+            coordinates: [[from.lng, from.lat], [to.lng, to.lat]],
+          },
+        },
+      },
+    },
+    layers: [
+      {
+        id: USER_LINE_LAYER,
+        type: "line",
+        source: USER_LINE_SOURCE,
+        layout: { "line-cap": "round" },
+        paint: {
+          "line-color": palette.overlay.routeColor,
+          "line-width": 4,
+          // Zero length dashes with round caps draw dots; the gap is in
+          // line widths, so 2.5 widths of 4 px put the dots 10 px apart.
+          "line-dasharray": [0, 2.5],
+        },
+      },
+    ],
+  };
+}
