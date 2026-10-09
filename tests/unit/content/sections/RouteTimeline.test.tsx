@@ -31,7 +31,6 @@ import {
   routeTimeLabels,
 } from "../../../../src/content/sections/RoutePreview/routeTimelineData";
 import { copy } from "../../../../src/copy/copy";
-import { protomapsKinds } from "../../../../src/mapHost/places";
 import { ROUTE_THEME_ROWS, stubThemeFetch } from "../../mapHost/routeThemes";
 
 type FakeMapInstance = {
@@ -431,7 +430,7 @@ describe("route map POI kinds and viewpoints", () => {
       const pois = style.layers.find((l) => l.id === "pois");
       expect(pois?.layout?.visibility).not.toBe("none");
       expect(JSON.stringify(pois?.filter)).toContain(
-        JSON.stringify(["literal", protomapsKinds(["park", "attraction"])]),
+        JSON.stringify(["literal", ["park", "attraction"]]),
       );
       const data = style.sources["route-landmarks"].data as {
         features: { properties: { label: string }; geometry: { coordinates: number[] } }[];

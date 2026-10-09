@@ -53,7 +53,6 @@ import {
 } from "../../../../src/content/sections/RoutePreview/routeMapConfig";
 import { routeTimeLabels } from "../../../../src/content/sections/RoutePreview/routeTimelineData";
 import { mountRouteMap } from "../../../../src/mapHost/handle";
-import { protomapsKinds } from "../../../../src/mapHost/places";
 import {
   ROUTE_THEME_ROWS,
   routePalette,
@@ -644,14 +643,14 @@ describe("route map config reaching the style", () => {
     const pois = layerOf(currentStyle(), "pois");
     expect(pois?.layout?.visibility).not.toBe("none");
     expect(JSON.stringify(pois?.filter)).toContain(
-      JSON.stringify(["literal", protomapsKinds(["park", "attraction"])]),
+      JSON.stringify(["literal", ["park", "attraction"]]),
     );
   });
 
   it("passes the settings' route map places whatever the event's config carries", async () => {
     await renderSection({ pois: { kinds: ["school"] } }, { settings: { places: { routeMap: { kinds: ["park"] } } } });
     const filter = JSON.stringify(layerOf(currentStyle(), "pois")?.filter);
-    expect(filter).toContain(JSON.stringify(["literal", protomapsKinds(["park"])]));
+    expect(filter).toContain(JSON.stringify(["literal", ["park"]]));
     expect(filter).not.toContain("school");
   });
 
