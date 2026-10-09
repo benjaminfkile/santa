@@ -4,10 +4,13 @@
    tokens and the dot tooltip popup (.route-map-tip) on the glass recipe
    in small sans text.
    MapLibre's own sheet is not loaded: most of its weight is icons for
-   controls the map host does not show. */
+   controls the map host does not show.
+   This sheet sets no position on .maplibregl-map: the host element is
+   positioned by its own rule (MapHost.module.css), and this sheet loads
+   with the routemap chunk after the host's, so a position here would win
+   over the host's and collapse it to no height. */
 
 .maplibregl-map {
-  position: relative;
   overflow: hidden;
   font: 12px/20px var(--font-sans, sans-serif);
   -webkit-tap-highlight-color: rgb(0 0 0 / 0);
