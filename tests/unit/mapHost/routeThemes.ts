@@ -1,6 +1,8 @@
 // The two seeded MapLibre themes (`route-light`, `route-dark`) from the
 // contracts fixtures: their snapshot rows (`trackerThemes`), their style
 // bodies, and a fetch stub that serves each body from its `styleUrl`.
+// The seeded Google themes' rows and style arrays are served the same way
+// (`googleRow`, GOOGLE_THEME_ROWS: `standard` and `night`).
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -49,6 +51,26 @@ export function routePalette(key: RouteKey): Pick<MapTheme, "overlay" | "chrome"
 
 export const ROUTE_THEME_ROWS: ThemeRow[] = [routeRow("route-light"), routeRow("route-dark")];
 
+export type GoogleKey = "standard" | "night" | "charcoal";
+
+export function googleStyle(key: GoogleKey): google.maps.MapTypeStyle[] {
+  return JSON.parse(readFileSync(resolve(SEED_DIR, `${key}.json`), "utf8")) as google.maps.MapTypeStyle[];
+}
+
+export function googleRow(key: GoogleKey): ThemeRow {
+  const row = seed.find((r) => r.key === key && r.renderer === "google");
+  if (row === undefined) throw new Error(`no seeded google theme ${key}`);
+  return {
+    ...row,
+    styleUrl: styleUrlOf(key),
+    spriteUrl: null,
+    thumbnailMediaId: null,
+  } as ThemeRow;
+}
+
+// The seeded Google themes flagged for light (`standard`) and dark (`night`).
+export const GOOGLE_THEME_ROWS: ThemeRow[] = [googleRow("standard"), googleRow("night")];
+
 // A background layer's colour in a style.
 export function backgroundOf(style: { layers: { id: string; paint?: unknown }[] }): unknown {
   const layer = style.layers.find((l) => l.id === "background");
@@ -60,9 +82,12 @@ export function backgroundOf(style: { layers: { id: string; paint?: unknown }[] 
 export function stubThemeFetch(
   options: { fail?: boolean; extra?: Record<string, StyleSpecification> } = {},
 ) {
-  const bodies = new Map<string, StyleSpecification>([
+  const bodies = new Map<string, StyleSpecification | google.maps.MapTypeStyle[]>([
     [styleUrlOf("route-light"), routeStyle("route-light")],
     [styleUrlOf("route-dark"), routeStyle("route-dark")],
+    [styleUrlOf("standard"), googleStyle("standard")],
+    [styleUrlOf("night"), googleStyle("night")],
+    [styleUrlOf("charcoal"), googleStyle("charcoal")],
     ...Object.entries(options.extra ?? {}),
   ]);
   const fetchMock = vi.fn(async (url: string) => {

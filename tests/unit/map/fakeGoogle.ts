@@ -190,10 +190,19 @@ export function installFakeGoogle(): void {
       this.y = y;
     }
   }
+  class Size {
+    width: number;
+    height: number;
+    constructor(width: number, height: number) {
+      this.width = width;
+      this.height = height;
+    }
+  }
   (globalThis as unknown as { google: unknown }).google = {
     maps: {
-      SymbolPath: { CIRCLE: 0, FORWARD_CLOSED_ARROW: 1 },
+      SymbolPath: { CIRCLE: 0, FORWARD_CLOSED_ARROW: 1, FORWARD_OPEN_ARROW: 2 },
       LatLngBounds,
+      Size,
       LatLng,
       Point,
     },
