@@ -1,10 +1,11 @@
 // docs/site.md sections 8.9, 22.1. The route map's control stack with
-// MapLibre and pmtiles mocked:
+// MapLibre and pmtiles mocked and the seeded route themes served from the
+// contracts fixtures:
 //  - The fullscreen button and the terrain toggle render by default and
 //    hide when the event's `routeMapConfig.controls.fullscreen` or
 //    `routeMapConfig.controls.terrain` is false, and a null config shows
 //    both; the same switches in the section data change nothing; the
-//    terrain toggle also hides when the terrain archive probe rejects.
+//    terrain toggle also hides when the theme has no terrain layer.
 //  - Fullscreen enters and exits through the Fullscreen API and through
 //    the takeover, resizing the map and refitting the path on both edges;
 //    Escape exits both; the takeover alone locks the body scroll; the
@@ -18,10 +19,9 @@
 //  - The terrain view starts on with no remembered choice and off with a
 //    remembered off; the toggle adds and removes the hillshade layer, the
 //    choice is stored, restores on the next mount, and survives an
-//    appearance switch; with the terrain probe failing the map stays
-//    without hillshade.
-// Every test imports the modules afresh, so the once-per-page-load
-// terrain probe runs again.
+//    appearance switch, each theme keeping its own hillshade paint.
+// Every test imports the modules afresh, so the once-per-page-load theme
+// bodies are fetched again.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, cleanup, act, fireEvent } from "@testing-library/react";
@@ -29,6 +29,7 @@ import { MemoryRouter, useNavigate } from "react-router-dom";
 import type { ComponentType } from "react";
 import type { ContentBundle } from "../../../../src/store/types";
 import type { ContentDocument, Snapshot } from "../../../../src/contracts";
+import { ROUTE_THEME_ROWS, routeStyle, stubThemeFetch } from "../../mapHost/routeThemes";
 
 type FakeMapInstance = {
   options: Record<string, unknown>;
@@ -40,7 +41,10 @@ type FakeMapInstance = {
 
 const mocks = vi.hoisted(() => ({
   maps: [] as FakeMapInstance[],
-  failing: new Set<string>(),
+}));
+
+vi.mock("../../../../src/map/renderer", () => ({
+  reportRenderer: vi.fn(() => "maplibre"),
 }));
 
 vi.mock("maplibre-gl", () => {
@@ -97,27 +101,10 @@ vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
 }));
 
 vi.mock("pmtiles", () => {
-  class PMTiles {
-    url: string;
-    constructor(url: string) {
-      this.url = url;
-    }
-    async getHeader() {
-      if (mocks.failing.has(this.url)) throw new Error(`${this.url} unreachable`);
-      return { minZoom: 0, maxZoom: 15 };
-    }
-  }
   class Protocol {
-    tiles = new Map<string, PMTiles>();
     tile = vi.fn();
-    add(p: PMTiles) {
-      this.tiles.set(p.url, p);
-    }
-    get(url: string) {
-      return this.tiles.get(url);
-    }
   }
-  return { PMTiles, Protocol };
+  return { Protocol };
 });
 
 const BASEMAP = "https://cdn.example/basemap";
@@ -141,7 +128,6 @@ type StyleShape = {
 type SectionProps = { data: unknown; items: unknown[]; bundle: ContentBundle };
 
 let RoutePreview: ComponentType<SectionProps>;
-let HILLSHADE_PAINTS: typeof import("../../../../src/routeMap/flavors").HILLSHADE_PAINTS;
 let store: typeof import("../../../../src/store/useStore").store;
 let initialStore: typeof import("../../../../src/store/types").initialStore;
 
@@ -153,9 +139,18 @@ function buildBundle(): ContentBundle {
   } as unknown as ContentBundle;
 }
 
+// A theme with the seeded light body less its terrain layer.
+const FLAT_URL = "https://cdn.example/themes/flat.json";
+const FLAT_ROWS = [{ ...ROUTE_THEME_ROWS[0], key: "flat", styleUrl: FLAT_URL }];
+
+function hillshadePaint(key: "route-light" | "route-dark"): unknown {
+  return routeStyle(key).layers.find((l) => l.id === "terrain-hillshade")?.paint;
+}
+
 function setEvent(
   routeMapConfig: Record<string, unknown> | null = null,
   terrainUrl: string | null = TERRAIN_URL,
+  trackerThemes: unknown = ROUTE_THEME_ROWS,
 ): void {
   store.setState((s) => ({
     ...s,
@@ -167,14 +162,17 @@ function setEvent(
         routeMapConfig,
         trackerMap: { id: 3, tilesUrl: `${BASEMAP}/tiles.pmtiles`, terrainUrl },
       },
+      trackerThemes,
     } as unknown as Snapshot,
   }));
 }
 
 async function settle(): Promise<void> {
   await act(async () => {
-    await vi.dynamicImportSettled();
-    for (let i = 0; i < 10; i++) await Promise.resolve();
+    for (let i = 0; i < 4; i++) {
+      await vi.dynamicImportSettled();
+      await new Promise((r) => setTimeout(r, 0));
+    }
   });
 }
 
@@ -184,8 +182,9 @@ async function renderSection(
   config: Record<string, unknown> | null = null,
   data: Record<string, unknown> = {},
   terrainUrl: string | null = TERRAIN_URL,
+  trackerThemes: unknown = ROUTE_THEME_ROWS,
 ) {
-  setEvent(config, terrainUrl);
+  setEvent(config, terrainUrl, trackerThemes);
   const result = render(
     <MemoryRouter>
       <RoutePreview data={data} items={[]} bundle={buildBundle()} />
@@ -243,12 +242,14 @@ function removeFullscreenApi(): void {
 beforeEach(async () => {
   vi.resetModules();
   mocks.maps.length = 0;
-  mocks.failing.clear();
+  const flat = routeStyle("route-light");
+  stubThemeFetch({
+    extra: { [FLAT_URL]: { ...flat, layers: flat.layers.filter((l) => l.id !== "terrain-hillshade") } },
+  });
   window.localStorage.clear();
   document.body.style.overflow = "";
   document.documentElement.setAttribute("data-theme", "light");
   ({ RoutePreview } = await import("../../../../src/content/sections/RoutePreview/RoutePreview"));
-  ({ HILLSHADE_PAINTS } = await import("../../../../src/routeMap/flavors"));
   ({ store } = await import("../../../../src/store/useStore"));
   ({ initialStore } = await import("../../../../src/store/types"));
   setEvent();
@@ -261,6 +262,7 @@ afterEach(() => {
   document.documentElement.removeAttribute("data-theme");
   document.body.style.overflow = "";
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("route map control stack", () => {
@@ -306,25 +308,18 @@ describe("route map control stack", () => {
     expect(q(container, "route-map-terrain")).not.toBeNull();
   });
 
-  it("hides the terrain toggle and logs once when the terrain archive probe rejects", async () => {
+  it("hides the terrain toggle when the theme has no terrain layer", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    mocks.failing.add(TERRAIN_URL);
-    const { container } = await renderSection();
+    const { container } = await renderSection(null, {}, TERRAIN_URL, FLAT_ROWS);
     expect(q(container, "route-map")).not.toBeNull();
     expect(q(container, "route-map-terrain")).toBeNull();
     expect(q(container, "route-map-fullscreen")).not.toBeNull();
     expect(hasHillshade(lastStyle(mocks.maps[0]))).toBe(false);
-    expect(warn).toHaveBeenCalledTimes(1);
-    cleanup();
-
-    await renderSection();
-    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it("shows no terrain toggle and no terrain layers when the event's map has no terrain archive", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    // A probe of any terrain archive would fail and log; none runs.
-    mocks.failing.add(TERRAIN_URL);
     const { container } = await renderSection(null, {}, null);
     expect(q(container, "route-map")).not.toBeNull();
     expect(q(container, "route-map-terrain")).toBeNull();
@@ -643,7 +638,7 @@ describe("route map terrain", () => {
     const off = lastStyle(map);
     expect(map.setStyle.mock.calls[map.setStyle.mock.calls.length - 1][1]).toEqual({ diff: true });
     expect(hasHillshade(off)).toBe(false);
-    expect(off.sources.terrain).toBeUndefined();
+    expect(off.layers.some((l) => l.source === "terrain")).toBe(false);
     expect(q(container, "route-map-terrain")?.getAttribute("aria-pressed")).toBe("false");
     expect(window.localStorage.getItem("wmsfo.routeMap.terrain")).toBe("off");
 
@@ -684,7 +679,7 @@ describe("route map terrain", () => {
     expect(q(container, "route-map-terrain")?.getAttribute("aria-pressed")).toBe("true");
     const light = lastStyle(map);
     expect(hasHillshade(light)).toBe(true);
-    expect(light.layers.find((l) => l.id === "terrain-hillshade")?.paint).toEqual(HILLSHADE_PAINTS.light);
+    expect(light.layers.find((l) => l.id === "terrain-hillshade")?.paint).toEqual(hillshadePaint("route-light"));
 
     await act(async () => {
       document.documentElement.setAttribute("data-theme", "dark");
@@ -693,7 +688,7 @@ describe("route map terrain", () => {
     await settle();
     const dark = lastStyle(map);
     expect(hasHillshade(dark)).toBe(true);
-    expect(dark.layers.find((l) => l.id === "terrain-hillshade")?.paint).toEqual(HILLSHADE_PAINTS.dark);
+    expect(dark.layers.find((l) => l.id === "terrain-hillshade")?.paint).toEqual(hillshadePaint("route-dark"));
     expect(light.layers.map((l) => l.id)).toEqual(dark.layers.map((l) => l.id));
   });
 

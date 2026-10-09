@@ -3,10 +3,14 @@
 //    published section data carries an older `style` key.
 //  - With no `emptyText` the section renders nothing.
 //  - The map frame height comes from `--route-preview-max-h` in tokens.css.
+// And the host's loading, with the host module mocked:
+//  - The host is lazy-imported only for a path of two or more points.
+//  - The renderer choice is reported once as the `route` surface; on
+//    `google` the section renders `emptyText` and imports no host.
 // The map itself is covered in RouteMap.test.tsx.
 
-import { describe, it, expect, afterEach } from "vitest";
-import { render, cleanup } from "@testing-library/react";
+import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
+import { render, cleanup, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -15,6 +19,28 @@ import { store } from "../../../../src/store/useStore";
 import { initialStore, type ContentBundle } from "../../../../src/store/types";
 import type { ContentDocument, Snapshot } from "../../../../src/contracts";
 import { RoutePreview } from "../../../../src/content/sections/RoutePreview/RoutePreview";
+import { reportRenderer } from "../../../../src/map/renderer";
+import { ROUTE_THEME_ROWS, stubThemeFetch } from "../../mapHost/routeThemes";
+
+const mocks = vi.hoisted(() => ({
+  hostImports: 0,
+  hostThemes: [] as string[],
+  renderer: "maplibre" as "maplibre" | "google",
+}));
+
+vi.mock("../../../../src/mapHost/MapHost", () => {
+  mocks.hostImports++;
+  return {
+    MapHost: ({ theme }: { theme: { key: string } }) => {
+      mocks.hostThemes.push(theme.key);
+      return <div data-testid="fake-host" />;
+    },
+  };
+});
+
+vi.mock("../../../../src/map/renderer", () => ({
+  reportRenderer: vi.fn(() => mocks.renderer),
+}));
 
 const ROOT = resolve(__dirname, "..", "..", "..", "..");
 
@@ -44,6 +70,7 @@ function renderSection(data: Record<string, unknown>) {
 afterEach(() => {
   cleanup();
   store.setState(() => ({ ...initialStore }));
+  vi.unstubAllGlobals();
 });
 
 describe("RoutePreview without a recording", () => {
@@ -80,5 +107,77 @@ describe("RoutePreview without a recording", () => {
     expect(css).toMatch(/\.routeMap\s*\{[^}]*height:\s*var\(--route-preview-max-h\)/);
     const tokens = readFileSync(resolve(ROOT, "src", "content", "theme", "tokens.css"), "utf8");
     expect(tokens).toMatch(/--route-preview-max-h:\s*min\(70vh,\s*720px\)/);
+  });
+});
+
+const PATH = [
+  { lat: 46.87, lng: -114.0 },
+  { lat: 46.9, lng: -113.95 },
+];
+
+function setRoute(path: { lat: number; lng: number }[]): void {
+  store.setState((s) => ({
+    ...s,
+    snapshot: {
+      schemaVersion: 1,
+      event: {
+        id: 1,
+        routeMap: { path, timeline: [], durationMinutes: 5, timed: false },
+        trackerMap: { id: 3, tilesUrl: "https://cdn.example/basemap/tiles.pmtiles", terrainUrl: null },
+      },
+      trackerThemes: ROUTE_THEME_ROWS,
+    } as unknown as Snapshot,
+  }));
+}
+
+async function settle(): Promise<void> {
+  await act(async () => {
+    for (let i = 0; i < 4; i++) {
+      await vi.dynamicImportSettled();
+      await new Promise((r) => setTimeout(r, 0));
+    }
+  });
+}
+
+describe("RoutePreview loading the map host", () => {
+  beforeEach(() => {
+    mocks.renderer = "maplibre";
+    mocks.hostThemes.length = 0;
+    vi.mocked(reportRenderer).mockClear();
+    stubThemeFetch();
+    document.documentElement.setAttribute("data-theme", "light");
+  });
+
+  afterEach(() => {
+    document.documentElement.removeAttribute("data-theme");
+  });
+
+  it("imports the host only for a path of two or more points, and reports the renderer once", async () => {
+    setRoute(PATH.slice(0, 1));
+    renderSection({ emptyText: "Not yet." });
+    await settle();
+    expect(mocks.hostImports).toBe(0);
+    expect(reportRenderer).not.toHaveBeenCalled();
+    cleanup();
+
+    setRoute(PATH);
+    const { container } = renderSection({ emptyText: "Not yet." });
+    await settle();
+    expect(mocks.hostImports).toBe(1);
+    expect(container.querySelector('[data-testid="fake-host"]')).not.toBeNull();
+    expect(mocks.hostThemes.at(-1)).toBe("route-light");
+    expect(reportRenderer).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(reportRenderer).mock.calls[0][0]).toBe("route");
+  });
+
+  it("renders emptyText on the google choice, with no host", async () => {
+    mocks.renderer = "google";
+    setRoute(PATH);
+    const { container } = renderSection({ heading: "The route", emptyText: "Not yet." });
+    await settle();
+    expect(container.querySelector('[data-testid="route-preview-empty"]')).not.toBeNull();
+    expect(container.textContent).toContain("Not yet.");
+    expect(container.querySelector('[data-testid="fake-host"]')).toBeNull();
+    expect(reportRenderer).toHaveBeenCalledTimes(1);
   });
 });

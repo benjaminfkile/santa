@@ -1,9 +1,8 @@
 // docs/site.md section 7.7. Sections and blocks must draw their colours,
 // radii, and fonts from the theme tokens. This lint-style test scans every
 // stylesheet, .ts, and .tsx file under src/ and fails when a hex colour
-// appears outside tokens.css. `src/routeMap/flavors.ts` (the route map
-// basemap palette, taken from the seeded `standard` and `night` themes) and
-// the generated icons are excluded.
+// appears outside tokens.css. The generated icons are excluded; the map
+// palettes are data in the theme rows, not code.
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -14,11 +13,9 @@ const here = dirname(fileURLToPath(import.meta.url));
 const srcRoot = resolve(here, "../../../../src");
 const tokensPath = resolve(srcRoot, "content/theme/tokens.css");
 const generatedIconsDir = resolve(srcRoot, "content/icons/generated");
-const routeMapFlavorsPath = resolve(srcRoot, "routeMap/flavors.ts");
 
 function isExcludedFile(full: string): boolean {
   if (full === tokensPath) return true;
-  if (full === routeMapFlavorsPath) return true;
   if (full.startsWith(generatedIconsDir + sep) || full === generatedIconsDir) return true;
   if (full.endsWith(".d.css.ts")) return true;
   return false;

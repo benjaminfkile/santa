@@ -1,20 +1,22 @@
 // docs/site.md sections 7.4, 8.9, 22.1. The route_preview map with
-// MapLibre and pmtiles mocked:
+// MapLibre and pmtiles mocked and the seeded route themes served from the
+// contracts fixtures:
 //  - A section with a recording and a basemap mounts the map, the heading
 //    and the disclaimer above it; a published document's `style` key,
 //    `viewer` included, is ignored.
 //  - The route line source is fed `event.routeMap.path`; the map fits its
 //    bounds, takes gestures directly (no cooperativeGestures option), and
-//    has the archive's zoom range and the OpenStreetMap attribution.
-//  - The style follows the site appearance, including a live switch that
-//    diffs the style on the same map.
-//  - Every fallback (no route map, no `trackerMap`, an unreadable archive,
-//    a style or tile error) renders the heading and `emptyText`, never an
-//    `<img>`, and logs once.
-//  - The routemap chunk is imported only when a section with a recording
+//    has the map row's zoom range and the OpenStreetMap attribution.
+//  - The style is the seeded theme of the site appearance, including a
+//    live switch that diffs the style on the same map.
+//  - Every fallback (no route map, no `trackerMap`, an unreadable style
+//    body, a style or tile error) renders the heading and `emptyText`,
+//    never an `<img>`, and logs once.
+//  - The map host chunk is imported only when a section with a recording
 //    mounts.
-//  - Mounting the map reports the renderer choice as the `route` surface,
-//    and the MapLibre route map draws whatever the answer.
+//  - A section with a recording reports the renderer choice as the
+//    `route` surface; the host draws on `maplibre` and the section renders
+//    `emptyText` on `google`.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, cleanup, act } from "@testing-library/react";
@@ -25,7 +27,13 @@ import { initialStore, type ContentBundle } from "../../../../src/store/types";
 import type { ContentDocument, Snapshot } from "../../../../src/contracts";
 import { RoutePreview } from "../../../../src/content/sections/RoutePreview/RoutePreview";
 import { reportRenderer } from "../../../../src/map/renderer";
-import { DARK_FLAVOR, LIGHT_FLAVOR, ROUTE_PALETTES } from "../../../../src/routeMap/flavors";
+import {
+  ROUTE_THEME_ROWS,
+  backgroundOf,
+  routePalette,
+  routeStyle,
+  stubThemeFetch,
+} from "../../mapHost/routeThemes";
 
 type Handler = (event: { error?: unknown }) => void;
 
@@ -40,7 +48,7 @@ type FakeMapInstance = {
 
 const mocks = vi.hoisted(() => ({
   maps: [] as FakeMapInstance[],
-  header: { fail: false, minZoom: 0, maxZoom: 15 },
+  renderer: "maplibre" as "maplibre" | "google",
 }));
 
 vi.mock("maplibre-gl", () => {
@@ -102,7 +110,9 @@ vi.mock("maplibre-gl", () => {
 });
 
 vi.mock("../../../../src/map/renderer", () => ({
-  reportRenderer: vi.fn(() => "google"),
+  reportRenderer: vi.fn((_surface: string, snapshot: { event?: { trackerMap?: unknown } } | null) =>
+    snapshot?.event?.trackerMap == null ? "google" : mocks.renderer,
+  ),
 }));
 
 vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
@@ -110,27 +120,10 @@ vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
 }));
 
 vi.mock("pmtiles", () => {
-  class PMTiles {
-    url: string;
-    constructor(url: string) {
-      this.url = url;
-    }
-    async getHeader() {
-      if (mocks.header.fail) throw new Error("archive unreachable");
-      return { minZoom: mocks.header.minZoom, maxZoom: mocks.header.maxZoom };
-    }
-  }
   class Protocol {
-    tiles = new Map<string, PMTiles>();
     tile = vi.fn();
-    add(p: PMTiles) {
-      this.tiles.set(p.url, p);
-    }
-    get(url: string) {
-      return this.tiles.get(url);
-    }
   }
-  return { PMTiles, Protocol };
+  return { Protocol };
 });
 
 const BASEMAP = "https://cdn.example/basemap";
@@ -158,12 +151,17 @@ function buildBundle(): ContentBundle {
   } as ContentBundle;
 }
 
-function setEvent(routeMap: unknown, trackerMap: unknown = TRACKER_MAP): void {
+function setEvent(
+  routeMap: unknown,
+  trackerMap: unknown = TRACKER_MAP,
+  trackerThemes: unknown = ROUTE_THEME_ROWS,
+): void {
   store.setState((s) => ({
     ...s,
     snapshot: {
       schemaVersion: 1,
       event: { id: 1, routeMap, trackerMap },
+      trackerThemes,
     } as unknown as Snapshot,
   }));
 }
@@ -174,8 +172,10 @@ function routeMapOf(path: { lat: number; lng: number }[]) {
 
 async function settle(): Promise<void> {
   await act(async () => {
-    await vi.dynamicImportSettled();
-    for (let i = 0; i < 6; i++) await Promise.resolve();
+    for (let i = 0; i < 4; i++) {
+      await vi.dynamicImportSettled();
+      await new Promise((r) => setTimeout(r, 0));
+    }
   });
 }
 
@@ -198,12 +198,16 @@ function routeLayer(style: StyleShape) {
 }
 
 function backgroundColor(style: StyleShape): unknown {
-  return style.layers.find((l) => l.id === "background")?.paint?.["background-color"];
+  return backgroundOf(style);
 }
+
+const LIGHT = { background: backgroundOf(routeStyle("route-light")), ...routePalette("route-light").overlay };
+const DARK = { background: backgroundOf(routeStyle("route-dark")), ...routePalette("route-dark").overlay };
 
 beforeEach(() => {
   mocks.maps.length = 0;
-  mocks.header.fail = false;
+  mocks.renderer = "maplibre";
+  stubThemeFetch();
   document.documentElement.setAttribute("data-theme", "light");
 });
 
@@ -213,6 +217,7 @@ afterEach(() => {
   store.setState(() => ({ ...initialStore }));
   document.documentElement.removeAttribute("data-theme");
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("route_preview map", () => {
@@ -265,7 +270,7 @@ describe("route_preview map", () => {
     expect(options.minZoom).toBe(0);
     expect(options.maxZoom).toBe(15);
     expect(JSON.stringify(options.attributionControl)).toContain("© OpenStreetMap contributors");
-    expect(style.sources.protomaps.url).toBe(`pmtiles://${BASEMAP}/tiles.pmtiles`);
+    expect(style.sources.basemap.url).toBe(`pmtiles://${BASEMAP}/tiles.pmtiles`);
     expect(style.glyphs).toBe(`${BASEMAP}/glyphs/{fontstack}/{range}.pbf`);
   });
 
@@ -274,16 +279,16 @@ describe("route_preview map", () => {
     renderSection({});
     await settle();
     const light = mocks.maps[0].options.style as StyleShape;
-    expect(routeLayer(light)?.paint?.["line-color"]).toBe(ROUTE_PALETTES.light.routeColor);
-    expect(backgroundColor(light)).toBe(LIGHT_FLAVOR.background);
+    expect(routeLayer(light)?.paint?.["line-color"]).toBe(LIGHT.routeColor);
+    expect(backgroundColor(light)).toBe(LIGHT.background);
     cleanup();
 
     document.documentElement.setAttribute("data-theme", "dark");
     renderSection({});
     await settle();
     const dark = mocks.maps[1].options.style as StyleShape;
-    expect(routeLayer(dark)?.paint?.["line-color"]).toBe(ROUTE_PALETTES.dark.routeColor);
-    expect(backgroundColor(dark)).toBe(DARK_FLAVOR.background);
+    expect(routeLayer(dark)?.paint?.["line-color"]).toBe(DARK.routeColor);
+    expect(backgroundColor(dark)).toBe(DARK.background);
   });
 
   it("switches the style live when the appearance changes, on the same map", async () => {
@@ -300,12 +305,12 @@ describe("route_preview map", () => {
       await Promise.resolve();
     });
     await settle();
-    expect(container.querySelector('[data-testid="route-map"]')?.getAttribute("data-appearance")).toBe("dark");
+    expect(container.querySelector('[data-testid="route-map"]')?.getAttribute("data-map-theme")).toBe("route-dark");
     expect(map.setStyle).toHaveBeenCalledTimes(1);
     const [dark, opts] = map.setStyle.mock.calls[0] as [StyleShape, { diff?: boolean }];
     expect(opts).toEqual({ diff: true });
-    expect(routeLayer(dark)?.paint?.["line-color"]).toBe(ROUTE_PALETTES.dark.routeColor);
-    expect(backgroundColor(dark)).toBe(DARK_FLAVOR.background);
+    expect(routeLayer(dark)?.paint?.["line-color"]).toBe(DARK.routeColor);
+    expect(backgroundColor(dark)).toBe(DARK.background);
 
     await act(async () => {
       document.documentElement.setAttribute("data-theme", "light");
@@ -314,9 +319,10 @@ describe("route_preview map", () => {
     await settle();
     expect(map.setStyle).toHaveBeenCalledTimes(2);
     const light = map.setStyle.mock.calls[1][0] as StyleShape;
-    expect(backgroundColor(light)).toBe(LIGHT_FLAVOR.background);
+    expect(backgroundColor(light)).toBe(LIGHT.background);
     expect(mocks.maps).toHaveLength(1);
-    expect(map.remove).not.toHaveBeenCalled();  });
+    expect(map.remove).not.toHaveBeenCalled();
+  });
 
   it("removes the map on unmount", async () => {
     setEvent(routeMapOf(PATH));
@@ -353,7 +359,7 @@ describe("route_preview map fallbacks", () => {
     expect(container.innerHTML).toBe("");
   });
 
-  it("reports the renderer as the route surface when it mounts the map, and still draws it", async () => {
+  it("reports the renderer as the route surface and draws the map on maplibre", async () => {
     vi.mocked(reportRenderer).mockClear();
     setEvent(routeMapOf(PATH));
     renderSection({ emptyText: EMPTY });
@@ -363,9 +369,20 @@ describe("route_preview map fallbacks", () => {
     expect(mocks.maps).toHaveLength(1);
   });
 
-  it("reports no renderer when there is no map to mount", async () => {
+  it("renders emptyText when the renderer choice is google", async () => {
     vi.mocked(reportRenderer).mockClear();
-    setEvent(routeMapOf(PATH), null);
+    mocks.renderer = "google";
+    setEvent(routeMapOf(PATH));
+    const { container } = renderSection({ emptyText: EMPTY });
+    await settle();
+    expect(reportRenderer).toHaveBeenCalledTimes(1);
+    expectEmptyView(container);
+    expect(mocks.maps).toHaveLength(0);
+  });
+
+  it("reports no renderer when the path cannot make a map", async () => {
+    vi.mocked(reportRenderer).mockClear();
+    setEvent(routeMapOf(PATH.slice(0, 1)));
     renderSection({ emptyText: EMPTY });
     await settle();
     expect(reportRenderer).not.toHaveBeenCalled();
@@ -379,10 +396,13 @@ describe("route_preview map fallbacks", () => {
     expect(mocks.maps).toHaveLength(0);
   });
 
-  it("renders emptyText and logs once when the tiles archive cannot be read", async () => {
+  it("renders emptyText and logs once when the theme's style body cannot be read", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    mocks.header.fail = true;
-    setEvent(routeMapOf(PATH));
+    const missing = ROUTE_THEME_ROWS.map((row) => ({
+      ...row,
+      styleUrl: `https://cdn.example/themes/missing-${row.key}.json`,
+    }));
+    setEvent(routeMapOf(PATH), TRACKER_MAP, missing);
     const { container } = renderSection({ emptyText: EMPTY });
     await settle();
     expectEmptyView(container);
@@ -421,7 +441,7 @@ describe("route_preview map fallbacks", () => {
   });
 });
 
-describe("routemap chunk", () => {
+describe("map host chunk", () => {
   it("is imported only when a section with a recording mounts", async () => {
     setEvent(null);
     const { container } = renderSection({});

@@ -6,6 +6,8 @@
 // `resolveInitialTheme` picks the starting theme of a renderer: the stored
 // key when it names one of that renderer's themes, then the holder of the
 // appearance's default flag, then the first in list order.
+// `resolveDefaultTheme` is the same order without the stored key, the
+// route preview's choice (8.9): the stored tracker theme plays no part there.
 
 import type { StyleSpecification } from "maplibre-gl";
 import type { Snapshot } from "../../contracts";
@@ -127,6 +129,15 @@ export function resolveInitialTheme(
     const found = offered.find((t) => t.key === stored);
     if (found !== undefined) return found;
   }
+  return resolveDefaultTheme(offered, renderer, appearance);
+}
+
+export function resolveDefaultTheme(
+  themes: readonly MapTheme[],
+  renderer: Renderer,
+  appearance: "light" | "dark",
+): MapTheme | null {
+  const offered = themesFor(themes, renderer);
   const flagged = offered.find((t) =>
     appearance === "dark" ? t.defaultDarkMode : t.defaultLightMode,
   );

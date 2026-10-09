@@ -1,5 +1,6 @@
 // docs/site.md section 8.9. The route map's config, viewpoint markers,
-// and gestures, with MapLibre and pmtiles mocked:
+// and gestures, with MapLibre and pmtiles mocked and the seeded route
+// themes served from the contracts fixtures:
 //  - The display and the controls come from the event's `routeMapConfig`: each of the
 //    five display values (time label interval, arrows, arrow size, route
 //    width, label size) resolves from the config's `display`, then the
@@ -9,8 +10,9 @@
 //    sizes. The controls default to true.
 //  - The viewpoints come from the site settings' `landmarks`, none when
 //    absent; a raw config that still carries `viewpoints` draws none.
-//  - The POI kinds come from the site settings' `places.routeMap.kinds`,
-//    none when absent, whatever the event's config carries;
+//  - The place kinds come from the site settings' `places.routeMap.kinds`,
+//    the theme's places layer hidden when absent, whatever the event's
+//    config carries;
 //    resolvePlaces keeps each part's string kinds when that part is an
 //    object with a `kinds` list.
 //  - A null or absent config renders the default map. Display, controls,
@@ -50,7 +52,14 @@ import {
   resolveRouteMapDisplay,
 } from "../../../../src/content/sections/RoutePreview/routeMapConfig";
 import { routeTimeLabels } from "../../../../src/content/sections/RoutePreview/routeTimelineData";
-import { mountRouteMap } from "../../../../src/routeMap/index";
+import { mountRouteMap } from "../../../../src/mapHost/handle";
+import { protomapsKinds } from "../../../../src/mapHost/places";
+import {
+  ROUTE_THEME_ROWS,
+  routePalette,
+  routeStyle,
+  stubThemeFetch,
+} from "../../mapHost/routeThemes";
 
 type Handler = (event: unknown) => void;
 
@@ -187,27 +196,15 @@ vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
 }));
 
 vi.mock("pmtiles", () => {
-  class PMTiles {
-    url: string;
-    constructor(url: string) {
-      this.url = url;
-    }
-    async getHeader() {
-      return { minZoom: 0, maxZoom: 15 };
-    }
-  }
   class Protocol {
-    tiles = new Map<string, PMTiles>();
     tile = vi.fn();
-    add(p: PMTiles) {
-      this.tiles.set(p.url, p);
-    }
-    get(url: string) {
-      return this.tiles.get(url);
-    }
   }
-  return { PMTiles, Protocol };
+  return { Protocol };
 });
+
+vi.mock("../../../../src/map/renderer", () => ({
+  reportRenderer: vi.fn(() => "maplibre"),
+}));
 
 const PATH = [
   { lat: 46.87, lng: -114.0 },
@@ -264,14 +261,17 @@ function setEvent(routeMapConfig?: Config | null): void {
         trackerMap: TRACKER_MAP,
         ...(routeMapConfig === undefined ? {} : { routeMapConfig }),
       },
+      trackerThemes: ROUTE_THEME_ROWS,
     } as unknown as Snapshot,
   }));
 }
 
 async function settle(): Promise<void> {
   await act(async () => {
-    await vi.dynamicImportSettled();
-    for (let i = 0; i < 6; i++) await Promise.resolve();
+    for (let i = 0; i < 4; i++) {
+      await vi.dynamicImportSettled();
+      await new Promise((r) => setTimeout(r, 0));
+    }
   });
 }
 
@@ -343,6 +343,7 @@ beforeEach(() => {
   mocks.maps.length = 0;
   mocks.markers.length = 0;
   mocks.popups.length = 0;
+  stubThemeFetch();
   document.documentElement.setAttribute("data-theme", "light");
   setEvent();
 });
@@ -353,6 +354,7 @@ afterEach(() => {
   document.documentElement.removeAttribute("data-theme");
   document.body.style.overflow = "";
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("route map config resolution", () => {
@@ -539,7 +541,7 @@ describe("route map config reaching the style", () => {
     expect(arrows?.layout?.["icon-size"]).toBe(1);
     expect(arrows?.layout?.["symbol-spacing"]).toBe(140);
     expect(lineWidth(style)).toEqual(widthAt(1));
-    expect(layerOf(style, "pois")).toBeUndefined();
+    expect(layerOf(style, "pois")?.layout?.visibility).toBe("none");
     expect(style.sources["route-landmarks"]).toBeUndefined();
     expect(timeLabelSize(style)).toEqual(labelSizeAt(1));
   }
@@ -637,23 +639,27 @@ describe("route map config reaching the style", () => {
     expect(viewpointMarkers()).toHaveLength(0);
   });
 
-  it("passes the settings' route map places to the route map as its POI kinds", async () => {
-    await renderSection(null, { settings: { places: { routeMap: { kinds: ["peak", "museum"] } } } });
+  it("passes the settings' route map places to the route map as its place filter", async () => {
+    await renderSection(null, { settings: { places: { routeMap: { kinds: ["park", "attraction"] } } } });
     const pois = layerOf(currentStyle(), "pois");
-    expect(pois).toBeDefined();
-    expect(JSON.stringify(pois?.filter)).toContain('["literal",["peak","museum"]]');
+    expect(pois?.layout?.visibility).not.toBe("none");
+    expect(JSON.stringify(pois?.filter)).toContain(
+      JSON.stringify(["literal", protomapsKinds(["park", "attraction"])]),
+    );
   });
 
   it("passes the settings' route map places whatever the event's config carries", async () => {
-    await renderSection({ pois: { kinds: ["school"] } }, { settings: { places: { routeMap: { kinds: ["peak"] } } } });
+    await renderSection({ pois: { kinds: ["school"] } }, { settings: { places: { routeMap: { kinds: ["park"] } } } });
     const filter = JSON.stringify(layerOf(currentStyle(), "pois")?.filter);
-    expect(filter).toContain('["literal",["peak"]]');
+    expect(filter).toContain(JSON.stringify(["literal", protomapsKinds(["park"])]));
     expect(filter).not.toContain("school");
   });
 
-  it("passes no POI kinds without the settings' route map places, whatever the event's config carries", async () => {
-    await renderSection({ pois: { kinds: ["peak"] } }, { settings: { places: { tracker: { kinds: ["park"] } } } });
-    expect(layerOf(currentStyle(), "pois")).toBeUndefined();
+  it("hides the places without the settings' route map places, whatever the event's config carries", async () => {
+    await renderSection({ pois: { kinds: ["park"] } }, { settings: { places: { tracker: { kinds: ["park"] } } } });
+    const pois = layerOf(currentStyle(), "pois");
+    expect(pois?.layout?.visibility).toBe("none");
+    expect(pois?.filter).toEqual(layerOf(routeStyle("route-light") as unknown as StyleShape, "pois")?.filter);
   });
 
   it("ignores a routeMap block in the site settings", async () => {
@@ -960,9 +966,10 @@ describe("route map dot layer events", () => {
     const container = document.createElement("div");
     const handle = await mountRouteMap({
       container,
-      basemap: TRACKER_MAP,
+      trackerMap: { ...TRACKER_MAP, minZoom: 0, maxZoom: 15 },
+      bbox: null,
+      theme: { key: "route-light", spriteUrl: null, style: routeStyle("route-light"), ...routePalette("route-light") },
       path: PATH,
-      appearance: "light",
       labelMinZoom: 12,
       onViewpointClick,
       onError: vi.fn(),

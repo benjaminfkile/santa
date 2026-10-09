@@ -1,5 +1,6 @@
 // docs/site.md sections 8.9, 22.1. The route map timeline with MapLibre
-// and pmtiles mocked:
+// and pmtiles mocked and the seeded route themes served from the
+// contracts fixtures:
 //  - A timed route renders no range input and no Santa pin; the start
 //    marker (the star flag and its "Starts here" label, anchored at its
 //    bottom) stands on the path's first point, the style draws the end
@@ -11,9 +12,10 @@
 //  - A timeline of fewer than two entries keeps the path and the start
 //    marker and shows no marks.
 //  - The site settings' `places.routeMap.kinds` and `landmarks` reach the
-//    style as its POI kind filter and its viewpoint labels; without them,
+//    style as its place filter and its viewpoint labels; without them,
 //    with them in the section data only, or with `pois` in the event's
-//    config, the style has neither.
+//    config, the theme's places layer is hidden and there are no
+//    viewpoints.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, cleanup, act } from "@testing-library/react";
@@ -29,6 +31,8 @@ import {
   routeTimeLabels,
 } from "../../../../src/content/sections/RoutePreview/routeTimelineData";
 import { copy } from "../../../../src/copy/copy";
+import { protomapsKinds } from "../../../../src/mapHost/places";
+import { ROUTE_THEME_ROWS, stubThemeFetch } from "../../mapHost/routeThemes";
 
 type FakeMapInstance = {
   options: Record<string, unknown>;
@@ -116,27 +120,15 @@ vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
 }));
 
 vi.mock("pmtiles", () => {
-  class PMTiles {
-    url: string;
-    constructor(url: string) {
-      this.url = url;
-    }
-    async getHeader() {
-      return { minZoom: 0, maxZoom: 15 };
-    }
-  }
   class Protocol {
-    tiles = new Map<string, PMTiles>();
     tile = vi.fn();
-    add(p: PMTiles) {
-      this.tiles.set(p.url, p);
-    }
-    get(url: string) {
-      return this.tiles.get(url);
-    }
   }
-  return { PMTiles, Protocol };
+  return { Protocol };
 });
+
+vi.mock("../../../../src/map/renderer", () => ({
+  reportRenderer: vi.fn(() => "maplibre"),
+}));
 
 const PATH = [
   { lat: 46.87, lng: -114.0 },
@@ -194,14 +186,17 @@ function setEvent(
         routeMapConfig,
         trackerMap: TRACKER_MAP,
       },
+      trackerThemes: ROUTE_THEME_ROWS,
     } as unknown as Snapshot,
   }));
 }
 
 async function settle(): Promise<void> {
   await act(async () => {
-    await vi.dynamicImportSettled();
-    for (let i = 0; i < 6; i++) await Promise.resolve();
+    for (let i = 0; i < 4; i++) {
+      await vi.dynamicImportSettled();
+      await new Promise((r) => setTimeout(r, 0));
+    }
   });
 }
 
@@ -222,7 +217,7 @@ function indexOfMinutes(minutes: number): number {
 
 type StyleShape = {
   sources: Record<string, { data?: unknown }>;
-  layers: { id: string; filter?: unknown }[];
+  layers: { id: string; filter?: unknown; layout?: Record<string, unknown> }[];
 };
 
 // The style the map shows now: the last one set, else the one it was
@@ -241,6 +236,7 @@ function markCoordinates(style: StyleShape): number[][] {
 beforeEach(() => {
   mocks.maps.length = 0;
   mocks.markers.length = 0;
+  stubThemeFetch();
   document.documentElement.setAttribute("data-theme", "light");
 });
 
@@ -249,6 +245,7 @@ afterEach(() => {
   store.setState(() => ({ ...initialStore }));
   document.documentElement.removeAttribute("data-theme");
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("route timeline data", () => {
@@ -422,7 +419,7 @@ describe("route map POI kinds and viewpoints", () => {
   it("passes the settings' places and viewpoints into the style", async () => {
     setEvent(null, TIMELINE);
     renderSection(undefined, {
-      places: { routeMap: { kinds: ["peak", "museum"] } },
+      places: { routeMap: { kinds: ["park", "attraction"] } },
       landmarks: [
         { name: "Mount Jumbo", lat: 46.88, lng: -113.96 },
         { name: "Caras Park", lat: 46.87, lng: -113.99 },
@@ -432,8 +429,10 @@ describe("route map POI kinds and viewpoints", () => {
     expect(mocks.maps).toHaveLength(1);
     for (const style of [mocks.maps[0].options.style as StyleShape, currentStyle()]) {
       const pois = style.layers.find((l) => l.id === "pois");
-      expect(pois).toBeDefined();
-      expect(JSON.stringify(pois?.filter)).toContain('["literal",["peak","museum"]]');
+      expect(pois?.layout?.visibility).not.toBe("none");
+      expect(JSON.stringify(pois?.filter)).toContain(
+        JSON.stringify(["literal", protomapsKinds(["park", "attraction"])]),
+      );
       const data = style.sources["route-landmarks"].data as {
         features: { properties: { label: string }; geometry: { coordinates: number[] } }[];
       };
@@ -445,11 +444,11 @@ describe("route map POI kinds and viewpoints", () => {
     expect(markCoordinates(currentStyle())).toHaveLength(TIMELINE.length);
   });
 
-  it("drops the POI layers for an empty kind list", async () => {
+  it("hides the places layer for an empty kind list", async () => {
     setEvent(null, TIMELINE);
     renderSection(undefined, { places: { routeMap: { kinds: [] } } });
     await settle();
-    expect(currentStyle().layers.some((l) => l.id === "pois")).toBe(false);
+    expect(currentStyle().layers.find((l) => l.id === "pois")?.layout?.visibility).toBe("none");
   });
 
   it("passes neither without them in the settings", async () => {
@@ -457,7 +456,7 @@ describe("route map POI kinds and viewpoints", () => {
     renderSection();
     await settle();
     const style = currentStyle();
-    expect(style.layers.some((l) => l.id === "pois")).toBe(false);
+    expect(currentStyle().layers.find((l) => l.id === "pois")?.layout?.visibility).toBe("none");
     expect(style.sources["route-landmarks"]).toBeUndefined();
     expect(style.layers.some((l) => l.id.startsWith("route-landmark"))).toBe(false);
   });
@@ -470,14 +469,14 @@ describe("route map POI kinds and viewpoints", () => {
     });
     await settle();
     const style = currentStyle();
-    expect(style.layers.some((l) => l.id === "pois")).toBe(false);
+    expect(currentStyle().layers.find((l) => l.id === "pois")?.layout?.visibility).toBe("none");
     expect(style.sources["route-landmarks"]).toBeUndefined();
   });
 
   it("passes no POI kinds from the event's config", async () => {
-    setEvent(null, TIMELINE, { pois: { kinds: ["peak"] } });
+    setEvent(null, TIMELINE, { pois: { kinds: ["park"] } });
     renderSection();
     await settle();
-    expect(currentStyle().layers.some((l) => l.id === "pois")).toBe(false);
+    expect(currentStyle().layers.find((l) => l.id === "pois")?.layout?.visibility).toBe("none");
   });
 });
