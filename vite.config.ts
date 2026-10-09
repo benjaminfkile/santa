@@ -27,35 +27,8 @@ function cognitoIdpPlugin(): Plugin {
   };
 }
 
-// The route map fetches its tiles and glyphs from VITE_ROUTE_BASEMAP_URL.
-// A small plugin exposes that URL's origin to the CSP as
-// %ROUTE_BASEMAP_ORIGIN% (empty when the variable is unset).
-function routeBasemapOriginPlugin(): Plugin {
-  let base = "";
-  return {
-    name: "wmsfo-route-basemap-origin",
-    configResolved(config) {
-      base = loadEnv(config.mode, config.root, "VITE_").VITE_ROUTE_BASEMAP_URL
-        ?? process.env.VITE_ROUTE_BASEMAP_URL
-        ?? "";
-    },
-    transformIndexHtml: {
-      order: "pre",
-      handler(html) {
-        let origin = "";
-        try {
-          origin = base === "" ? "" : new URL(base).origin;
-        } catch {
-          origin = "";
-        }
-        return html.replaceAll("%ROUTE_BASEMAP_ORIGIN%", origin);
-      },
-    },
-  };
-}
-
 export default defineConfig({
-  plugins: [react(), cognitoIdpPlugin(), routeBasemapOriginPlugin()],
+  plugins: [react(), cognitoIdpPlugin()],
   // amazon-cognito-identity-js pulls in the Node buffer shim, which reads
   // `global` at module load; the browser has only globalThis.
   define: { global: "globalThis" },
@@ -69,7 +42,7 @@ export default defineConfig({
             { name: "signalr", test: /@microsoft[\\/]signalr/, priority: 20 },
             { name: "auth", test: /amazon-cognito-identity-js|[\\/]src[\\/]auth[\\/]cognito|[\\/]src[\\/]pages[\\/]Auth[\\/]/, priority: 20 },
             // Pin the colour-scheme module (and its inputs), the shared
-            // Santa pin image module, the directions link helper, the
+            // Santa pin image module, the renderer choice, the directions link helper, the
             // analytics module, and the number format to a shared "theme"
             // chunk so both the map chunk and the index chunk import from it
             // rather than each other.
@@ -77,7 +50,7 @@ export default defineConfig({
             // this list lands in whichever chunk reaches it first: lib/number
             // went into the map chunk and made index import the whole map,
             // which chunk.test.ts catches only against a fresh build.
-            { name: "theme", test: /[\\/]src[\\/]content[\\/]theme[\\/]colorScheme|[\\/]src[\\/]lib[\\/](storage|directions|number|analytics)|[\\/]src[\\/]map[\\/]santa(Pin\.ts|-pin\.png)/, priority: 30 },
+            { name: "theme", test: /[\\/]src[\\/]content[\\/]theme[\\/]colorScheme|[\\/]src[\\/]lib[\\/](storage|directions|number|analytics)|[\\/]src[\\/]map[\\/](santa(Pin\.ts|-pin\.png)|renderer\.ts)/, priority: 30 },
             { name: "map", test: /@googlemaps[\\/]js-api-loader|[\\/]src[\\/]map[\\/]/, priority: 20 },
             { name: "alerts", test: /[\\/]src[\\/]pages[\\/]Alerts[\\/]/, priority: 20 },
             { name: "routemap", test: /[\\/]maplibre-gl[\\/]|[\\/]pmtiles[\\/]|@protomaps[\\/]basemaps|[\\/]src[\\/]routeMap[\\/]/, priority: 20 },

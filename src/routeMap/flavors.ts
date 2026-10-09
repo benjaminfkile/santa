@@ -1,13 +1,13 @@
 // docs/site.md section 8.9. The two basemap flavors of the route map and
 // the palette of what the site draws over them. Each flavor is one table
 // holding every colour key of the @protomaps/basemaps flavor, with the
-// tracker theme value it is taken from beside it, so the route map reads
-// as the same world as the tracker:
-//  - light follows src/map/themes/standard.ts. That theme leaves Google's
+// seeded tracker theme value it is taken from beside it, so the route map
+// reads as the same world as the tracker:
+//  - light follows the seeded `standard` theme. That theme leaves Google's
 //    default roadmap unstyled, so the ground, water, roads, and landuse
 //    are Google's default roadmap colours, and the labels and halos take
-//    standard.ts's chrome text colours.
-//  - dark follows src/map/themes/night.ts: every colour is a value of its
+//    `standard`'s chrome text colours.
+//  - dark follows the seeded `night` theme: every colour is a value of its
 //    style array or its overlay palette.
 // The hillshade paint of the terrain view is one table per appearance
 // too: a low exaggeration and shadow and highlight colours close to the
@@ -22,8 +22,8 @@
 // POI_COLOURS is the `pois` colour set of the @protomaps/basemaps flavor,
 // kept out of FLAVORS so the default style carries no POI layer; the
 // style adds it to the flavor only when a POI kind list is chosen. Light
-// takes Google's default POI label colours and standard.ts values, dark
-// takes night.ts's POI label colours.
+// takes Google's default POI label colours and `standard` values, dark
+// takes `night`'s POI label colours.
 
 import type { Flavor } from "@protomaps/basemaps";
 
@@ -108,95 +108,95 @@ export const LIGHT_FLAVOR: Flavor = {
   bridges_link: "#ffffff",            // Google default road
   bridges_major: "#ffffff",           // Google default road
   bridges_highway: "#fde293",         // Google default highway
-  roads_label_minor: "#5f6368",       // standard.ts chrome.fg
-  roads_label_minor_halo: "#ffffff",  // standard.ts chrome.bg
-  roads_label_major: "#5f6368",       // standard.ts chrome.fg
-  roads_label_major_halo: "#ffffff",  // standard.ts chrome.bg
-  ocean_label: "#1a56c4",             // standard.ts chrome.accent
-  subplace_label: "#5f6368",          // standard.ts chrome.fg
-  subplace_label_halo: "#ffffff",     // standard.ts chrome.bg
-  city_label: "#202124",              // standard.ts chrome.text
-  city_label_halo: "#ffffff",         // standard.ts chrome.bg
-  state_label: "#5f6368",             // standard.ts chrome.fg
-  state_label_halo: "#ffffff",        // standard.ts chrome.bg
-  country_label: "#5f6368",           // standard.ts chrome.fg
-  address_label: "#5f6368",           // standard.ts chrome.fg
-  address_label_halo: "#ffffff",      // standard.ts chrome.bg
+  roads_label_minor: "#5f6368",       // standard chrome.fg
+  roads_label_minor_halo: "#ffffff",  // standard chrome.bg
+  roads_label_major: "#5f6368",       // standard chrome.fg
+  roads_label_major_halo: "#ffffff",  // standard chrome.bg
+  ocean_label: "#1a56c4",             // standard chrome.accent
+  subplace_label: "#5f6368",          // standard chrome.fg
+  subplace_label_halo: "#ffffff",     // standard chrome.bg
+  city_label: "#202124",              // standard chrome.text
+  city_label_halo: "#ffffff",         // standard chrome.bg
+  state_label: "#5f6368",             // standard chrome.fg
+  state_label_halo: "#ffffff",        // standard chrome.bg
+  country_label: "#5f6368",           // standard chrome.fg
+  address_label: "#5f6368",           // standard chrome.fg
+  address_label_halo: "#ffffff",      // standard chrome.bg
 };
 
 export const DARK_FLAVOR: Flavor = {
-  background: "#242f3e",              // night.ts geometry
-  earth: "#242f3e",                   // night.ts geometry
-  park_a: "#263c3f",                  // night.ts poi.park geometry
-  park_b: "#263c3f",                  // night.ts poi.park geometry
-  hospital: "#242f3e",                // night.ts geometry
-  industrial: "#242f3e",              // night.ts geometry
-  school: "#242f3e",                  // night.ts geometry
-  wood_a: "#263c3f",                  // night.ts poi.park geometry
-  wood_b: "#263c3f",                  // night.ts poi.park geometry
-  pedestrian: "#242f3e",              // night.ts geometry
-  scrub_a: "#263c3f",                 // night.ts poi.park geometry
-  scrub_b: "#263c3f",                 // night.ts poi.park geometry
-  glacier: "#242f3e",                 // night.ts geometry
-  sand: "#242f3e",                    // night.ts geometry
-  beach: "#242f3e",                   // night.ts geometry
-  aerodrome: "#2f3948",               // night.ts transit geometry
-  runway: "#38414e",                  // night.ts road geometry
-  water: "#17263c",                   // night.ts water geometry
-  zoo: "#263c3f",                     // night.ts poi.park geometry
-  military: "#242f3e",                // night.ts geometry
-  tunnel_other_casing: "#212a37",     // night.ts road geometry.stroke
-  tunnel_minor_casing: "#212a37",     // night.ts road geometry.stroke
-  tunnel_link_casing: "#212a37",      // night.ts road geometry.stroke
-  tunnel_major_casing: "#212a37",     // night.ts road geometry.stroke
-  tunnel_highway_casing: "#1f2835",   // night.ts road.highway geometry.stroke
-  tunnel_other: "#2f3948",            // night.ts transit geometry
-  tunnel_minor: "#2f3948",            // night.ts transit geometry
-  tunnel_link: "#2f3948",             // night.ts transit geometry
-  tunnel_major: "#2f3948",            // night.ts transit geometry
-  tunnel_highway: "#746855",          // night.ts road.highway geometry
-  pier: "#2f3948",                    // night.ts transit geometry
-  buildings: "#2f3948",               // night.ts transit geometry
-  minor_service_casing: "#212a37",    // night.ts road geometry.stroke
-  minor_casing: "#212a37",            // night.ts road geometry.stroke
-  link_casing: "#212a37",             // night.ts road geometry.stroke
-  major_casing_late: "#212a37",       // night.ts road geometry.stroke
-  highway_casing_late: "#1f2835",     // night.ts road.highway geometry.stroke
-  other: "#38414e",                   // night.ts road geometry
-  minor_service: "#38414e",           // night.ts road geometry
-  minor_a: "#38414e",                 // night.ts road geometry
-  minor_b: "#38414e",                 // night.ts road geometry
-  link: "#38414e",                    // night.ts road geometry
-  major_casing_early: "#212a37",      // night.ts road geometry.stroke
-  major: "#38414e",                   // night.ts road geometry
-  highway_casing_early: "#1f2835",    // night.ts road.highway geometry.stroke
-  highway: "#746855",                 // night.ts road.highway geometry
-  railway: "#2f3948",                 // night.ts transit geometry
-  boundaries: "#746855",              // night.ts labels.text.fill
-  bridges_other_casing: "#212a37",    // night.ts road geometry.stroke
-  bridges_minor_casing: "#212a37",    // night.ts road geometry.stroke
-  bridges_link_casing: "#212a37",     // night.ts road geometry.stroke
-  bridges_major_casing: "#212a37",    // night.ts road geometry.stroke
-  bridges_highway_casing: "#1f2835",  // night.ts road.highway geometry.stroke
-  bridges_other: "#38414e",           // night.ts road geometry
-  bridges_minor: "#38414e",           // night.ts road geometry
-  bridges_link: "#38414e",            // night.ts road geometry
-  bridges_major: "#38414e",           // night.ts road geometry
-  bridges_highway: "#746855",         // night.ts road.highway geometry
-  roads_label_minor: "#9ca5b3",       // night.ts road labels.text.fill
-  roads_label_minor_halo: "#242f3e",  // night.ts labels.text.stroke
-  roads_label_major: "#f3d19c",       // night.ts road.highway labels.text.fill
-  roads_label_major_halo: "#242f3e",  // night.ts labels.text.stroke
-  ocean_label: "#515c6d",             // night.ts water labels.text.fill
-  subplace_label: "#746855",          // night.ts labels.text.fill
-  subplace_label_halo: "#242f3e",     // night.ts labels.text.stroke
-  city_label: "#d59563",              // night.ts administrative.locality labels.text.fill
-  city_label_halo: "#242f3e",         // night.ts labels.text.stroke
-  state_label: "#746855",             // night.ts labels.text.fill
-  state_label_halo: "#242f3e",        // night.ts labels.text.stroke
-  country_label: "#746855",           // night.ts labels.text.fill
-  address_label: "#9ca5b3",           // night.ts road labels.text.fill
-  address_label_halo: "#242f3e",      // night.ts labels.text.stroke
+  background: "#242f3e",              // night geometry
+  earth: "#242f3e",                   // night geometry
+  park_a: "#263c3f",                  // night poi.park geometry
+  park_b: "#263c3f",                  // night poi.park geometry
+  hospital: "#242f3e",                // night geometry
+  industrial: "#242f3e",              // night geometry
+  school: "#242f3e",                  // night geometry
+  wood_a: "#263c3f",                  // night poi.park geometry
+  wood_b: "#263c3f",                  // night poi.park geometry
+  pedestrian: "#242f3e",              // night geometry
+  scrub_a: "#263c3f",                 // night poi.park geometry
+  scrub_b: "#263c3f",                 // night poi.park geometry
+  glacier: "#242f3e",                 // night geometry
+  sand: "#242f3e",                    // night geometry
+  beach: "#242f3e",                   // night geometry
+  aerodrome: "#2f3948",               // night transit geometry
+  runway: "#38414e",                  // night road geometry
+  water: "#17263c",                   // night water geometry
+  zoo: "#263c3f",                     // night poi.park geometry
+  military: "#242f3e",                // night geometry
+  tunnel_other_casing: "#212a37",     // night road geometry.stroke
+  tunnel_minor_casing: "#212a37",     // night road geometry.stroke
+  tunnel_link_casing: "#212a37",      // night road geometry.stroke
+  tunnel_major_casing: "#212a37",     // night road geometry.stroke
+  tunnel_highway_casing: "#1f2835",   // night road.highway geometry.stroke
+  tunnel_other: "#2f3948",            // night transit geometry
+  tunnel_minor: "#2f3948",            // night transit geometry
+  tunnel_link: "#2f3948",             // night transit geometry
+  tunnel_major: "#2f3948",            // night transit geometry
+  tunnel_highway: "#746855",          // night road.highway geometry
+  pier: "#2f3948",                    // night transit geometry
+  buildings: "#2f3948",               // night transit geometry
+  minor_service_casing: "#212a37",    // night road geometry.stroke
+  minor_casing: "#212a37",            // night road geometry.stroke
+  link_casing: "#212a37",             // night road geometry.stroke
+  major_casing_late: "#212a37",       // night road geometry.stroke
+  highway_casing_late: "#1f2835",     // night road.highway geometry.stroke
+  other: "#38414e",                   // night road geometry
+  minor_service: "#38414e",           // night road geometry
+  minor_a: "#38414e",                 // night road geometry
+  minor_b: "#38414e",                 // night road geometry
+  link: "#38414e",                    // night road geometry
+  major_casing_early: "#212a37",      // night road geometry.stroke
+  major: "#38414e",                   // night road geometry
+  highway_casing_early: "#1f2835",    // night road.highway geometry.stroke
+  highway: "#746855",                 // night road.highway geometry
+  railway: "#2f3948",                 // night transit geometry
+  boundaries: "#746855",              // night labels.text.fill
+  bridges_other_casing: "#212a37",    // night road geometry.stroke
+  bridges_minor_casing: "#212a37",    // night road geometry.stroke
+  bridges_link_casing: "#212a37",     // night road geometry.stroke
+  bridges_major_casing: "#212a37",    // night road geometry.stroke
+  bridges_highway_casing: "#1f2835",  // night road.highway geometry.stroke
+  bridges_other: "#38414e",           // night road geometry
+  bridges_minor: "#38414e",           // night road geometry
+  bridges_link: "#38414e",            // night road geometry
+  bridges_major: "#38414e",           // night road geometry
+  bridges_highway: "#746855",         // night road.highway geometry
+  roads_label_minor: "#9ca5b3",       // night road labels.text.fill
+  roads_label_minor_halo: "#242f3e",  // night labels.text.stroke
+  roads_label_major: "#f3d19c",       // night road.highway labels.text.fill
+  roads_label_major_halo: "#242f3e",  // night labels.text.stroke
+  ocean_label: "#515c6d",             // night water labels.text.fill
+  subplace_label: "#746855",          // night labels.text.fill
+  subplace_label_halo: "#242f3e",     // night labels.text.stroke
+  city_label: "#d59563",              // night administrative.locality labels.text.fill
+  city_label_halo: "#242f3e",         // night labels.text.stroke
+  state_label: "#746855",             // night labels.text.fill
+  state_label_halo: "#242f3e",        // night labels.text.stroke
+  country_label: "#746855",           // night labels.text.fill
+  address_label: "#9ca5b3",           // night road labels.text.fill
+  address_label_halo: "#242f3e",      // night labels.text.stroke
 };
 
 export const FLAVORS: Record<Appearance, Flavor> = {
@@ -206,24 +206,24 @@ export const FLAVORS: Record<Appearance, Flavor> = {
 
 export const ROUTE_PALETTES: Record<Appearance, RoutePalette> = {
   light: {
-    routeColor: "#1a56c4",  // standard.ts routeColor
-    routeOpacity: 0.9,      // standard.ts routeOpacity
-    markerStroke: "#ffffff", // standard.ts chrome.bg
-    endFill: "#202124",     // standard.ts chrome.text
-    labelText: "#202124",   // standard.ts chrome.text
-    labelHalo: "#ffffff",   // standard.ts chrome.bg
-    landmarkFill: "#5f6368",   // standard.ts chrome.fg
-    landmarkStroke: "#ffffff", // standard.ts chrome.bg
+    routeColor: "#1a56c4",  // standard routeColor
+    routeOpacity: 0.9,      // standard routeOpacity
+    markerStroke: "#ffffff", // standard chrome.bg
+    endFill: "#202124",     // standard chrome.text
+    labelText: "#202124",   // standard chrome.text
+    labelHalo: "#ffffff",   // standard chrome.bg
+    landmarkFill: "#5f6368",   // standard chrome.fg
+    landmarkStroke: "#ffffff", // standard chrome.bg
   },
   dark: {
-    routeColor: "#33d6ff",  // night.ts routeColor
-    routeOpacity: 0.85,     // night.ts routeOpacity
-    markerStroke: "#0f1a2b", // night.ts chrome.bg
-    endFill: "#f2f6ff",     // night.ts chrome.text
-    labelText: "#f2f6ff",   // night.ts chrome.text
-    labelHalo: "#0f1a2b",   // night.ts chrome.bg
-    landmarkFill: "#8fa3c2",   // night.ts chrome.fg
-    landmarkStroke: "#0f1a2b", // night.ts chrome.bg
+    routeColor: "#33d6ff",  // night routeColor
+    routeOpacity: 0.85,     // night routeOpacity
+    markerStroke: "#0f1a2b", // night chrome.bg
+    endFill: "#f2f6ff",     // night chrome.text
+    labelText: "#f2f6ff",   // night chrome.text
+    labelHalo: "#0f1a2b",   // night chrome.bg
+    landmarkFill: "#8fa3c2",   // night chrome.fg
+    landmarkStroke: "#0f1a2b", // night chrome.bg
   },
 };
 
@@ -234,37 +234,37 @@ export const ROUTE_PALETTES: Record<Appearance, RoutePalette> = {
 export const POI_COLOURS: Record<Appearance, PoiColours> = {
   light: {
     green: "#188038",     // Google default park label
-    lapis: "#1a56c4",     // standard.ts chrome.accent
-    slategray: "#5f6368", // standard.ts chrome.fg
-    blue: "#1a56c4",      // standard.ts chrome.accent
+    lapis: "#1a56c4",     // standard chrome.accent
+    slategray: "#5f6368", // standard chrome.fg
+    blue: "#1a56c4",      // standard chrome.accent
     tangerine: "#e37400", // Google default food and drink label
-    pink: "#5f6368",      // standard.ts chrome.fg
-    red: "#c62828",       // standard.ts userColor
-    turquoise: "#1a56c4", // standard.ts chrome.accent
+    pink: "#5f6368",      // standard chrome.fg
+    red: "#c62828",       // standard userColor
+    turquoise: "#1a56c4", // standard chrome.accent
   },
   dark: {
-    green: "#6b9a76",     // night.ts poi.park labels.text.fill
-    lapis: "#d59563",     // night.ts transit.station labels.text.fill
-    slategray: "#d59563", // night.ts poi labels.text.fill
-    blue: "#d59563",      // night.ts poi labels.text.fill
-    tangerine: "#d59563", // night.ts poi labels.text.fill
-    pink: "#d59563",      // night.ts poi labels.text.fill
-    red: "#d59563",       // night.ts poi labels.text.fill
-    turquoise: "#d59563", // night.ts poi labels.text.fill
+    green: "#6b9a76",     // night poi.park labels.text.fill
+    lapis: "#d59563",     // night transit.station labels.text.fill
+    slategray: "#d59563", // night poi labels.text.fill
+    blue: "#d59563",      // night poi labels.text.fill
+    tangerine: "#d59563", // night poi labels.text.fill
+    pink: "#d59563",      // night poi labels.text.fill
+    red: "#d59563",       // night poi labels.text.fill
+    turquoise: "#d59563", // night poi labels.text.fill
   },
 };
 
 export const HILLSHADE_PAINTS: Record<Appearance, HillshadePaint> = {
   light: {
     "hillshade-exaggeration": 0.25,
-    "hillshade-shadow-color": "#5f6368",    // standard.ts chrome.fg
-    "hillshade-highlight-color": "#ffffff", // standard.ts chrome.bg
+    "hillshade-shadow-color": "#5f6368",    // standard chrome.fg
+    "hillshade-highlight-color": "#ffffff", // standard chrome.bg
     "hillshade-accent-color": "#9aa0a6",    // Google default administrative line
   },
   dark: {
     "hillshade-exaggeration": 0.3,
-    "hillshade-shadow-color": "#1f2835",    // night.ts road.highway geometry.stroke
-    "hillshade-highlight-color": "#515c6d", // night.ts water labels.text.fill
-    "hillshade-accent-color": "#17263c",    // night.ts water geometry
+    "hillshade-shadow-color": "#1f2835",    // night road.highway geometry.stroke
+    "hillshade-highlight-color": "#515c6d", // night water labels.text.fill
+    "hillshade-accent-color": "#17263c",    // night water geometry
   },
 };

@@ -8,11 +8,13 @@
 //    has the archive's zoom range and the OpenStreetMap attribution.
 //  - The style follows the site appearance, including a live switch that
 //    diffs the style on the same map.
-//  - Every fallback (no route map, no basemap URL, an unreadable archive,
+//  - Every fallback (no route map, no `trackerMap`, an unreadable archive,
 //    a style or tile error) renders the heading and `emptyText`, never an
 //    `<img>`, and logs once.
 //  - The routemap chunk is imported only when a section with a recording
 //    mounts.
+//  - Mounting the map reports the renderer choice as the `route` surface,
+//    and the MapLibre route map draws whatever the answer.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, cleanup, act } from "@testing-library/react";
@@ -21,8 +23,8 @@ import { MemoryRouter } from "react-router-dom";
 import { store } from "../../../../src/store/useStore";
 import { initialStore, type ContentBundle } from "../../../../src/store/types";
 import type { ContentDocument, Snapshot } from "../../../../src/contracts";
-import { env } from "../../../../src/config/env";
 import { RoutePreview } from "../../../../src/content/sections/RoutePreview/RoutePreview";
+import { reportRenderer } from "../../../../src/map/renderer";
 import { DARK_FLAVOR, LIGHT_FLAVOR, ROUTE_PALETTES } from "../../../../src/routeMap/flavors";
 
 type Handler = (event: { error?: unknown }) => void;
@@ -99,6 +101,10 @@ vi.mock("maplibre-gl", () => {
   return { Map: FakeMap, Marker: FakeMarker, Popup: FakePopup, addProtocol: vi.fn(), setWorkerUrl: vi.fn() };
 });
 
+vi.mock("../../../../src/map/renderer", () => ({
+  reportRenderer: vi.fn(() => "google"),
+}));
+
 vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
   default: "/assets/maplibre-gl-worker.js",
 }));
@@ -134,8 +140,15 @@ const PATH = [
   { lat: 46.85, lng: -113.9 },
 ];
 
-const mutableEnv = env as unknown as { ROUTE_BASEMAP_URL: string };
-const originalBasemap = mutableEnv.ROUTE_BASEMAP_URL;
+// The event's map, `snapshot.event.trackerMap`, with its archives under BASEMAP.
+const TRACKER_MAP = {
+  id: 3,
+  name: "Valley",
+  minZoom: 0,
+  maxZoom: 15,
+  tilesUrl: `${BASEMAP}/tiles.pmtiles`,
+  terrainUrl: `${BASEMAP}/terrain.pmtiles`,
+};
 
 function buildBundle(): ContentBundle {
   return {
@@ -145,12 +158,12 @@ function buildBundle(): ContentBundle {
   } as ContentBundle;
 }
 
-function setEvent(routeMap: unknown): void {
+function setEvent(routeMap: unknown, trackerMap: unknown = TRACKER_MAP): void {
   store.setState((s) => ({
     ...s,
     snapshot: {
       schemaVersion: 1,
-      event: { id: 1, routeMap },
+      event: { id: 1, routeMap, trackerMap },
     } as unknown as Snapshot,
   }));
 }
@@ -191,7 +204,6 @@ function backgroundColor(style: StyleShape): unknown {
 beforeEach(() => {
   mocks.maps.length = 0;
   mocks.header.fail = false;
-  mutableEnv.ROUTE_BASEMAP_URL = BASEMAP;
   document.documentElement.setAttribute("data-theme", "light");
 });
 
@@ -199,7 +211,6 @@ afterEach(() => {
   window.localStorage.removeItem("wmsfo.routeMap.terrain");
   cleanup();
   store.setState(() => ({ ...initialStore }));
-  mutableEnv.ROUTE_BASEMAP_URL = originalBasemap;
   document.documentElement.removeAttribute("data-theme");
   vi.restoreAllMocks();
 });
@@ -342,9 +353,26 @@ describe("route_preview map fallbacks", () => {
     expect(container.innerHTML).toBe("");
   });
 
-  it("renders emptyText when VITE_ROUTE_BASEMAP_URL is unset", async () => {
-    mutableEnv.ROUTE_BASEMAP_URL = "";
+  it("reports the renderer as the route surface when it mounts the map, and still draws it", async () => {
+    vi.mocked(reportRenderer).mockClear();
     setEvent(routeMapOf(PATH));
+    renderSection({ emptyText: EMPTY });
+    await settle();
+    expect(reportRenderer).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(reportRenderer).mock.calls[0][0]).toBe("route");
+    expect(mocks.maps).toHaveLength(1);
+  });
+
+  it("reports no renderer when there is no map to mount", async () => {
+    vi.mocked(reportRenderer).mockClear();
+    setEvent(routeMapOf(PATH), null);
+    renderSection({ emptyText: EMPTY });
+    await settle();
+    expect(reportRenderer).not.toHaveBeenCalled();
+  });
+
+  it("renders emptyText when the event has no trackerMap", async () => {
+    setEvent(routeMapOf(PATH), null);
     const { container } = renderSection({ emptyText: EMPTY });
     await settle();
     expectEmptyView(container);

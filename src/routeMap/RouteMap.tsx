@@ -21,8 +21,9 @@
 // (the caller owns the fullscreen state and passes `fullscreen` and
 // `onToggleFullscreen`; each change of `fullscreen` resizes the map and
 // refits the path), and a terrain toggle when `terrainControl` is set and
-// the terrain archive exists (probed once per page load after the map
-// mounts). The terrain choice is kept in storage under TERRAIN_KEY
+// the event's map has a terrain archive that exists (probed once per page
+// load after the map mounts). `basemap` names the event's map archives
+// and is read once, when the map mounts. The terrain choice is kept in storage under TERRAIN_KEY
 // ("on" or "off", on when absent) and applied to every style the map
 // builds, so an appearance switch keeps it.
 
@@ -34,6 +35,7 @@ import {
   mountRouteMap,
   probeTerrain,
   type Appearance,
+  type RouteBasemap,
   type Viewpoint,
   type ViewpointMarker,
   type LatLng,
@@ -53,6 +55,7 @@ const NO_LABELS: readonly TimeLabel[] = [];
 const NO_MARKERS: readonly ViewpointMarker[] = [];
 
 export type RouteMapProps = {
+  basemap: RouteBasemap;
   path: readonly LatLng[];
   marks?: readonly LatLng[];
   timeLabels?: readonly TimeLabel[];
@@ -76,6 +79,7 @@ export type RouteMapProps = {
 };
 
 export function RouteMap({
+  basemap,
   path,
   marks = NO_MARKS,
   timeLabels = NO_LABELS,
@@ -106,6 +110,7 @@ export function RouteMap({
   const showTerrain = terrainControl && terrainAvailable;
   const terrain = showTerrain && terrainOn;
   const latest = useRef({
+    basemap,
     path,
     marks,
     timeLabels,
@@ -126,6 +131,7 @@ export function RouteMap({
 
   useEffect(() => {
     latest.current = {
+    basemap,
     path,
     marks,
     timeLabels,
@@ -158,6 +164,7 @@ export function RouteMap({
     }
     mountRouteMap({
       container: host,
+      basemap: latest.current.basemap,
       path: latest.current.path,
       marks: latest.current.marks,
       timeLabels: latest.current.timeLabels,
@@ -210,13 +217,13 @@ export function RouteMap({
   useEffect(() => {
     if (!mounted || !terrainControl) return;
     let cancelled = false;
-    void probeTerrain().then((exists) => {
+    void probeTerrain(basemap.terrainUrl).then((exists) => {
       if (!cancelled) setTerrainAvailable(exists);
     });
     return () => {
       cancelled = true;
     };
-  }, [mounted, terrainControl]);
+  }, [mounted, terrainControl, basemap.terrainUrl]);
 
   useEffect(() => {
     handleRef.current?.update({

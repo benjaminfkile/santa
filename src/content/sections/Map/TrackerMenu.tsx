@@ -6,8 +6,13 @@
 // location, flight history, time labels, fit, viewpoints, and close as
 // square buttons on the right. Viewpoints shows while the site has
 // viewpoints and the section's `controls.landmarks` is not false.
+// Each style's thumbnail is the `480` variant of its `thumbnailMediaId`
+// from the snapshot's media; a style without one, or whose media does not
+// resolve, shows a swatch of its chrome (the background ringed in the
+// accent). A pick waits for `onThemeChange` to settle, the button marked
+// busy meanwhile.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../../auth/AuthProvider";
 import { useStore } from "../../../store/useStore";
@@ -55,7 +60,7 @@ export type TrackerMenuProps = {
   controls: Toggles;
   themes: MapTheme[];
   themeKey: string;
-  onThemeChange: (key: string) => void;
+  onThemeChange: (key: string) => void | Promise<void>;
   mapType: "terrain" | "roadmap";
   onMapTypeChange: (t: "terrain" | "roadmap") => void;
   snow: boolean;
@@ -85,8 +90,29 @@ function fmt(value: number | null | undefined, unit: string): string {
   return formatCountWithUnit(value, unit);
 }
 
+// The 480 px variant of a theme thumbnail, else the media's own URL.
+function thumbnailUrl(
+  media: Record<string, { url?: string; variants?: Record<string, string | undefined> } | undefined> | null,
+  id: string | null,
+): string | null {
+  if (id === null || media === null) return null;
+  const entry = media[id];
+  if (entry === undefined) return null;
+  return entry.variants?.["480"] ?? entry.url ?? null;
+}
+
+function ThemeSwatch({ theme }: { theme: MapTheme }) {
+  const style = {
+    "--swatch-bg": theme.chrome.bg,
+    "--swatch-ring": theme.chrome.accent,
+  } as CSSProperties;
+  return <span className={styles.themeSwatch} style={style} aria-hidden data-testid={`tracker-menu-theme-swatch-${theme.key}`} />;
+}
+
 export function TrackerMenu(props: TrackerMenuProps) {
   const dialogRef = useRef<HTMLDivElement | null>(null);
+  const media = useStore((s) => s.snapshot?.media ?? null);
+  const [pendingKey, setPendingKey] = useState<string | null>(null);
   const speedMps = useStore((s) => s.live?.speedMps ?? null);
   const headingDeg = useStore((s) => s.live?.headingDeg ?? null);
   const altitudeM = useStore((s) => s.live?.altitudeM ?? null);
@@ -129,18 +155,29 @@ export function TrackerMenu(props: TrackerMenuProps) {
           <div className={styles.themes} role="radiogroup" aria-label="Map style">
             {props.themes.map((t) => {
               const selected = props.themeKey === t.key;
+              const thumb = thumbnailUrl(media, t.thumbnailMediaId);
               return (
                 <button
                   key={t.key}
                   type="button"
                   role="radio"
                   aria-checked={selected}
-                  onClick={() => props.onThemeChange(t.key)}
+                  aria-busy={pendingKey === t.key ? true : undefined}
+                  onClick={() => {
+                    setPendingKey(t.key);
+                    void Promise.resolve(props.onThemeChange(t.key)).finally(() => {
+                      setPendingKey((k) => (k === t.key ? null : k));
+                    });
+                  }}
                   className={selected ? `${styles.theme} ${styles.themeSelected} ${styles.onMark}` : styles.theme}
                   data-testid={`tracker-menu-theme-${t.key}`}
                 >
-                  <img className={styles.themeThumb} src={`/tracker-themes/${t.key}.png`} alt="" width={54} height={54} />
-                  <span className={styles.themeLabel}>{t.label}</span>
+                  {thumb !== null ? (
+                    <img className={styles.themeThumb} src={thumb} alt="" width={54} height={54} />
+                  ) : (
+                    <ThemeSwatch theme={t} />
+                  )}
+                  <span className={styles.themeLabel}>{t.name}</span>
                 </button>
               );
             })}

@@ -2,12 +2,19 @@
 // the map listeners and the pending zoom redraw, every method afterwards is
 // a no-op, a build that fails part way leaves nothing on the map, and the
 // user location never starts a watch or reports a change once destroyed.
+// The bounds lock (8.2): the map is built with a strict restriction to the
+// event box and the fitted minimum zoom, a fix outside the box pans to the
+// nearest in-box point with Santa on the edge, `recenter` clamps, and
+// `fitHistory` leaves out points outside the box. `setTheme` awaits the
+// theme's style body before applying `poiStyles(style, pois)`.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createMapController, type MapControllerOptions } from "../../../src/map/mapController";
 import { createUserLocation } from "../../../src/map/userLocation";
-import { resolveOfferedThemes } from "../../../src/map/themes";
+import type { MapTheme } from "../../../src/map/themes";
 import { poiStyles } from "../../../src/map/poiStyles";
+import { fittedMinZoom } from "../../../src/map/bounds";
+import { SEEDED, seededStyle } from "./themeFixtures";
 import {
   FakeMap,
   FakeMapObject,
@@ -17,7 +24,8 @@ import {
   resetFakeGoogle,
 } from "./fakeGoogle";
 
-const theme = resolveOfferedThemes(null)[0];
+const theme = SEEDED.standard;
+const VALLEY = { west: -114.3, south: 46.75, east: -113.8, north: 47.05 };
 
 const points = [
   { lat: 40, lng: -105, recordedAt: "2023-12-24T02:00:00Z" },
@@ -28,6 +36,8 @@ const points = [
 function options(over: Partial<MapControllerOptions> = {}): MapControllerOptions {
   return {
     theme,
+    style: seededStyle("standard"),
+    bbox: null,
     defaultCenter: { lat: 40, lng: -105 },
     defaultZoom: 8,
     showSantaMarker: true,
@@ -225,30 +235,126 @@ describe("createUserLocation after destroy", () => {
 });
 
 describe("createMapController place filter", () => {
-  const night = resolveOfferedThemes(["night"])[0];
+  const night = SEEDED.night;
+  const nightStyle = seededStyle("night");
 
-  it("setPois sets the theme's styles plus the filter, and a theme change keeps it", () => {
+  it("setPois sets the theme's styles plus the filter, and a theme change keeps it", async () => {
     const c = createMapController(fakeLibs(), document.createElement("div"), options());
     const map = FakeMap.instances[0];
     c.setPois({ kinds: ["park", "school"] });
     expect(map.optionsCalls.at(-1)).toEqual({
-      styles: poiStyles(theme.styles, { kinds: ["park", "school"] }),
+      styles: poiStyles(seededStyle("standard"), { kinds: ["park", "school"] }),
     });
-    c.setTheme(night);
+    await c.setTheme(night);
     expect(map.optionsCalls.at(-1)).toEqual({
-      styles: poiStyles(night.styles, { kinds: ["park", "school"] }),
+      styles: poiStyles(nightStyle, { kinds: ["park", "school"] }),
     });
     c.setPois(null);
-    expect((map.optionsCalls.at(-1) as { styles: unknown }).styles).toBe(night.styles);
+    expect((map.optionsCalls.at(-1) as { styles: unknown }).styles).toEqual(nightStyle);
   });
 
-  it("every call after destroy is a no-op", () => {
+  it("every call after destroy is a no-op", async () => {
     const c = createMapController(fakeLibs(), document.createElement("div"), options());
     const map = FakeMap.instances[0];
     c.destroy();
     c.setPois({ kinds: ["park"] });
-    c.setTheme(night);
+    await c.setTheme(night);
     c.setPois(null);
     expect(map.optionsCalls).toEqual([]);
+  });
+});
+
+describe("createMapController theme", () => {
+  it("setTheme awaits the style body and then applies poiStyles(style, pois)", async () => {
+    const c = createMapController(fakeLibs(), document.createElement("div"), options());
+    const map = FakeMap.instances[0];
+    c.setPois({ kinds: ["park"] });
+    let release: (s: google.maps.MapTypeStyle[]) => void = () => {};
+    const body = seededStyle("charcoal");
+    const slow: MapTheme = {
+      ...SEEDED.charcoal,
+      getStyle: () => new Promise((res) => (release = res)),
+    };
+    const calls = map.optionsCalls.length;
+    const pending = c.setTheme(slow);
+    await Promise.resolve();
+    expect(map.optionsCalls.length).toBe(calls);
+    release(body);
+    await pending;
+    expect(map.optionsCalls.at(-1)).toEqual({ styles: poiStyles(body, { kinds: ["park"] }) });
+  });
+
+  it("a later setTheme wins over an earlier one still waiting for its body", async () => {
+    const c = createMapController(fakeLibs(), document.createElement("div"), options());
+    const map = FakeMap.instances[0];
+    let release: (s: google.maps.MapTypeStyle[]) => void = () => {};
+    const slow: MapTheme = {
+      ...SEEDED.charcoal,
+      getStyle: () => new Promise((res) => (release = res)),
+    };
+    const first = c.setTheme(slow);
+    await c.setTheme(SEEDED.night);
+    release(seededStyle("charcoal"));
+    await first;
+    expect(map.optionsCalls.at(-1)).toEqual({ styles: seededStyle("night") });
+  });
+});
+
+describe("createMapController bounds", () => {
+  function sized(width: number, height: number): HTMLElement {
+    const el = document.createElement("div");
+    Object.defineProperty(el, "clientWidth", { value: width });
+    Object.defineProperty(el, "clientHeight", { value: height });
+    return el;
+  }
+
+  it("is built with the strict restriction to the box and the fitted minimum zoom", () => {
+    createMapController(fakeLibs(), sized(1280, 800), options({ bbox: VALLEY }));
+    const opts = FakeMap.instances[0].createOptions;
+    expect(opts.restriction).toEqual({ latLngBounds: VALLEY, strictBounds: true });
+    expect(opts.minZoom).toBe(fittedMinZoom(VALLEY, { width: 1280, height: 800 }));
+    expect(opts.minZoom).toBeGreaterThan(5);
+  });
+
+  it("without a box has no restriction and a minimum zoom of 5", () => {
+    createMapController(fakeLibs(), sized(1280, 800), options());
+    const opts = FakeMap.instances[0].createOptions;
+    expect(opts.restriction).toBeUndefined();
+    expect(opts.minZoom).toBe(5);
+  });
+
+  it("a fix outside the box pans to the nearest in-box point and Santa sits on the edge", async () => {
+    const c = createMapController(fakeLibs(), sized(400, 800), options({ bbox: VALLEY }));
+    const map = FakeMap.instances[0];
+    c.setLiveFix("tracking", { lat: 47.5, lng: -113.9 }, true);
+    expect(map.center).toEqual({ lat: 47.05, lng: -113.9 });
+    c.setLiveFix("tracking", { lat: 46, lng: -115 }, true);
+    expect(map.center).toEqual({ lat: 46.75, lng: -114.3 });
+    c.setLiveFix("tracking", { lat: 46.9, lng: -114 }, true);
+    expect(map.center).toEqual({ lat: 46.9, lng: -114 });
+  });
+
+  it("recenter clamps its target to the box", () => {
+    const c = createMapController(fakeLibs(), sized(400, 800), options({ bbox: VALLEY }));
+    const map = FakeMap.instances[0];
+    c.follow(false);
+    c.recenter({ lat: 40, lng: -114 });
+    expect(map.center).toEqual({ lat: 46.75, lng: -114 });
+  });
+
+  it("fitHistory fits only the points inside the box", () => {
+    const c = createMapController(fakeLibs(), sized(400, 800), options({ bbox: VALLEY }));
+    const map = FakeMap.instances[0];
+    c.setFlightHistory([
+      { lat: 46.8, lng: -114.1, recordedAt: null },
+      { lat: 40, lng: -105, recordedAt: null },
+      { lat: 47, lng: -113.9, recordedAt: null },
+    ]);
+    c.fitHistory();
+    const bounds = map.fitBoundsCalls.at(-1) as { points: google.maps.LatLngLiteral[] };
+    expect(bounds.points).toEqual([
+      { lat: 46.8, lng: -114.1 },
+      { lat: 47, lng: -113.9 },
+    ]);
   });
 });

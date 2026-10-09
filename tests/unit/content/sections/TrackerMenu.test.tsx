@@ -3,6 +3,10 @@
 // liftoff, recorded, and received timestamps; every value in --font-mono
 // with tabular numerals through the co-located CSS module. The footer row:
 // the account button alone on the left, the other buttons on the right.
+// The style picker: each theme's thumbnail is the 480 variant of its
+// `thumbnailMediaId` from the snapshot's media, a theme without one shows a
+// swatch of its chrome, the active theme carries the underline, and a pick
+// stays busy until `onThemeChange` settles.
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -37,18 +41,25 @@ vi.mock("../../../../src/content/sections/Map/TrackerMenu.module.css", async () 
 const here = dirname(fileURLToPath(import.meta.url));
 const trackerModulePath = resolve(here, "../../../../src/content/sections/Map/TrackerMenu.module.css");
 
-const themes: MapTheme[] = [
-  {
-    key: "standard",
-    label: "Standard",
-    styles: [],
-    routeColor: "hsl(210 100% 40%)",
-    routeOpacity: 1,
-    arrowColor: "hsl(210 100% 40%)",
-    timeLabelBg: "hsl(0 0% 100%)",
-    timeLabelFg: "hsl(0 0% 0%)",
-    timeLabelOpacity: 1,
-    userColor: "hsl(210 100% 40%)",
+function makeTheme(key: string, over: Partial<MapTheme> = {}): MapTheme {
+  return {
+    key,
+    renderer: "google",
+    name: key.charAt(0).toUpperCase() + key.slice(1),
+    styleUrl: `https://cdn.example/themes/${key}.json`,
+    spriteUrl: null,
+    thumbnailMediaId: null,
+    defaultLightMode: false,
+    defaultDarkMode: false,
+    overlay: {
+      routeColor: "hsl(210 100% 40%)",
+      routeOpacity: 1,
+      arrowColor: "hsl(210 100% 40%)",
+      timeLabelBg: "hsl(0 0% 100%)",
+      timeLabelFg: "hsl(0 0% 0%)",
+      timeLabelOpacity: 1,
+      userColor: "hsl(210 100% 40%)",
+    },
     chrome: {
       bg: "hsl(0 0% 100%)",
       fg: "hsl(0 0% 40%)",
@@ -58,8 +69,12 @@ const themes: MapTheme[] = [
       panel: "hsl(0 0% 100%)",
       accent: "hsl(210 100% 40%)",
     },
-  },
-];
+    getStyle: () => Promise.resolve([]),
+    ...over,
+  };
+}
+
+const themes: MapTheme[] = [makeTheme("standard")];
 
 function seedLive(): void {
   act(() => {
@@ -417,3 +432,111 @@ describe("TrackerMenu account button", () => {
   });
 });
 
+
+describe("TrackerMenu themes", () => {
+  const picker = [
+    makeTheme("standard", { thumbnailMediaId: "thumb-standard" }),
+    makeTheme("night", {
+      chrome: {
+        bg: "hsl(215 48% 11%)",
+        fg: "hsl(216 29% 66%)",
+        text: "hsl(220 100% 97%)",
+        tile: "hsl(216 36% 19%)",
+        tileFg: "hsl(220 100% 97%)",
+        panel: "hsl(215 48% 8%)",
+        accent: "hsl(192 100% 60%)",
+      },
+    }),
+  ];
+
+  function seedMedia(): void {
+    act(() => {
+      store.setState({
+        ...initialStore,
+        snapshot: {
+          schemaVersion: 1,
+          media: {
+            "thumb-standard": {
+              url: "https://cdn.example/media/thumb-standard/original.png",
+              kind: "raster",
+              variants: {
+                "480": "https://cdn.example/media/thumb-standard/w480.webp",
+                "960": "https://cdn.example/media/thumb-standard/w960.webp",
+              },
+            },
+          },
+          trackerThemes: [],
+        } as never,
+      });
+    });
+  }
+
+  function renderPicker(onThemeChange: (key: string) => void | Promise<void>, themeKey = "standard") {
+    return render(
+      <MemoryRouter>
+        <AuthProvider initialState={{ status: "unknown" } as AuthState}>
+          <TrackerMenu
+            {...footerProps(() => {})}
+            controls={{ ...footerProps(() => {}).controls, themePicker: true }}
+            themes={picker}
+            themeKey={themeKey}
+            onThemeChange={onThemeChange}
+          />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+  }
+
+  it("shows a thumbnail as the 480 variant from the snapshot's media", () => {
+    seedMedia();
+    const { getByTestId } = renderPicker(() => {});
+    const img = getByTestId("tracker-menu-theme-standard").querySelector("img");
+    expect(img?.getAttribute("src")).toBe("https://cdn.example/media/thumb-standard/w480.webp");
+    expect(getByTestId("tracker-menu-theme-standard").textContent).toContain("Standard");
+  });
+
+  it("shows a chrome swatch for a theme without a thumbnail", () => {
+    seedMedia();
+    const { getByTestId } = renderPicker(() => {});
+    const button = getByTestId("tracker-menu-theme-night");
+    expect(button.querySelector("img")).toBeNull();
+    const swatch = getByTestId("tracker-menu-theme-swatch-night");
+    expect(swatch.style.getPropertyValue("--swatch-bg")).toBe("hsl(215 48% 11%)");
+    expect(swatch.style.getPropertyValue("--swatch-ring")).toBe("hsl(192 100% 60%)");
+    const css = readFileSync(trackerModulePath, "utf8");
+    expect(ruleOf(css, ".themeSwatch")).toContain("background: var(--swatch-bg)");
+    expect(ruleOf(css, ".themeSwatch")).toContain("var(--swatch-ring)");
+  });
+
+  it("shows the swatch when the thumbnail's media is missing", () => {
+    act(() => store.setState({ ...initialStore }));
+    const { getByTestId } = renderPicker(() => {});
+    expect(getByTestId("tracker-menu-theme-standard").querySelector("img")).toBeNull();
+    expect(getByTestId("tracker-menu-theme-swatch-standard")).toBeTruthy();
+  });
+
+  it("underlines the active theme only", () => {
+    seedMedia();
+    const { getByTestId } = renderPicker(() => {}, "night");
+    expect(getByTestId("tracker-menu-theme-night").className).toContain("onMark");
+    expect(getByTestId("tracker-menu-theme-night").getAttribute("aria-checked")).toBe("true");
+    expect(getByTestId("tracker-menu-theme-standard").className).not.toContain("onMark");
+  });
+
+  it("a pick stays busy until the theme switch settles", async () => {
+    seedMedia();
+    let release: () => void = () => {};
+    const onThemeChange = vi.fn(() => new Promise<void>((res) => (release = res)));
+    const { getByTestId } = renderPicker(onThemeChange);
+    fireEvent.click(getByTestId("tracker-menu-theme-night"));
+    expect(onThemeChange).toHaveBeenCalledWith("night");
+    expect(getByTestId("tracker-menu-theme-night").getAttribute("aria-busy")).toBe("true");
+    await act(async () => {
+      release();
+      await Promise.resolve();
+    });
+    await waitFor(() =>
+      expect(getByTestId("tracker-menu-theme-night").getAttribute("aria-busy")).toBeNull(),
+    );
+  });
+});

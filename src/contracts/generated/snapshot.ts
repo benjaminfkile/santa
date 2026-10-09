@@ -54,6 +54,27 @@ export interface Snapshot {
       body?: string;
       createdAt?: string;
     } | null;
+    trackerBbox: {
+      west?: number;
+      south?: number;
+      east?: number;
+      north?: number;
+    };
+    trackerMap: {
+      id?: number;
+      name?: string;
+      bbox?: {
+        west?: number;
+        south?: number;
+        east?: number;
+        north?: number;
+      };
+      minZoom?: number;
+      maxZoom?: number;
+      terrainMaxZoom?: number | null;
+      tilesUrl?: string;
+      terrainUrl?: string | null;
+    } | null;
   } | null;
   qrCodes?: {
     [k: string]:
@@ -121,6 +142,35 @@ export interface Snapshot {
   icons?: {
     [k: string]: string | undefined;
   };
+  trackerThemes: {
+    id?: number;
+    renderer?: string;
+    key?: string;
+    name?: string;
+    styleUrl?: string;
+    spriteUrl?: string | null;
+    thumbnailMediaId?: string | null;
+    chrome?: {
+      bg?: string;
+      fg?: string;
+      text?: string;
+      tile?: string;
+      tileFg?: string;
+      panel?: string;
+      accent?: string;
+    };
+    overlay?: {
+      routeColor?: string;
+      routeOpacity?: number;
+      arrowColor?: string;
+      timeLabelBg?: string;
+      timeLabelFg?: string;
+      timeLabelOpacity?: number;
+      userColor?: string;
+    };
+    defaultLightMode?: boolean;
+    defaultDarkMode?: boolean;
+  }[];
 }
 export interface Variants {
   [k: string]: string | undefined;

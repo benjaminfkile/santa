@@ -9,6 +9,10 @@
 // stacks above it.
 // While the event is live the section is fixed to the viewport and nothing
 // else on the site renders.
+// The map styles are the event's enabled Google themes from the snapshot's
+// `trackerThemes` (8.4); the map is locked to `event.trackerBbox` (8.2).
+// The renderer choice of 8.1 is made and reported as the `live` surface on
+// mount; the section builds the Google controller whatever the answer.
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
@@ -17,7 +21,7 @@ import { useAuth } from "../../../auth/AuthProvider";
 import { store, useStore } from "../../../store/useStore";
 import { selectLiveState } from "../../../store/liveState";
 import { selectTakeover } from "../../selectPage";
-import { storageGet, storageSet } from "../../../lib/storage";
+import { storageSet } from "../../../lib/storage";
 import { describeError } from "../../../lib/analytics";
 import { setSnowOverride, useSnowEnabled } from "../../theme/seasonalLayers";
 import { SponsorCarousel } from "../SponsorCarousel/SponsorCarousel";
@@ -26,7 +30,14 @@ import { MapView } from "../../../map/MapView";
 import type { MapController } from "../../../map/mapController";
 import type { UserLocationState } from "../../../map/userLocation";
 import type { MapTheme } from "../../../map/themes";
-import { resolveOfferedThemes, resolveInitialTheme } from "../../../map/themes";
+import {
+  loadThemes,
+  resolveInitialTheme,
+  themesFor,
+  THEME_STORAGE_KEY,
+} from "../../../map/themes";
+import { toBbox } from "../../../map/bounds";
+import { reportRenderer } from "../../../map/renderer";
 import { resolvePoiKinds } from "../../../map/poiStyles";
 import { acquire as acquireWakeLock, release as releaseWakeLock } from "../../../map/wakeLock";
 import type { MountIcon, TrackerViewpoint } from "../../../map/viewpointsOverlay";
@@ -50,11 +61,7 @@ import { CookiePlusGlyph, TrackerMenuGlyph } from "./glyphs";
 import * as styles from "./Map.module.css";
 import * as ibtn from "../../../ui/IconButton.module.css";
 
-const THEME_STORAGE_KEY = "wmsfo.tracker.theme";
-
 type MapSectionData = {
-  themes?: readonly string[];
-  defaultTheme?: string;
   defaultCenter?: { lat: number; lng: number };
   defaultZoom?: number;
   flightHistoryDefault?: boolean;
@@ -118,17 +125,18 @@ function readAppearance(): "light" | "dark" {
 
 export const Map: SectionComponent = ({ data, bundle }) => {
   const d = (data ?? {}) as MapSectionData;
-  const offered = useMemo(() => resolveOfferedThemes(d.themes ?? null), [d.themes]);
-  const stored = storageGet(THEME_STORAGE_KEY);
-  const initialTheme = useMemo(
-    () =>
-      resolveInitialTheme(
-        { stored, appearance: readAppearance(), defaultTheme: d.defaultTheme },
-        offered,
-      ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [offered],
+  const trackerThemes = useStore((s) => s.snapshot?.trackerThemes ?? null);
+  const trackerBbox = useStore((s) => s.snapshot?.event?.trackerBbox ?? null);
+  const themes = useMemo(() => loadThemes({ trackerThemes: trackerThemes ?? [] }), [trackerThemes]);
+  const offered = useMemo(() => themesFor(themes, "google"), [themes]);
+  const [initialTheme] = useState<MapTheme | null>(() =>
+    resolveInitialTheme(themes, "google", readAppearance()),
   );
+
+  useEffect(() => {
+    const s = store.getState().snapshot;
+    reportRenderer("live", s);
+  }, []);
 
   const controls: Required<NonNullable<MapSectionData["controls"]>> = {
     themePicker: d.controls?.themePicker ?? false,
@@ -164,7 +172,9 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     return tracker === undefined ? null : { kinds: resolvePoiKinds(tracker) };
   }, [settingsPlaces]);
 
-  const [theme, setTheme] = useState<MapTheme>(initialTheme);
+  const [theme, setTheme] = useState<MapTheme | null>(initialTheme);
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
   const [mapType, setMapType] = useState<"terrain" | "roadmap">("terrain");
   const snow = useSnowEnabled(false);
   // The viewer's choice outlives a remount; the content default applies
@@ -253,6 +263,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const mapOptions = useMemo(
     () => ({
       theme,
+      bbox: toBbox(trackerBbox),
       defaultCenter,
       defaultZoom,
       showSantaMarker: true,
@@ -277,10 +288,14 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     };
   }, []);
 
+  // A rebuilt controller starts from the theme it was built with; the
+  // viewer's current choice is applied over it.
   useEffect(() => {
-    if (controller === null) return;
-    controller.setTheme(theme);
-  }, [controller, theme]);
+    if (controller === null || themeRef.current === null) return;
+    controller.setTheme(themeRef.current).catch((error: unknown) => {
+      console.warn("map: the style did not load", error);
+    });
+  }, [controller]);
 
   useEffect(() => {
     if (controller === null) return;
@@ -329,14 +344,22 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     return store.subscribe(apply);
   }, [controller]);
 
+  // The switch waits for the controller to apply the new style, so the
+  // chrome changes with the map.
   const onThemeChange = useCallback(
-    (key: string) => {
+    async (key: string) => {
       const next = offered.find((t) => t.key === key);
       if (next === undefined) return;
-      setTheme(next);
+      try {
+        await controller?.setTheme(next);
+      } catch (error) {
+        console.warn("map: the style did not load", error);
+        return;
+      }
       storageSet(THEME_STORAGE_KEY, next.key);
+      setTheme(next);
     },
-    [offered],
+    [offered, controller],
   );
 
   const onEnableLocation = useCallback(() => {
@@ -355,7 +378,8 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   // The tracker follows the map style, not the site's scheme (8.4): the
   // section rebinds the surface tokens to the theme's chrome so every pill,
   // panel, tile, button, and dialog inside it takes the theme's colours.
-  const chromeStyle = useMemo<CSSProperties>(() => {
+  const chromeStyle = useMemo<CSSProperties | undefined>(() => {
+    if (theme === null) return undefined;
     const c = theme.chrome;
     return {
       "--panel": c.bg,
@@ -388,7 +412,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
       className={rootClass}
       style={chromeStyle}
       data-testid="map"
-      data-theme-key={theme.key}
+      data-theme-key={theme?.key}
       data-takeover={takeover ? "live" : undefined}
       data-flight-history={flightHistoryOn && flightHistoryAvailable ? "on" : "off"}
     >
@@ -470,7 +494,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 onClose={() => setMenuOpen(false)}
                 controls={controls}
                 themes={offered}
-                themeKey={theme.key}
+                themeKey={theme?.key ?? ""}
                 onThemeChange={onThemeChange}
                 mapType={mapType}
                 onMapTypeChange={setMapType}

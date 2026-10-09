@@ -86,9 +86,9 @@ export function timeLabelSvgDataUri(text: string, theme: MapTheme): string {
   const width = 8 + text.length * 7 + 20;
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="24" viewBox="0 0 ${width} 24">` +
-    `<rect x="0.5" y="0.5" width="${width - 1}" height="23" rx="6" ry="6" fill="${theme.timeLabelBg}" fill-opacity="${theme.timeLabelOpacity}" stroke="${theme.timeLabelFg}" stroke-opacity="0.4"/>` +
-    `<circle cx="12" cy="12" r="4" fill="${theme.routeColor}"/>` +
-    `<text x="22" y="16" fill="${theme.timeLabelFg}" font-family="system-ui, sans-serif" font-size="12">${text}</text>` +
+    `<rect x="0.5" y="0.5" width="${width - 1}" height="23" rx="6" ry="6" fill="${theme.overlay.timeLabelBg}" fill-opacity="${theme.overlay.timeLabelOpacity}" stroke="${theme.overlay.timeLabelFg}" stroke-opacity="0.4"/>` +
+    `<circle cx="12" cy="12" r="4" fill="${theme.overlay.routeColor}"/>` +
+    `<text x="22" y="16" fill="${theme.overlay.timeLabelFg}" font-family="system-ui, sans-serif" font-size="12">${text}</text>` +
     `</svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
@@ -96,7 +96,7 @@ export function timeLabelSvgDataUri(text: string, theme: MapTheme): string {
 export function timeDotSvgDataUri(theme: MapTheme): string {
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">` +
-    `<circle cx="6" cy="6" r="5.5" fill="${theme.routeColor}" stroke="${theme.timeLabelFg}" stroke-opacity="0.4"/>` +
+    `<circle cx="6" cy="6" r="5.5" fill="${theme.overlay.routeColor}" stroke="${theme.overlay.timeLabelFg}" stroke-opacity="0.4"/>` +
     `</svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
@@ -142,8 +142,8 @@ export function createFlightHistoryOverlay(
         path,
         map,
         geodesic: true,
-        strokeColor: theme.routeColor,
-        strokeOpacity: theme.routeOpacity,
+        strokeColor: theme.overlay.routeColor,
+        strokeOpacity: theme.overlay.routeOpacity,
         strokeWeight: 2,
       });
 
@@ -155,8 +155,8 @@ export function createFlightHistoryOverlay(
           icon: {
             path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
             scale,
-            strokeColor: theme.arrowColor,
-            fillColor: theme.arrowColor,
+            strokeColor: theme.overlay.arrowColor,
+            fillColor: theme.overlay.arrowColor,
             fillOpacity: 1,
           },
           offset: `${(i / filtered.length) * 100}%`,

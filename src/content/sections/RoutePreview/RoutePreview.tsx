@@ -1,10 +1,12 @@
 // docs/site.md section 7.4 and 8.9. `route_preview` renders the heading,
 // `data.disclaimer` in the disclaimer recipe (above the map, when set), and
-// the route map (MapLibre over the CDN basemap, `event.routeMap.path` drawn
-// on it) in its own `routemap` chunk. With no route map (null, or fewer
-// than two points), no VITE_ROUTE_BASEMAP_URL, or a failed load, the
-// section renders the heading and `emptyText`, or nothing when `emptyText`
-// is empty; it never draws a picture. The start marker (routeStartMarker:
+// the route map (MapLibre over the event's map, `snapshot.event.trackerMap`,
+// with `event.routeMap.path` drawn on it) in its own `routemap` chunk. With
+// no route map (null, or fewer than two points), no `trackerMap`, or a
+// failed load, the section renders the heading and `emptyText`, or nothing
+// when `emptyText` is empty; it never draws a picture. When it mounts its
+// map the renderer choice of 8.1 is reported as the `route` surface; the
+// map is the MapLibre route map whatever the answer. The start marker (routeStartMarker:
 // a gold star flag and a "Starts here" label) stands on the path's first
 // point and the end keeps its circle; nothing on the map moves. With two
 // or more `event.routeMap.timeline` entries the map also carries a dot at
@@ -37,7 +39,7 @@ import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } fro
 import type { SectionComponent } from "../../registry";
 import { Inline } from "../../inline/Inline";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
-import { useStore } from "../../../store/useStore";
+import { store, useStore } from "../../../store/useStore";
 import { routeMapPath, type LatLng } from "./routeMapPath";
 import { routeMapTimeline, routeTimeLabels, type TimelineLabel } from "./routeTimelineData";
 import { createRouteStartMarker } from "./routeStartMarker";
@@ -45,12 +47,14 @@ import { useRouteViewpoints } from "./RouteViewpoints";
 import { resolvePlaces, resolveViewpoints, resolveRouteMapConfig } from "./routeMapConfig";
 import { useRouteMapFullscreen } from "./useRouteMapFullscreen";
 import { TakeoverPortal } from "../../../lib/TakeoverPortal";
-import { env } from "../../../config/env";
+import { reportRenderer } from "../../../map/renderer";
+import type { RouteBasemap } from "../../../routeMap";
 import { copy } from "../../../copy/copy";
 import * as styles from "./RoutePreview.module.css";
 import * as ibtn from "../../../ui/IconButton.module.css";
 
 type RouteMapProps = {
+  basemap: RouteBasemap;
   path: readonly LatLng[];
   marks?: readonly LatLng[];
   timeLabels?: readonly TimelineLabel[];
@@ -107,6 +111,12 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   const emptyText = d.emptyText ?? null;
   const routeMap = useStore((s) => s.snapshot?.event?.routeMap ?? null);
   const routeMapConfig = useStore((s) => s.snapshot?.event?.routeMapConfig ?? null);
+  const tilesUrl = useStore((s) => s.snapshot?.event?.trackerMap?.tilesUrl ?? null);
+  const terrainUrl = useStore((s) => s.snapshot?.event?.trackerMap?.terrainUrl ?? null);
+  const basemap = useMemo<RouteBasemap | null>(
+    () => (tilesUrl === null || tilesUrl === "" ? null : { tilesUrl, terrainUrl }),
+    [tilesUrl, terrainUrl],
+  );
   const event = useSnapshotEvent();
   const content = bundle.content;
   const [mapFailed, setMapFailed] = useState(false);
@@ -144,7 +154,11 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const fullscreen = useRouteMapFullscreen(stageRef);
 
-  const showMap = path.length >= 2 && env.ROUTE_BASEMAP_URL !== "" && !mapFailed;
+  const showMap = path.length >= 2 && basemap !== null && !mapFailed;
+
+  useEffect(() => {
+    if (showMap) reportRenderer("route", store.getState().snapshot);
+  }, [showMap]);
 
   if (showMap) {
     return (
@@ -176,6 +190,7 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
             <div className={styles.routeMap} data-testid="route-map-frame">
               <Suspense fallback={null}>
                 <LazyRouteMap
+                  basemap={basemap}
                   path={path}
                   marks={marks}
                   timeLabels={timeLabels}

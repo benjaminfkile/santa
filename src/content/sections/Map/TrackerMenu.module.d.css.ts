@@ -18,6 +18,7 @@ export const rowToggle: string;
 export const theme: string;
 export const themeLabel: string;
 export const themeSelected: string;
+export const themeSwatch: string;
 export const themeThumb: string;
 export const themes: string;
 export const toggle: string;
