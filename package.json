@@ -24,7 +24,6 @@
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.1.1",
     "@microsoft/signalr": "^10.0.11",
-    "@protomaps/basemaps": "^5.7.2",
     "amazon-cognito-identity-js": "^6.3.20",
     "maplibre-gl": "^6.11.2",
     "pmtiles": "^4.5.0",
@@ -79,12 +78,20 @@
       "limit": "50 KB"
     },
     {
-      "name": "routemap (maplibre-gl + pmtiles + @protomaps/basemaps + src/routeMap)",
+      "name": "routemap (maplibre-gl + pmtiles)",
       "path": [
         "dist/assets/routemap-*.js",
         "dist/assets/routemap-*.css"
       ],
       "limit": "250 KB"
+    },
+    {
+      "name": "tracker-maplibre (src/mapHost: the map host, its style, places, and route layers)",
+      "path": [
+        "dist/assets/tracker-maplibre-*.js",
+        "dist/assets/tracker-maplibre-*.css"
+      ],
+      "limit": "60 KB"
     },
     {
       "name": "routemap worker (the MapLibre worker, started by the route map)",
