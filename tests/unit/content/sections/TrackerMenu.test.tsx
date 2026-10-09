@@ -6,7 +6,9 @@
 // The style picker: each theme's thumbnail is the 480 variant of its
 // `thumbnailMediaId` from the snapshot's media, a theme without one shows a
 // swatch of its chrome, the active theme carries the underline, and a pick
-// stays busy until `onThemeChange` settles.
+// stays busy until `onThemeChange` settles. In the Map section the picker
+// lists the enabled themes of the active renderer, and the Terrain and
+// Road pair calls the controller's `setMapType`.
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -36,6 +38,41 @@ vi.mock("../../../../src/content/sections/Map/TrackerMenu.module.css", async () 
   return Object.fromEntries(
     Array.from(names, (n) => [n, composed.has(n) ? `${n} ${composed.get(n)}` : n]),
   );
+});
+
+// The Map section over a controller that records its calls, on the
+// renderer the test picks.
+const sectionMocks = vi.hoisted(() => ({
+  renderer: "maplibre" as "maplibre" | "google",
+  controller: null as null | Record<string, ReturnType<typeof import("vitest").vi.fn>>,
+}));
+
+vi.mock("../../../../src/map/renderer", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../../../src/map/renderer")>();
+  return { ...actual, reportRenderer: vi.fn(() => sectionMocks.renderer) };
+});
+
+vi.mock("../../../../src/map/MapView", async () => {
+  const { useEffect } = await import("react");
+  return {
+    MapView: (props: {
+      onController?: (c: unknown) => void;
+      children?: (state: { controller: unknown; error: unknown; retry: () => void }) => unknown;
+    }) => {
+      const controller = sectionMocks.controller;
+      const { onController } = props;
+      useEffect(() => {
+        onController?.(controller);
+      }, [onController, controller]);
+      return (
+        <div>
+          {typeof props.children === "function"
+            ? (props.children({ controller, error: null, retry: () => {} }) as React.ReactNode)
+            : null}
+        </div>
+      );
+    },
+  };
 });
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -538,5 +575,105 @@ describe("TrackerMenu themes", () => {
     await waitFor(() =>
       expect(getByTestId("tracker-menu-theme-night").getAttribute("aria-busy")).toBeNull(),
     );
+  });
+});
+
+describe("TrackerMenu in the Map section", () => {
+  function themeRow(key: string, renderer: string) {
+    return {
+      id: key.length,
+      renderer,
+      key,
+      name: key.toUpperCase(),
+      styleUrl: `https://cdn.example/themes/${key}.json`,
+      spriteUrl: null,
+      thumbnailMediaId: null,
+      chrome: { bg: "white", fg: "gray", text: "black", tile: "silver", tileFg: "black", panel: "white", accent: "blue" },
+      overlay: {
+        routeColor: "blue",
+        routeOpacity: 1,
+        arrowColor: "white",
+        timeLabelBg: "black",
+        timeLabelFg: "white",
+        timeLabelOpacity: 1,
+        userColor: "red",
+      },
+      defaultLightMode: false,
+      defaultDarkMode: false,
+    };
+  }
+
+  async function renderSection() {
+    sectionMocks.controller = {
+      setTheme: vi.fn(async () => {}),
+      setPois: vi.fn(),
+      setMapType: vi.fn(),
+      setFlightHistory: vi.fn(),
+      setViewpoints: vi.fn(),
+      setToggles: vi.fn(),
+      setLiveFix: vi.fn(),
+      follow: vi.fn(),
+      recenter: vi.fn(),
+      zoomBy: vi.fn(),
+      fitHistory: vi.fn(),
+      enableUserLocation: vi.fn(async () => {}),
+      disableUserLocation: vi.fn(),
+      getUserLocation: vi.fn(() => null),
+      destroy: vi.fn(),
+    };
+    act(() => {
+      store.setState({
+        ...initialStore,
+        snapshot: {
+          schemaVersion: 1,
+          media: {},
+          icons: {},
+          event: { id: 1, trackerBbox: { west: -114.3, south: 46.75, east: -113.8, north: 47.05 }, trackerMap: null },
+          trackerThemes: [
+            themeRow("standard", "google"),
+            themeRow("night", "google"),
+            themeRow("route-light", "maplibre"),
+            themeRow("route-dark", "maplibre"),
+          ],
+        } as never,
+      });
+    });
+    const { Map } = await import("../../../../src/content/sections/Map/Map");
+    const bundle = { content: null, media: {}, icons: {} } as unknown as import("../../../../src/store/types").ContentBundle;
+    const utils = render(
+      <MemoryRouter>
+        <Map data={{ controls: { themePicker: true, terrain: true } }} items={[]} bundle={bundle} />
+      </MemoryRouter>,
+    );
+    fireEvent.click(utils.getByRole("button", { name: "Tracker menu" }));
+    return utils;
+  }
+
+  function pickerKeys(utils: ReturnType<typeof render>): (string | null)[] {
+    return utils
+      .getAllByRole("radio")
+      .map((b) => b.getAttribute("data-testid"))
+      .filter((id) => id !== null && id.startsWith("tracker-menu-theme-"));
+  }
+
+  it("lists the enabled themes of the active renderer", async () => {
+    sectionMocks.renderer = "maplibre";
+    const utils = await renderSection();
+    expect(pickerKeys(utils)).toEqual(["tracker-menu-theme-route-light", "tracker-menu-theme-route-dark"]);
+    cleanup();
+    sectionMocks.renderer = "google";
+    const google = await renderSection();
+    expect(pickerKeys(google)).toEqual(["tracker-menu-theme-standard", "tracker-menu-theme-night"]);
+  });
+
+  it("the Terrain and Road pair calls setMapType, terrain first", async () => {
+    sectionMocks.renderer = "maplibre";
+    const utils = await renderSection();
+    const setMapType = sectionMocks.controller!.setMapType;
+    expect(setMapType).toHaveBeenLastCalledWith("terrain");
+    fireEvent.click(utils.getByRole("radio", { name: "Road" }));
+    expect(setMapType).toHaveBeenLastCalledWith("roadmap");
+    fireEvent.click(utils.getByRole("radio", { name: "Terrain" }));
+    expect(setMapType).toHaveBeenLastCalledWith("terrain");
   });
 });

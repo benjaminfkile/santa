@@ -7,8 +7,10 @@
 // has usually brought it), and a new theme (the section re-resolves it on
 // every scheme change) is applied to the same map as a style diff once
 // its body is in hand. The event box (`trackerBbox`) is the pan limit and
-// the least zoom. Any failure (the style body, the style, the tiles,
-// WebGL) is logged once and reported through `onFail`. The map is
+// the least zoom. Any failure is logged once and reported through
+// `onFail` with its reason: `style_failed` for the style body, the style,
+// or the tiles before the first complete render, `context_lost` for a
+// WebGL context lost and not restored within 5 s. The map is
 // destroyed on unmount. `marks` are drawn as dots on the path and
 // `timeLabels` as labelled dots beside them; `poiKinds` is the place
 // filter; `viewpoints`, `arrows`, `arrowScale`, `routeWidthScale`, and
@@ -37,14 +39,15 @@
 // drawing (src/map/routeMode.ts), both imported with `import()`, in the
 // given Google theme's style array; a new theme is applied to the same
 // map. The same controls stand over both; on Google the terrain toggle
-// switches the map type and shows whenever `terrainControl` is set.
+// switches the map type and shows whenever `terrainControl` is set, and a
+// failure there reports through `onFail` with no reason.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { StyleSpecification } from "maplibre-gl";
 import { copy } from "../copy/copy";
 import { storageGet, storageSet } from "../lib/storage";
 import type { MapTheme } from "../map/themes";
-import type { Renderer } from "../map/renderer";
+import type { FallbackReason, Renderer } from "../map/renderer";
 import type { MapsLibs } from "../map/loadMaps";
 import type { GoogleRouteHandle, GoogleRouteTheme } from "../map/routeMode";
 import { toBbox, type Bbox } from "../map/bounds";
@@ -52,6 +55,7 @@ import {
   mountRouteMap,
   type HostTheme,
   type LatLng,
+  type MapLibreFailure,
   type RouteMapHandle,
   type TimeLabel,
   type TrackerMap,
@@ -92,7 +96,8 @@ export type MapHostProps = {
   controlClassName?: string;
   fullscreen?: boolean;
   onToggleFullscreen?: () => void;
-  onFail: () => void;
+  // A MapLibre failure carries its reason; a Google failure none.
+  onFail: (reason?: FallbackReason) => void;
 };
 
 function isStyle(body: unknown): body is StyleSpecification {
@@ -155,11 +160,11 @@ function MapLibreRouteHost({
     latest.current = { onFail, onViewpointClick };
   });
 
-  function fail(error: unknown): void {
+  function fail(error: unknown, reason: MapLibreFailure = "style_failed"): void {
     if (failed.current) return;
     failed.current = true;
     console.warn("map host: the map did not load", error);
-    latest.current.onFail();
+    latest.current.onFail(reason);
   }
 
   // The theme's body, then the theme as the handle draws it.

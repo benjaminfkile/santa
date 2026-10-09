@@ -17,7 +17,9 @@
 // NAME_MIN_ZOOM each element carries `data-name="hidden"` and the name
 // hides, shown instead as a tooltip above the badge while the badge is
 // hovered or focused on a hover device; at or above it `data-name="shown"`.
-// A click opens the popover at any zoom.
+// A click opens the popover at any zoom. `createViewpointBadges` builds the
+// elements and the popover for any map; the MapLibre tracker stands the
+// same elements in its own markers.
 
 import type { IconRef } from "../contracts";
 import { copy } from "../copy/copy";
@@ -49,25 +51,36 @@ export type ViewpointsOverlay = {
   destroy(): void;
 };
 
+// The badges and the popover of a viewpoint list, whatever draws them on
+// the map: one element per viewpoint (`items`, in list order) and the one
+// open popover in the popover host, placed at `toPixel(index)` (the
+// viewpoint's point in host pixels) whenever `position` runs. The Google
+// overlay below and the MapLibre tracker's markers both use it.
+export type ViewpointBadges = {
+  items: readonly { viewpoint: TrackerViewpoint; element: HTMLElement }[];
+  setNames(zoom: number): void;
+  position(): void;
+  close(): void;
+  destroy(): void;
+};
+
 type Entry = {
+  index: number;
   viewpoint: TrackerViewpoint;
   element: HTMLElement;
   badge: HTMLButtonElement;
-  overlay: google.maps.OverlayView;
   unmountIcon: (() => void) | null;
 };
 
 const CLOSE_SVG =
   '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>';
 
-export function createViewpointsOverlay(
-  libs: { maps: google.maps.MapsLibrary },
-  map: google.maps.Map,
+export function createViewpointBadges(
   viewpoints: readonly TrackerViewpoint[],
   mountIcon: MountIcon | null,
   popoverHost: HTMLElement,
-): ViewpointsOverlay {
-  let shown = false;
+  toPixel: (index: number) => { x: number; y: number } | null,
+): ViewpointBadges {
   let open: Entry | null = null;
   let popover: HTMLElement | null = null;
 
@@ -100,11 +113,9 @@ export function createViewpointsOverlay(
   // Places the open popover's bottom centre POPOVER_GAP px above the
   // entry's point in host pixels, clamped inside the host's width when both
   // the host and the popover have a measured width.
-  function positionPopover(entry: Entry): void {
-    if (open !== entry || popover === null) return;
-    const point = entry.overlay
-      .getProjection()
-      ?.fromLatLngToContainerPixel({ lat: entry.viewpoint.lat, lng: entry.viewpoint.lng });
+  function positionPopover(): void {
+    if (open === null || popover === null) return;
+    const point = toPixel(open.index);
     if (!point) return;
     let x = point.x;
     const hostWidth = popoverHost.clientWidth;
@@ -123,7 +134,7 @@ export function createViewpointsOverlay(
     open = entry;
     popover = buildPopover(entry.viewpoint, () => closePopover(true));
     popoverHost.appendChild(popover);
-    positionPopover(entry);
+    positionPopover();
     entry.badge.setAttribute("aria-expanded", "true");
     document.addEventListener("keydown", onKeyDown, true);
     document.addEventListener("pointerdown", onPointerDown, true);
@@ -168,6 +179,49 @@ export function createViewpointsOverlay(
 
     element.append(badge, label);
 
+    const entry: Entry = { index, viewpoint, element, badge, unmountIcon };
+    badge.addEventListener("click", () => {
+      if (open === entry) closePopover(false);
+      else openPopover(entry);
+    });
+    return entry;
+  });
+
+  return {
+    items: entries,
+    setNames(zoom) {
+      const name = zoom >= NAME_MIN_ZOOM ? "shown" : "hidden";
+      for (const e of entries) e.element.setAttribute("data-name", name);
+    },
+    position: positionPopover,
+    close: () => closePopover(false),
+    destroy() {
+      closePopover(false);
+      for (const e of entries) {
+        e.unmountIcon?.();
+        e.unmountIcon = null;
+      }
+    },
+  };
+}
+
+export function createViewpointsOverlay(
+  libs: { maps: google.maps.MapsLibrary },
+  map: google.maps.Map,
+  viewpoints: readonly TrackerViewpoint[],
+  mountIcon: MountIcon | null,
+  popoverHost: HTMLElement,
+): ViewpointsOverlay {
+  let shown = false;
+  const overlays: google.maps.OverlayView[] = [];
+  const badges = createViewpointBadges(viewpoints, mountIcon, popoverHost, (index) => {
+    const point = overlays[index]
+      ?.getProjection()
+      ?.fromLatLngToContainerPixel({ lat: viewpoints[index].lat, lng: viewpoints[index].lng });
+    return point ? { x: point.x, y: point.y } : null;
+  });
+
+  for (const { viewpoint, element } of badges.items) {
     class ViewpointOverlay extends libs.maps.OverlayView {
       onAdd() {
         libs.maps.OverlayView.preventMapHitsAndGesturesFrom(element);
@@ -178,39 +232,28 @@ export function createViewpointsOverlay(
         if (!point) return;
         element.style.left = `${point.x}px`;
         element.style.top = `${point.y}px`;
-        positionPopover(entry);
+        badges.position();
       }
       onRemove() {
         element.remove();
       }
     }
-
-    const entry: Entry = { viewpoint, element, badge, overlay: new ViewpointOverlay(), unmountIcon };
-    badge.addEventListener("click", () => {
-      if (open === entry) closePopover(false);
-      else openPopover(entry);
-    });
-    return entry;
-  });
+    overlays.push(new ViewpointOverlay());
+  }
 
   return {
     update({ visible, zoom }) {
-      const name = zoom >= NAME_MIN_ZOOM ? "shown" : "hidden";
-      for (const e of entries) e.element.setAttribute("data-name", name);
+      badges.setNames(zoom);
       const next = visible && zoom >= VIEWPOINTS_MIN_ZOOM;
       if (next === shown) return;
       shown = next;
-      if (!shown) closePopover(false);
-      for (const e of entries) e.overlay.setMap(shown ? map : null);
+      if (!shown) badges.close();
+      for (const o of overlays) o.setMap(shown ? map : null);
     },
     destroy() {
-      closePopover(false);
+      badges.destroy();
       shown = false;
-      for (const e of entries) {
-        e.overlay.setMap(null);
-        e.unmountIcon?.();
-        e.unmountIcon = null;
-      }
+      for (const o of overlays) o.setMap(null);
     },
   };
 }
