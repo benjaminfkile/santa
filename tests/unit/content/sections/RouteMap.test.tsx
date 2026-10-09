@@ -15,8 +15,10 @@
 //  - The map host chunk is imported only when a section with a recording
 //    mounts.
 //  - A section with a recording reports the renderer choice as the
-//    `route` surface; the host draws on `maplibre` and the section renders
-//    `emptyText` on `google`.
+//    `route` surface; the host draws on `maplibre`, and on `google` it
+//    draws with the Google libraries (faked) when the event has a Google
+//    theme. A Google load that still fails after its retries renders
+//    `emptyText` and logs once.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, cleanup, act } from "@testing-library/react";
@@ -27,7 +29,10 @@ import { initialStore, type ContentBundle } from "../../../../src/store/types";
 import type { ContentDocument, Snapshot } from "../../../../src/contracts";
 import { RoutePreview } from "../../../../src/content/sections/RoutePreview/RoutePreview";
 import { reportRenderer } from "../../../../src/map/renderer";
+import { loadMaps } from "../../../../src/map/loadMaps";
+import { FakeMap, installFakeGoogle, resetFakeGoogle } from "../../map/fakeGoogle";
 import {
+  GOOGLE_THEME_ROWS,
   ROUTE_THEME_ROWS,
   backgroundOf,
   routePalette,
@@ -114,6 +119,11 @@ vi.mock("../../../../src/map/renderer", () => ({
     snapshot?.event?.trackerMap == null ? "google" : mocks.renderer,
   ),
 }));
+
+vi.mock("../../../../src/map/loadMaps", async () => {
+  const { fakeLibs } = await import("../../map/fakeGoogle");
+  return { loadMaps: vi.fn(async () => fakeLibs()) };
+});
 
 vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
   default: "/assets/maplibre-gl-worker.js",
@@ -207,6 +217,8 @@ const DARK = { background: backgroundOf(routeStyle("route-dark")), ...routePalet
 beforeEach(() => {
   mocks.maps.length = 0;
   mocks.renderer = "maplibre";
+  installFakeGoogle();
+  resetFakeGoogle();
   stubThemeFetch();
   document.documentElement.setAttribute("data-theme", "light");
 });
@@ -369,15 +381,67 @@ describe("route_preview map fallbacks", () => {
     expect(mocks.maps).toHaveLength(1);
   });
 
-  it("renders emptyText when the renderer choice is google", async () => {
+  it("draws the map with Google when the renderer choice is google", async () => {
     vi.mocked(reportRenderer).mockClear();
+    mocks.renderer = "google";
+    setEvent(routeMapOf(PATH), TRACKER_MAP, [...ROUTE_THEME_ROWS, ...GOOGLE_THEME_ROWS]);
+    const { container } = renderSection({ emptyText: EMPTY });
+    await settle();
+    await settle();
+    expect(reportRenderer).toHaveBeenCalledTimes(1);
+    expect(container.querySelector('[data-testid="route-preview-empty"]')).toBeNull();
+    expect(container.querySelector('[data-testid="route-map"]')?.getAttribute("data-renderer")).toBe("google");
+    expect(FakeMap.instances).toHaveLength(1);
+    expect(mocks.maps).toHaveLength(0);
+  });
+
+  it("draws the Google map when the event has no trackerMap", async () => {
+    setEvent(routeMapOf(PATH), null, GOOGLE_THEME_ROWS);
+    const { container } = renderSection({ emptyText: EMPTY });
+    await settle();
+    await settle();
+    expect(container.querySelector('[data-testid="route-map"]')).not.toBeNull();
+    expect(FakeMap.instances).toHaveLength(1);
+  });
+
+  it("renders emptyText and logs once when the Google libraries fail after their retries", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.mocked(loadMaps).mockClear();
+    vi.mocked(loadMaps).mockRejectedValue(new Error("Google Maps did not answer in 15 s"));
+    mocks.renderer = "google";
+    setEvent(routeMapOf(PATH), TRACKER_MAP, GOOGLE_THEME_ROWS);
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      const { container } = renderSection({ heading: "The route", emptyText: EMPTY });
+      for (let i = 0; i < 8; i++) {
+        await act(async () => {
+          await vi.dynamicImportSettled();
+          await vi.advanceTimersByTimeAsync(4000);
+        });
+      }
+      expectEmptyView(container);
+      expect(container.querySelector("h2")?.textContent).toBe("The route");
+      expect(loadMaps).toHaveBeenCalledTimes(4);
+      expect(FakeMap.instances).toHaveLength(0);
+      expect(warn).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+      vi.mocked(loadMaps).mockReset();
+      vi.mocked(loadMaps).mockImplementation(async () => {
+        const { fakeLibs } = await import("../../map/fakeGoogle");
+        return fakeLibs();
+      });
+    }
+  });
+
+  it("renders emptyText on google when the event has no Google theme", async () => {
     mocks.renderer = "google";
     setEvent(routeMapOf(PATH));
     const { container } = renderSection({ emptyText: EMPTY });
     await settle();
-    expect(reportRenderer).toHaveBeenCalledTimes(1);
     expectEmptyView(container);
     expect(mocks.maps).toHaveLength(0);
+    expect(FakeMap.instances).toHaveLength(0);
   });
 
   it("reports no renderer when the path cannot make a map", async () => {

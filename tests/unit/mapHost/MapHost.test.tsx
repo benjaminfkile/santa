@@ -10,6 +10,12 @@
 //  - The path is fitted on mount and again on every resize of the frame.
 //  - The terrain toggle hides without a terrain URL and without a terrain
 //    layer in the theme; the remembered choice restores.
+// And on the `google` renderer, over the fake Google libraries:
+//  - The host loads the `map` chunk's loader and route drawing and never
+//    builds a MapLibre map.
+//  - The route preview hands it the enabled Google theme carrying the
+//    default flag for the page's appearance; a scheme change re-resolves
+//    it and the host applies its styles to the same map with `setOptions`.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, cleanup, act, fireEvent } from "@testing-library/react";
@@ -21,7 +27,16 @@ import type { ContentDocument, Snapshot } from "../../../src/contracts";
 import { RoutePreview } from "../../../src/content/sections/RoutePreview/RoutePreview";
 import { MapHost, TERRAIN_KEY } from "../../../src/mapHost/MapHost";
 import { loadThemes, type MapTheme } from "../../../src/map/themes";
-import { ROUTE_THEME_ROWS, backgroundOf, routeStyle, stubThemeFetch } from "./routeThemes";
+import {
+  GOOGLE_THEME_ROWS,
+  ROUTE_THEME_ROWS,
+  backgroundOf,
+  googleStyle,
+  routeStyle,
+  stubThemeFetch,
+} from "./routeThemes";
+import { FakeMap, installFakeGoogle, resetFakeGoogle } from "../map/fakeGoogle";
+import { loadMaps } from "../../../src/map/loadMaps";
 
 type FakeMapInstance = {
   options: Record<string, unknown>;
@@ -35,6 +50,7 @@ type FakeMapInstance = {
 const mocks = vi.hoisted(() => ({
   maps: [] as FakeMapInstance[],
   observers: [] as { callback: () => void; targets: Element[] }[],
+  renderer: "maplibre" as "maplibre" | "google",
 }));
 
 vi.mock("maplibre-gl", () => {
@@ -88,8 +104,13 @@ vi.mock("pmtiles", () => {
 });
 
 vi.mock("../../../src/map/renderer", () => ({
-  reportRenderer: vi.fn(() => "maplibre"),
+  reportRenderer: vi.fn(() => mocks.renderer),
 }));
+
+vi.mock("../../../src/map/loadMaps", async () => {
+  const { fakeLibs } = await import("../map/fakeGoogle");
+  return { loadMaps: vi.fn(async () => fakeLibs()) };
+});
 
 const PATH = [
   { lat: 46.87, lng: -114.0 },
@@ -193,6 +214,9 @@ async function renderSection(trackerThemes: unknown = ROUTE_THEME_ROWS) {
 beforeEach(() => {
   mocks.maps.length = 0;
   mocks.observers.length = 0;
+  mocks.renderer = "maplibre";
+  installFakeGoogle();
+  resetFakeGoogle();
   window.localStorage.clear();
   const flat = routeStyle("route-light");
   stubThemeFetch({
@@ -338,5 +362,77 @@ describe("route mode terrain", () => {
     const second = await renderHost(themeOf("route-light"));
     expect(q(second.container, "route-map-terrain")?.getAttribute("aria-pressed")).toBe("false");
     expect(hasHillshade(lastStyle(mocks.maps[1]))).toBe(false);
+  });
+});
+
+describe("route mode on Google", () => {
+  const BOTH = [...ROUTE_THEME_ROWS, ...GOOGLE_THEME_ROWS];
+
+  function googleStyles(map: FakeMap): google.maps.MapTypeStyle[] {
+    const calls = map.optionsCalls.filter((c) => "styles" in c);
+    return (calls.length > 0 ? calls[calls.length - 1].styles : map.createOptions.styles) as google.maps.MapTypeStyle[];
+  }
+
+  function startsWith(styles: google.maps.MapTypeStyle[], theme: google.maps.MapTypeStyle[]): boolean {
+    return JSON.stringify(styles.slice(0, theme.length)) === JSON.stringify(theme);
+  }
+
+  it("loads the map chunk's Google route mode and never builds a MapLibre map", async () => {
+    vi.mocked(loadMaps).mockClear();
+    mocks.renderer = "google";
+    const { container } = await renderSection(BOTH);
+    await settle();
+    expect(loadMaps).toHaveBeenCalledTimes(1);
+    expect(FakeMap.instances).toHaveLength(1);
+    expect(mocks.maps).toHaveLength(0);
+    expect(q(container, "route-map")?.getAttribute("data-renderer")).toBe("google");
+    expect(q(container, "route-map-terrain")).not.toBeNull();
+  });
+
+  it("draws the Google theme flagged for each appearance", async () => {
+    mocks.renderer = "google";
+    const light = await renderSection(BOTH);
+    expect(q(light.container, "route-map")?.getAttribute("data-map-theme")).toBe("standard");
+    expect(startsWith(googleStyles(FakeMap.instances[0]), googleStyle("standard"))).toBe(true);
+    cleanup();
+
+    document.documentElement.setAttribute("data-theme", "dark");
+    const dark = await renderSection(BOTH);
+    expect(q(dark.container, "route-map")?.getAttribute("data-map-theme")).toBe("night");
+    expect(startsWith(googleStyles(FakeMap.instances[1]), googleStyle("night"))).toBe(true);
+  });
+
+  it("draws the first enabled Google theme when none carries the flag", async () => {
+    mocks.renderer = "google";
+    const rows = BOTH.map((row) => ({ ...row, defaultLightMode: false, defaultDarkMode: false }));
+    const { container } = await renderSection(rows);
+    expect(q(container, "route-map")?.getAttribute("data-map-theme")).toBe("standard");
+  });
+
+  it("re-resolves on a scheme change and applies the styles to the same map", async () => {
+    mocks.renderer = "google";
+    const { container } = await renderSection(BOTH);
+    const map = FakeMap.instances[0];
+    expect(map.optionsCalls.some((c) => "styles" in c)).toBe(false);
+    await act(async () => {
+      document.documentElement.setAttribute("data-theme", "dark");
+      await Promise.resolve();
+    });
+    await settle();
+    expect(FakeMap.instances).toHaveLength(1);
+    expect(startsWith(googleStyles(map), googleStyle("night"))).toBe(true);
+    expect(q(container, "route-map")?.getAttribute("data-map-theme")).toBe("night");
+  });
+
+  it("switches the map type with the terrain toggle and remembers the choice", async () => {
+    mocks.renderer = "google";
+    const { container } = await renderSection(BOTH);
+    const map = FakeMap.instances[0];
+    expect(map.createOptions.mapTypeId).toBe("terrain");
+    await act(async () => {
+      fireEvent.click(q(container, "route-map-terrain")!);
+    });
+    expect(map.mapTypeId).toBe("roadmap");
+    expect(window.localStorage.getItem(TERRAIN_KEY)).toBe("off");
   });
 });

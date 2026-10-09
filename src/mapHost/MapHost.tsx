@@ -31,12 +31,22 @@
 // terrain choice is kept in storage under TERRAIN_KEY ("on" or "off", on
 // when absent) and applied to every style the map builds, so a theme
 // switch keeps it.
+// `renderer` picks the branch: `maplibre` (the default) is the host above;
+// `google` draws the same options with Google primitives (site.md 8.9,
+// Route mode on Google) through the `map` chunk's loader and route
+// drawing (src/map/routeMode.ts), both imported with `import()`, in the
+// given Google theme's style array; a new theme is applied to the same
+// map. The same controls stand over both; on Google the terrain toggle
+// switches the map type and shows whenever `terrainControl` is set.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { StyleSpecification } from "maplibre-gl";
 import { copy } from "../copy/copy";
 import { storageGet, storageSet } from "../lib/storage";
 import type { MapTheme } from "../map/themes";
+import type { Renderer } from "../map/renderer";
+import type { MapsLibs } from "../map/loadMaps";
+import type { GoogleRouteHandle, GoogleRouteTheme } from "../map/routeMode";
 import { toBbox, type Bbox } from "../map/bounds";
 import {
   mountRouteMap,
@@ -59,6 +69,7 @@ const NO_MARKERS: readonly ViewpointMarker[] = [];
 
 export type MapHostProps = {
   mode: "route";
+  renderer?: Renderer;
   theme: MapTheme;
   trackerMap: TrackerMap;
   trackerBbox: Partial<Bbox> | null;
@@ -94,7 +105,13 @@ function isStyle(body: unknown): body is StyleSpecification {
   );
 }
 
-export function MapHost({
+// The renderer picks the branch; each branch keeps its own map, so a
+// change of renderer builds the other one in its place.
+export function MapHost(props: MapHostProps) {
+  return props.renderer === "google" ? <GoogleRouteHost {...props} /> : <MapLibreRouteHost {...props} />;
+}
+
+function MapLibreRouteHost({
   theme,
   trackerMap,
   trackerBbox,
@@ -281,33 +298,307 @@ export function MapHost({
         data-map-theme={drawn?.key}
         data-terrain={terrain ? "on" : "off"}
       />
-      {mounted && (showFullscreen || showTerrain) ? (
-        <div className={styles.routeMapControls} data-testid="route-map-controls">
-          {showFullscreen ? (
-            <button
-              type="button"
-              className={controlClassName}
-              aria-label={fullscreen ? copy.map.routeMap.exitFullscreen : copy.map.routeMap.fullscreen}
-              aria-pressed={fullscreen}
-              onClick={onToggleFullscreen}
-              data-testid="route-map-fullscreen"
-            >
-              {fullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
-            </button>
-          ) : null}
-          {showTerrain ? (
-            <button
-              type="button"
-              className={controlClassName}
-              aria-label={copy.map.routeMap.terrain}
-              aria-pressed={terrainOn}
-              onClick={toggleTerrain}
-              data-testid="route-map-terrain"
-            >
-              <TerrainIcon />
-            </button>
-          ) : null}
-        </div>
+      {mounted ? (
+        <RouteControls
+          showFullscreen={showFullscreen}
+          showTerrain={showTerrain}
+          fullscreen={fullscreen}
+          terrainOn={terrainOn}
+          controlClassName={controlClassName}
+          onToggleFullscreen={onToggleFullscreen}
+          onToggleTerrain={toggleTerrain}
+        />
+      ) : null}
+    </>
+  );
+}
+
+type RouteControlsProps = {
+  showFullscreen: boolean;
+  showTerrain: boolean;
+  fullscreen: boolean;
+  terrainOn: boolean;
+  controlClassName?: string;
+  onToggleFullscreen?: () => void;
+  onToggleTerrain: () => void;
+};
+
+// The control stack at the top right of the frame, on both renderers.
+function RouteControls({
+  showFullscreen,
+  showTerrain,
+  fullscreen,
+  terrainOn,
+  controlClassName,
+  onToggleFullscreen,
+  onToggleTerrain,
+}: RouteControlsProps) {
+  if (!showFullscreen && !showTerrain) return null;
+  return (
+    <div className={styles.routeMapControls} data-testid="route-map-controls">
+      {showFullscreen ? (
+        <button
+          type="button"
+          className={controlClassName}
+          aria-label={fullscreen ? copy.map.routeMap.exitFullscreen : copy.map.routeMap.fullscreen}
+          aria-pressed={fullscreen}
+          onClick={onToggleFullscreen}
+          data-testid="route-map-fullscreen"
+        >
+          {fullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
+        </button>
+      ) : null}
+      {showTerrain ? (
+        <button
+          type="button"
+          className={controlClassName}
+          aria-label={copy.map.routeMap.terrain}
+          aria-pressed={terrainOn}
+          onClick={onToggleTerrain}
+          data-testid="route-map-terrain"
+        >
+          <TerrainIcon />
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+// A failed Google library load retries by itself GOOGLE_RETRIES times,
+// waiting GOOGLE_RETRY_BASE_MS and doubling, before the failure counts.
+export const GOOGLE_RETRIES = 3;
+export const GOOGLE_RETRY_BASE_MS = 1000;
+
+type GoogleModules = {
+  libs: MapsLibs;
+  mountGoogleRoute: typeof import("../map/routeMode").mountGoogleRoute;
+};
+
+// Route mode on Google (site.md 8.9): the Google loader and the route
+// drawing come from the `map` chunk through `import()`, the libraries
+// with the retries above, and the theme's style array through
+// `getStyle()`; the map is built once both are in hand and a new theme is
+// applied to the same map through `setOptions`. Terrain is the map type,
+// so the toggle shows whenever `terrainControl` is set. Any failure (the
+// chunk, the libraries after their retries, the style) is logged once and
+// reported through `onFail`.
+function GoogleRouteHost({
+  theme,
+  trackerBbox,
+  path,
+  marks = NO_MARKS,
+  timeLabels = NO_LABELS,
+  poiKinds,
+  viewpoints,
+  viewpointMarkers = NO_MARKERS,
+  arrows = false,
+  arrowScale,
+  routeWidthScale,
+  labelScale,
+  labelMinZoom,
+  onViewpointClick,
+  startElement,
+  ariaLabel,
+  fullscreenControl = false,
+  terrainControl = false,
+  controlClassName,
+  fullscreen = false,
+  onToggleFullscreen,
+  onFail,
+}: MapHostProps) {
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const handleRef = useRef<GoogleRouteHandle | null>(null);
+  const [modules, setModules] = useState<GoogleModules | null>(null);
+  const [drawn, setDrawn] = useState<GoogleRouteTheme | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [terrainOn, setTerrainOn] = useState(() => storageGet(TERRAIN_KEY) !== "off");
+  const showTerrain = terrainControl;
+  const terrain = showTerrain && terrainOn;
+  const failed = useRef(false);
+  const latest = useRef({ onFail, onViewpointClick });
+
+  useEffect(() => {
+    latest.current = { onFail, onViewpointClick };
+  });
+
+  function fail(error: unknown): void {
+    if (failed.current) return;
+    failed.current = true;
+    console.warn("map host: the Google map did not load", error);
+    latest.current.onFail();
+  }
+
+  // The `map` chunk's loader and route drawing, then the libraries.
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    (async () => {
+      try {
+        const [loader, routeMode] = await Promise.all([
+          import("../map/loadMaps"),
+          import("../map/routeMode"),
+        ]);
+        for (let attempt = 0; ; attempt++) {
+          if (cancelled) return;
+          try {
+            const libs = await loader.loadMaps();
+            if (!cancelled) setModules({ libs, mountGoogleRoute: routeMode.mountGoogleRoute });
+            return;
+          } catch (error) {
+            if (attempt >= GOOGLE_RETRIES) throw error;
+            await new Promise<void>((resolve) => {
+              timer = setTimeout(resolve, GOOGLE_RETRY_BASE_MS * 2 ** attempt);
+            });
+          }
+        }
+      } catch (error) {
+        if (!cancelled) fail(error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (timer !== undefined) clearTimeout(timer);
+    };
+    // fail reads refs only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // The theme's style array, then the theme as the map draws it.
+  useEffect(() => {
+    let cancelled = false;
+    theme
+      .getStyle()
+      .then((body) => {
+        if (cancelled) return;
+        if (!Array.isArray(body)) throw new Error(`The theme ${theme.key} has no Google style`);
+        setDrawn({ key: theme.key, overlay: theme.overlay, chrome: theme.chrome, style: body });
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) fail(error);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // fail reads refs only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [theme]);
+
+  const bbox = useMemo(() => toBbox(trackerBbox), [trackerBbox]);
+  const update = {
+    path,
+    marks,
+    timeLabels,
+    poiKinds,
+    viewpoints,
+    viewpointMarkers,
+    arrows,
+    arrowScale,
+    routeWidthScale,
+    labelScale,
+    labelMinZoom,
+    terrain,
+  };
+  const latestUpdate = useRef(update);
+  latestUpdate.current = update;
+  const mapInputs = useRef({ bbox, startElement });
+
+  const ready = drawn !== null && modules !== null;
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!ready || host === null || handleRef.current !== null || failed.current) return;
+    try {
+      const { bbox: box, startElement: start } = mapInputs.current;
+      handleRef.current = modules.mountGoogleRoute(modules.libs, host, {
+        bbox: box,
+        theme: drawn,
+        ...latestUpdate.current,
+        startElement: start,
+        onViewpointClick: (point) => latest.current.onViewpointClick?.(point),
+      });
+      setMounted(true);
+    } catch (error) {
+      fail(error);
+    }
+    // The map mounts once, when the libraries and the first style are in hand.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready]);
+
+  useEffect(
+    () => () => {
+      handleRef.current?.destroy();
+      handleRef.current = null;
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (drawn === null) return;
+    handleRef.current?.update({
+      theme: drawn,
+      path,
+      marks,
+      timeLabels,
+      poiKinds,
+      viewpoints,
+      viewpointMarkers,
+      arrows,
+      arrowScale,
+      routeWidthScale,
+      labelScale,
+      labelMinZoom,
+      terrain,
+    });
+  }, [
+    drawn,
+    path,
+    marks,
+    timeLabels,
+    poiKinds,
+    viewpoints,
+    viewpointMarkers,
+    arrows,
+    arrowScale,
+    routeWidthScale,
+    labelScale,
+    labelMinZoom,
+    terrain,
+  ]);
+
+  const fullscreenSeen = useRef(fullscreen);
+  useEffect(() => {
+    if (fullscreenSeen.current === fullscreen) return;
+    fullscreenSeen.current = fullscreen;
+    handleRef.current?.refit();
+  }, [fullscreen]);
+
+  function toggleTerrain(): void {
+    const next = !terrainOn;
+    setTerrainOn(next);
+    storageSet(TERRAIN_KEY, next ? "on" : "off");
+  }
+
+  return (
+    <>
+      <div
+        ref={hostRef}
+        className={styles.routeMapHost}
+        role="region"
+        aria-label={ariaLabel}
+        data-testid="route-map"
+        data-renderer="google"
+        data-map-theme={drawn?.key}
+        data-terrain={terrain ? "on" : "off"}
+      />
+      {mounted ? (
+        <RouteControls
+          showFullscreen={fullscreenControl && onToggleFullscreen !== undefined}
+          showTerrain={showTerrain}
+          fullscreen={fullscreen}
+          terrainOn={terrainOn}
+          controlClassName={controlClassName}
+          onToggleFullscreen={onToggleFullscreen}
+          onToggleTerrain={toggleTerrain}
+        />
       ) : null}
     </>
   );
