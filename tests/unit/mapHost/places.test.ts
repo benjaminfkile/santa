@@ -1,10 +1,11 @@
 // docs/site.md section 8.10 (Places). The place filter on a MapLibre
-// theme: the kind table covers the nine tracker kinds; a marked layer
-// takes `["all", <its own filter>, ["in", ["get", "kind"], ["literal",
-// kinds]]]`, or `["all", <the kind test>]` without one, rebuilt from the
-// theme's own layer on every change; a null, empty, or unknown list hides
-// the marked layers; unmarked layers and a theme with no marked layer are
-// untouched.
+// theme: `applyPlaces` takes Protomaps kinds as the route map hands them;
+// the kind table expands the tracker's nine kinds for the live surface. A
+// marked layer takes `["all", <its own filter>, ["in", ["get", "kind"],
+// ["literal", kinds]]]`, or `["all", <the kind test>]` without one,
+// rebuilt from the theme's own layer on every change; a null or empty list
+// hides the marked layers; unmarked layers and a theme with no marked layer
+// are untouched.
 
 import { describe, it, expect } from "vitest";
 import type { LayerSpecification, StyleSpecification } from "maplibre-gl";
@@ -69,7 +70,7 @@ describe("the place kind table", () => {
 
 describe("applyPlaces", () => {
   it("adds the kind test to a marked layer's own filter", () => {
-    const style = applyPlaces(styleOf([MARKED, ROADS]), ["park", "medical"]);
+    const style = applyPlaces(styleOf([MARKED, ROADS]), protomapsKinds(["park", "medical"]));
     expect(byId(style, "pois").filter).toEqual([
       "all",
       OWN,
@@ -80,7 +81,7 @@ describe("applyPlaces", () => {
   });
 
   it("filters a marked layer with no own filter by kind alone", () => {
-    const style = applyPlaces(styleOf([MARKED_BARE]), ["transit"]);
+    const style = applyPlaces(styleOf([MARKED_BARE]), PLACE_KINDS.transit);
     expect(byId(style, "pois_bare").filter).toEqual([
       "all",
       ["in", ["get", "kind"], ["literal", PLACE_KINDS.transit]],
@@ -89,8 +90,8 @@ describe("applyPlaces", () => {
 
   it("rebuilds from the theme's own layer on every change", () => {
     const theme = styleOf([MARKED]);
-    applyPlaces(theme, ["park"]);
-    const second = applyPlaces(theme, ["school"]);
+    applyPlaces(theme, PLACE_KINDS.park);
+    const second = applyPlaces(theme, PLACE_KINDS.school);
     expect(byId(second, "pois").filter).toEqual([
       "all",
       OWN,
@@ -99,8 +100,13 @@ describe("applyPlaces", () => {
     expect(byId(theme, "pois")).toBe(MARKED);
   });
 
-  it("hides the marked layers for a null, empty, or unknown list", () => {
-    for (const kinds of [null, undefined, [], ["peak"]]) {
+  it("passes the route map's Protomaps kinds through as they are", () => {
+    const style = applyPlaces(styleOf([MARKED]), ["park", "dog_park", "picnic_site"]);
+    expect(byId(style, "pois").filter).toEqual(["all", OWN, ["in", ["get", "kind"], ["literal", ["park", "dog_park", "picnic_site"]]]]);
+  });
+
+  it("hides the marked layers for a null or empty list", () => {
+    for (const kinds of [null, undefined, []]) {
       const style = applyPlaces(styleOf([MARKED, ROADS]), kinds);
       expect(byId(style, "pois").layout).toEqual({ ...MARKED.layout, visibility: "none" });
       expect(byId(style, "pois").filter).toEqual(OWN);

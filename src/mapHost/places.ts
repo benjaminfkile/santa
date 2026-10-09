@@ -1,15 +1,18 @@
 // docs/site.md section 8.10 (Places). The place filter on a MapLibre
-// theme: PLACE_KINDS maps each of the nine tracker kinds of `POI_KINDS`
-// (poiStyles.ts) to the Protomaps `kind` values it shows. Every layer whose
+// theme. `applyPlaces` takes Protomaps `kind` values: every layer whose
 // `metadata` carries `"wmsfo:places": true` takes the filter
 // `["all", <the layer's own filter, when it has one>, ["in", ["get", "kind"],
 // ["literal", kinds]]]`, so the layer's own rules (a zoom rule, say) still
-// hold. A null or empty list, or a list with no known kind, sets
-// `visibility: "none"` on those layers. A theme with no marked layer shows
-// no places whatever the list. `applyPlaces` returns a new style and never
-// changes the one it is given; the host keeps each theme's own style and
-// builds every filter from it, so a layer's original filter is the one
-// every change starts from.
+// hold; a null or empty list sets `visibility: "none"` on those layers; a
+// theme with no marked layer shows no places whatever the list. The two
+// surfaces hand it different lists: the route map's `places.routeMap.kinds`
+// are Protomaps kinds already (contracts 57, up to 100 of them) and pass as
+// they are; the tracker's `places.tracker.kinds` are the nine kinds of
+// `POI_KINDS` (poiStyles.ts), which `protomapsKinds` expands through
+// PLACE_KINDS first. `applyPlaces` returns a new style and never changes
+// the one it is given; the host keeps each theme's own style and builds
+// every filter from it, so a layer's original filter is the one every
+// change starts from.
 
 import type { FilterSpecification, LayerSpecification, StyleSpecification } from "maplibre-gl";
 import { POI_KINDS, type PoiKind } from "../map/poiStyles";
@@ -66,7 +69,7 @@ export function applyPlaces(
   kinds: readonly string[] | null | undefined,
 ): StyleSpecification {
   if (!style.layers.some(isPlacesLayer)) return style;
-  const protomaps = protomapsKinds(kinds);
+  const protomaps = (kinds ?? []).filter((kind) => typeof kind === "string" && kind !== "");
   const layers = style.layers.map((layer): LayerSpecification => {
     if (!isPlacesLayer(layer)) return layer;
     if (protomaps.length === 0) {
