@@ -10,6 +10,8 @@
 //  - The path is fitted on mount and again on every resize of the frame.
 //  - The terrain toggle hides without a terrain URL and without a terrain
 //    layer in the theme; the remembered choice restores.
+//  - The MapLibre branch imports the handle module and never the Google
+//    loader; the Google branch imports the loader and never the handle.
 // And on the `google` renderer, over the fake Google libraries:
 //  - The host loads the `map` chunk's loader and route drawing and never
 //    builds a MapLibre map.
@@ -17,7 +19,7 @@
 //    default flag for the page's appearance; a scheme change re-resolves
 //    it and the host applies its styles to the same map with `setOptions`.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from "vitest";
 import { render, cleanup, act, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
@@ -51,7 +53,9 @@ const mocks = vi.hoisted(() => ({
   maps: [] as FakeMapInstance[],
   observers: [] as { callback: () => void; targets: Element[] }[],
   renderer: "maplibre" as "maplibre" | "google",
+  imported: [] as string[],
 }));
+
 
 vi.mock("maplibre-gl", () => {
   class FakeMap {
@@ -211,6 +215,12 @@ async function renderSection(trackerThemes: unknown = ROUTE_THEME_ROWS) {
   await settle();
   return result;
 }
+
+// The host imports the handle module when its MapLibre branch mounts; a
+// first import here keeps that within each test's settle.
+beforeAll(async () => {
+  await import("../../../src/mapHost/handle");
+});
 
 beforeEach(() => {
   mocks.maps.length = 0;
@@ -435,5 +445,48 @@ describe("route mode on Google", () => {
     });
     expect(map.mapTypeId).toBe("roadmap");
     expect(window.localStorage.getItem(TERRAIN_KEY)).toBe("off");
+  });
+});
+
+describe("modules each branch imports", () => {
+  async function renderFresh(renderer: "maplibre" | "google", theme: MapTheme) {
+    vi.resetModules();
+    mocks.imported.length = 0;
+    vi.doMock("../../../src/mapHost/handle", async (importOriginal) => {
+      mocks.imported.push("handle");
+      return importOriginal();
+    });
+    vi.doMock("../../../src/map/loadMaps", async () => {
+      mocks.imported.push("loadMaps");
+      const { fakeLibs } = await import("../map/fakeGoogle");
+      return { loadMaps: vi.fn(async () => fakeLibs()) };
+    });
+    const fresh = await import("../../../src/mapHost/MapHost");
+    render(
+      <fresh.MapHost
+        mode="route"
+        renderer={renderer}
+        theme={theme}
+        trackerMap={TRACKER_MAP}
+        trackerBbox={null}
+        path={PATH}
+        onFail={() => {}}
+      />,
+    );
+    await settle();
+  }
+
+  it("imports the handle module and never the Google loader on maplibre", async () => {
+    await renderFresh("maplibre", themeOf("route-light"));
+    expect(mocks.imported).toContain("handle");
+    expect(mocks.imported).not.toContain("loadMaps");
+    expect(mocks.maps).toHaveLength(1);
+  });
+
+  it("imports the Google loader and never the handle module on google", async () => {
+    await renderFresh("google", themeOf("standard", GOOGLE_THEME_ROWS));
+    expect(mocks.imported).toContain("loadMaps");
+    expect(mocks.imported).not.toContain("handle");
+    expect(mocks.maps).toHaveLength(0);
   });
 });

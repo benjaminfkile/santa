@@ -53,8 +53,10 @@ export default defineConfig({
             { name: "theme", test: /[\\/]src[\\/]content[\\/]theme[\\/]colorScheme|[\\/]src[\\/]lib[\\/](storage|directions|number|analytics)|[\\/]src[\\/]map[\\/](santa(Pin\.ts|-pin\.png)|renderer\.ts)/, priority: 30 },
             { name: "map", test: /@googlemaps[\\/]js-api-loader|[\\/]src[\\/]map[\\/]/, priority: 20 },
             { name: "alerts", test: /[\\/]src[\\/]pages[\\/]Alerts[\\/]/, priority: 20 },
-            { name: "routemap", test: /[\\/]node_modules[\\/](maplibre-gl|pmtiles)[\\/]/, priority: 20 },
-            { name: "tracker-maplibre", test: /[\\/]src[\\/]mapHost[\\/]/, priority: 20 },
+            // MapLibre, PMTiles, and the host modules that import them at
+            // run time, so the host chunk reaches them through import() alone.
+            { name: "routemap", test: /[\\/]node_modules[\\/](maplibre-gl|pmtiles)[\\/]|[\\/]src[\\/]mapHost[\\/](handle|maplibreController|userLocation|places|routeLayers|themeStyle)\.ts$|[\\/]src[\\/]mapHost[\\/]maplibre\.css$/, priority: 15 },
+            { name: "tracker-maplibre", test: /[\\/]src[\\/]mapHost[\\/](?!(handle|maplibreController|userLocation|places|routeLayers|themeStyle)\.ts$|maplibre\.css$)/, priority: 20 },
           ],
         },
       },

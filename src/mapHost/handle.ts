@@ -62,6 +62,7 @@ import { mapBounds, themeStyle, withoutTerrain, type TrackerMap } from "./themeS
 
 export type { LatLng, TimeLabel, Viewpoint } from "./routeLayers";
 export type { TrackerMap } from "./themeStyle";
+export { hasTerrainLayers } from "./themeStyle";
 
 export type ViewpointMarker = { lat: number; lng: number; element: HTMLElement };
 

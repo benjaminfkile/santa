@@ -78,7 +78,7 @@
       "limit": "50 KB"
     },
     {
-      "name": "routemap (maplibre-gl + pmtiles)",
+      "name": "routemap (maplibre-gl + pmtiles + the host's MapLibre modules)",
       "path": [
         "dist/assets/routemap-*.js",
         "dist/assets/routemap-*.css"
@@ -86,7 +86,7 @@
       "limit": "250 KB"
     },
     {
-      "name": "tracker-maplibre (src/mapHost: the map host, its style, places, and route layers)",
+      "name": "tracker-maplibre (src/mapHost: the map host and its controls)",
       "path": [
         "dist/assets/tracker-maplibre-*.js",
         "dist/assets/tracker-maplibre-*.css"
