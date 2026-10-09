@@ -127,9 +127,10 @@ function trackerViewpoints(list: unknown, bundle: ContentBundle): TrackerViewpoi
   );
 }
 
-// The MapLibre controller, in the `tracker-maplibre` chunk.
+// The MapLibre controller, reached through the host's chunk
+// (`tracker-maplibre`), which imports it, with MapLibre, through `import()`.
 function loadMaplibreController() {
-  return import("../../../mapHost/maplibreController");
+  return import("../../../mapHost/MapHost").then((mod) => mod.loadMaplibreController());
 }
 
 // The event's map (`snapshot.event.trackerMap`) as the MapLibre controller

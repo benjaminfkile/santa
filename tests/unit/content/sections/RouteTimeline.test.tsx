@@ -17,7 +17,7 @@
 //    config, the theme's places layer is hidden and there are no
 //    viewpoints.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from "vitest";
 import { render, cleanup, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
@@ -232,6 +232,12 @@ function markCoordinates(style: StyleShape): number[][] {
   const data = style.sources["route-marks"].data as { features: { geometry: { coordinates: number[] } }[] };
   return data.features.map((f) => f.geometry.coordinates);
 }
+
+// The host imports the handle module when its MapLibre branch mounts; a
+// first import here keeps that within each test's settle.
+beforeAll(async () => {
+  await import("../../../../src/mapHost/handle");
+});
 
 beforeEach(() => {
   mocks.maps.length = 0;

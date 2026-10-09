@@ -7,8 +7,8 @@
 // source "load" and handed to the caller as `error` so it can render the
 // "map unavailable" panel.
 // On the `maplibre` renderer it loads the MapLibre controller through the
-// caller's `maplibre.load` (the `tracker-maplibre` chunk, imported by the
-// Map section) and the theme's body in parallel and builds that
+// caller's `maplibre.load` (the `routemap` chunk, which the Map section
+// reaches through the host's `loadMaplibreController`) and the theme's body in parallel and builds that
 // controller instead, never loading Google. A failed chunk, a failed body
 // or MapLibre style, or a lost WebGL context tears the MapLibre map down
 // and falls back once: `maplibre.onFallback` answers the Google theme, and

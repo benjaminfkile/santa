@@ -23,7 +23,7 @@
 // Every test imports the modules afresh, so the once-per-page-load theme
 // bodies are fetched again.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from "vitest";
 import { render, cleanup, act, fireEvent } from "@testing-library/react";
 import { MemoryRouter, useNavigate } from "react-router-dom";
 import type { ComponentType } from "react";
@@ -239,6 +239,12 @@ function removeFullscreenApi(): void {
   delete d.exitFullscreen;
   delete (HTMLElement.prototype as unknown as Record<string, unknown>).requestFullscreen;
 }
+
+// The host imports the handle module when its MapLibre branch mounts; a
+// first import here keeps that within each test's settle.
+beforeAll(async () => {
+  await import("../../../../src/mapHost/handle");
+});
 
 beforeEach(async () => {
   vi.resetModules();

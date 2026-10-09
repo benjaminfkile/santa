@@ -1,6 +1,11 @@
-// docs/site.md sections 8.9 and 8.10. The MapLibre map host, in the
-// `tracker-maplibre` chunk, which alone imports MapLibre and PMTiles (the
-// `routemap` chunk). In route mode (`route_preview`) it draws the route
+// docs/site.md sections 8.9, 8.10, and 18. The map host, in the
+// `tracker-maplibre` chunk. It imports nothing of MapLibre or PMTiles
+// statically: the MapLibre branch loads the handle module (`handle.ts`,
+// in the `routemap` chunk with MapLibre and PMTiles) through `import()`
+// in parallel with the theme's body, and `loadMaplibreController` loads
+// the live mode controller the same way, so the Google branch downloads
+// neither. A failed import of the handle module reports through `onFail`
+// as `chunk_failed`. In route mode (`route_preview`) it draws the route
 // over the event's map (`trackerMap`, read once when the map mounts) in
 // the given theme's style: the body comes through the theme's
 // `getStyle()` (fetched once per page, so the section's own early call
@@ -51,18 +56,15 @@ import type { FallbackReason, Renderer } from "../map/renderer";
 import type { MapsLibs } from "../map/loadMaps";
 import type { GoogleRouteHandle, GoogleRouteTheme } from "../map/routeMode";
 import { toBbox, type Bbox } from "../map/bounds";
-import {
-  mountRouteMap,
-  type HostTheme,
-  type LatLng,
-  type MapLibreFailure,
-  type RouteMapHandle,
-  type TimeLabel,
-  type TrackerMap,
-  type Viewpoint,
-  type ViewpointMarker,
+import type {
+  HostTheme,
+  LatLng,
+  RouteMapHandle,
+  TimeLabel,
+  TrackerMap,
+  Viewpoint,
+  ViewpointMarker,
 } from "./handle";
-import { hasTerrainLayers } from "./themeStyle";
 import * as styles from "./MapHost.module.css";
 
 export const TERRAIN_KEY = "wmsfo.routeMap.terrain";
@@ -99,6 +101,14 @@ export type MapHostProps = {
   // A MapLibre failure carries its reason; a Google failure none.
   onFail: (reason?: FallbackReason) => void;
 };
+
+type HandleModule = typeof import("./handle");
+
+// The MapLibre controller of live mode, through `import()`, so MapLibre
+// loads only when the caller is on the `maplibre` branch.
+export function loadMaplibreController() {
+  return import("./maplibreController");
+}
 
 function isStyle(body: unknown): body is StyleSpecification {
   return (
@@ -143,14 +153,16 @@ function MapLibreRouteHost({
 }: MapHostProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const handleRef = useRef<RouteMapHandle | null>(null);
+  const [lib, setLib] = useState<HandleModule | null>(null);
   const [drawn, setDrawn] = useState<HostTheme | null>(null);
   const [mounted, setMounted] = useState(false);
   const [terrainOn, setTerrainOn] = useState(() => storageGet(TERRAIN_KEY) !== "off");
   const terrainAvailable =
+    lib !== null &&
     drawn !== null &&
     trackerMap.terrainUrl !== null &&
     trackerMap.terrainUrl !== "" &&
-    hasTerrainLayers(drawn.style);
+    lib.hasTerrainLayers(drawn.style);
   const showTerrain = terrainControl && terrainAvailable;
   const terrain = showTerrain && terrainOn;
   const failed = useRef(false);
@@ -160,12 +172,30 @@ function MapLibreRouteHost({
     latest.current = { onFail, onViewpointClick };
   });
 
-  function fail(error: unknown, reason: MapLibreFailure = "style_failed"): void {
+  function fail(error: unknown, reason: FallbackReason = "style_failed"): void {
     if (failed.current) return;
     failed.current = true;
     console.warn("map host: the map did not load", error);
     latest.current.onFail(reason);
   }
+
+  // The handle module (MapLibre and PMTiles, the `routemap` chunk), in
+  // parallel with the theme's body.
+  useEffect(() => {
+    let cancelled = false;
+    import("./handle")
+      .then((mod) => {
+        if (!cancelled) setLib(mod);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) fail(error, "chunk_failed");
+      });
+    return () => {
+      cancelled = true;
+    };
+    // fail reads refs only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // The theme's body, then the theme as the handle draws it.
   useEffect(() => {
@@ -212,13 +242,13 @@ function MapLibreRouteHost({
   latestUpdate.current = update;
   const mapInputs = useRef({ trackerMap, bbox, startElement });
 
-  const ready = drawn !== null;
+  const ready = drawn !== null && lib !== null;
   useEffect(() => {
     const host = hostRef.current;
     if (!ready || host === null || handleRef.current !== null || failed.current) return;
     try {
       const { trackerMap: map, bbox: box, startElement: start } = mapInputs.current;
-      handleRef.current = mountRouteMap({
+      handleRef.current = lib.mountRouteMap({
         container: host,
         trackerMap: map,
         bbox: box,
@@ -232,7 +262,7 @@ function MapLibreRouteHost({
     } catch (error) {
       fail(error);
     }
-    // The map mounts once, when the first body arrives.
+    // The map mounts once, when the handle module and the first body are in hand.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
 

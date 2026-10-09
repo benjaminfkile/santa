@@ -3,7 +3,10 @@
 // `dist/`: the index chunk reaches it through `import()` alone, the Map
 // section chunk imports it, the route preview's host chunk
 // (`tracker-maplibre`, whose Google branch draws route mode with it)
-// reaches it, and nothing in `routemap` (MapLibre and PMTiles) imports it. The test is skipped when there is no build output.
+// reaches it, and `routemap` (MapLibre, PMTiles, and the host's MapLibre
+// modules, which draw the shared overlays) imports it only where the host
+// chunk already does, so the MapLibre branch downloads it once with the
+// host. The test is skipped when there is no build output.
 
 import { describe, it, expect } from "vitest";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -50,10 +53,14 @@ describe("map chunk", () => {
     expect(readFileSync(hostPath, "utf8").includes(`./${basename(mapPath)}`)).toBe(true);
   });
 
-  it("is imported by nothing in routemap", () => {
+  it("is imported by routemap only where the host chunk imports it too", () => {
     const mapPath = findChunk("map");
     const routeMapPath = findChunk("routemap");
-    if (mapPath === null || routeMapPath === null) return;
-    expect(readFileSync(routeMapPath, "utf8").includes(`./${basename(mapPath)}`)).toBe(false);
+    const hostPath = findChunk("tracker-maplibre");
+    if (mapPath === null || routeMapPath === null || hostPath === null) return;
+    const ref = `./${basename(mapPath)}`;
+    if (!readFileSync(routeMapPath, "utf8").includes(ref)) return;
+    const staticImport = new RegExp(`from\\s*["\`']${ref.replace(/\./g, "\\.")}["\`']`);
+    expect(readFileSync(hostPath, "utf8")).toMatch(staticImport);
   });
 });

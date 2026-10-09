@@ -1,11 +1,13 @@
 // docs/site.md sections 8.9, 8.10, and 18. The import rule of the MapLibre
-// chunks against the built `dist/`: `routemap` (maplibre-gl and pmtiles)
-// is imported only by `tracker-maplibre` (src/mapHost); the index chunk
-// reaches `tracker-maplibre` through `import()` alone and the Map section
-// chunk is the only other chunk that may import it; the index chunk
-// carries none of MapLibre; and both chunks stay under their size-limit
-// budgets, brotli compressed. The test is skipped when there is no build
-// output.
+// chunks against the built `dist/`: `routemap` (maplibre-gl, pmtiles, and
+// the host modules that import them) is imported only by
+// `tracker-maplibre` (the host), through `import()` alone, so the Google
+// branch of the host downloads none of it; the index chunk reaches
+// `tracker-maplibre` through `import()` alone and the Map section chunk is
+// the only other chunk that may import it; the `map` chunk references
+// neither; the index chunk carries none of MapLibre; and both chunks stay
+// under their size-limit budgets, brotli compressed. The test is skipped
+// when there is no build output.
 
 import { describe, it, expect } from "vitest";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -57,12 +59,15 @@ function budget(prefix: string): number {
 }
 
 describe("routemap chunk", () => {
-  it("is imported only by tracker-maplibre", () => {
+  it("is imported only by tracker-maplibre, through import() alone", () => {
     const routeMapPath = findChunk("routemap");
     const hostPath = findChunk("tracker-maplibre");
     if (routeMapPath === null || hostPath === null) return;
     const name = basename(routeMapPath);
-    expect(read(basename(hostPath))).toMatch(staticImport(name));
+    const hostJs = read(basename(hostPath));
+    expect(hostJs).not.toMatch(staticImport(name));
+    expect(hostJs).not.toMatch(new RegExp(`import\\s*["\`']\\./${escape(name)}["\`']`));
+    expect(hostJs).toMatch(dynamicImport(name));
     for (const f of jsFiles()) {
       if (f === name || f === basename(hostPath)) continue;
       expect(read(f).includes(`./${name}`), f).toBe(false);
@@ -82,6 +87,19 @@ describe("routemap chunk", () => {
     const bytes = brotliBytes("routemap");
     expect(bytes).toBeGreaterThan(0);
     expect(bytes).toBeLessThan(budget("routemap"));
+  });
+});
+
+describe("map chunk", () => {
+  it("references neither routemap nor tracker-maplibre", () => {
+    const mapPath = findChunk("map");
+    if (mapPath === null) return;
+    const mapJs = readFileSync(mapPath, "utf8");
+    for (const prefix of ["routemap", "tracker-maplibre"]) {
+      const chunk = findChunk(prefix);
+      if (chunk === null) continue;
+      expect(mapJs.includes(basename(chunk)), prefix).toBe(false);
+    }
   });
 });
 
