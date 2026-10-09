@@ -4,15 +4,17 @@
 // (a route map with two or more points); with fewer points it renders the
 // heading and `emptyText`, or nothing when `emptyText` is empty, and never
 // draws a picture. Otherwise it reports the renderer choice of 8.1 as the
-// `route` surface. On `maplibre` it lazy-imports the map host
+// `route` surface and lazy-imports the map host
 // (`src/mapHost/MapHost.tsx`, the `tracker-maplibre` chunk) and, in
 // parallel, the theme loader, then resolves the route theme: the event's
-// enabled MapLibre theme carrying the default flag for the page's
-// appearance (`<html data-theme>`), else the first one, re-resolved on
-// every scheme change. The theme's style body is fetched as soon as the
-// theme is known, alongside the host's chunk. On `google`, or when the
-// host fails (the chunk, the theme, the style, the tiles), the section
-// renders the heading and `emptyText`. The start marker (routeStartMarker:
+// enabled theme of the chosen renderer carrying the default flag for the
+// page's appearance (`<html data-theme>`), else the first one, re-resolved
+// on every scheme change. The theme's style body is fetched as soon as the
+// theme is known, alongside the host's chunk. The host draws on the chosen
+// renderer (MapLibre, or Google primitives on `google`). With no theme
+// for that renderer, or when the host fails (the chunk, the theme, the
+// style, the tiles, the Google libraries), the section renders the
+// heading and `emptyText`. The start marker (routeStartMarker:
 // a gold star flag and a "Starts here" label) stands on the path's first
 // point and the end keeps its circle; nothing on the map moves. With two
 // or more `event.routeMap.timeline` entries the map also carries a dot at
@@ -169,7 +171,7 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
 
   // The theme loader, imported alongside the host's chunk.
   const [themesModule, setThemesModule] = useState<ThemesModule | null>(null);
-  const wantsHost = renderer === "maplibre" && !mapFailed;
+  const wantsHost = renderer !== null && !mapFailed;
   useEffect(() => {
     if (!wantsHost || themesModule !== null) return;
     let cancelled = false;
@@ -191,19 +193,19 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
 
   const appearance = useAppearance();
   const theme = useMemo(() => {
-    if (themesModule === null) return null;
+    if (themesModule === null || renderer === null) return null;
     const themes = themesModule.loadThemes({ trackerThemes: themeRows ?? undefined });
-    return themesModule.resolveDefaultTheme(themes, "maplibre", appearance);
-  }, [themesModule, themeRows, appearance]);
+    return themesModule.resolveDefaultTheme(themes, renderer, appearance);
+  }, [themesModule, themeRows, appearance, renderer]);
 
   // The style body starts with the chunk; the host reports a failure.
   useEffect(() => {
     theme?.getStyle().catch(() => {});
   }, [theme]);
 
-  const noTheme = themesModule !== null && theme === null;
+  const noTheme = themesModule !== null && renderer !== null && theme === null;
 
-  if (canMap && renderer !== "google" && !mapFailed && !noTheme) {
+  if (canMap && !mapFailed && !noTheme) {
     return (
       <div className={`${styles.routePreview} ${styles.routePreviewMap}`} data-testid="route-preview-map">
         {d.heading ? (
@@ -235,6 +237,7 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
                 <Suspense fallback={null}>
                   <LazyMapHost
                     mode="route"
+                    renderer={renderer ?? "maplibre"}
                     theme={theme}
                     trackerMap={trackerMap}
                     trackerBbox={trackerBbox}

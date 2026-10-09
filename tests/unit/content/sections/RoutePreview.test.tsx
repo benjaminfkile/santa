@@ -6,7 +6,8 @@
 // And the host's loading, with the host module mocked:
 //  - The host is lazy-imported only for a path of two or more points.
 //  - The renderer choice is reported once as the `route` surface; on
-//    `google` the section renders `emptyText` and imports no host.
+//    `google` the host gets the renderer and the Google theme of the
+//    appearance, and with no Google theme the section renders `emptyText`.
 // The map itself is covered in RouteMap.test.tsx.
 
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
@@ -20,19 +21,21 @@ import { initialStore, type ContentBundle } from "../../../../src/store/types";
 import type { ContentDocument, Snapshot } from "../../../../src/contracts";
 import { RoutePreview } from "../../../../src/content/sections/RoutePreview/RoutePreview";
 import { reportRenderer } from "../../../../src/map/renderer";
-import { ROUTE_THEME_ROWS, stubThemeFetch } from "../../mapHost/routeThemes";
+import { GOOGLE_THEME_ROWS, ROUTE_THEME_ROWS, stubThemeFetch } from "../../mapHost/routeThemes";
 
 const mocks = vi.hoisted(() => ({
   hostImports: 0,
   hostThemes: [] as string[],
+  hostRenderers: [] as (string | undefined)[],
   renderer: "maplibre" as "maplibre" | "google",
 }));
 
 vi.mock("../../../../src/mapHost/MapHost", () => {
   mocks.hostImports++;
   return {
-    MapHost: ({ theme }: { theme: { key: string } }) => {
+    MapHost: ({ theme, renderer }: { theme: { key: string }; renderer?: string }) => {
       mocks.hostThemes.push(theme.key);
+      mocks.hostRenderers.push(renderer);
       return <div data-testid="fake-host" />;
     },
   };
@@ -115,7 +118,7 @@ const PATH = [
   { lat: 46.9, lng: -113.95 },
 ];
 
-function setRoute(path: { lat: number; lng: number }[]): void {
+function setRoute(path: { lat: number; lng: number }[], trackerThemes: unknown = ROUTE_THEME_ROWS): void {
   store.setState((s) => ({
     ...s,
     snapshot: {
@@ -125,7 +128,7 @@ function setRoute(path: { lat: number; lng: number }[]): void {
         routeMap: { path, timeline: [], durationMinutes: 5, timed: false },
         trackerMap: { id: 3, tilesUrl: "https://cdn.example/basemap/tiles.pmtiles", terrainUrl: null },
       },
-      trackerThemes: ROUTE_THEME_ROWS,
+      trackerThemes,
     } as unknown as Snapshot,
   }));
 }
@@ -170,7 +173,18 @@ describe("RoutePreview loading the map host", () => {
     expect(vi.mocked(reportRenderer).mock.calls[0][0]).toBe("route");
   });
 
-  it("renders emptyText on the google choice, with no host", async () => {
+  it("renders the host on the google choice with the Google theme of the appearance", async () => {
+    mocks.renderer = "google";
+    setRoute(PATH, [...ROUTE_THEME_ROWS, ...GOOGLE_THEME_ROWS]);
+    const { container } = renderSection({ heading: "The route", emptyText: "Not yet." });
+    await settle();
+    expect(container.querySelector('[data-testid="fake-host"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="route-preview-empty"]')).toBeNull();
+    expect(mocks.hostThemes.at(-1)).toBe("standard");
+    expect(mocks.hostRenderers.at(-1)).toBe("google");
+  });
+
+  it("renders emptyText on the google choice when the event has no Google theme", async () => {
     mocks.renderer = "google";
     setRoute(PATH);
     const { container } = renderSection({ heading: "The route", emptyText: "Not yet." });

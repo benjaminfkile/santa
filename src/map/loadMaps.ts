@@ -1,7 +1,8 @@
 // docs/site.md section 8.1. Loader singleton for the Google Maps JS API.
-// Imported only from sections/Map/Map.tsx and sections/RoutePreview when
-// its style is `map`; a load failure surfaces as a "map unavailable"
-// panel. The three library imports race a 15 s timer, so a script that
+// Imported through `import()` from sections/Map/Map.tsx, where a load
+// failure surfaces as a "map unavailable" panel, and from the map host's
+// route mode on Google (src/mapHost/MapHost.tsx), where it renders the
+// route preview's `emptyText`. The three library imports race a 15 s timer, so a script that
 // loads without Google's callback firing fails with a named reason
 // instead of hanging; any failure clears the attempt so the next call
 // starts a new one.

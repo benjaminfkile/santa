@@ -1,8 +1,9 @@
 // docs/site.md sections 4 and 18. The `map` chunk (src/map: the renderer
 // choice's loader, the theme loader, the Google tracker) against the built
 // `dist/`: the index chunk reaches it through `import()` alone, the Map
-// section chunk imports it, and nothing in `routemap` (MapLibre and
-// PMTiles) imports it. The test is skipped when there is no build output.
+// section chunk imports it, the route preview's host chunk
+// (`tracker-maplibre`, whose Google branch draws route mode with it)
+// reaches it, and nothing in `routemap` (MapLibre and PMTiles) imports it. The test is skipped when there is no build output.
 
 import { describe, it, expect } from "vitest";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -40,6 +41,13 @@ describe("map chunk", () => {
     const importSuffix = `./${mapChunkName}`;
     const inMap = readFileSync(MapPath, "utf8").includes(importSuffix);
     expect(inMap).toBe(true);
+  });
+
+  it("is reached from the route preview's host chunk", () => {
+    const mapPath = findChunk("map");
+    const hostPath = findChunk("tracker-maplibre");
+    if (mapPath === null || hostPath === null) return;
+    expect(readFileSync(hostPath, "utf8").includes(`./${basename(mapPath)}`)).toBe(true);
   });
 
   it("is imported by nothing in routemap", () => {
