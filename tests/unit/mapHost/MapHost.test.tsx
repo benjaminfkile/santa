@@ -229,7 +229,7 @@ beforeEach(() => {
   installFakeGoogle();
   resetFakeGoogle();
   window.localStorage.clear();
-  const flat = routeStyle("route-light");
+  const flat = routeStyle("light");
   stubThemeFetch({
     extra: { [FLAT_URL]: { ...flat, layers: flat.layers.filter((l) => l.id !== "terrain-hillshade") } },
   });
@@ -263,20 +263,20 @@ afterEach(() => {
 describe("route mode theme", () => {
   it("draws the theme flagged for each appearance", async () => {
     await renderSection();
-    expect(backgroundOf(mocks.maps[0].options.style as StyleShape)).toBe(backgroundOf(routeStyle("route-light")));
+    expect(backgroundOf(mocks.maps[0].options.style as StyleShape)).toBe(backgroundOf(routeStyle("light")));
     cleanup();
 
     document.documentElement.setAttribute("data-theme", "dark");
     const { container } = await renderSection();
-    expect(backgroundOf(mocks.maps[1].options.style as StyleShape)).toBe(backgroundOf(routeStyle("route-dark")));
-    expect(q(container, "route-map")?.getAttribute("data-map-theme")).toBe("route-dark");
+    expect(backgroundOf(mocks.maps[1].options.style as StyleShape)).toBe(backgroundOf(routeStyle("dark")));
+    expect(q(container, "route-map")?.getAttribute("data-map-theme")).toBe("dark");
   });
 
   it("draws the first enabled MapLibre theme when none carries the flag", async () => {
     const rows = ROUTE_THEME_ROWS.map((row) => ({ ...row, defaultLightMode: false, defaultDarkMode: false }));
     document.documentElement.setAttribute("data-theme", "dark");
     const { container } = await renderSection(rows);
-    expect(q(container, "route-map")?.getAttribute("data-map-theme")).toBe("route-light");
+    expect(q(container, "route-map")?.getAttribute("data-map-theme")).toBe("light");
   });
 
   it("re-resolves on a scheme change and diffs the style on the same map", async () => {
@@ -292,17 +292,17 @@ describe("route mode theme", () => {
     expect(map.setStyle).toHaveBeenCalledTimes(1);
     const [style, options] = map.setStyle.mock.calls[0] as [StyleShape, unknown];
     expect(options).toEqual({ diff: true });
-    expect(backgroundOf(style)).toBe(backgroundOf(routeStyle("route-dark")));
-    expect(q(container, "route-map")?.getAttribute("data-map-theme")).toBe("route-dark");
+    expect(backgroundOf(style)).toBe(backgroundOf(routeStyle("dark")));
+    expect(q(container, "route-map")?.getAttribute("data-map-theme")).toBe("dark");
   });
 
   it("applies a new theme prop to the same map as a diff", async () => {
     const { rerender } = render(
-      <MapHost mode="route" theme={themeOf("route-light")} trackerMap={TRACKER_MAP} trackerBbox={null} path={PATH} onFail={() => {}} />,
+      <MapHost mode="route" theme={themeOf("light")} trackerMap={TRACKER_MAP} trackerBbox={null} path={PATH} onFail={() => {}} />,
     );
     await settle();
     rerender(
-      <MapHost mode="route" theme={themeOf("route-dark")} trackerMap={TRACKER_MAP} trackerBbox={null} path={PATH} onFail={() => {}} />,
+      <MapHost mode="route" theme={themeOf("dark")} trackerMap={TRACKER_MAP} trackerBbox={null} path={PATH} onFail={() => {}} />,
     );
     await settle();
     expect(mocks.maps).toHaveLength(1);
@@ -312,7 +312,7 @@ describe("route mode theme", () => {
 
 describe("route mode bounds and fit", () => {
   it("takes the box as maxBounds with its fitted least zoom, and the row's zoom range", async () => {
-    await renderHost(themeOf("route-light"), { trackerBbox: BOX });
+    await renderHost(themeOf("light"), { trackerBbox: BOX });
     const options = mocks.maps[0].options;
     expect(options.maxBounds).toEqual([[-114.5, 46.5], [-113.5, 47.2]]);
     expect(typeof options.minZoom).toBe("number");
@@ -320,7 +320,7 @@ describe("route mode bounds and fit", () => {
   });
 
   it("fits the path on mount and again on every resize", async () => {
-    await renderHost(themeOf("route-light"), { trackerBbox: BOX });
+    await renderHost(themeOf("light"), { trackerBbox: BOX });
     const map = mocks.maps[0];
     expect(map.options.bounds).toEqual([[-114.0, 46.85], [-113.9, 46.9]]);
     expect(mocks.observers).toHaveLength(1);
@@ -332,20 +332,20 @@ describe("route mode bounds and fit", () => {
   });
 
   it("clamps the fitted path to the box only where it leaves it", async () => {
-    await renderHost(themeOf("route-light"), { trackerBbox: { ...BOX, east: -113.95 } });
+    await renderHost(themeOf("light"), { trackerBbox: { ...BOX, east: -113.95 } });
     expect(mocks.maps[0].options.bounds).toEqual([[-114.0, 46.85], [-113.95, 46.9]]);
   });
 });
 
 describe("route mode terrain", () => {
   it("shows the toggle, on, with a terrain URL and a terrain layer", async () => {
-    const { container } = await renderHost(themeOf("route-light"));
+    const { container } = await renderHost(themeOf("light"));
     expect(q(container, "route-map-terrain")?.getAttribute("aria-pressed")).toBe("true");
     expect(hasHillshade(lastStyle(mocks.maps[0]))).toBe(true);
   });
 
   it("hides the toggle without a terrain URL", async () => {
-    const { container } = await renderHost(themeOf("route-light"), {
+    const { container } = await renderHost(themeOf("light"), {
       trackerMap: { ...TRACKER_MAP, terrainUrl: null },
     });
     expect(q(container, "route-map-terrain")).toBeNull();
@@ -361,7 +361,7 @@ describe("route mode terrain", () => {
   });
 
   it("remembers the choice and restores it on the next mount", async () => {
-    const first = await renderHost(themeOf("route-light"));
+    const first = await renderHost(themeOf("light"));
     await act(async () => {
       fireEvent.click(q(first.container, "route-map-terrain")!);
     });
@@ -370,7 +370,7 @@ describe("route mode terrain", () => {
     expect(mocks.maps[0].setStyle).toHaveBeenLastCalledWith(expect.anything(), { diff: true });
     cleanup();
 
-    const second = await renderHost(themeOf("route-light"));
+    const second = await renderHost(themeOf("light"));
     expect(q(second.container, "route-map-terrain")?.getAttribute("aria-pressed")).toBe("false");
     expect(hasHillshade(lastStyle(mocks.maps[1]))).toBe(false);
   });
@@ -477,7 +477,7 @@ describe("modules each branch imports", () => {
   }
 
   it("imports the handle module and never the Google loader on maplibre", async () => {
-    await renderFresh("maplibre", themeOf("route-light"));
+    await renderFresh("maplibre", themeOf("light"));
     expect(mocks.imported).toContain("handle");
     expect(mocks.imported).not.toContain("loadMaps");
     expect(mocks.maps).toHaveLength(1);

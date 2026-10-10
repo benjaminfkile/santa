@@ -659,7 +659,7 @@ describe("route map config reaching the style", () => {
     await renderSection({ pois: { kinds: ["park"] } }, { settings: { places: { tracker: { kinds: ["park"] } } } });
     const pois = layerOf(currentStyle(), "pois");
     expect(pois?.layout?.visibility).toBe("none");
-    expect(pois?.filter).toEqual(layerOf(routeStyle("route-light") as unknown as StyleShape, "pois")?.filter);
+    expect(pois?.filter).toEqual(layerOf(routeStyle("light") as unknown as StyleShape, "pois")?.filter);
   });
 
   it("ignores a routeMap block in the site settings", async () => {
@@ -968,7 +968,7 @@ describe("route map dot layer events", () => {
       container,
       trackerMap: { ...TRACKER_MAP, minZoom: 0, maxZoom: 15 },
       bbox: null,
-      theme: { key: "route-light", spriteUrl: null, style: routeStyle("route-light"), ...routePalette("route-light") },
+      theme: { key: "light", spriteUrl: null, style: routeStyle("light"), ...routePalette("light") },
       path: PATH,
       labelMinZoom: 12,
       onViewpointClick,

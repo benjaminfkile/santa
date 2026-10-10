@@ -1,5 +1,5 @@
 // docs/site.md section 8.10 (Sources). A theme's body for the event's map:
-// the seeded `route-light` body keeps every layer unchanged apart from the
+// the seeded `light` body keeps every layer unchanged apart from the
 // two source URLs, the glyph template, and no `sprite`; a null terrain
 // URL drops exactly the `terrain` layers and the source; a sprite URL
 // lands as `sprite`; the body is never mutated; and the map takes
@@ -24,7 +24,7 @@ const MAP = {
 
 describe("themeStyle", () => {
   it("injects the two source URLs and the glyph template, and touches nothing else", () => {
-    const body = routeStyle("route-light");
+    const body = routeStyle("light");
     const before = JSON.stringify(body);
     const style = themeStyle(body, MAP, null);
     expect(JSON.stringify(body)).toBe(before);
@@ -40,7 +40,7 @@ describe("themeStyle", () => {
   });
 
   it("drops exactly the terrain layers and the terrain source without a terrain URL", () => {
-    const body = routeStyle("route-light");
+    const body = routeStyle("light");
     const style = themeStyle(body, { ...MAP, terrainUrl: null }, null);
     expect(style.sources.terrain).toBeUndefined();
     expect(style.sources.basemap).toBeDefined();
@@ -52,17 +52,17 @@ describe("themeStyle", () => {
   });
 
   it("sets a sprite URL as `sprite`", () => {
-    const style = themeStyle(routeStyle("route-dark"), MAP, "https://cdn.example/sprites/abc");
+    const style = themeStyle(routeStyle("dark"), MAP, "https://cdn.example/sprites/abc");
     expect(style.sprite).toBe("https://cdn.example/sprites/abc");
   });
 
   it("drops a sprite the body names when the theme has none", () => {
-    const body = { ...routeStyle("route-dark"), sprite: "https://elsewhere.example/sprite" };
+    const body = { ...routeStyle("dark"), sprite: "https://elsewhere.example/sprite" };
     expect(themeStyle(body, MAP, null)).not.toHaveProperty("sprite");
   });
 
   it("takes the terrain layers out and keeps the rest", () => {
-    const style = themeStyle(routeStyle("route-light"), MAP, null);
+    const style = themeStyle(routeStyle("light"), MAP, null);
     const flat = withoutTerrain(style);
     expect(flat.layers.map((l) => l.id)).toEqual(style.layers.map((l) => l.id).filter((id) => id !== "terrain-hillshade"));
     expect(flat.sources).toBe(style.sources);

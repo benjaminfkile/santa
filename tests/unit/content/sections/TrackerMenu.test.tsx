@@ -632,8 +632,8 @@ describe("TrackerMenu in the Map section", () => {
           trackerThemes: [
             themeRow("standard", "google"),
             themeRow("night", "google"),
-            themeRow("route-light", "maplibre"),
-            themeRow("route-dark", "maplibre"),
+            themeRow("light", "maplibre"),
+            themeRow("dark", "maplibre"),
           ],
         } as never,
       });
@@ -659,7 +659,7 @@ describe("TrackerMenu in the Map section", () => {
   it("lists the enabled themes of the active renderer", async () => {
     sectionMocks.renderer = "maplibre";
     const utils = await renderSection();
-    expect(pickerKeys(utils)).toEqual(["tracker-menu-theme-route-light", "tracker-menu-theme-route-dark"]);
+    expect(pickerKeys(utils)).toEqual(["tracker-menu-theme-light", "tracker-menu-theme-dark"]);
     cleanup();
     sectionMocks.renderer = "google";
     const google = await renderSection();
