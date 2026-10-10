@@ -1,4 +1,4 @@
-// The two seeded MapLibre themes (`route-light`, `route-dark`) from the
+// The two seeded MapLibre themes (`light`, `dark`) from the
 // contracts fixtures: their snapshot rows (`trackerThemes`), their style
 // bodies, and a fetch stub that serves each body from its `styleUrl`.
 // The seeded Google themes' rows and style arrays are served the same way
@@ -13,7 +13,7 @@ import type { MapTheme } from "../../../src/map/themes";
 
 const SEED_DIR = resolve(__dirname, "..", "..", "..", "contracts", "fixtures", "themes");
 
-export type RouteKey = "route-light" | "route-dark";
+export type RouteKey = "light" | "dark";
 
 export type ThemeRow = NonNullable<Snapshot["trackerThemes"]>[number];
 
@@ -49,7 +49,7 @@ export function routePalette(key: RouteKey): Pick<MapTheme, "overlay" | "chrome"
   return { overlay: row.overlay, chrome: row.chrome };
 }
 
-export const ROUTE_THEME_ROWS: ThemeRow[] = [routeRow("route-light"), routeRow("route-dark")];
+export const ROUTE_THEME_ROWS: ThemeRow[] = [routeRow("light"), routeRow("dark")];
 
 export type GoogleKey = "standard" | "night" | "charcoal";
 
@@ -83,8 +83,8 @@ export function stubThemeFetch(
   options: { fail?: boolean; extra?: Record<string, StyleSpecification> } = {},
 ) {
   const bodies = new Map<string, StyleSpecification | google.maps.MapTypeStyle[]>([
-    [styleUrlOf("route-light"), routeStyle("route-light")],
-    [styleUrlOf("route-dark"), routeStyle("route-dark")],
+    [styleUrlOf("light"), routeStyle("light")],
+    [styleUrlOf("dark"), routeStyle("dark")],
     [styleUrlOf("standard"), googleStyle("standard")],
     [styleUrlOf("night"), googleStyle("night")],
     [styleUrlOf("charcoal"), googleStyle("charcoal")],

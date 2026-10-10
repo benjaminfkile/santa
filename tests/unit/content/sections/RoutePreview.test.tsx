@@ -169,7 +169,7 @@ describe("RoutePreview loading the map host", () => {
     await settle();
     expect(mocks.hostImports).toBe(1);
     expect(container.querySelector('[data-testid="fake-host"]')).not.toBeNull();
-    expect(mocks.hostThemes.at(-1)).toBe("route-light");
+    expect(mocks.hostThemes.at(-1)).toBe("light");
     expect(reportRenderer).toHaveBeenCalledTimes(1);
     expect(vi.mocked(reportRenderer).mock.calls[0][0]).toBe("route");
   });

@@ -65,8 +65,8 @@ describe("loadThemes", () => {
   it("maps every snapshot field, in list order", () => {
     const a = row({
       renderer: "maplibre",
-      key: "route-light",
-      name: "Route light",
+      key: "light",
+      name: "Light",
       spriteUrl: "https://cdn.example/themes/7/sprites/abc/sprite",
       thumbnailMediaId: "m-1",
       defaultLightMode: true,
@@ -74,9 +74,9 @@ describe("loadThemes", () => {
     const b = row({ key: "night", name: "Night", defaultDarkMode: true });
     const [first, second] = loadThemes({ trackerThemes: [a, b] });
     expect(first).toMatchObject({
-      key: "route-light",
+      key: "light",
       renderer: "maplibre",
-      name: "Route light",
+      name: "Light",
       styleUrl: a.styleUrl,
       spriteUrl: "https://cdn.example/themes/7/sprites/abc/sprite",
       thumbnailMediaId: "m-1",
@@ -156,8 +156,8 @@ describe("resolveInitialTheme", () => {
       row({ key: "expedition" }),
       row({ key: "standard", defaultLightMode: true }),
       row({ key: "night", defaultDarkMode: true }),
-      row({ key: "route-light", renderer: "maplibre", defaultLightMode: true }),
-      row({ key: "route-dark", renderer: "maplibre", defaultDarkMode: true }),
+      row({ key: "light", renderer: "maplibre", defaultLightMode: true }),
+      row({ key: "dark", renderer: "maplibre", defaultDarkMode: true }),
     ],
   });
 
@@ -170,12 +170,12 @@ describe("resolveInitialTheme", () => {
   it("picks the appearance's flag holder when nothing is stored", () => {
     expect(resolveInitialTheme(themes, "google", "light")?.key).toBe("standard");
     expect(resolveInitialTheme(themes, "google", "dark")?.key).toBe("night");
-    expect(resolveInitialTheme(themes, "maplibre", "light")?.key).toBe("route-light");
-    expect(resolveInitialTheme(themes, "maplibre", "dark")?.key).toBe("route-dark");
+    expect(resolveInitialTheme(themes, "maplibre", "light")?.key).toBe("light");
+    expect(resolveInitialTheme(themes, "maplibre", "dark")?.key).toBe("dark");
   });
 
   it("ignores a stored key of the other renderer", () => {
-    window.localStorage.setItem(THEME_STORAGE_KEY, "route-dark");
+    window.localStorage.setItem(THEME_STORAGE_KEY, "dark");
     expect(resolveInitialTheme(themes, "google", "light")?.key).toBe("standard");
   });
 

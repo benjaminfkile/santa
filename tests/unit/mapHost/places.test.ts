@@ -121,7 +121,7 @@ describe("applyPlaces", () => {
   });
 
   it("finds the seeded themes' marked places layer", () => {
-    const body = routeStyle("route-light");
+    const body = routeStyle("light");
     const style = applyPlaces(body, ["attraction"]);
     const changed = style.layers.filter((l, i) => l !== body.layers[i]).map((l) => l.id);
     expect(changed).toEqual(["pois"]);

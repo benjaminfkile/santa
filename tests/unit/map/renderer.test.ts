@@ -19,7 +19,7 @@ function snapshot(opts: { map?: boolean; maplibre?: boolean }) {
     event: { trackerBbox: {}, trackerMap: opts.map === false ? null : MAP },
     trackerThemes: [
       { key: "standard", renderer: "google" },
-      ...(opts.maplibre === false ? [] : [{ key: "route-light", renderer: "maplibre" }]),
+      ...(opts.maplibre === false ? [] : [{ key: "light", renderer: "maplibre" }]),
     ],
   } as never;
 }

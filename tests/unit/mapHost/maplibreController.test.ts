@@ -1,6 +1,6 @@
 // docs/site.md sections 8.2, 8.3, 8.6, 8.7, and 8.10 (Live mode). The
 // MapLibre tracker controller against a mocked `maplibre-gl`, over the
-// seeded `route-light` and `route-dark` bodies:
+// seeded `light` and `dark` bodies:
 //  - The first view fits the event box without a fix, centres on a fix in
 //    the box at the default zoom, and takes the default centre when the
 //    fix lies outside it; the map takes `maxBounds` and the fitted least
@@ -48,18 +48,18 @@ const TRACKER_MAP = {
 
 function themes(): Record<"light" | "dark", MapTheme> {
   const list = loadThemes({ trackerThemes: ROUTE_THEME_ROWS });
-  const light = list.find((t) => t.key === "route-light")!;
-  const dark = list.find((t) => t.key === "route-dark")!;
+  const light = list.find((t) => t.key === "light")!;
+  const dark = list.find((t) => t.key === "dark")!;
   return {
-    light: { ...light, getStyle: () => Promise.resolve(routeStyle("route-light")) },
-    dark: { ...dark, getStyle: () => Promise.resolve(routeStyle("route-dark")) },
+    light: { ...light, getStyle: () => Promise.resolve(routeStyle("light")) },
+    dark: { ...dark, getStyle: () => Promise.resolve(routeStyle("dark")) },
   };
 }
 
 function options(over: Partial<MaplibreControllerOptions> = {}): MaplibreControllerOptions {
   return {
     theme: themes().light,
-    style: routeStyle("route-light"),
+    style: routeStyle("light"),
     bbox: BOX,
     trackerMap: TRACKER_MAP,
     fix: null,
@@ -206,7 +206,7 @@ describe("the style", () => {
   it("setPois filters the marked places layers by the expanded Protomaps kinds, the theme's own while null", () => {
     const { c, map } = build();
     const own = map.style().layers.find((l) => l.id === "pois")!;
-    const seeded = routeStyle("route-light").layers.find((l) => l.id === "pois") as { filter?: unknown };
+    const seeded = routeStyle("light").layers.find((l) => l.id === "pois") as { filter?: unknown };
     expect(own.filter).toEqual(seeded.filter);
     c.setPois({ kinds: ["park"] });
     const filtered = map.style().layers.find((l) => l.id === "pois")!;
@@ -222,11 +222,11 @@ describe("the style", () => {
     const pending = c.setTheme(dark);
     await Promise.resolve();
     expect(map.setStyle).not.toHaveBeenCalled();
-    release(routeStyle("route-dark"));
+    release(routeStyle("dark"));
     await pending;
     expect(map.setStyle).toHaveBeenCalledTimes(1);
     const background = map.style().layers.find((l) => l.id === "background")!;
-    const darkBackground = routeStyle("route-dark").layers.find((l) => l.id === "background")!;
+    const darkBackground = routeStyle("dark").layers.find((l) => l.id === "background")!;
     expect(background.paint).toEqual(darkBackground.paint);
   });
 

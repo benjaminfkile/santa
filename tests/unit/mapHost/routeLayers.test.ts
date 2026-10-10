@@ -37,9 +37,9 @@ import { routePalette, type RouteKey } from "./routeThemes";
 
 const PATH = [{ lat: 1, lng: 2 }, { lat: 3, lng: 4 }, { lat: 5, lng: 3 }];
 const MARKS = [{ lat: 2, lng: 3 }];
-const LIGHT = routePalette("route-light");
+const LIGHT = routePalette("light");
 
-function build(options: RouteLayerOptions = {}, key: RouteKey = "route-light") {
+function build(options: RouteLayerOptions = {}, key: RouteKey = "light") {
   return routeLayers(routePalette(key), PATH, MARKS, options);
 }
 
@@ -76,10 +76,10 @@ function layer<T>(built: ReturnType<typeof routeLayers>, id: string): T {
 describe("route layers", () => {
   it("draws the line, the marks, and the end circle in the route map's palette", () => {
     const expected = {
-      "route-light": { route: "#1a56c4", opacity: 0.9, stroke: "#ffffff", end: "#202124" },
-      "route-dark": { route: "#33d6ff", opacity: 0.85, stroke: "#0f1a2b", end: "#f2f6ff" },
+      "light": { route: "#1a56c4", opacity: 0.9, stroke: "#ffffff", end: "#202124" },
+      "dark": { route: "#33d6ff", opacity: 0.85, stroke: "#0f1a2b", end: "#f2f6ff" },
     } as const;
-    for (const key of ["route-light", "route-dark"] as const) {
+    for (const key of ["light", "dark"] as const) {
       const built = build({}, key);
       const colours = expected[key];
       expect(built.layers.map((l) => l.id)).toEqual([ROUTE_LAYER, MARKS_LAYER, ENDS_LAYER]);
@@ -107,14 +107,14 @@ describe("route layers", () => {
 
   it("adds an arrowhead symbol layer along the route line in the arrow colour", () => {
     expect(build().layers.some((l) => l.id === ARROWS_LAYER)).toBe(false);
-    const built = build({ arrows: true }, "route-dark");
+    const built = build({ arrows: true }, "dark");
     const arrows = layer<SymbolLayerSpecification>(built, ARROWS_LAYER);
     expect(arrows.type).toBe("symbol");
     expect(arrows.source).toBe(ROUTE_SOURCE);
     expect(arrows.layout?.["symbol-placement"]).toBe("line");
     expect(arrows.layout?.["icon-image"]).toBe(ROUTE_ARROW_ICON);
     expect(arrows.layout?.["symbol-spacing"]).toBeGreaterThanOrEqual(80);
-    expect(arrows.paint?.["icon-color"]).toBe(routePalette("route-dark").overlay.arrowColor);
+    expect(arrows.paint?.["icon-color"]).toBe(routePalette("dark").overlay.arrowColor);
     const ids = built.layers.map((l) => l.id);
     expect(ids.indexOf(ARROWS_LAYER)).toBeGreaterThan(ids.indexOf(ROUTE_LAYER));
   });
@@ -167,7 +167,7 @@ describe("route layers", () => {
       { lat: 3, lng: 4, label: "30m" },
       { lat: 5, lng: 3, label: "45m" },
     ];
-    for (const key of ["route-light", "route-dark"] as const) {
+    for (const key of ["light", "dark"] as const) {
       const { overlay } = routePalette(key);
       const built = build({ timeLabels }, key);
       const source = built.sources[TIME_LABELS_SOURCE] as {
@@ -193,8 +193,8 @@ describe("route layers", () => {
       const ids = built.layers.map((l) => l.id);
       expect(ids.indexOf(TIME_LABELS_LAYER)).toBe(ids.length - 1);
     }
-    expect(routePalette("route-light").overlay).toMatchObject({ timeLabelFg: "#202124", timeLabelBg: "#ffffff" });
-    expect(routePalette("route-dark").overlay).toMatchObject({ timeLabelFg: "#f2f6ff", timeLabelBg: "#0f1a2b" });
+    expect(routePalette("light").overlay).toMatchObject({ timeLabelFg: "#202124", timeLabelBg: "#ffffff" });
+    expect(routePalette("dark").overlay).toMatchObject({ timeLabelFg: "#f2f6ff", timeLabelBg: "#0f1a2b" });
   });
 
   it("adds one smaller labelled dot per viewpoint, apart from the time labels", () => {
@@ -203,7 +203,7 @@ describe("route layers", () => {
       { lat: 46.9, lng: -113.95, label: "Mount Jumbo" },
     ];
     const timeLabels = [{ lat: 1, lng: 2, label: "15m" }];
-    for (const key of ["route-light", "route-dark"] as const) {
+    for (const key of ["light", "dark"] as const) {
       const { overlay, chrome } = routePalette(key);
       const built = build({ viewpoints, timeLabels }, key);
       const source = built.sources[VIEWPOINTS_SOURCE] as {
@@ -233,8 +233,8 @@ describe("route layers", () => {
       expect(ids.indexOf(VIEWPOINTS_LAYER)).toBe(ids.indexOf(VIEWPOINT_DOTS_LAYER) + 1);
       expect(ids.indexOf(TIME_LABEL_DOTS_LAYER)).toBeGreaterThan(ids.indexOf(VIEWPOINTS_LAYER));
     }
-    expect(routePalette("route-light").chrome).toMatchObject({ fg: "#5f6368", bg: "#ffffff" });
-    expect(routePalette("route-dark").chrome).toMatchObject({ fg: "#8fa3c2", bg: "#0f1a2b" });
+    expect(routePalette("light").chrome).toMatchObject({ fg: "#5f6368", bg: "#ffffff" });
+    expect(routePalette("dark").chrome).toMatchObject({ fg: "#8fa3c2", bg: "#0f1a2b" });
   });
 
   it("leaves the dot off a badge viewpoint and sets its label further out", () => {

@@ -214,8 +214,8 @@ function backgroundColor(style: StyleShape): unknown {
   return backgroundOf(style);
 }
 
-const LIGHT = { background: backgroundOf(routeStyle("route-light")), ...routePalette("route-light").overlay };
-const DARK = { background: backgroundOf(routeStyle("route-dark")), ...routePalette("route-dark").overlay };
+const LIGHT = { background: backgroundOf(routeStyle("light")), ...routePalette("light").overlay };
+const DARK = { background: backgroundOf(routeStyle("dark")), ...routePalette("dark").overlay };
 
 beforeEach(() => {
   mocks.maps.length = 0;
@@ -320,7 +320,7 @@ describe("route_preview map", () => {
       await Promise.resolve();
     });
     await settle();
-    expect(container.querySelector('[data-testid="route-map"]')?.getAttribute("data-map-theme")).toBe("route-dark");
+    expect(container.querySelector('[data-testid="route-map"]')?.getAttribute("data-map-theme")).toBe("dark");
     expect(map.setStyle).toHaveBeenCalledTimes(1);
     const [dark, opts] = map.setStyle.mock.calls[0] as [StyleShape, { diff?: boolean }];
     expect(opts).toEqual({ diff: true });

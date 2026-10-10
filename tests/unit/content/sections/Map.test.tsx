@@ -222,7 +222,7 @@ describe("Map section themes", () => {
           themeRow("expedition", "google"),
           themeRow("standard", "google", { light: true }),
           themeRow("night", "google", { dark: true }),
-          themeRow("route-light", "maplibre", { light: true }),
+          themeRow("light", "maplibre", { light: true }),
         ],
       } as never,
     });

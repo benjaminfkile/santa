@@ -162,7 +162,7 @@ describe("the live surface in MapView", () => {
     const onFallback = vi.fn((_reason: FallbackReason) => google);
     const seen: (MapController | null)[] = [];
     const options: MapViewOptions = {
-      theme: mlTheme ?? themes.find((t) => t.key === "route-light")!,
+      theme: mlTheme ?? themes.find((t) => t.key === "light")!,
       renderer: "maplibre",
       maplibre: { load, trackerMap: TRACKER_MAP, fix: () => null, onFallback },
       bbox: BOX,
@@ -292,7 +292,7 @@ describe("the live surface in the Map section", () => {
   it("keeps the viewer's stored key when a Google theme has it, and sends one event", async () => {
     window.localStorage.setItem(THEME_STORAGE_KEY, "night");
     const utils = await mountMap();
-    expect(utils.getByTestId("map").getAttribute("data-theme-key")).toBe("route-light");
+    expect(utils.getByTestId("map").getAttribute("data-theme-key")).toBe("light");
     expect(mocks.built).toHaveLength(1);
     fail("context_lost");
     await flush();
@@ -304,9 +304,9 @@ describe("the live surface in the Map section", () => {
   });
 
   it("resolves the appearance's Google default when the stored key names no Google theme", async () => {
-    window.localStorage.setItem(THEME_STORAGE_KEY, "route-dark");
+    window.localStorage.setItem(THEME_STORAGE_KEY, "dark");
     const utils = await mountMap();
-    expect(utils.getByTestId("map").getAttribute("data-theme-key")).toBe("route-dark");
+    expect(utils.getByTestId("map").getAttribute("data-theme-key")).toBe("dark");
     fail("style_failed");
     await flush();
     expect(utils.getByTestId("map").getAttribute("data-theme-key")).toBe("standard");
@@ -320,7 +320,7 @@ describe("the live surface in the Map section", () => {
       .getAllByRole("radio")
       .map((b) => b.getAttribute("data-testid"))
       .filter((id) => id?.startsWith("tracker-menu-theme-"));
-    expect(before).toEqual(["tracker-menu-theme-route-light", "tracker-menu-theme-route-dark"]);
+    expect(before).toEqual(["tracker-menu-theme-light", "tracker-menu-theme-dark"]);
     fail("context_lost");
     await flush();
     const google = FakeMap.instances[0];

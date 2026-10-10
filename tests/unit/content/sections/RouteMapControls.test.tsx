@@ -144,7 +144,7 @@ function buildBundle(): ContentBundle {
 const FLAT_URL = "https://cdn.example/themes/flat.json";
 const FLAT_ROWS = [{ ...ROUTE_THEME_ROWS[0], key: "flat", styleUrl: FLAT_URL }];
 
-function hillshadePaint(key: "route-light" | "route-dark"): unknown {
+function hillshadePaint(key: "light" | "dark"): unknown {
   return routeStyle(key).layers.find((l) => l.id === "terrain-hillshade")?.paint;
 }
 
@@ -249,7 +249,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   vi.resetModules();
   mocks.maps.length = 0;
-  const flat = routeStyle("route-light");
+  const flat = routeStyle("light");
   stubThemeFetch({
     extra: { [FLAT_URL]: { ...flat, layers: flat.layers.filter((l) => l.id !== "terrain-hillshade") } },
   });
@@ -686,7 +686,7 @@ describe("route map terrain", () => {
     expect(q(container, "route-map-terrain")?.getAttribute("aria-pressed")).toBe("true");
     const light = lastStyle(map);
     expect(hasHillshade(light)).toBe(true);
-    expect(light.layers.find((l) => l.id === "terrain-hillshade")?.paint).toEqual(hillshadePaint("route-light"));
+    expect(light.layers.find((l) => l.id === "terrain-hillshade")?.paint).toEqual(hillshadePaint("light"));
 
     await act(async () => {
       document.documentElement.setAttribute("data-theme", "dark");
@@ -695,7 +695,7 @@ describe("route map terrain", () => {
     await settle();
     const dark = lastStyle(map);
     expect(hasHillshade(dark)).toBe(true);
-    expect(dark.layers.find((l) => l.id === "terrain-hillshade")?.paint).toEqual(hillshadePaint("route-dark"));
+    expect(dark.layers.find((l) => l.id === "terrain-hillshade")?.paint).toEqual(hillshadePaint("dark"));
     expect(light.layers.map((l) => l.id)).toEqual(dark.layers.map((l) => l.id));
   });
 
