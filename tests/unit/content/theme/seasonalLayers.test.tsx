@@ -219,6 +219,45 @@ describe("the snow choice outlives the live takeover", () => {
   });
 });
 
+describe("snow under reduced motion", () => {
+  function reduce(): void {
+    vi.spyOn(window, "matchMedia").mockImplementation(((query: string) => ({
+      matches: /prefers-reduced-motion: reduce/.test(query),
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    })) as unknown as typeof window.matchMedia);
+  }
+  afterEach(() => vi.restoreAllMocks());
+
+  it("does not render the page snow", () => {
+    reduce();
+    seedLive(1);
+    const { container } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <SnowLayer bundle={bundleWithDefaults(true, false)} />
+      </MemoryRouter>,
+    );
+    expect(container.querySelector("[data-testid=snow-canvas]")).toBeNull();
+  });
+
+  it("renders the flakes on the live screen once the viewer presses Snow", () => {
+    reduce();
+    seedLive(3);
+    act(() => setSnowOverride(true));
+    const { container } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <SnowLayer bundle={bundleWithDefaults(false, false)} />
+      </MemoryRouter>,
+    );
+    expect(container.querySelector("[data-testid=snow-canvas]")).not.toBeNull();
+  });
+});
+
 describe("LightsLayer live-screen detection", () => {
   it("does not render over the map on the live screen (eventStatusId === 3 at /)", () => {
     seedLive(3);

@@ -91,7 +91,10 @@ export function SnowLayer({ bundle }: { bundle: ContentBundle | null }) {
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const enabled = chosen && !prefersReduced;
+  // A viewer who presses Snow on the live screen asked for it, so that
+  // choice draws under reduced motion too; the published default off the
+  // live screen still yields to the preference.
+  const enabled = isLive ? chosen : chosen && !prefersReduced;
 
   useEffect(() => {
     storageRemove(SNOW_KEY);
