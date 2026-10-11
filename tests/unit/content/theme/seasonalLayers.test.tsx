@@ -234,7 +234,7 @@ describe("snow under reduced motion", () => {
   }
   afterEach(() => vi.restoreAllMocks());
 
-  it("does not render the page snow", () => {
+  it("renders the page snow", () => {
     reduce();
     seedLive(1);
     const { container } = render(
@@ -242,7 +242,7 @@ describe("snow under reduced motion", () => {
         <SnowLayer bundle={bundleWithDefaults(true, false)} />
       </MemoryRouter>,
     );
-    expect(container.querySelector("[data-testid=snow-canvas]")).toBeNull();
+    expect(container.querySelector("[data-testid=snow-canvas]")).not.toBeNull();
   });
 
   it("renders the flakes on the live screen once the viewer presses Snow", () => {

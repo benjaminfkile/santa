@@ -520,24 +520,29 @@ describe("Shell menu panel", () => {
     expect(nav.hidden).toBe(true);
   });
 
-  it("slides from the right with the legacy 0.5 s ease both ways, removed under reduced motion", () => {
+  it("slides from the right with the legacy 0.5 s ease both ways, with no rule that removes it", () => {
     const ease = "500ms cubic-bezier\\(0\\.25, 0\\.46, 0\\.45, 0\\.94\\) both";
     expect(css()).toMatch(new RegExp(`\\.panelIn \\{ animation: panelIn ${ease}; \\}`));
     expect(css()).toMatch(new RegExp(`\\.panelOut \\{ animation: panelOut ${ease}; \\}`));
     expect(css()).toMatch(/@keyframes panelIn \{\s*from \{ transform: translateX\(calc\(100% \+ var\(--space-2\)\)\); \}\s*to \{ transform: translateX\(0\); \}/);
     expect(css()).toMatch(/@keyframes panelOut \{\s*from \{ transform: translateX\(0\); \}\s*to \{ transform: translateX\(calc\(100% \+ var\(--space-2\)\)\); \}/);
-    expect(css()).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.panelIn,\s*\.panelOut \{ animation: none; \}/);
+    expect(css()).not.toMatch(/@media \(prefers-reduced-motion/);
+    expect(css()).not.toMatch(/animation: none/);
   });
 
-  it("collapses the slide under reduced motion: opening and closing are instant", () => {
+  it("slides in and out when matchMedia reports reduced motion", () => {
     stubReducedMotion(true);
     seed(makeContent());
     const { getByLabelText } = renderShell();
     const nav = panelOf(getByLabelText);
     fireEvent.click(getByLabelText("Menu"));
     expect(nav.hidden).toBe(false);
-    expect(nav.getAttribute("data-motion")).toBe("none");
+    expect(nav.getAttribute("data-motion")).toBe("in");
     fireEvent.keyDown(document, { key: "Escape" });
+    expect(nav.hidden).toBe(false);
+    expect(nav.getAttribute("data-panel")).toBe("closing");
+    expect(nav.getAttribute("data-motion")).toBe("out");
+    fireEvent.animationEnd(nav);
     expect(nav.hidden).toBe(true);
     expect(nav.getAttribute("data-panel")).toBe("closed");
     expect(nav.getAttribute("data-motion")).toBe("none");
@@ -553,12 +558,14 @@ describe("Shell menu panel", () => {
     fireEvent.mouseDown(nav);
     expect(nav.hidden).toBe(false);
     fireEvent.mouseDown(getByTestId("site-footer"));
+    fireEvent.animationEnd(nav);
     expect(nav.hidden).toBe(true);
     expect(document.activeElement).toBe(button);
 
     fireEvent.click(button);
     expect(nav.hidden).toBe(false);
     fireEvent.touchStart(document.body);
+    fireEvent.animationEnd(nav);
     expect(nav.hidden).toBe(true);
     expect(document.activeElement).toBe(button);
   });
@@ -587,6 +594,7 @@ describe("Shell menu panel", () => {
       expect(nav.hidden).toBe(false);
       const item = nav.querySelectorAll<HTMLElement>("a, button")[i];
       fireEvent.click(item);
+      fireEvent.animationEnd(nav);
       expect(nav.hidden).toBe(true);
       expect(document.activeElement).toBe(button);
     }

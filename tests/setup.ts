@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { vi } from "vitest";
 
 // docs/site.md section 7.7. Provide a matchMedia stub so the theme's
-// media-query listener and reduced-motion checks work under jsdom.
+// media-query listeners work under jsdom.
 if (typeof window !== "undefined" && !window.matchMedia) {
   window.matchMedia = ((query: string): MediaQueryList => ({
     matches: false,

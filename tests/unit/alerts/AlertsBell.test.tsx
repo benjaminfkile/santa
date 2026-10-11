@@ -480,9 +480,9 @@ describe("AlertsBell swing", () => {
     expect(body.className).toContain("swing");
   });
 
-  it("adds no swing class under reduced motion", async () => {
+  it("swings when matchMedia reports reduced motion", async () => {
     stubReducedMotion(true);
     const body = await riseCount();
-    expect(body.className).not.toContain("swing");
+    expect(body.className).toContain("swing");
   });
 });

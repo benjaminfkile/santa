@@ -133,10 +133,10 @@ describe("GaugeFrame", () => {
     expect(utils.getByTestId("g").contains(utils.getByTestId("mark"))).toBe(true);
   });
 
-  it("the stylesheet sweeps over 300 ms, not at all under reduced motion, from the chrome tokens", () => {
+  it("the stylesheet sweeps over 300 ms whatever the motion preference, from the chrome tokens", () => {
     const css = readFileSync(resolve(gaugesDir, "GaugeFrame.module.css"), "utf8");
     expect(css).toMatch(/\.arc \{[^}]*transition: stroke-dashoffset 300ms/);
-    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.arc \{ transition: none; \}/);
+    expect(css).not.toMatch(/prefers-reduced-motion|transition: none/);
     expect(css).toMatch(/\.track \{[^}]*stroke: var\(--panel-2\);[^}]*stroke-width: 5;[^}]*stroke-linecap: round;/);
     expect(css).toMatch(/\.arc \{[^}]*stroke: var\(--accent\);/);
     expect(css).toContain("width: 70px;");
@@ -357,12 +357,12 @@ describe("HeadingCompass", () => {
     expect(shortestRotation(-30, 300)).toBe(-60);
   });
 
-  it("the stylesheet turns the needle over 300 ms, not at all under reduced motion", () => {
+  it("the stylesheet turns the needle over 300 ms whatever the motion preference", () => {
     const css = readFileSync(resolve(gaugesDir, "HeadingCompass.module.css"), "utf8");
     expect(css).toMatch(/\.needle \{[^}]*transition: transform 300ms/);
     expect(css).toContain("fill: var(--accent)");
     expect(css).toContain("fill: var(--text-dim)");
-    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.needle \{ transition: none; \}/);
+    expect(css).not.toMatch(/prefers-reduced-motion|transition: none/);
     expect(css).toMatch(/\.rose \{[^}]*stroke: var\(--panel-2\);[^}]*stroke-width: 1\.5;/);
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgb\(/);
   });

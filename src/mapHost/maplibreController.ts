@@ -99,12 +99,6 @@ function bearing(a: LatLng, b: LatLng): number {
   return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
 }
 
-function reducedMotion(): boolean {
-  return typeof window !== "undefined" && typeof window.matchMedia === "function"
-    ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    : false;
-}
-
 // What the overlay draws from a viewpoint; two lists with the same
 // signature draw the same badges.
 function viewpointsSignature(list: readonly TrackerViewpoint[]): string {
@@ -325,7 +319,7 @@ export function createMaplibreController(
   });
 
   function panTo(p: LatLng): void {
-    map.panTo([p.lng, p.lat], { animate: !reducedMotion() });
+    map.panTo([p.lng, p.lat], { animate: true });
   }
 
   return {
@@ -435,7 +429,7 @@ export function createMaplibreController(
       if (bounds === null) return;
       const { width, height } = viewport();
       const padding = Math.max(0, Math.min(FIT_PADDING, Math.floor(Math.min(width, height) / 4)));
-      map.fitBounds(bounds, { padding, animate: !reducedMotion() });
+      map.fitBounds(bounds, { padding, animate: true });
     },
     enableUserLocation: () => (disposed ? Promise.resolve() : (userLoc?.enable() ?? Promise.resolve())),
     disableUserLocation: () => {

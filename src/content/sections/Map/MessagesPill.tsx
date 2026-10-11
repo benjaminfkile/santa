@@ -5,8 +5,7 @@
 // sits at the envelope's top right. The pill follows the mark through
 // `subscribeMessageSeen`, so a `latest_message` section on the same page
 // that marks the message read clears the dot. When the message id rises
-// while the pill is on screen the envelope shakes once (no shake under
-// reduced motion). The pill opens the messages dialog only when pressed;
+// while the pill is on screen the envelope shakes once. The pill opens the messages dialog only when pressed;
 // opening marks the message read, so the dot clears, while the dialog
 // keeps its New marker until it closes.
 

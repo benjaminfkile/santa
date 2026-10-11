@@ -1,6 +1,6 @@
 // docs/site.md section 9. Leaderboard: one row per `snapshot.cookieTypes`
 // entry; icon, name, count; `panel` collapses to five, `full` shows all.
-// A count change animates the row order unless reduced motion.
+// A count change animates the row order.
 
 import { useState } from "react";
 import type { SectionComponent } from "../../registry";

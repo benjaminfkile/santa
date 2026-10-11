@@ -39,9 +39,6 @@
   stroke-linecap: round;
   transition: stroke-dashoffset 300ms ease-out;
 }
-@media (prefers-reduced-motion: reduce) {
-  .arc { transition: none; }
-}
 
 /* The size comes from `valueFontSize` on the element, so a long reading
    fits the 54 unit box. */
