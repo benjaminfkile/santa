@@ -18,7 +18,7 @@
 //    object whose `kinds` is a list.
 
 import type { IconRef, Snapshot } from "../../../contracts";
-import type { ViewpointData } from "./RouteViewpoints";
+import type { TrackerViewpoint } from "../../../map/viewpointsOverlay";
 
 export type RouteMapConfig = NonNullable<NonNullable<Snapshot["event"]>["routeMapConfig"]>;
 
@@ -98,15 +98,15 @@ function asIcon(v: unknown): IconRef | null {
   return v as IconRef;
 }
 
-export function resolveViewpoints(list: unknown): ViewpointData[] | undefined {
+export function resolveViewpoints(list: unknown): TrackerViewpoint[] | undefined {
   if (!Array.isArray(list)) return undefined;
-  const out: ViewpointData[] = [];
+  const out: TrackerViewpoint[] = [];
   for (const item of list as unknown[]) {
     if (item === null || typeof item !== "object") continue;
     const entry = item as Record<string, unknown>;
     const { name, lat, lng, description } = entry;
     if (typeof name !== "string" || name === "" || !isCoordinate(lat) || !isCoordinate(lng)) continue;
-    const viewpoint: ViewpointData = { name, lat, lng };
+    const viewpoint: TrackerViewpoint = { name, lat, lng };
     const icon = asIcon(entry.icon);
     if (icon !== null) viewpoint.icon = icon;
     if (typeof description === "string") viewpoint.description = description;

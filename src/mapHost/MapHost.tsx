@@ -19,14 +19,13 @@
 // destroyed on unmount. `marks` are drawn as dots on the path and
 // `timeLabels` as labelled dots beside them; `poiKinds` is the place
 // filter; `viewpoints`, `arrows`, `arrowScale`, `routeWidthScale`, and
-// `labelScale` pass through to the route layers; `viewpointMarkers`
-// stands each caller's element on its point as a marker (the caller
-// renders the viewpoint badges and buttons into them); `startElement`
-// stands as a marker on the path's first point (the caller builds it, so
-// this chunk imports neither react-dom nor the icon modules).
-// `labelMinZoom` passes through to the map (the names hide below it) and
-// `onViewpointClick` is called, as it is at the time, with the point of a
-// clicked viewpoint dot.
+// `labelScale` pass through to the route layers; `viewpointBadges` is
+// drawn in the tracker's viewpoint badges and popover, the icons through
+// `mountIcon` (read once when the map mounts), and a click on a
+// viewpoint's style dot opens its popover; `startElement` stands as a
+// marker on the path's first point (the caller builds it and `mountIcon`,
+// so this chunk imports neither react-dom nor the icon modules).
+// `labelMinZoom` passes through to the map (the names hide below it).
 // The control stack sits at the top right of the frame, each button
 // carrying `controlClassName` (the caller passes the icon button recipe,
 // which stays out of this chunk because the tracker shares it): a
@@ -55,15 +54,16 @@ import type { MapTheme } from "../map/themes";
 import type { FallbackReason, Renderer } from "../map/renderer";
 import type { MapsLibs } from "../map/loadMaps";
 import type { GoogleRouteHandle, GoogleRouteTheme } from "../map/routeMode";
+import type { MountIcon } from "../map/viewpointsOverlay";
 import { toBbox, type Bbox } from "../map/bounds";
 import type {
+  BadgeViewpoint,
   HostTheme,
   LatLng,
   RouteMapHandle,
   TimeLabel,
   TrackerMap,
   Viewpoint,
-  ViewpointMarker,
 } from "./handle";
 import * as styles from "./MapHost.module.css";
 
@@ -71,7 +71,7 @@ export const TERRAIN_KEY = "wmsfo.routeMap.terrain";
 
 const NO_MARKS: readonly LatLng[] = [];
 const NO_LABELS: readonly TimeLabel[] = [];
-const NO_MARKERS: readonly ViewpointMarker[] = [];
+const NO_BADGES: readonly BadgeViewpoint[] = [];
 
 export type MapHostProps = {
   mode: "route";
@@ -84,13 +84,13 @@ export type MapHostProps = {
   timeLabels?: readonly TimeLabel[];
   poiKinds?: readonly string[] | null;
   viewpoints?: readonly Viewpoint[];
-  viewpointMarkers?: readonly ViewpointMarker[];
+  viewpointBadges?: readonly BadgeViewpoint[];
+  mountIcon?: MountIcon;
   arrows?: boolean;
   arrowScale?: number;
   routeWidthScale?: number;
   labelScale?: number;
   labelMinZoom?: number;
-  onViewpointClick?: (point: { lat: number; lng: number }) => void;
   startElement?: HTMLElement;
   ariaLabel?: string;
   fullscreenControl?: boolean;
@@ -135,13 +135,13 @@ function MapLibreRouteHost({
   timeLabels = NO_LABELS,
   poiKinds,
   viewpoints,
-  viewpointMarkers = NO_MARKERS,
+  viewpointBadges = NO_BADGES,
+  mountIcon,
   arrows = false,
   arrowScale,
   routeWidthScale,
   labelScale,
   labelMinZoom,
-  onViewpointClick,
   startElement,
   ariaLabel,
   fullscreenControl = false,
@@ -166,10 +166,10 @@ function MapLibreRouteHost({
   const showTerrain = terrainControl && terrainAvailable;
   const terrain = showTerrain && terrainOn;
   const failed = useRef(false);
-  const latest = useRef({ onFail, onViewpointClick });
+  const latest = useRef({ onFail });
 
   useEffect(() => {
-    latest.current = { onFail, onViewpointClick };
+    latest.current = { onFail };
   });
 
   function fail(error: unknown, reason: FallbackReason = "style_failed"): void {
@@ -230,7 +230,7 @@ function MapLibreRouteHost({
     timeLabels,
     poiKinds,
     viewpoints,
-    viewpointMarkers,
+    viewpointBadges,
     arrows,
     arrowScale,
     routeWidthScale,
@@ -240,14 +240,14 @@ function MapLibreRouteHost({
   };
   const latestUpdate = useRef(update);
   latestUpdate.current = update;
-  const mapInputs = useRef({ trackerMap, bbox, startElement });
+  const mapInputs = useRef({ trackerMap, bbox, startElement, mountIcon });
 
   const ready = drawn !== null && lib !== null;
   useEffect(() => {
     const host = hostRef.current;
     if (!ready || host === null || handleRef.current !== null || failed.current) return;
     try {
-      const { trackerMap: map, bbox: box, startElement: start } = mapInputs.current;
+      const { trackerMap: map, bbox: box, startElement: start, mountIcon: mount } = mapInputs.current;
       handleRef.current = lib.mountRouteMap({
         container: host,
         trackerMap: map,
@@ -255,7 +255,7 @@ function MapLibreRouteHost({
         theme: drawn,
         ...latestUpdate.current,
         startElement: start,
-        onViewpointClick: (point) => latest.current.onViewpointClick?.(point),
+        mountIcon: mount,
         onError: fail,
       });
       setMounted(true);
@@ -283,7 +283,7 @@ function MapLibreRouteHost({
       timeLabels,
       poiKinds,
       viewpoints,
-      viewpointMarkers,
+      viewpointBadges,
       arrows,
       arrowScale,
       routeWidthScale,
@@ -298,7 +298,7 @@ function MapLibreRouteHost({
     timeLabels,
     poiKinds,
     viewpoints,
-    viewpointMarkers,
+    viewpointBadges,
     arrows,
     arrowScale,
     routeWidthScale,
@@ -425,13 +425,13 @@ function GoogleRouteHost({
   timeLabels = NO_LABELS,
   poiKinds,
   viewpoints,
-  viewpointMarkers = NO_MARKERS,
+  viewpointBadges = NO_BADGES,
+  mountIcon,
   arrows = false,
   arrowScale,
   routeWidthScale,
   labelScale,
   labelMinZoom,
-  onViewpointClick,
   startElement,
   ariaLabel,
   fullscreenControl = false,
@@ -450,10 +450,10 @@ function GoogleRouteHost({
   const showTerrain = terrainControl;
   const terrain = showTerrain && terrainOn;
   const failed = useRef(false);
-  const latest = useRef({ onFail, onViewpointClick });
+  const latest = useRef({ onFail });
 
   useEffect(() => {
-    latest.current = { onFail, onViewpointClick };
+    latest.current = { onFail };
   });
 
   function fail(error: unknown): void {
@@ -525,7 +525,7 @@ function GoogleRouteHost({
     timeLabels,
     poiKinds,
     viewpoints,
-    viewpointMarkers,
+    viewpointBadges,
     arrows,
     arrowScale,
     routeWidthScale,
@@ -535,20 +535,20 @@ function GoogleRouteHost({
   };
   const latestUpdate = useRef(update);
   latestUpdate.current = update;
-  const mapInputs = useRef({ bbox, startElement });
+  const mapInputs = useRef({ bbox, startElement, mountIcon });
 
   const ready = drawn !== null && modules !== null;
   useEffect(() => {
     const host = hostRef.current;
     if (!ready || host === null || handleRef.current !== null || failed.current) return;
     try {
-      const { bbox: box, startElement: start } = mapInputs.current;
+      const { bbox: box, startElement: start, mountIcon: mount } = mapInputs.current;
       handleRef.current = modules.mountGoogleRoute(modules.libs, host, {
         bbox: box,
         theme: drawn,
         ...latestUpdate.current,
         startElement: start,
-        onViewpointClick: (point) => latest.current.onViewpointClick?.(point),
+        mountIcon: mount,
       });
       setMounted(true);
     } catch (error) {
@@ -575,7 +575,7 @@ function GoogleRouteHost({
       timeLabels,
       poiKinds,
       viewpoints,
-      viewpointMarkers,
+      viewpointBadges,
       arrows,
       arrowScale,
       routeWidthScale,
@@ -590,7 +590,7 @@ function GoogleRouteHost({
     timeLabels,
     poiKinds,
     viewpoints,
-    viewpointMarkers,
+    viewpointBadges,
     arrows,
     arrowScale,
     routeWidthScale,

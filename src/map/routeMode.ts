@@ -20,11 +20,18 @@
 //  - Each viewpoint is a dot marker in `chrome.fg` ringed in `chrome.bg`
 //    (none for a `badge` viewpoint, whose element the caller builds) and a
 //    name label beside it under the same zoom rule, further out for a
-//    badge. A click on the dot or the name calls `onViewpointClick` with
-//    the viewpoint's point.
+//    badge. A click on the dot or the name opens the popover of the
+//    `viewpointBadges` entry at that point.
 //  - `startElement` stands on the path's first point, anchored at its
-//    bottom centre, and each `viewpointMarkers` element on its point,
-//    centred, both in an `OverlayView` on the overlay mouse target pane.
+//    bottom centre, in an `OverlayView` on the overlay mouse target pane.
+//  - `viewpointBadges` is the viewpoint list in the tracker's badges and
+//    popover (createViewpointBadges, site.md 8.5), built through
+//    `mountIcon` with the popover host the container's parent (the map
+//    frame): each entry with `badge` stands its badge element centred on
+//    its point in the same kind of `OverlayView`, and the popover is placed
+//    from the point's container pixel again on every draw and every
+//    `bounds_changed`, the names following the zoom (`setNames`). A list
+//    that draws the same badges keeps them; a changed one replaces them.
 //  - `terrain` picks the `terrain` map type, else `roadmap`.
 //  - The map is restricted to the event box, its least zoom the zoom that
 //    fits the box (recomputed on resize). The camera fits the path's
@@ -34,16 +41,19 @@
 //  - `styles` is the theme's array with the place filter of `poiKinds` on
 //    top (absent hides every kind).
 
-import type {
-  LatLng,
-  TimeLabel,
-  Viewpoint,
-  ViewpointMarker,
-} from "../mapHost/handle";
+import type { LatLng, TimeLabel, Viewpoint } from "../mapHost/handle";
 import type { MapsLibs } from "./loadMaps";
 import type { MapTheme } from "./themes";
 import { poiStyles } from "./poiStyles";
 import { fittedMinZoom, MIN_ZOOM_FLOOR, type Bbox } from "./bounds";
+import {
+  badgesSignature,
+  createViewpointBadges,
+  viewpointAt,
+  type BadgeViewpoint,
+  type MountIcon,
+  type ViewpointBadges,
+} from "./viewpointsOverlay";
 
 // A Google theme as the route map draws it: its fetched style array and
 // the palettes the overlay paints with.
@@ -59,7 +69,7 @@ export type GoogleRouteUpdate = {
   timeLabels?: readonly TimeLabel[];
   poiKinds?: readonly string[] | null;
   viewpoints?: readonly Viewpoint[];
-  viewpointMarkers?: readonly ViewpointMarker[];
+  viewpointBadges?: readonly BadgeViewpoint[];
   arrows?: boolean;
   arrowScale?: number;
   routeWidthScale?: number;
@@ -70,7 +80,7 @@ export type GoogleRouteUpdate = {
 export type GoogleRouteOptions = GoogleRouteUpdate & {
   bbox: Bbox | null;
   startElement?: HTMLElement;
-  onViewpointClick?: (point: { lat: number; lng: number }) => void;
+  mountIcon?: MountIcon;
 };
 
 export type GoogleRouteHandle = {
@@ -113,7 +123,7 @@ function stateOf(next: GoogleRouteUpdate) {
     timeLabels: next.timeLabels ?? [],
     poiKinds: next.poiKinds ?? null,
     viewpoints: next.viewpoints ?? [],
-    viewpointMarkers: next.viewpointMarkers ?? [],
+    viewpointBadges: next.viewpointBadges ?? [],
     arrows: next.arrows ?? false,
     arrowScale: scaleOf(next.arrowScale),
     routeWidthScale: scaleOf(next.routeWidthScale),
@@ -137,12 +147,6 @@ function sameLabelled(
   b: readonly (LatLng & { label: string; badge?: boolean })[],
 ): boolean {
   return samePoints(a, b) && a.every((p, i) => p.label === b[i].label && p.badge === b[i].badge);
-}
-
-function sameMarkers(a: readonly ViewpointMarker[], b: readonly ViewpointMarker[]): boolean {
-  if (a === b) return true;
-  if (a.length !== b.length) return false;
-  return a.every((m, i) => m.element === b[i].element && m.lat === b[i].lat && m.lng === b[i].lng);
 }
 
 function sameTheme(a: GoogleRouteTheme, b: GoogleRouteTheme): boolean {
@@ -422,7 +426,9 @@ export function mountGoogleRoute(
     for (const v of state.viewpoints) {
       const point = { lat: v.lat, lng: v.lng };
       const click = () => {
-        if (!disposed) options.onViewpointClick?.(point);
+        if (disposed) return;
+        const index = viewpointAt(badgeList, point);
+        if (index >= 0) badges?.open(index);
       };
       if (v.badge !== true) {
         marker({
@@ -507,22 +513,65 @@ export function mountGoogleRoute(
       ? null
       : elementOverlay(options.startElement, startPoint, "bottom");
 
+  // The viewpoint popover lives in the map frame, whose box is the map
+  // container's box, so the container pixels are its pixels. The probe is
+  // an empty overlay for the projection, placing the popover on each draw.
+  const popoverHost = container.parentElement ?? container;
+  class Probe extends libs.maps.OverlayView {
+    onAdd() {}
+    draw() {
+      badges?.position();
+    }
+    onRemove() {}
+  }
+  const probe = new Probe();
+  probe.setMap(map);
+  let badgeList: readonly BadgeViewpoint[] = [];
+  let badgesKey = badgesSignature([]);
+  let badges: ViewpointBadges | null = null;
   let pins: ElementOverlay[] = [];
-  let pinned: readonly ViewpointMarker[] = [];
-  function placePins(next: readonly ViewpointMarker[]): void {
-    if (sameMarkers(pinned, next)) return;
+
+  function clearBadges(): void {
     for (const pin of pins) pin.setMap(null);
-    pinned = next;
-    pins = next.map(({ lat, lng, element }) => elementOverlay(element, { lat, lng }, "center"));
+    pins = [];
+    badges?.destroy();
+    badges = null;
+  }
+
+  function placeBadges(next: readonly BadgeViewpoint[]): void {
+    const key = badgesSignature(next);
+    if (key === badgesKey) return;
+    clearBadges();
+    badgesKey = key;
+    badgeList = next;
+    if (next.length === 0) return;
+    badges = createViewpointBadges(next, options.mountIcon ?? null, popoverHost, (index) => {
+      const v = badgeList[index];
+      const point = probe.getProjection()?.fromLatLngToContainerPixel({ lat: v.lat, lng: v.lng });
+      return point ? { x: point.x, y: point.y } : null;
+    });
+    badges.setNames(zoom());
+    pins = badges.items
+      .filter((_, i) => next[i].badge)
+      .map(({ viewpoint, element }) =>
+        elementOverlay(element, { lat: viewpoint.lat, lng: viewpoint.lng }, "center"),
+      );
   }
 
   draw();
-  placePins(state.viewpointMarkers);
+  placeBadges(state.viewpointBadges);
   fit();
 
-  const listeners = [map.addListener("zoom_changed", () => {
-    if (!disposed) showLabels();
-  })];
+  const listeners = [
+    map.addListener("zoom_changed", () => {
+      if (disposed) return;
+      showLabels();
+      badges?.setNames(zoom());
+    }),
+    map.addListener("bounds_changed", () => {
+      if (!disposed) badges?.position();
+    }),
+  ];
 
   let observer: ResizeObserver | null = null;
   if (typeof ResizeObserver !== "undefined") {
@@ -536,7 +585,7 @@ export function mountGoogleRoute(
       const next = stateOf(update);
       const previous = state;
       state = next;
-      placePins(next.viewpointMarkers);
+      placeBadges(next.viewpointBadges);
       if (!sameTheme(previous.theme, next.theme) || !sameKinds(previous.poiKinds, next.poiKinds)) {
         map.setOptions({ styles: styles() });
       }
@@ -558,8 +607,8 @@ export function mountGoogleRoute(
       for (const l of listeners) l.remove();
       clearDrawing();
       start?.setMap(null);
-      for (const pin of pins) pin.setMap(null);
-      pins = [];
+      clearBadges();
+      probe.setMap(null);
     },
   };
 }

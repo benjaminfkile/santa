@@ -23,10 +23,15 @@
 // `labelScale`, and `labelMinZoom` reach routeLayers' options of the same
 // names and `poiKinds` the place filter; a change rebuilds the style
 // through the same diff. The arrowhead image is added under
-// ROUTE_ARROW_ICON through the missing image resolver whenever the style asks for it. `viewpointMarkers`
-// stands one MapLibre marker around each caller's element on its point
-// (the badges and buttons of the viewpoints with an icon or a
-// description); a changed list replaces them. The map takes gestures
+// ROUTE_ARROW_ICON through the missing image resolver whenever the style asks for it.
+// `viewpointBadges` is the viewpoint list in the tracker's badges and
+// popover (createViewpointBadges, site.md 8.5), built through `mountIcon`
+// with the popover host the container's parent (the map frame, whose box
+// is the canvas's box): each entry with `badge` stands its badge element
+// in a MapLibre marker centred on its point, the popover is placed again
+// on every `move`, and the names follow the zoom (`setNames`) from the
+// mount and on every zoom event. A list that draws the same badges keeps
+// them; a changed one replaces them. The map takes gestures
 // directly: the scroll wheel zooms and one finger pans. Below
 // `labelMinZoom` the names count as hidden. The handle listens on the
 // viewpoint and time label dot layers by id, so the listeners outlive
@@ -34,10 +39,10 @@
 // shows a Popup (TIP_CLASS, no close button) with the feature's `label`
 // at the feature and the pointer cursor, gone when the pointer leaves,
 // and a click on a time dot shows the same popup for TIP_PEEK_MS (a tap
-// on a touch screen). A click on a viewpoint dot calls `onViewpointClick`
-// with the feature's point at any zoom. The container carries
-// `data-names` ("hidden" or "shown") from the mount and on every zoom
-// event, so the caller's marker styles can follow it.
+// on a touch screen). A click on a viewpoint dot, at any zoom, opens the
+// popover of the `viewpointBadges` entry at the feature's point, above
+// that point. The container carries `data-names` ("hidden" or "shown")
+// from the mount and on every zoom event.
 
 import "./maplibre.css";
 import { Map as MapLibreMap, Marker, Popup, addProtocol, setWorkerUrl } from "maplibre-gl";
@@ -45,6 +50,14 @@ import type { AddProtocolAction, MapLayerMouseEvent, StyleSpecification } from "
 import { Protocol } from "pmtiles";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { Bbox } from "../map/bounds";
+import {
+  badgesSignature,
+  createViewpointBadges,
+  viewpointAt,
+  type BadgeViewpoint,
+  type MountIcon,
+  type ViewpointBadges,
+} from "../map/viewpointsOverlay";
 import { applyPlaces } from "./places";
 import {
   makeRouteArrowImage,
@@ -64,7 +77,7 @@ export type { LatLng, TimeLabel, Viewpoint } from "./routeLayers";
 export type { TrackerMap } from "./themeStyle";
 export { hasTerrainLayers } from "./themeStyle";
 
-export type ViewpointMarker = { lat: number; lng: number; element: HTMLElement };
+export type { BadgeViewpoint } from "../map/viewpointsOverlay";
 
 // A theme as the handle draws it: its fetched style body, its sprite, and
 // the palettes the overlay paints with.
@@ -82,7 +95,7 @@ export type RouteMapUpdate = {
   timeLabels?: readonly TimeLabel[];
   poiKinds?: readonly string[] | null;
   viewpoints?: readonly Viewpoint[];
-  viewpointMarkers?: readonly ViewpointMarker[];
+  viewpointBadges?: readonly BadgeViewpoint[];
   arrows?: boolean;
   arrowScale?: number;
   routeWidthScale?: number;
@@ -95,7 +108,7 @@ export type RouteMapOptions = RouteMapUpdate & {
   trackerMap: TrackerMap;
   bbox: Bbox | null;
   startElement?: HTMLElement;
-  onViewpointClick?: (point: { lat: number; lng: number }) => void;
+  mountIcon?: MountIcon;
   onError: (error: unknown, reason: MapLibreFailure) => void;
 };
 
@@ -171,13 +184,6 @@ function sameViewpoints(
   return sameLabels(a, b) && a.every((viewpoint, i) => viewpoint.badge === b[i].badge);
 }
 
-function sameMarkers(a: readonly ViewpointMarker[], b: readonly ViewpointMarker[]): boolean {
-  if (a === b) return true;
-  if (a.length !== b.length) return false;
-  return a.every(
-    (m, i) => m.element === b[i].element && m.lat === b[i].lat && m.lng === b[i].lng,
-  );
-}
 
 // The point of the event's first feature when it is a point.
 function featurePoint(event: MapLayerMouseEvent): LatLng | null {
@@ -196,7 +202,7 @@ function stateOf(next: RouteMapUpdate) {
     timeLabels: next.timeLabels ?? [],
     poiKinds: next.poiKinds,
     viewpoints: next.viewpoints,
-    viewpointMarkers: next.viewpointMarkers ?? [],
+    viewpointBadges: next.viewpointBadges ?? [],
     arrows: next.arrows ?? false,
     arrowScale: next.arrowScale,
     routeWidthScale: next.routeWidthScale,
@@ -357,19 +363,42 @@ export function mountRouteMap(options: RouteMapOptions): RouteMapHandle {
           .setLngLat([state.path[0].lng, state.path[0].lat])
           .addTo(map);
 
-  let viewpointMarkers: readonly ViewpointMarker[] = [];
-  let viewpointPins: Marker[] = [];
+  // The viewpoint popover lives in the map frame, whose box is the
+  // canvas's box, so the map's container pixels are its pixels.
+  const popoverHost = container.parentElement ?? container;
+  let badgeList: readonly BadgeViewpoint[] = [];
+  let badgesKey = badgesSignature([]);
+  let badges: ViewpointBadges | null = null;
+  let badgePins: Marker[] = [];
 
-  function placeViewpointMarkers(next: readonly ViewpointMarker[]): void {
-    if (sameMarkers(viewpointMarkers, next)) return;
-    for (const marker of viewpointPins) marker.remove();
-    viewpointMarkers = next;
-    viewpointPins = next.map(({ lat, lng, element }) =>
-      new Marker({ element, anchor: "center" }).setLngLat([lng, lat]).addTo(map),
-    );
+  function clearBadges(): void {
+    for (const marker of badgePins) marker.remove();
+    badgePins = [];
+    badges?.destroy();
+    badges = null;
   }
 
-  placeViewpointMarkers(state.viewpointMarkers);
+  function placeBadges(next: readonly BadgeViewpoint[]): void {
+    const key = badgesSignature(next);
+    if (key === badgesKey) return;
+    clearBadges();
+    badgesKey = key;
+    badgeList = next;
+    if (next.length === 0) return;
+    badges = createViewpointBadges(next, options.mountIcon ?? null, popoverHost, (index) => {
+      const v = badgeList[index];
+      const point = map.project([v.lng, v.lat]);
+      return { x: point.x, y: point.y };
+    });
+    badges.setNames(map.getZoom());
+    badgePins = badges.items
+      .filter((_, i) => next[i].badge)
+      .map(({ viewpoint, element }) =>
+        new Marker({ element, anchor: "center" }).setLngLat([viewpoint.lng, viewpoint.lat]).addTo(map),
+      );
+  }
+
+  placeBadges(state.viewpointBadges);
 
   function namesHidden(): boolean {
     return state.labelMinZoom !== undefined && map.getZoom() < state.labelMinZoom;
@@ -408,7 +437,11 @@ export function mountRouteMap(options: RouteMapOptions): RouteMapHandle {
     map.getCanvas().style.cursor = cursor;
   }
 
-  map.on("zoom", stampNames);
+  map.on("zoom", () => {
+    stampNames();
+    badges?.setNames(map.getZoom());
+  });
+  map.on("move", () => badges?.position());
   stampNames();
 
   map.on("mouseenter", VIEWPOINT_DOTS_LAYER, (event) => {
@@ -421,7 +454,9 @@ export function mountRouteMap(options: RouteMapOptions): RouteMapHandle {
   });
   map.on("click", VIEWPOINT_DOTS_LAYER, (event) => {
     const point = featurePoint(event);
-    if (point !== null) options.onViewpointClick?.(point);
+    if (point === null) return;
+    const index = viewpointAt(badgeList, point);
+    if (index >= 0) badges?.open(index);
   });
   map.on("mouseenter", TIME_LABEL_DOTS_LAYER, (event) => {
     if (!namesHidden()) return;
@@ -440,7 +475,7 @@ export function mountRouteMap(options: RouteMapOptions): RouteMapHandle {
   return {
     update(update) {
       const next = stateOf(update);
-      placeViewpointMarkers(next.viewpointMarkers);
+      placeBadges(next.viewpointBadges);
       if (sameState(state, next)) return;
       const pathChanged = !samePath(state.path, next.path);
       state = next;
@@ -456,8 +491,7 @@ export function mountRouteMap(options: RouteMapOptions): RouteMapHandle {
       stopContextWatch();
       hideTip();
       start?.remove();
-      for (const marker of viewpointPins) marker.remove();
-      viewpointPins = [];
+      clearBadges();
       observer?.disconnect();
       observer = null;
       map.remove();

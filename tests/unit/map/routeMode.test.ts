@@ -6,8 +6,11 @@
 //  - The marks are circle symbols in the chrome background ringed in the
 //    route colour; each time label is a titled dot and a label marker,
 //    the labels on the map only at `labelMinZoom` and above.
-//  - The viewpoints draw a dot and a name (no dot for a badge, whose
-//    element stands on its point); a click calls `onViewpointClick`.
+//  - The viewpoints draw a dot and a name (no dot for a badge); a click
+//    on the dot or the name opens the tracker's popover above the point
+//    in the map frame. A `viewpointBadges` entry with `badge` stands the
+//    tracker's badge on its point; its click opens the same popover, which
+//    follows the map on `bounds_changed`.
 //  - The start element stands on the first point and the end is a circle.
 //  - The map type follows `terrain`; the map is restricted to the box with
 //    its fitted least zoom, recomputed on resize.
@@ -20,6 +23,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   FakeMap,
   FakeMapObject,
+  FakeOverlayView,
   fakeLibs,
   installFakeGoogle,
   resetFakeGoogle,
@@ -34,6 +38,7 @@ import {
   type GoogleRouteTheme,
 } from "../../../src/map/routeMode";
 import { fittedMinZoom } from "../../../src/map/bounds";
+import { POPOVER_GAP } from "../../../src/map/viewpointsOverlay";
 import { SEEDED } from "./themeFixtures";
 
 const PATH = [
@@ -54,6 +59,7 @@ function themeOf(key: "standard" | "night" = "standard"): GoogleRouteTheme {
 
 const observers: { callback: () => void }[] = [];
 
+let frame: HTMLElement;
 let container: HTMLElement;
 
 function sized(width: number, height: number): void {
@@ -114,8 +120,11 @@ beforeEach(() => {
   installFakeGoogle();
   resetFakeGoogle();
   observers.length = 0;
+  FakeOverlayView.shift = { x: 0, y: 0 };
+  frame = document.createElement("div");
   container = document.createElement("div");
-  document.body.appendChild(container);
+  frame.appendChild(container);
+  document.body.appendChild(frame);
   sized(600, 400);
   vi.stubGlobal(
     "ResizeObserver",
@@ -134,7 +143,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  container.remove();
+  frame.remove();
   vi.unstubAllGlobals();
 });
 
@@ -211,36 +220,92 @@ describe("route mode on Google: marks and time labels", () => {
 });
 
 describe("route mode on Google: viewpoints", () => {
-  it("draws a dot and a name for a plain viewpoint, and a click reports its point", async () => {
+  const RIDGE = { name: "Ridge & Pass", lat: 46.88, lng: -113.97, badge: false };
+  const LOOKOUT = {
+    name: "Lookout",
+    lat: 46.86,
+    lng: -113.96,
+    description: "Over the valley.",
+    badge: true,
+  };
+
+  function popover(): HTMLElement | null {
+    return frame.querySelector('[data-testid="tracker-viewpoint-popover"]');
+  }
+
+  it("draws a dot and a name for a plain viewpoint, and a click on either opens its popover above the point", async () => {
     const theme = themeOf();
-    const onViewpointClick = vi.fn();
     mount({
-      viewpoints: [{ lat: 46.88, lng: -113.97, label: "Ridge & Pass" }],
-      onViewpointClick,
+      viewpoints: [{ lat: RIDGE.lat, lng: RIDGE.lng, label: RIDGE.name }],
+      viewpointBadges: [RIDGE],
     });
+    await flush();
     const [dot] = circles(theme.chrome.fg);
     expect(dot.opts.title).toBe("Ridge & Pass");
     expect(dot.opts.clickable).toBe(true);
     const [name] = labelMarkers();
     expect(labelText(name)).toContain(">Ridge &amp; Pass<");
+    expect(map().panes.overlayMouseTarget.querySelector('[data-testid="tracker-viewpoint"]')).toBeNull();
+
     dot.trigger("click");
+    const panel = popover()!;
+    expect(panel).not.toBeNull();
+    expect(panel.parentElement).toBe(frame);
+    expect(panel.querySelector("h3")?.textContent).toBe("Ridge & Pass");
+    expect(panel.querySelector("p")).toBeNull();
+    expect(panel.style.left).toBe(`${RIDGE.lng * 10}px`);
+    expect(panel.style.top).toBe(`${RIDGE.lat * 10 - POPOVER_GAP}px`);
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    expect(popover()).toBeNull();
     name.trigger("click");
-    expect(onViewpointClick).toHaveBeenCalledTimes(2);
-    expect(onViewpointClick).toHaveBeenCalledWith({ lat: 46.88, lng: -113.97 });
+    expect(popover()).not.toBeNull();
   });
 
-  it("draws no dot for a badge viewpoint and stands its element on the point", async () => {
+  it("stands the tracker's badge for a badge viewpoint, its click opening the popover that follows the map", async () => {
     const theme = themeOf();
-    const element = document.createElement("div");
-    element.setAttribute("data-testid", "badge");
     mount({
-      viewpoints: [{ lat: 46.88, lng: -113.97, label: "Lookout", badge: true }],
-      viewpointMarkers: [{ lat: 46.88, lng: -113.97, element }],
+      viewpoints: [{ lat: RIDGE.lat, lng: RIDGE.lng, label: RIDGE.name }],
+      viewpointBadges: [RIDGE, LOOKOUT],
     });
     await flush();
-    expect(circles(theme.chrome.fg)).toHaveLength(0);
-    expect(labelMarkers()).toHaveLength(1);
-    expect(map().panes.overlayMouseTarget.contains(element)).toBe(true);
+    expect(circles(theme.chrome.fg)).toHaveLength(1);
+    const pane = map().panes.overlayMouseTarget;
+    const elements = pane.querySelectorAll('[data-testid="tracker-viewpoint"]');
+    expect(elements).toHaveLength(1);
+    expect(elements[0].getAttribute("data-viewpoint-index")).toBe("1");
+    const badge = elements[0].querySelector<HTMLButtonElement>('[data-testid="tracker-viewpoint-badge"]')!;
+    expect(badge.getAttribute("aria-label")).toBe("About Lookout");
+
+    badge.click();
+    const panel = popover()!;
+    expect(panel.textContent).toContain("Over the valley.");
+    expect(badge.getAttribute("aria-expanded")).toBe("true");
+    expect(panel.style.top).toBe(`${LOOKOUT.lat * 10 - POPOVER_GAP}px`);
+
+    FakeOverlayView.shift = { x: 5, y: 7 };
+    map().trigger("bounds_changed");
+    expect(panel.style.left).toBe(`${LOOKOUT.lng * 10 + 5}px`);
+    expect(panel.style.top).toBe(`${LOOKOUT.lat * 10 + 7 - POPOVER_GAP}px`);
+
+    document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    expect(popover()).toBeNull();
+  });
+
+  it("keeps the badges for a list that draws the same, and replaces them for a changed one", async () => {
+    const handle = mount({ viewpointBadges: [LOOKOUT] });
+    await flush();
+    const pane = map().panes.overlayMouseTarget;
+    const first = pane.querySelector('[data-testid="tracker-viewpoint"]');
+    handle.update({ theme: themeOf(), path: PATH, viewpointBadges: [{ ...LOOKOUT }] });
+    await flush();
+    expect(pane.querySelector('[data-testid="tracker-viewpoint"]')).toBe(first);
+    handle.update({ theme: themeOf(), path: PATH, viewpointBadges: [{ ...LOOKOUT, name: "Summit" }] });
+    await flush();
+    const next = pane.querySelectorAll('[data-testid="tracker-viewpoint"]');
+    expect(next).toHaveLength(1);
+    expect(next[0]).not.toBe(first);
+    expect(next[0].textContent).toContain("Summit");
   });
 });
 
@@ -343,24 +408,24 @@ describe("route mode on Google: the fit", () => {
 describe("route mode on Google: destroy", () => {
   it("takes every line, marker, and element off the map", async () => {
     const startElement = document.createElement("div");
-    const element = document.createElement("div");
     const handle = mount({
       startElement,
       marks: PATH,
       arrows: true,
       timeLabels: [{ lat: 46.9, lng: -113.95, label: "15m" }],
-      viewpoints: [
-        { lat: 46.88, lng: -113.97, label: "Ridge" },
-        { lat: 46.86, lng: -113.96, label: "Lookout", badge: true },
-      ],
-      viewpointMarkers: [{ lat: 46.86, lng: -113.96, element }],
+      viewpoints: [{ lat: 46.88, lng: -113.97, label: "Ridge" }],
+      viewpointBadges: [{ name: "Lookout", lat: 46.86, lng: -113.96, badge: true }],
     });
     await flush();
+    const element = map().panes.overlayMouseTarget.querySelector('[data-testid="tracker-viewpoint"]')!;
+    element.querySelector<HTMLButtonElement>("button")!.click();
+    expect(frame.querySelector('[data-testid="tracker-viewpoint-popover"]')).not.toBeNull();
     expect(live().length).toBeGreaterThan(0);
     handle.destroy();
     expect(live()).toHaveLength(0);
     expect(map().listenerCount()).toBe(0);
     expect(map().panes.overlayMouseTarget.contains(startElement)).toBe(false);
     expect(map().panes.overlayMouseTarget.contains(element)).toBe(false);
+    expect(frame.querySelector('[data-testid="tracker-viewpoint-popover"]')).toBeNull();
   });
 });

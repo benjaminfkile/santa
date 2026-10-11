@@ -18,8 +18,10 @@
 // hides, shown instead as a tooltip above the badge while the badge is
 // hovered or focused on a hover device; at or above it `data-name="shown"`.
 // A click opens the popover at any zoom. `createViewpointBadges` builds the
-// elements and the popover for any map; the MapLibre tracker stands the
-// same elements in its own markers.
+// elements and the popover for any map; the MapLibre tracker and the route
+// map on both renderers stand the same elements in their own markers, and
+// `open(index)` opens a viewpoint's popover without its badge (the route
+// map's style dots call it).
 
 import type { IconRef } from "../contracts";
 import { copy } from "../copy/copy";
@@ -55,11 +57,12 @@ export type ViewpointsOverlay = {
 // the map: one element per viewpoint (`items`, in list order) and the one
 // open popover in the popover host, placed at `toPixel(index)` (the
 // viewpoint's point in host pixels) whenever `position` runs. The Google
-// overlay below and the MapLibre tracker's markers both use it.
+// overlay below, the MapLibre tracker's markers, and the route map use it.
 export type ViewpointBadges = {
   items: readonly { viewpoint: TrackerViewpoint; element: HTMLElement }[];
   setNames(zoom: number): void;
   position(): void;
+  open(index: number): void;
   close(): void;
   destroy(): void;
 };
@@ -194,6 +197,10 @@ export function createViewpointBadges(
       for (const e of entries) e.element.setAttribute("data-name", name);
     },
     position: positionPopover,
+    open(index) {
+      const entry = entries[index];
+      if (entry !== undefined) openPopover(entry);
+    },
     close: () => closePopover(false),
     destroy() {
       closePopover(false);
@@ -203,6 +210,32 @@ export function createViewpointBadges(
       }
     },
   };
+}
+
+// What the badges draw from a viewpoint list; two lists with the same
+// signature draw the same badges.
+export function viewpointsSignature(list: readonly TrackerViewpoint[]): string {
+  return JSON.stringify(
+    list.map((l) => [l.lat, l.lng, l.name, l.icon ?? null, l.description ?? null]),
+  );
+}
+
+// A viewpoint of the route map: `badge` stands its badge on the map, and
+// without it the popover opens from the style's dot.
+export type BadgeViewpoint = TrackerViewpoint & { badge: boolean };
+
+// What the route map's badges draw from a list: the viewpoints and which
+// of them stand.
+export function badgesSignature(list: readonly BadgeViewpoint[]): string {
+  return `${viewpointsSignature(list)}/${list.map((v) => (v.badge ? 1 : 0)).join("")}`;
+}
+
+// The index of the viewpoint at `point` in `list`, or -1.
+export function viewpointAt(
+  list: readonly { lat: number; lng: number }[],
+  point: { lat: number; lng: number },
+): number {
+  return list.findIndex((v) => v.lat === point.lat && v.lng === point.lng);
 }
 
 export function createViewpointsOverlay(
