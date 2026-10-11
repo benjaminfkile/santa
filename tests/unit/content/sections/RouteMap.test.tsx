@@ -82,6 +82,9 @@ vi.mock("maplibre-gl", () => {
       return this.canvas;
     }
     canvas = document.createElement("canvas");
+    setMissingStyleImageResolver() {
+      return this;
+    }
     once(event: string, fn: Handler) {
       (this.onceHandlers[event] ??= []).push(fn);
       return this;

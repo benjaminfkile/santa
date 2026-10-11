@@ -21,6 +21,11 @@ export class FakeMlMap {
   onceHandlers: Record<string, Handler[]> = {};
   zoom: number;
   images = new Set<string>();
+  resolver: ((id: string) => void) | null = null;
+  setMissingStyleImageResolver(resolver: ((id: string) => void) | null) {
+    this.resolver = resolver;
+    return this;
+  }
   removed = false;
   canvas = document.createElement("canvas");
   setStyle = vi.fn();

@@ -225,8 +225,10 @@ export function createMaplibreController(
     if (!settled) fail("style_failed", event.error);
   });
   const stopContextWatch = watchContext(map, (error) => fail("context_lost", error));
-  map.on("styleimagemissing", (event) => {
-    if (disposed || event.id !== ROUTE_ARROW_ICON || map.hasImage(ROUTE_ARROW_ICON)) return;
+  // MapLibre 6 awaits this resolver before it gives up on an image; a
+  // styleimagemissing listener runs too late for the tile that asked.
+  map.setMissingStyleImageResolver((id) => {
+    if (disposed || id !== ROUTE_ARROW_ICON || map.hasImage(ROUTE_ARROW_ICON)) return;
     const image = makeRouteArrowImage();
     map.addImage(ROUTE_ARROW_ICON, image.data, image.options);
   });

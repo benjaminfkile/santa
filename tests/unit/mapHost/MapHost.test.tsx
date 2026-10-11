@@ -76,6 +76,9 @@ vi.mock("maplibre-gl", () => {
     once() {
       return this;
     }
+    setMissingStyleImageResolver() {
+      return this;
+    }
     getZoom() {
       return 10;
     }

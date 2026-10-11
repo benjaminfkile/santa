@@ -23,7 +23,7 @@
 // `labelScale`, and `labelMinZoom` reach routeLayers' options of the same
 // names and `poiKinds` the place filter; a change rebuilds the style
 // through the same diff. The arrowhead image is added under
-// ROUTE_ARROW_ICON whenever the style asks for it. `viewpointMarkers`
+// ROUTE_ARROW_ICON through the missing image resolver whenever the style asks for it. `viewpointMarkers`
 // stands one MapLibre marker around each caller's element on its point
 // (the badges and buttons of the viewpoints with an icon or a
 // description); a changed list replaces them. The map takes gestures
@@ -317,8 +317,10 @@ export function mountRouteMap(options: RouteMapOptions): RouteMapHandle {
   map.once("idle", () => {
     settled = true;
   });
-  map.on("styleimagemissing", (event) => {
-    if (event.id !== ROUTE_ARROW_ICON || map.hasImage(ROUTE_ARROW_ICON)) return;
+  // MapLibre 6 awaits this resolver before it gives up on an image; a
+  // styleimagemissing listener runs too late for the tile that asked.
+  map.setMissingStyleImageResolver((id) => {
+    if (id !== ROUTE_ARROW_ICON || map.hasImage(ROUTE_ARROW_ICON)) return;
     const image = makeRouteArrowImage();
     map.addImage(ROUTE_ARROW_ICON, image.data, image.options);
   });

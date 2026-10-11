@@ -66,6 +66,7 @@ type FakeMapInstance = {
   options: Record<string, unknown>;
   setStyle: ReturnType<typeof vi.fn>;
   addImage: ReturnType<typeof vi.fn>;
+  resolver: ((id: string) => void) | null;
   handlers: Map<string, Handler[]>;
   layerHandlers: Map<string, Handler[]>;
   zoom: number;
@@ -108,6 +109,11 @@ vi.mock("maplibre-gl", () => {
     addImage = vi.fn((id: string) => {
       this.images.add(id);
     });
+    resolver: ((id: string) => void) | null = null;
+    setMissingStyleImageResolver(resolver: ((id: string) => void) | null) {
+      this.resolver = resolver;
+      return this;
+    }
     constructor(options: Record<string, unknown>) {
       this.options = options;
       mocks.maps.push(this as unknown as FakeMapInstance);
@@ -671,15 +677,15 @@ describe("route map config reaching the style", () => {
     expectDefaultStyle();
   });
 
-  it("adds the arrowhead image when the style asks for it", async () => {
+  it("adds the arrowhead image through the missing image resolver", async () => {
     await renderSection();
     const map = mocks.maps[0];
-    const missing = map.handlers.get("styleimagemissing") ?? [];
-    expect(missing).toHaveLength(1);
-    missing[0]({ id: "something-else" });
+    const resolve = map.resolver!;
+    expect(resolve).toBeTypeOf("function");
+    resolve("something-else");
     expect(map.addImage).not.toHaveBeenCalled();
-    missing[0]({ id: "route-arrow" });
-    missing[0]({ id: "route-arrow" });
+    resolve("route-arrow");
+    resolve("route-arrow");
     expect(map.addImage).toHaveBeenCalledTimes(1);
     expect(map.addImage.mock.calls[0][0]).toBe("route-arrow");
     expect(map.addImage.mock.calls[0][2]).toMatchObject({ sdf: true });
