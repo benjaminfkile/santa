@@ -74,7 +74,9 @@ function pageViews(): unknown[] {
 
 afterEach(() => {
   cleanup();
-  vi.unstubAllEnvs();
+  // Back to the tests/setup.ts defaults; unstubAllEnvs would drop VITE_ENV too.
+  vi.stubEnv("VITE_ANALYTICS_ID", "");
+  vi.stubEnv("VITE_ANALYTICS_ORIGINS", "");
   document.head.querySelectorAll('script[src*="googletagmanager"]').forEach((s) => s.remove());
 });
 

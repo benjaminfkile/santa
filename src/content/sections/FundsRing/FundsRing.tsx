@@ -1,5 +1,6 @@
-// docs/site.md section 7.4. The Cheer Meter panel: ring in --gold on
-// --line, the amount in mono, the caption, and (optional) Donate button.
+// docs/site.md section 7.4. The Cheer Meter panel: ring on --line, its
+// fill in --err, --gold, or --ok by the raw fundsPercent (data-level on
+// the fill), the amount in mono, the caption, and (optional) Donate button.
 
 import type { SectionComponent } from "../../registry";
 import { Inline } from "../../inline/Inline";
@@ -30,6 +31,17 @@ function clampPercent(n: number | undefined | null): number {
   return n;
 }
 
+export type FundsLevel = "low" | "mid" | "met";
+
+/** The fill's band from the raw fundsPercent: below 30 is low, 30 up to
+ *  100 is mid, 100 and above is met; no number is low. */
+export function fundsLevel(n: number | undefined | null): FundsLevel {
+  if (typeof n !== "number" || Number.isNaN(n)) return "low";
+  if (n >= 100) return "met";
+  if (n >= 30) return "mid";
+  return "low";
+}
+
 export const FundsRing: SectionComponent = ({ data, bundle }) => {
   const d = (data ?? {}) as FundsRingData;
   const size = d.size ?? "large";
@@ -37,6 +49,7 @@ export const FundsRing: SectionComponent = ({ data, bundle }) => {
   const showYear = d.showYear !== false;
   const event = useSnapshotEvent();
   const percent = event ? clampPercent(event.fundsPercent) : 0;
+  const level = fundsLevel(event?.fundsPercent);
   const reduced = useReducedMotion();
   const donateUrl = useStore((s) => {
     const content = s.snapshot?.content as ContentDocument | undefined;
@@ -80,6 +93,7 @@ export const FundsRing: SectionComponent = ({ data, bundle }) => {
             r={radius}
             fill="none"
             strokeWidth={stroke}
+            data-level={level}
             strokeDasharray={circumference}
             strokeDashoffset={dashOffset}
             transform={`rotate(-90 ${px / 2} ${px / 2})`}
