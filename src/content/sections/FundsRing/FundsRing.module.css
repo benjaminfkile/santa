@@ -1,5 +1,6 @@
-/* docs/site.md section 7.4. The Cheer Meter panel: ring in --gold on
-   --line, the amount in mono, the caption, the Donate button. One column
+/* docs/site.md section 7.4. The Cheer Meter panel: ring on --line,
+   its fill in --err below 30 percent, --gold below 100, --ok at 100 and
+   above (the fill's data-level), the amount in mono, the caption, the Donate button. One column
    at every width, the text under the ring; the section's align decides
    whether everything sits at the start or the centre. The percent is
    always centred inside the ring. */
@@ -23,6 +24,9 @@
   stroke-linecap: round;
   transition: stroke-dashoffset 900ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+.fundsRingFill[data-level="low"] { stroke: var(--err); }
+.fundsRingFill[data-level="mid"] { stroke: var(--gold); }
+.fundsRingFill[data-level="met"] { stroke: var(--ok); }
 .fundsRingFillReduced { transition: none; }
 .fundsRingValue {
   position: absolute;

@@ -669,7 +669,7 @@ Content kinds read `data`, `items`, and the bundle only. Live kinds read the sto
 | `links` | `data.style`, `items` | Buttons, cards (label, icon, description), or a list |
 | `icon_row` | `data`, `items` | Decorative row of icons with optional labels; icons `aria-hidden` when unlabelled |
 | `divider` | `data.style` | A line, a row of snowflake icons, or a string of lights (CSS) |
-| `funds_ring` | `snapshot.event.fundsPercent`, `year` | SVG ring filled to the percent with the number in the middle (always centred in the ring), animated fill; one column at every width with the heading, caption, and Donate button under the ring; `presentation.align` puts the whole stack at the start or the centre (centre also centres the text); `showYear` adds the year to the heading; 0 and no year when `event` is null |
+| `funds_ring` | `snapshot.event.fundsPercent`, `year` | SVG ring filled to the percent with the number in the middle (always centred in the ring), animated fill; the fill's colour comes from the raw `fundsPercent` before any clamp, as `data-level` on the fill with the colours in the CSS module: below 30 is `low` in `--err`, 30 up to but not including 100 is `mid` in `--gold`, 100 and above is `met` in `--ok` (no event is `low`); one column at every width with the heading, caption, and Donate button under the ring; `presentation.align` puts the whole stack at the start or the centre (centre also centres the text); `showYear` adds the year to the heading; 0 and no year when `event` is null |
 | `countdown` | `snapshot.event.scheduledAt`, `live.eventStatusId` | `Xd Xh Xm Xs` from the 1 s clock; renders nothing unless status is 2 and `now < scheduledAt`; blank while `!timeReady` |
 | `event_times` | `snapshot.event.scheduledAt`, `wentLiveAt`, `endedAt`, `live.eventStatusId` | One labelled line per field in `data.fields` whose value exists, formatted in the viewer's timezone; `airborneFor` is `formatElapsed(now - wentLiveAt)` on the 1 s clock while status is 3; blank while `!timeReady` |
 | `latest_message` | `snapshot.event.latestMessage` | `card`: body plus `createdAt`; `ticker`: one collapsible line; `aria-live="polite"`; nothing when null. Rendering a message with a numeric id marks it read (`markMessageSeen(event.id, message.id)`, 7.6) in an effect keyed on the two ids, in both styles and with the ticker collapsed, so the tracker's envelope pill shows it as read |
@@ -759,11 +759,11 @@ Data row units: speed as mph from `speedMps`, heading as degrees plus cardinal f
 | `--accent` | `#6fd3ff` | `#0b6bb5` | the accent: eyebrows, active nav, buttons, icons |
 | `--accent-soft` | `rgba(111,211,255,.14)` | `rgba(11,107,181,.11)` | accent washes, hover fills |
 | `--on-accent` | `#070d1c` | `#ffffff` | text on a filled accent button |
-| `--gold` | `#f0c05a` | `#8a6210` | funds ring fill, the star in the brand mark |
+| `--gold` | `#f0c05a` | `#8a6210` | funds ring fill from 30 up to 100 percent, the star in the brand mark |
 | `--link` | `#9cc7ff` | `#0b6bb5` | prose links |
-| `--ok` | `#56d29a` | `#1c7548` | status good, live dot |
+| `--ok` | `#56d29a` | `#1c7548` | status good, live dot, funds ring fill at 100 percent and above |
 | `--warn` | `#f0c05a` | `#8a6210` | status degraded, disclaimer |
-| `--err` | `#ff7a70` | `#ba3329` | status down, validation errors |
+| `--err` | `#ff7a70` | `#ba3329` | status down, validation errors, funds ring fill below 30 percent |
 | `--shadow` | `none` | `0 1px 3px rgba(15,26,48,.08)` | panels (dark has no shadows) |
 | `--shadow-raised` | `0 10px 28px rgba(0,0,0,.5)` | `0 10px 28px rgba(15,26,48,.18)` | the elevated menu panel |
 | `--snow` | `rgba(255,255,255,.85)` | `rgba(140,165,205,.55)` | snow flakes |
