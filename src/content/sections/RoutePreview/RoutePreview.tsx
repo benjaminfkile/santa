@@ -33,13 +33,16 @@
 // The map carries a fullscreen button and a terrain toggle unless
 // `controls.fullscreen` or `controls.terrain` is false. The
 // `places.routeMap.kinds` list reaches the host as its place filter and
-// the viewpoints as its viewpoints, each name the label. A viewpoint with
-// an icon or a description also gets a marker and its popover
-// (RouteViewpoints). The names and the time label text start at
-// LABEL_MIN_ZOOM (`labelMinZoom`); a click on a viewpoint's style dot
-// opens the popover of the viewpoint at that point, so every viewpoint
-// opens its popover. The five display values (time label interval,
-// arrows, arrow size, route width, label size) reach the host as the
+// the viewpoints in the tracker's viewpoint badges and popover
+// (`viewpointBadges`, site.md 8.5), each icon checked against the bundle
+// (one that does not resolve counts as none) and drawn through the Icon
+// primitive in its own root (`mountIcon`). A viewpoint with an icon or a
+// description stands its badge; a plain one (neither) is a style
+// viewpoint, its name the label, and a click on its dot opens its popover
+// above the dot, so every viewpoint opens its popover. The names and the
+// time label text start at LABEL_MIN_ZOOM (`labelMinZoom`). The five
+// display values (time label interval, arrows, arrow size, route width,
+// label size) reach the host as the
 // label interval, `arrows`, `arrowScale`, `routeWidthScale`, and
 // `labelScale`. The section data carries the heading, the disclaimer, and
 // the empty text; any other key in a published document is ignored.
@@ -55,6 +58,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { createRoot } from "react-dom/client";
 import type { SectionComponent } from "../../registry";
 import { Inline } from "../../inline/Inline";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
@@ -62,9 +66,11 @@ import { store, useStore } from "../../../store/useStore";
 import { routeMapPath, type LatLng } from "./routeMapPath";
 import { routeMapTimeline, routeTimeLabels, type TimelineLabel } from "./routeTimelineData";
 import { createRouteStartMarker } from "./routeStartMarker";
-import { useRouteViewpoints } from "./RouteViewpoints";
 import { resolvePlaces, resolveViewpoints, resolveRouteMapConfig } from "./routeMapConfig";
 import { useRouteMapFullscreen } from "./useRouteMapFullscreen";
+import type { IconRef } from "../../../contracts";
+import { Icon, iconResolves } from "../../primitives/Icon";
+import type { BadgeViewpoint, MountIcon } from "../../../map/viewpointsOverlay";
 import { TakeoverPortal } from "../../../lib/TakeoverPortal";
 import { getResolved, subscribeScheme } from "../../theme/colorScheme";
 import {
@@ -168,15 +174,31 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   const viewpointList = useMemo(() => resolveViewpoints(settingsViewpoints), [settingsViewpoints]);
   const settingsPlaces = content?.settings?.places;
   const routeMapPlaces = useMemo(() => resolvePlaces(settingsPlaces).routeMap, [settingsPlaces]);
-  const viewpoints = useRouteViewpoints(viewpointList, bundle);
-  const { openIndex } = viewpoints;
-  const onViewpointClick = useCallback(
-    (point: { lat: number; lng: number }) => {
-      const index = viewpointList.findIndex((l) => l.lat === point.lat && l.lng === point.lng);
-      if (index >= 0) openIndex(index);
-    },
-    [viewpointList, openIndex],
+  const viewpointBadges = useMemo<BadgeViewpoint[] | undefined>(
+    () =>
+      viewpointList?.map((v) => {
+        const icon = v.icon && iconResolves(v.icon, bundle) ? v.icon : null;
+        const told = typeof v.description === "string" && v.description.trim() !== "";
+        return { ...v, icon, badge: icon !== null || told };
+      }),
+    [viewpointList, bundle],
   );
+  const styleViewpoints = useMemo(
+    () =>
+      viewpointBadges
+        ?.filter((v) => !v.badge)
+        .map(({ name, lat, lng }) => ({ lat, lng, label: name })),
+    [viewpointBadges],
+  );
+  // Viewpoint icons render through the Icon primitive into the badge, each
+  // in its own root, against the latest bundle.
+  const bundleRef = useRef(bundle);
+  bundleRef.current = bundle;
+  const mountIcon = useCallback<MountIcon>((container: HTMLElement, icon: IconRef) => {
+    const root = createRoot(container);
+    root.render(<Icon icon={icon} bundle={bundleRef.current} decorative size={18} />);
+    return () => queueMicrotask(() => root.unmount());
+  }, []);
   const [startElement] = useState(createRouteStartMarker);
 
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -269,14 +291,14 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
                     marks={marks}
                     timeLabels={timeLabels}
                     poiKinds={routeMapPlaces}
-                    viewpoints={viewpoints.styleViewpoints}
-                    viewpointMarkers={viewpoints.markers}
+                    viewpoints={styleViewpoints}
+                    viewpointBadges={viewpointBadges}
+                    mountIcon={mountIcon}
                     arrows={display.arrows}
                     arrowScale={display.arrowScale}
                     routeWidthScale={display.routeWidthScale}
                     labelScale={display.labelScale}
                     labelMinZoom={LABEL_MIN_ZOOM}
-                    onViewpointClick={onViewpointClick}
                     startElement={startElement}
                     ariaLabel={copy.map.routeMap.region}
                     fullscreenControl={config.controls.fullscreen}
@@ -288,11 +310,9 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
                   />
                 </Suspense>
               ) : null}
-              {viewpoints.popover}
             </div>
           </div>
         </TakeoverPortal>
-        {viewpoints.portals}
       </div>
     );
   }

@@ -19,21 +19,24 @@
 //    viewpoints, or POI kinds in the section data, or a routeMap block in
 //    the site settings, change nothing.
 //  - The named sizes map to scales through one table.
-//  - A viewpoint with an icon stands a badge marker (a library icon
-//    inline, a media icon through an image) and has no style dot; a
-//    viewpoint with a description stands a button that opens its popover,
-//    one at a time, closed by its close button, Escape, a tap elsewhere,
-//    and its own button again; plain viewpoints get no marker and stay as
-//    the style draws them. The popover holds a "Get directions" link to
-//    the viewpoint's point in a new tab: Apple Maps on an Apple touch
-//    device, Google Maps everywhere else.
+//  - A viewpoint with an icon or a description stands the tracker's badge
+//    (createViewpointBadges) in a marker and leaves the style; its icon
+//    draws inline for a library icon and through an image for a media
+//    icon, and a description viewpoint without one shows the accent dot.
+//    A badge click opens the tracker's popover in the popover host (the
+//    map frame) above the point, one at a time, closed by its close
+//    button, Escape, a press elsewhere, and its own badge again; plain
+//    viewpoints get no marker and stay as the style draws them. The
+//    popover holds a "Get directions" link to the viewpoint's point in a
+//    new tab: Apple Maps on an Apple touch device, Google Maps everywhere
+//    else.
 //  - The map is created without cooperativeGestures.
 //  - The section passes labelMinZoom 12: the handle listens on the
 //    viewpoint and time label dot layers; below zoom 12 a pointer on a dot
 //    shows a popup with its label until it leaves, a tap on a time dot
 //    shows it for 2.5 s, and the container carries data-names; a click on
-//    any viewpoint dot opens that viewpoint's popover, a plain viewpoint's
-//    without a description paragraph.
+//    any viewpoint dot opens that viewpoint's popover above the dot, a
+//    plain viewpoint's without a description paragraph.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, cleanup, act, fireEvent } from "@testing-library/react";
@@ -53,6 +56,7 @@ import {
 } from "../../../../src/content/sections/RoutePreview/routeMapConfig";
 import { routeTimeLabels } from "../../../../src/content/sections/RoutePreview/routeTimelineData";
 import { mountRouteMap } from "../../../../src/mapHost/handle";
+import { POPOVER_GAP } from "../../../../src/map/viewpointsOverlay";
 import {
   ROUTE_THEME_ROWS,
   routePalette,
@@ -141,6 +145,10 @@ vi.mock("maplibre-gl", () => {
     }
     getCanvas() {
       return this.canvas;
+    }
+    // Container pixels: (lng * 10, lat * 10).
+    project([lng, lat]: [number, number]) {
+      return { x: lng * 10, y: lat * 10 };
     }
     once() {
       return this;
@@ -721,24 +729,24 @@ function viewpointProperties(style: StyleShape): Record<string, unknown>[] {
 }
 
 function viewpointMarkers(): FakeMarkerInstance[] {
-  return mocks.markers.filter((m) => m.element?.getAttribute("data-testid") === "route-viewpoint");
+  return mocks.markers.filter((m) => m.element?.getAttribute("data-testid") === "tracker-viewpoint");
 }
 
 function popover(): HTMLElement | null {
-  return q(document, "route-viewpoint-popover");
+  return q(document, "tracker-viewpoint-popover");
 }
 
-function buttonFor(name: string): HTMLButtonElement {
-  const button = qa(document, "route-viewpoint-button").find(
+function badgeFor(name: string): HTMLButtonElement {
+  const badge = qa(document, "tracker-viewpoint-badge").find(
     (b) => b.getAttribute("aria-label") === `About ${name}`,
   );
-  expect(button, name).toBeDefined();
-  return button as HTMLButtonElement;
+  expect(badge, name).toBeDefined();
+  return badge as HTMLButtonElement;
 }
 
 async function open(name: string): Promise<void> {
   await act(async () => {
-    fireEvent.click(buttonFor(name));
+    fireEvent.click(badgeFor(name));
   });
 }
 
@@ -752,7 +760,7 @@ describe("route map viewpoints", () => {
     await renderSection({ landmarks: [PLAIN, TOLD, LIBRARY] });
     expect(currentStyle().sources["route-landmarks"]).toBeUndefined();
     expect(viewpointMarkers()).toHaveLength(0);
-    expect(qa(document, "route-viewpoint-button")).toHaveLength(0);
+    expect(qa(document, "tracker-viewpoint-badge")).toHaveLength(0);
   });
 
   it("keeps plain viewpoints exactly as the style draws them, with no marker", async () => {
@@ -763,36 +771,40 @@ describe("route map viewpoints", () => {
     expect(layerOf(style, "route-landmarks")?.layout?.["text-radial-offset"]).toBe(0.5);
     expect(viewpointMarkers()).toHaveLength(0);
     expect(mocks.markers).toHaveLength(1);
-    expect(qa(document, "route-viewpoint")).toHaveLength(0);
+    expect(qa(document, "tracker-viewpoint")).toHaveLength(0);
   });
 
-  it("draws an icon viewpoint as a badge in place of the dot, the label beside it", async () => {
+  it("stands the tracker's badge for an icon viewpoint, the name beside it, and leaves it out of the style", async () => {
     await renderSection(null, { settings: { landmarks: [PLAIN, LIBRARY, MEDIA] } });
-    const style = currentStyle();
-    expect(viewpointProperties(style)).toEqual([
-      { label: "Caras Park" },
-      { label: "Mount Jumbo", badge: true },
-      { label: "Higgins Bridge", badge: true },
-    ]);
-    expect(layerOf(style, "route-landmark-dots")?.filter).toEqual(["!", ["has", "badge"]]);
-    expect(layerOf(style, "route-landmarks")).toBeDefined();
+    expect(viewpointProperties(currentStyle())).toEqual([{ label: "Caras Park" }]);
 
     const markers = viewpointMarkers();
     expect(markers).toHaveLength(2);
     expect(markers[0].lngLats).toEqual([[LIBRARY.lng, LIBRARY.lat]]);
     expect(markers[1].lngLats).toEqual([[MEDIA.lng, MEDIA.lat]]);
+    expect(markers.map((m) => m.element!.getAttribute("data-viewpoint-index"))).toEqual(["1", "2"]);
+    expect(markers.map((m) => m.element!.textContent)).toEqual(["Mount Jumbo", "Higgins Bridge"]);
+    expect(markers.every((m) => m.element!.getAttribute("data-name") === "hidden")).toBe(true);
 
-    const libraryBadge = q(markers[0].element!, "route-viewpoint-badge")!;
-    expect(libraryBadge.getAttribute("aria-hidden")).toBe("true");
-    const svg = libraryBadge.querySelector('svg[data-icon-source="library"]');
+    const libraryIcon = q(markers[0].element!, "tracker-viewpoint-icon")!;
+    expect(libraryIcon.getAttribute("aria-hidden")).toBe("true");
+    const svg = libraryIcon.querySelector('svg[data-icon-source="library"]');
     expect(svg?.getAttribute("data-icon-id")).toBe("tree");
-    expect(libraryBadge.querySelector("img")).toBeNull();
+    expect(libraryIcon.querySelector("img")).toBeNull();
 
-    const mediaBadge = q(markers[1].element!, "route-viewpoint-badge")!;
-    const img = mediaBadge.querySelector("img");
+    const mediaIcon = q(markers[1].element!, "tracker-viewpoint-icon")!;
+    const img = mediaIcon.querySelector("img");
     expect(img?.getAttribute("src")).toBe("https://cdn.example/media/bridge.svg");
     expect(img?.getAttribute("data-icon-source")).toBe("media");
-    expect(qa(document, "route-viewpoint-button")).toHaveLength(0);
+  });
+
+  it("follows the zoom with the badge names", async () => {
+    await renderSection(null, { settings: { landmarks: [LIBRARY] } });
+    const [marker] = viewpointMarkers();
+    expect(marker.element!.getAttribute("data-name")).toBe("hidden");
+    mocks.maps[0].zoom = 12;
+    mocks.maps[0].fire("zoom");
+    expect(marker.element!.getAttribute("data-name")).toBe("shown");
   });
 
   it("treats an icon that does not resolve as no icon", async () => {
@@ -804,17 +816,17 @@ describe("route map viewpoints", () => {
     expect(viewpointMarkers()).toHaveLength(0);
   });
 
-  it("opens a description viewpoint's popover with its name and description, and closes it with the close button", async () => {
+  it("opens a description viewpoint's popover above its badge in the map frame, and closes it with the close button", async () => {
     await renderSection(null, { settings: { landmarks: [PLAIN, TOLD] } });
-    expect(viewpointProperties(currentStyle())).toEqual([{ label: "Caras Park" }, { label: "The Oval" }]);
+    expect(viewpointProperties(currentStyle())).toEqual([{ label: "Caras Park" }]);
     const markers = viewpointMarkers();
     expect(markers).toHaveLength(1);
     expect(markers[0].lngLats).toEqual([[TOLD.lng, TOLD.lat]]);
 
-    const button = buttonFor("The Oval");
-    expect(markers[0].element!.contains(button)).toBe(true);
-    expect(button.getAttribute("aria-expanded")).toBe("false");
-    expect(q(button, "route-viewpoint-badge")).toBeNull();
+    const badge = badgeFor("The Oval");
+    expect(markers[0].element!.contains(badge)).toBe(true);
+    expect(badge.getAttribute("aria-expanded")).toBe("false");
+    expect(q(badge, "tracker-viewpoint-dot")).not.toBeNull();
     expect(popover()).toBeNull();
 
     await open("The Oval");
@@ -824,19 +836,31 @@ describe("route map viewpoints", () => {
     const title = document.getElementById(panel.getAttribute("aria-labelledby")!);
     expect(title?.textContent).toBe("The Oval");
     expect(panel.textContent).toContain("Where the reindeer rest.");
-    expect(button.getAttribute("aria-expanded")).toBe("true");
-    expect(button.getAttribute("aria-controls")).toBe(panel.id);
-    expect(q(document, "route-map-frame")!.contains(panel)).toBe(true);
+    expect(badge.getAttribute("aria-expanded")).toBe("true");
+    expect(panel.parentElement).toBe(q(document, "route-map-frame"));
+    expect(panel.style.left).toBe(`${TOLD.lng * 10}px`);
+    expect(panel.style.top).toBe(`${TOLD.lat * 10 - POPOVER_GAP}px`);
 
-    const close = q(panel, "route-viewpoint-popover-close")!;
+    const close = q(panel, "tracker-viewpoint-popover-close")!;
     expect(close.getAttribute("aria-label")).toBe("Close");
     expect(document.activeElement).toBe(close);
     await act(async () => {
       fireEvent.click(close);
     });
     expect(popover()).toBeNull();
-    expect(button.getAttribute("aria-expanded")).toBe("false");
-    expect(document.activeElement).toBe(button);
+    expect(badge.getAttribute("aria-expanded")).toBe("false");
+    expect(document.activeElement).toBe(badge);
+  });
+
+  it("moves the open popover with the map", async () => {
+    await renderSection(null, { settings: { landmarks: [TOLD] } });
+    await open("The Oval");
+    const panel = popover()!;
+    const map = mocks.maps[0] as unknown as { project: (p: [number, number]) => { x: number; y: number } };
+    map.project = ([lng, lat]) => ({ x: lng * 10 + 5, y: lat * 10 + 7 });
+    mocks.maps[0].fire("move");
+    expect(panel.style.left).toBe(`${TOLD.lng * 10 + 5}px`);
+    expect(panel.style.top).toBe(`${TOLD.lat * 10 + 7 - POPOVER_GAP}px`);
   });
 
   it("closes the popover on Escape, keeping a fullscreen map fullscreen", async () => {
@@ -854,7 +878,7 @@ describe("route map viewpoints", () => {
       fireEvent.keyDown(document.activeElement ?? document, { key: "Escape" });
     });
     expect(popover()).toBeNull();
-    expect(document.activeElement).toBe(buttonFor("The Oval"));
+    expect(document.activeElement).toBe(badgeFor("The Oval"));
     expect(stage.getAttribute("data-fullscreen")).toBe("takeover");
 
     await act(async () => {
@@ -863,7 +887,7 @@ describe("route map viewpoints", () => {
     expect(stage.getAttribute("data-fullscreen")).toBe("off");
   });
 
-  it("closes the popover on a tap elsewhere, and not on a tap inside it", async () => {
+  it("closes the popover on a press elsewhere, and not on a press inside it", async () => {
     await renderSection(null, { settings: { landmarks: [TOLD] } });
     await open("The Oval");
     const panel = popover()!;
@@ -883,12 +907,12 @@ describe("route map viewpoints", () => {
     expect(popover()).toBeNull();
   });
 
-  it("closes the popover from its own viewpoint's button", async () => {
+  it("closes the popover from its own viewpoint's badge", async () => {
     await renderSection(null, { settings: { landmarks: [TOLD] } });
     await open("The Oval");
     expect(popover()).not.toBeNull();
     await act(async () => {
-      fireEvent.pointerDown(buttonFor("The Oval"));
+      fireEvent.pointerDown(badgeFor("The Oval"));
     });
     expect(popover()).not.toBeNull();
     await open("The Oval");
@@ -903,7 +927,7 @@ describe("route map viewpoints", () => {
     for (const viewpoint of [TOLD, TOLD_ICON]) {
       await open(viewpoint.name);
       const panel = popover()!;
-      const link = q(panel, "route-viewpoint-directions") as HTMLAnchorElement;
+      const link = q(panel, "tracker-viewpoint-directions") as HTMLAnchorElement;
       expect(link.tagName).toBe("A");
       expect(link.textContent).toBe("Get directions");
       expect(link.getAttribute("href")).toBe(
@@ -922,7 +946,7 @@ describe("route map viewpoints", () => {
     );
     await renderSection(null, { settings: { landmarks: [TOLD] } });
     await open(TOLD.name);
-    const link = q(popover()!, "route-viewpoint-directions")!;
+    const link = q(popover()!, "tracker-viewpoint-directions")!;
     expect(link.getAttribute("href")).toBe(`https://maps.apple.com/?daddr=${TOLD.lat},${TOLD.lng}`);
     expect(link.getAttribute("target")).toBe("_blank");
     expect(link.getAttribute("rel")).toBe("noopener");
@@ -932,32 +956,33 @@ describe("route map viewpoints", () => {
     await renderSection(null, { settings: { landmarks: [TOLD, TOLD_ICON] } });
     await open("The Oval");
     await act(async () => {
-      fireEvent.pointerDown(buttonFor("Clock Tower"));
+      fireEvent.pointerDown(badgeFor("Clock Tower"));
     });
     await open("Clock Tower");
-    expect(qa(document, "route-viewpoint-popover")).toHaveLength(1);
+    expect(qa(document, "tracker-viewpoint-popover")).toHaveLength(1);
     expect(popover()!.textContent).toContain("Chimes at midnight.");
-    expect(buttonFor("The Oval").getAttribute("aria-expanded")).toBe("false");
-    expect(buttonFor("Clock Tower").getAttribute("aria-expanded")).toBe("true");
+    expect(badgeFor("The Oval").getAttribute("aria-expanded")).toBe("false");
+    expect(badgeFor("Clock Tower").getAttribute("aria-expanded")).toBe("true");
   });
 
-  it("makes an icon viewpoint with a description a button around its badge", async () => {
+  it("draws an icon viewpoint with a description as the badge holding its icon", async () => {
     await renderSection(null, { settings: { landmarks: [TOLD_ICON] } });
-    expect(viewpointProperties(currentStyle())).toEqual([{ label: "Clock Tower", badge: true }]);
-    const button = buttonFor("Clock Tower");
-    const badge = q(button, "route-viewpoint-badge")!;
+    expect(currentStyle().sources["route-landmarks"]).toBeUndefined();
+    const badge = badgeFor("Clock Tower");
     expect(badge.querySelector('svg[data-icon-id="bell"]')).not.toBeNull();
     await open("Clock Tower");
     expect(popover()!.textContent).toContain("Clock Tower");
     expect(popover()!.textContent).toContain("Chimes at midnight.");
   });
 
-  it("removes the viewpoint markers with the map", async () => {
+  it("removes the viewpoint markers and the popover with the map", async () => {
     const { unmount } = await renderSection(null, { settings: { landmarks: [LIBRARY, TOLD] } });
     const markers = viewpointMarkers();
     expect(markers).toHaveLength(2);
+    await open("The Oval");
     unmount();
     expect(markers.every((m) => m.removed)).toBe(true);
+    expect(popover()).toBeNull();
   });
 });
 
@@ -968,8 +993,10 @@ function dotEvent(label: string, lat: number, lng: number) {
 }
 
 describe("route map dot layer events", () => {
-  async function mount(onViewpointClick = vi.fn()) {
+  async function mount() {
+    const frame = document.createElement("div");
     const container = document.createElement("div");
+    frame.appendChild(container);
     const handle = await mountRouteMap({
       container,
       trackerMap: { ...TRACKER_MAP, minZoom: 0, maxZoom: 15 },
@@ -977,10 +1004,11 @@ describe("route map dot layer events", () => {
       theme: { key: "light", spriteUrl: null, style: routeStyle("light"), ...routePalette("light") },
       path: PATH,
       labelMinZoom: 12,
-      onViewpointClick,
+      viewpoints: [{ lat: 46.87, lng: -113.99, label: "Caras Park" }],
+      viewpointBadges: [{ name: "Caras Park", lat: 46.87, lng: -113.99, badge: false }],
       onError: vi.fn(),
     });
-    return { container, handle, map: mocks.maps[0], onViewpointClick };
+    return { frame, container, handle, map: mocks.maps[0] };
   }
 
   it("registers the listeners on both dot layers and stamps the container by the zoom", async () => {
@@ -1017,11 +1045,16 @@ describe("route map dot layer events", () => {
     expect(mocks.popups).toHaveLength(0);
   });
 
-  it("calls onViewpointClick with the feature's point on a viewpoint dot click", async () => {
-    const { map, onViewpointClick } = await mount();
+  it("opens the popover of the viewpoint at the feature's point above it in the frame on a viewpoint dot click", async () => {
+    const { frame, map } = await mount();
     map.zoom = 14;
+    map.fireLayer("click", "route-landmark-dots", dotEvent("Somewhere", 46.8, -113.9));
+    expect(q(frame, "tracker-viewpoint-popover")).toBeNull();
     map.fireLayer("click", "route-landmark-dots", dotEvent("Caras Park", 46.87, -113.99));
-    expect(onViewpointClick).toHaveBeenCalledWith({ lat: 46.87, lng: -113.99 });
+    const panel = q(frame, "tracker-viewpoint-popover")!;
+    expect(panel.parentElement).toBe(frame);
+    expect(panel.querySelector("h3")?.textContent).toBe("Caras Park");
+    expect(panel.style.top).toBe(`${46.87 * 10 - POPOVER_GAP}px`);
   });
 
   it("shows a time dot's popup for 2.5 s on a click", async () => {
@@ -1060,19 +1093,33 @@ describe("route map viewpoint dot clicks", () => {
     });
     const panel = popover()!;
     expect(panel).not.toBeNull();
+    expect(panel.parentElement).toBe(q(document, "route-map-frame"));
+    expect(panel.style.left).toBe(`${PLAIN.lng * 10}px`);
+    expect(panel.style.top).toBe(`${PLAIN.lat * 10 - POPOVER_GAP}px`);
     expect(panel.querySelector("h3")?.textContent).toBe("Caras Park");
     expect(panel.querySelector("p")).toBeNull();
-    const link = q(panel, "route-viewpoint-directions")!;
+    const link = q(panel, "tracker-viewpoint-directions")!;
     expect(link.textContent).toBe("Get directions");
     expect(link.getAttribute("href")).toContain(`${PLAIN.lat},${PLAIN.lng}`);
   });
 
-  it("puts the name in a tooltip span in every marker", async () => {
-    await renderSection(null, { settings: { landmarks: [LIBRARY, TOLD] } });
-    const markers = viewpointMarkers();
-    expect(markers.map((m) => q(m.element!, "route-viewpoint-tip")?.textContent)).toEqual([
-      "Mount Jumbo",
-      "The Oval",
-    ]);
+  it("closes a dot's popover on Escape and on a press outside it", async () => {
+    await renderSection(null, { settings: { landmarks: [PLAIN] } });
+    const click = () =>
+      act(async () => {
+        mocks.maps[0].fireLayer("click", "route-landmark-dots", dotEvent("Caras Park", PLAIN.lat, PLAIN.lng));
+      });
+    await click();
+    expect(popover()).not.toBeNull();
+    await act(async () => {
+      fireEvent.keyDown(document, { key: "Escape" });
+    });
+    expect(popover()).toBeNull();
+    await click();
+    expect(popover()).not.toBeNull();
+    await act(async () => {
+      fireEvent.pointerDown(q(document, "route-map")!);
+    });
+    expect(popover()).toBeNull();
   });
 });

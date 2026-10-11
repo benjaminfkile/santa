@@ -16,14 +16,4 @@ export const routePreviewMap: string;
 export const routeStart: string;
 export const routeStartFlag: string;
 export const routeStartLabel: string;
-export const routeViewpoint: string;
-export const routeViewpointBadge: string;
-export const routeViewpointButton: string;
-export const routeViewpointDirections: string;
-export const routeViewpointDotButton: string;
-export const routeViewpointPopover: string;
-export const routeViewpointPopoverHead: string;
-export const routeViewpointPopoverText: string;
-export const routeViewpointPopoverTitle: string;
-export const routeViewpointTip: string;
 

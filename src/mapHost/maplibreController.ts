@@ -44,6 +44,7 @@ import {
 import {
   createViewpointBadges,
   VIEWPOINTS_MIN_ZOOM,
+  viewpointsSignature,
   type TrackerViewpoint,
   type ViewpointBadges,
 } from "../map/viewpointsOverlay";
@@ -97,14 +98,6 @@ function bearing(a: LatLng, b: LatLng): number {
     Math.cos(rad(a.lat)) * Math.sin(rad(b.lat)) -
     Math.sin(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.cos(rad(b.lng - a.lng));
   return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
-}
-
-// What the overlay draws from a viewpoint; two lists with the same
-// signature draw the same badges.
-function viewpointsSignature(list: readonly TrackerViewpoint[]): string {
-  return JSON.stringify(
-    list.map((l) => [l.lat, l.lng, l.name, l.icon ?? null, l.description ?? null]),
-  );
 }
 
 export function createMaplibreController(
