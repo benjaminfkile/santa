@@ -34,6 +34,7 @@ import { useAuth } from "../auth/AuthProvider";
 import { useThemeChoice } from "../content/theme/colorScheme";
 import { LightsLayer } from "../content/theme/seasonalLayers";
 import { useReducedMotion } from "../lib/motion";
+import { usePageViews } from "../lib/analytics";
 import type { IconRef } from "../contracts";
 import type { ContentBundle } from "../store/types";
 import { usePreviewLive } from "../pages/previewLive";
@@ -61,6 +62,10 @@ export function Shell({ children }: ShellProps) {
   const takeover = useStore(selectTakeover);
 
   const updatesPaused = !online || consecutiveFailures >= 3;
+
+  // Every route renders inside the shell, so this is the one place the
+  // analytics gate and the page view per navigation run (section 16).
+  usePageViews();
 
   useEffect(() => {
     const root = document.documentElement;

@@ -1300,7 +1300,7 @@ export function initAnalytics(): boolean {
 }
 ```
 
-Enabled only when `settings.analyticsEnabled` is true in the current bundle (checked when the first snapshot is held; a later publish that turns it off stops page views at the next navigation), both `VITE_ANALYTICS_ID` and `VITE_ANALYTICS_ORIGINS` are set, and the page origin is in the list; both are set in the Vercel Production environment only, so preview deployments, PR previews on `*.vercel.app` hosts, and local runs send nothing. The router sends one `page_view` per navigation. Beyond the page view, three events go through `sendEvent(name, params)` behind the same gate, so none of them measures anything on a preview deployment or locally; the measurement is production only:
+Enabled only when `settings.analyticsEnabled` is true in the current bundle (checked when the first snapshot is held; a later publish that turns it off stops page views at the next navigation), both `VITE_ANALYTICS_ID` and `VITE_ANALYTICS_ORIGINS` are set, and the page origin is in the list; both are set in the Production environment of each Vercel project only (the dev site with the dev property's id and its own origin, the production site with the production property's id and its origin), so preview deployments, PR previews, and local runs send nothing. `Shell` calls `usePageViews()`, so every route runs the gate and sends one `page_view` per navigation. Beyond the page view, three events go through `sendEvent(name, params)` behind the same gate, so none of them measures anything on a preview deployment or locally:
 
 | Event | Sent when | Params |
 |---|---|---|
@@ -1441,8 +1441,8 @@ The three families (IBM Plex Sans 400, 500, 600; IBM Plex Mono 400, 500; Bricola
   default-src 'self';
   script-src 'self' https://maps.googleapis.com https://www.googletagmanager.com;
   connect-src 'self' %VITE_CDN_BASE_URL% %VITE_API_BASE_URL% %VITE_HUB_URL% %COGNITO_IDP_URL%
-              https://maps.googleapis.com https://www.googletagmanager.com https://*.google-analytics.com;
-  img-src 'self' data: blob: %VITE_CDN_BASE_URL% https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.gstatic.com https://*.ggpht.com;
+              https://maps.googleapis.com https://*.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com;
+  img-src 'self' data: blob: %VITE_CDN_BASE_URL% https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.gstatic.com https://*.ggpht.com https://*.google-analytics.com https://*.googletagmanager.com;
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   worker-src 'self' blob:;
@@ -1586,7 +1586,7 @@ Site-specific steps within the overall cut-over:
 
 ## 24. Decisions made here
 
-- Analytics fires only when `VITE_ANALYTICS_ID` is set and the page origin is in `VITE_ANALYTICS_ORIGINS`; both are set on the Vercel production environment only.
+- Analytics fires only when `VITE_ANALYTICS_ID` is set and the page origin is in `VITE_ANALYTICS_ORIGINS`; both are set on each Vercel project's Production environment only, dev and production sending to separate GA4 properties.
 
 - The Playwright harness obtains its admin ID token with `InitiateAuth` (`USER_PASSWORD_AUTH`) on the dev pool's `wmsfo-admin` client and answers the `SOFTWARE_TOKEN_MFA` challenge with a TOTP computed from a CI secret; a dedicated test admin user exists in the dev pool only.
 
@@ -1619,7 +1619,7 @@ Site-specific steps within the overall cut-over:
 - Both alert landing pages POST on load after a token regex check.
 - Accounts are the site's own pages over the Cognito API with `amazon-cognito-identity-js` (SRP); tokens live in `localStorage`, renewal uses the refresh token, sign-out revokes it and stays on the page; the hosted UI is never shown and there is no callback route.
 - API `message` text is never rendered; every code maps to copy in `copy/copy.ts`.
-- Analytics is GA4 through gtag, gated by `VITE_ANALYTICS_ID` and an exact-origin list in `VITE_ANALYTICS_ORIGINS`, page views only.
+- Analytics is GA4 through gtag, gated by `VITE_ANALYTICS_ID` and an exact-origin list in `VITE_ANALYTICS_ORIGINS`: page views plus the three map events of section 16.
 - CSP is a build-time `<meta>` in `index.html` from `VITE_` values; `vercel.json` carries only environment-free headers.
 - No service worker and no PWA install prompt.
 - No links, copy, or images are constants in the repository beyond the loading, error, and sign-in strings in `copy/copy.ts`.
