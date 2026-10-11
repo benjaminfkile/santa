@@ -6,6 +6,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { act, cleanup, render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import {
+  LIVE_FLAKE_FILL,
+  LIVE_FLAKE_OUTLINE,
   SnowLayer,
   LightsLayer,
   SNOW_KEY,
@@ -233,6 +235,7 @@ describe("LightsLayer live-screen detection", () => {
 describe("the snow canvas on a high density screen", () => {
   let frames: Map<number, FrameRequestCallback>;
   let visibility: DocumentVisibilityState;
+  let snowCtx: { fill: ReturnType<typeof vi.fn>; stroke: ReturnType<typeof vi.fn>; fillStyle: string; strokeStyle: string };
 
   beforeEach(() => {
     frames = new Map();
@@ -253,8 +256,12 @@ describe("the snow canvas on a high density screen", () => {
       beginPath: vi.fn(),
       arc: vi.fn(),
       fill: vi.fn(),
+      stroke: vi.fn(),
       fillStyle: "",
+      strokeStyle: "",
+      lineWidth: 1,
     };
+    snowCtx = ctx;
     vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
       () => ctx as unknown as CanvasRenderingContext2D,
     );
@@ -277,6 +284,48 @@ describe("the snow canvas on a high density screen", () => {
     );
     return container.querySelector('[data-testid="snow-canvas"]') as HTMLCanvasElement;
   }
+
+  function runFrames(): void {
+    act(() => {
+      for (const cb of Array.from(frames.values())) cb(0);
+    });
+  }
+
+  it("draws the map flakes white with a cool outline, about one per 16,000 square pixels", () => {
+    seedLive(3);
+    act(() => setSnowOverride(true));
+    const { container } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <SnowLayer bundle={bundleWithDefaults(false, false)} />
+      </MemoryRouter>,
+    );
+    expect(container.querySelector("[data-testid=snow-canvas]")).not.toBeNull();
+    runFrames();
+    const perFrame = Math.floor((390 * 844) / 16000);
+    expect(snowCtx.fillStyle).toBe(LIVE_FLAKE_FILL);
+    expect(snowCtx.strokeStyle).toBe(LIVE_FLAKE_OUTLINE);
+    expect(snowCtx.fill.mock.calls.length).toBeGreaterThan(0);
+    expect(snowCtx.fill.mock.calls.length % perFrame).toBe(0);
+    expect(snowCtx.stroke).toHaveBeenCalledTimes(snowCtx.fill.mock.calls.length);
+    act(() => clearSnowOverride());
+  });
+
+  it("draws the page flakes in --snow with no outline, about one per 30,000 square pixels", () => {
+    seedLive(2);
+    document.documentElement.style.setProperty("--snow", "rgba(1, 2, 3, 0.5)");
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <SnowLayer bundle={bundleWithDefaults(true, false)} />
+      </MemoryRouter>,
+    );
+    runFrames();
+    document.documentElement.style.removeProperty("--snow");
+    const perFrame = Math.floor((390 * 844) / 30000);
+    expect(snowCtx.fillStyle).toBe("rgba(1, 2, 3, 0.5)");
+    expect(snowCtx.fill.mock.calls.length).toBeGreaterThan(0);
+    expect(snowCtx.fill.mock.calls.length % perFrame).toBe(0);
+    expect(snowCtx.stroke).not.toHaveBeenCalled();
+  });
 
   it("sizes the backing store at a device pixel ratio of 2, not 3", () => {
     const canvas = renderSnow();
