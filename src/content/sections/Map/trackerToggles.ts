@@ -1,6 +1,7 @@
 // docs/site.md section 8.5. The viewer's tracker choices: flight history,
 // time labels, viewpoints, the flight gauge shown or hidden, the cookie
-// tally open or collapsed, and the map type (terrain or road). They live
+// tally open or collapsed, the map type (terrain or road), and the live
+// screen's snow (seasonalLayers.tsx reads and writes that one). They live
 // in localStorage["wmsfo.tracker.settings"] as one JSON object, read and
 // written through lib/storage, so a refresh, a remount of the section (a
 // live flip, the unavailable panel's retry), and the next visit all keep
@@ -17,7 +18,8 @@ export type TrackerToggleKey =
   | "timeLabels"
   | "landmarks"
   | "flightDock"
-  | "cookieTally";
+  | "cookieTally"
+  | "snow";
 
 export type TrackerMapType = "terrain" | "roadmap";
 
@@ -52,6 +54,17 @@ export function readTrackerToggle(key: TrackerToggleKey, fallback: boolean): boo
 
 export function writeTrackerToggle(key: TrackerToggleKey, value: boolean): void {
   save({ ...settings(), [key]: value });
+}
+
+// Whether the viewer has chosen this toggle (true or false) at all.
+export function hasTrackerToggle(key: TrackerToggleKey): boolean {
+  return typeof settings()[key] === "boolean";
+}
+
+export function removeTrackerToggle(key: TrackerToggleKey): void {
+  const next = { ...settings() };
+  delete next[key];
+  save(next);
 }
 
 export function readTrackerMapType(fallback: TrackerMapType): TrackerMapType {

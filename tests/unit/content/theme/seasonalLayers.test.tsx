@@ -16,6 +16,7 @@ import {
   useSnowEnabled,
 } from "../../../../src/content/theme/seasonalLayers";
 import { store } from "../../../../src/store/useStore";
+import { TRACKER_SETTINGS_KEY } from "../../../../src/content/sections/Map/trackerToggles";
 import { initialStore } from "../../../../src/store/types";
 import type { ContentBundle } from "../../../../src/store/types";
 
@@ -90,11 +91,12 @@ afterEach(() => {
 });
 
 describe("the live snow choice", () => {
-  it("is held in memory and never written to localStorage", () => {
+  it("is stored with the tracker's other choices, never under the old key", () => {
     setSnowOverride(true);
     expect(window.localStorage.getItem(SNOW_KEY)).toBeNull();
+    expect(JSON.parse(window.localStorage.getItem(TRACKER_SETTINGS_KEY) ?? "{}").snow).toBe(true);
     setSnowOverride(false);
-    expect(window.localStorage.getItem(SNOW_KEY)).toBeNull();
+    expect(JSON.parse(window.localStorage.getItem(TRACKER_SETTINGS_KEY) ?? "{}").snow).toBe(false);
   });
 
   it("useSnowEnabled prefers the choice over the default until it is cleared", () => {
@@ -152,37 +154,46 @@ describe("SnowLayer live-screen detection", () => {
   });
 });
 
-describe("the snow choice ends with the live takeover", () => {
+describe("the snow choice outlives the live takeover", () => {
   function canvasIn(container: HTMLElement): Element | null {
     return container.querySelector('[data-testid="snow-canvas"]');
   }
 
-  it("renders snowDefault once the event is not live, whatever was chosen on the tracker", () => {
+  it("renders snowDefault once the event is not live and the stored choice again when it is", () => {
     seedLive(3);
-    const bundle = bundleWithDefaults(true, false);
+    const bundle = bundleWithDefaults(false, false);
     const { container } = render(
       <MemoryRouter initialEntries={["/"]}>
         <SnowLayer bundle={bundle} />
       </MemoryRouter>,
     );
+    expect(canvasIn(container)).toBeNull();
     act(() => setSnowOverride(true));
     expect(canvasIn(container)).not.toBeNull();
-    act(() => setSnowOverride(false));
-    expect(canvasIn(container)).toBeNull();
 
     act(() => {
       store.setState({ live: { ...store.getState().live!, eventStatusId: 4 } });
     });
-    expect(canvasIn(container)).not.toBeNull();
+    expect(canvasIn(container)).toBeNull();
 
-    // A later takeover starts from the live default again, not the old choice.
     act(() => {
       store.setState({ live: { ...store.getState().live!, eventStatusId: 3 } });
     });
-    expect(canvasIn(container)).toBeNull();
+    expect(canvasIn(container)).not.toBeNull();
   });
 
-  it("ignores and removes a stored off outside live, rendering snowDefault", () => {
+  it("starts the live screen from a choice a previous page load stored", () => {
+    window.localStorage.setItem(TRACKER_SETTINGS_KEY, JSON.stringify({ snow: true }));
+    seedLive(3);
+    const { container } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <SnowLayer bundle={bundleWithDefaults(false, false)} />
+      </MemoryRouter>,
+    );
+    expect(canvasIn(container)).not.toBeNull();
+  });
+
+  it("ignores and removes the old key outside live, rendering snowDefault", () => {
     window.localStorage.setItem(SNOW_KEY, "off");
     seedLive(1);
     const bundle = bundleWithDefaults(true, false);
@@ -195,8 +206,8 @@ describe("the snow choice ends with the live takeover", () => {
     expect(window.localStorage.getItem(SNOW_KEY)).toBeNull();
   });
 
-  it("keeps snow off outside live when snowDefault is off, whatever was stored", () => {
-    window.localStorage.setItem(SNOW_KEY, "on");
+  it("keeps snow off outside live when snowDefault is off, whatever was chosen", () => {
+    window.localStorage.setItem(TRACKER_SETTINGS_KEY, JSON.stringify({ snow: true }));
     seedLive(1);
     const bundle = bundleWithDefaults(false, false);
     const { container } = render(
@@ -291,7 +302,7 @@ describe("the snow canvas on a high density screen", () => {
     });
   }
 
-  it("draws the map flakes white with a cool outline, about one per 16,000 square pixels", () => {
+  it("draws the map flakes white with a cool outline, about one per 22,000 square pixels", () => {
     seedLive(3);
     act(() => setSnowOverride(true));
     const { container } = render(
@@ -301,7 +312,7 @@ describe("the snow canvas on a high density screen", () => {
     );
     expect(container.querySelector("[data-testid=snow-canvas]")).not.toBeNull();
     runFrames();
-    const perFrame = Math.floor((390 * 844) / 16000);
+    const perFrame = Math.floor((390 * 844) / 22000);
     expect(snowCtx.fillStyle).toBe(LIVE_FLAKE_FILL);
     expect(snowCtx.strokeStyle).toBe(LIVE_FLAKE_OUTLINE);
     expect(snowCtx.fill.mock.calls.length).toBeGreaterThan(0);

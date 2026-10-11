@@ -1,36 +1,41 @@
 // docs/site.md section 7.7. Two seasonal layers: a canvas of small, slow,
 // translucent flakes coloured by --snow behind the page's cards (white
-// flakes with a thin cool outline over the map, so they read on any map
+// flakes with a thin cool outline over the map, the same on every map
 // style), and a string of 7 px bulbs on a 1 px wire under the header. Off
 // the live screen snow follows the published `snowDefault` alone. On the
-// live screen snow is off by default and the tracker menu's Snow button sets a choice
-// held in memory only; the choice is cleared when the takeover ends, so the
-// site then follows `snowDefault` again. The lights follow the site setting
-// alone. The live screen is detected through `live.eventStatusId === 3`
-// (docs 24), whatever the path, since every path renders the tracker then;
-// the lights are not rendered over the map.
+// live screen snow is off until the viewer presses the tracker menu's
+// Snow button, and that choice is stored with the tracker's other choices
+// (sections/Map/trackerToggles.ts), so a refresh and the next visit keep
+// it. The lights follow the site setting alone. The live screen is
+// detected through `live.eventStatusId === 3` (docs 24), whatever the
+// path, since every path renders the tracker then; the lights are not
+// rendered over the map.
 
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { decorativeDpr, startDecorativeLoop } from "../../lib/decorativeLoop";
 import { storageRemove } from "../../lib/storage";
 import type { ContentBundle } from "../../store/types";
 import { useStore } from "../../store/useStore";
+import {
+  hasTrackerToggle,
+  readTrackerToggle,
+  removeTrackerToggle,
+  writeTrackerToggle,
+} from "../sections/Map/trackerToggles";
 import { subscribeScheme } from "./colorScheme";
 import * as styles from "./SeasonalLayers.module.css";
 
-// A leftover key from builds that stored the choice; it is removed and
-// never read.
+// A leftover key from builds that stored the choice on its own; it is
+// removed and never read.
 export const SNOW_KEY = "wmsfo.snow";
 
 // Square pixels per flake behind the page's cards and over the map, and
 // the map flakes' fill and outline.
 const PAGE_FLAKE_AREA = 30000;
-const LIVE_FLAKE_AREA = 16000;
-export const LIVE_FLAKE_FILL = "rgba(255, 255, 255, 0.95)";
-export const LIVE_FLAKE_OUTLINE = "rgba(48, 70, 100, 0.45)";
+const LIVE_FLAKE_AREA = 22000;
+export const LIVE_FLAKE_FILL = "rgba(255, 255, 255, 0.8)";
+export const LIVE_FLAKE_OUTLINE = "rgba(48, 70, 100, 0.4)";
 const LIVE_FLAKE_OUTLINE_WIDTH = 0.75;
-
-let liveChoice: boolean | null = null;
 
 const overrideListeners = new Set<() => void>();
 
@@ -45,27 +50,27 @@ export function subscribeOverrides(l: () => void): () => void {
   };
 }
 
-// The tracker's Snow button: sets the visitor's choice for the current
-// live takeover, in memory only.
+// The tracker's Snow button: stores the viewer's choice with the tracker's
+// other choices.
 export function setSnowOverride(next: boolean): void {
-  liveChoice = next;
+  writeTrackerToggle("snow", next);
   notifyOverrides();
 }
 
-// Drops the live choice; called when the takeover ends.
+// Forgets the viewer's choice, so the live screen starts from off again.
 export function clearSnowOverride(): void {
   storageRemove(SNOW_KEY);
-  if (liveChoice === null) return;
-  liveChoice = null;
+  if (!hasTrackerToggle("snow")) return;
+  removeTrackerToggle("snow");
   notifyOverrides();
 }
 
 function getSnowSnapshot(): boolean | null {
-  return liveChoice;
+  return hasTrackerToggle("snow") ? readTrackerToggle("snow", false) : null;
 }
 
-// The live screen's snow state: the visitor's choice for this takeover,
-// else `defaultOn`.
+// The live screen's snow state: the viewer's stored choice, else
+// `defaultOn`.
 export function useSnowEnabled(defaultOn: boolean): boolean {
   const chosen = useSyncExternalStore(subscribeOverrides, getSnowSnapshot, () => null);
   return chosen ?? defaultOn;
@@ -89,8 +94,8 @@ export function SnowLayer({ bundle }: { bundle: ContentBundle | null }) {
   const enabled = chosen && !prefersReduced;
 
   useEffect(() => {
-    if (!isLive) clearSnowOverride();
-  }, [isLive]);
+    storageRemove(SNOW_KEY);
+  }, []);
 
   useEffect(() => {
     if (!enabled) return;
@@ -134,7 +139,7 @@ export function SnowLayer({ bundle }: { bundle: ContentBundle | null }) {
         flakes.push({
           x: Math.random() * width,
           y: Math.random() * height,
-          r: overMap ? 1.2 + Math.random() * 1.6 : 0.8 + Math.random() * 1.3,
+          r: overMap ? 1.0 + Math.random() * 1.2 : 0.8 + Math.random() * 1.3,
           v: 0.15 + Math.random() * 0.45,
           d: (Math.random() - 0.5) * 0.15,
         });
