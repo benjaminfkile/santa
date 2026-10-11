@@ -29,6 +29,7 @@ import { GlobeIcon } from "./globe";
 import { HeartIcon } from "./heart";
 import { HelicopterIcon } from "./helicopter";
 import { HollyIcon } from "./holly";
+import { HomeIcon } from "./home";
 import { InstagramIcon } from "./instagram";
 import { JingleBellsIcon } from "./jingle-bells";
 import { LollipopIcon } from "./lollipop";
@@ -49,6 +50,7 @@ import { QuestionIcon } from "./question";
 import { ReindeerIcon } from "./reindeer";
 import { ReindeerFaceIcon } from "./reindeer-face";
 import { RibbonIcon } from "./ribbon";
+import { RouteIcon } from "./route";
 import { SantaIcon } from "./santa";
 import { SantaHatIcon } from "./santa-hat";
 import { ScarfIcon } from "./scarf";
@@ -96,6 +98,7 @@ export const LIBRARY_ICONS: Record<string, IconComponent> = {
   "heart": HeartIcon,
   "helicopter": HelicopterIcon,
   "holly": HollyIcon,
+  "home": HomeIcon,
   "instagram": InstagramIcon,
   "jingle-bells": JingleBellsIcon,
   "lollipop": LollipopIcon,
@@ -116,6 +119,7 @@ export const LIBRARY_ICONS: Record<string, IconComponent> = {
   "reindeer": ReindeerIcon,
   "reindeer-face": ReindeerFaceIcon,
   "ribbon": RibbonIcon,
+  "route": RouteIcon,
   "santa": SantaIcon,
   "santa-hat": SantaHatIcon,
   "scarf": ScarfIcon,
