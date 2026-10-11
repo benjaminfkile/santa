@@ -67,7 +67,12 @@ import { RouteDisclaimer } from "./RouteDisclaimer";
 import { TrackerMenu } from "./TrackerMenu";
 import { LocationPrompt } from "./LocationPrompt";
 import { MapUnavailable } from "./MapUnavailable";
-import { readTrackerToggle, writeTrackerToggle } from "./trackerToggles";
+import {
+  readTrackerMapType,
+  readTrackerToggle,
+  writeTrackerMapType,
+  writeTrackerToggle,
+} from "./trackerToggles";
 import { CookieTally } from "./CookieTally";
 import { CookiePlusGlyph, TrackerMenuGlyph } from "./glyphs";
 import * as styles from "./Map.module.css";
@@ -206,10 +211,16 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const [theme, setTheme] = useState<MapTheme | null>(initialTheme);
   const themeRef = useRef(theme);
   themeRef.current = theme;
-  const [mapType, setMapType] = useState<"terrain" | "roadmap">("terrain");
+  // Every choice below is stored, so a refresh and a remount keep it; the
+  // content default applies until the viewer has chosen (trackerToggles.ts).
+  const [mapType, setMapTypeState] = useState<"terrain" | "roadmap">(() =>
+    readTrackerMapType("terrain"),
+  );
+  const setMapType = useCallback((t: "terrain" | "roadmap") => {
+    writeTrackerMapType(t);
+    setMapTypeState(t);
+  }, []);
   const snow = useSnowEnabled(false);
-  // The viewer's choice outlives a remount; the content default applies
-  // until the viewer has toggled (trackerToggles.ts).
   const [flightHistoryOn, setFlightHistoryOnState] = useState<boolean>(() =>
     readTrackerToggle("flightHistory", flightHistoryDefault),
   );

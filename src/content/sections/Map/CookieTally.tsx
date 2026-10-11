@@ -6,8 +6,8 @@
 // a shadow in the chrome's panel colour. Rows reorder in place as live
 // objects arrive, with no animation. A chevron above the column collapses
 // it for a viewer who would rather not look at the counts; collapsed, the
-// chevron is all that is left, and the choice is kept for the page load in
-// trackerToggles like the tracker's other choices.
+// chevron is all that is left, and the choice is stored in trackerToggles
+// like the tracker's other choices.
 
 import { useState } from "react";
 import type { IconRef } from "../../../contracts";
