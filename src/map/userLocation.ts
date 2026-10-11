@@ -28,11 +28,6 @@ function readUserPalette(): UserPalette | null {
   return { fill, stroke };
 }
 
-function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
 const ONE_MILE_M = 1609.344;
 
 export function formatDistanceMetres(m: number): string {
@@ -138,7 +133,7 @@ export function createUserLocation(
       userMarker.setPosition(drawn(state.position));
       if (userMarker.getMap() === null) userMarker.setMap(map);
     }
-    if (!prefersReducedMotion() && pulseTimer === null && typeof window !== "undefined") {
+    if (pulseTimer === null && typeof window !== "undefined") {
       pulseTimer = window.setInterval(() => {
         if (userMarker === null) return;
         visible = !visible;

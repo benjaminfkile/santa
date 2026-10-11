@@ -280,13 +280,37 @@ test("a printed code that opens a page lands on it and the code's people count r
     .toBeGreaterThanOrEqual(beforePeople + 1);
 });
 
-test.describe("reduced motion", () => {
+test.describe("motion under a reduced-motion preference", () => {
   test.use({ colorScheme: "light" });
-  test("hides the snow toggle", async ({ browser }) => {
+  test("every animation runs when the browser asks for reduced motion", async ({ browser }) => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const p = await context.newPage();
     await p.goto("/");
-    await expect(p.locator('[data-testid="snow-toggle"]')).toHaveCount(0);
+    await expect(p.locator("header").first()).toBeVisible();
+    expect(await p.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
+    // No stylesheet on the page carries a reduced-motion media rule.
+    const reducedRules = await p.evaluate(() => {
+      let count = 0;
+      for (const sheet of Array.from(document.styleSheets)) {
+        let rules: CSSRuleList;
+        try {
+          rules = sheet.cssRules;
+        } catch {
+          continue;
+        }
+        for (const rule of Array.from(rules)) {
+          if (rule instanceof CSSMediaRule && rule.conditionText.includes("prefers-reduced-motion")) count += 1;
+        }
+      }
+      return count;
+    });
+    expect(reducedRules).toBe(0);
+    // The ornaments, when the site shows them, sway with a running keyframe.
+    const ornaments = p.locator("[data-sway]");
+    for (const o of await ornaments.all()) {
+      await expect(o).toHaveAttribute("data-sway", "on");
+      expect(await o.evaluate((el) => getComputedStyle(el).animationDuration)).not.toBe("0s");
+    }
     await context.close();
   });
 });

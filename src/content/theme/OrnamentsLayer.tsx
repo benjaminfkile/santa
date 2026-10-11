@@ -3,11 +3,9 @@
 // live screen when `settings.theme.ornaments` is true. Colours come from
 // the `--orn-*` tokens, the whole layer is dimmed by `--orn-opacity`
 // (0.55 light, 0.4 dark, 0.3 below 640 px), and the top offset follows
-// the shell's `--header-height`. The sway keyframe is on by default and
-// the reduced-motion query in tokens.css zeroes it, leaving the sway
-// class present but silent so tests can assert its presence.
+// the shell's `--header-height`. Every ornament carries the sway class
+// and the sway keyframe always runs.
 
-import { useSyncExternalStore } from "react";
 import { useStore } from "../../store/useStore";
 import type { ContentBundle } from "../../store/types";
 import * as styles from "./OrnamentsLayer.module.css";
@@ -80,21 +78,8 @@ function useIsLiveScreen(): boolean {
   return eventStatusId === 3;
 }
 
-function subscribeReducedMotion(cb: () => void): () => void {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return () => {};
-  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-  mq.addEventListener("change", cb);
-  return () => mq.removeEventListener("change", cb);
-}
-
-function getReducedMotion(): boolean {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
 export function OrnamentsLayer({ bundle }: { bundle: ContentBundle | null }) {
   const isLive = useIsLiveScreen();
-  const reduced = useSyncExternalStore(subscribeReducedMotion, getReducedMotion, () => false);
   const enabled = (bundle?.content?.settings.theme.ornaments ?? false) && !isLive;
   if (!enabled) return null;
 
@@ -115,11 +100,10 @@ export function OrnamentsLayer({ bundle }: { bundle: ContentBundle | null }) {
         const sphereCenterY = o.stringLengthPx + capHeight + o.spherePx / 2;
         const totalWidth = o.spherePx;
         const totalHeight = o.stringLengthPx + capHeight + o.spherePx;
-        const swayClass = reduced ? "" : ` ${styles.sway}`;
         return (
           <span
             key={i}
-            className={`${styles.ornament}${swayClass}`}
+            className={`${styles.ornament} ${styles.sway}`}
             style={{
               left: o.leftCss,
               width: `${totalWidth}px`,
@@ -128,7 +112,7 @@ export function OrnamentsLayer({ bundle }: { bundle: ContentBundle | null }) {
               animationDelay: `${o.swayDelaySeconds}s`,
             }}
             data-testid={`ornament-${i}`}
-            data-sway={reduced ? "off" : "on"}
+            data-sway="on"
           >
             <svg
               viewBox={`0 0 ${totalWidth} ${totalHeight}`}

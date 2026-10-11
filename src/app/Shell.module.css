@@ -294,8 +294,7 @@
   box-shadow: var(--shadow-raised);
 }
 /* Opening slides the panel in from the right; closing slides it out to
-   the right, both 0.5 s on the same ease. Under reduced motion neither
-   class is applied, so the panel appears and disappears at once. */
+   the right, both 0.5 s on the same ease. */
 .panelIn { animation: panelIn 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
 .panelOut { animation: panelOut 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
 @keyframes panelIn {
@@ -305,10 +304,6 @@
 @keyframes panelOut {
   from { transform: translateX(0); }
   to { transform: translateX(calc(100% + var(--space-2))); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .panelIn,
-  .panelOut { animation: none; }
 }
 .panelList {
   list-style: none;

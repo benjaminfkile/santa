@@ -284,12 +284,12 @@ describe("MessagesPill shake", () => {
     expect(view.getByTestId("messages-envelope").className).not.toContain("messagesShake");
   });
 
-  it("adds no shake class under reduced motion", () => {
+  it("shakes when matchMedia reports reduced motion", () => {
     stubReducedMotion(true);
     setMessage(M11);
     const view = renderMap();
     setMessage(M12);
-    expect(view.getByTestId("messages-envelope").className).not.toContain("messagesShake");
+    expect(view.getByTestId("messages-envelope").className).toContain("messagesShake");
   });
 });
 

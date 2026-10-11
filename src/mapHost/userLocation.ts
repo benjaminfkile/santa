@@ -1,9 +1,8 @@
 // docs/site.md sections 8.6 and 8.10. The viewer's location on the MapLibre
 // tracker: the same `watchPosition` and state as the Google form
 // (src/map/userLocation.ts), drawn as an HTML marker (a 16 px circle in the
-// theme's `overlay.userColor`, pulsing every PULSE_MS unless reduced
-// motion) and a dotted line to Santa that the controller draws in its
-// style from `line()`. With the event box given, the marker and both ends
+// theme's `overlay.userColor`, pulsing every PULSE_MS) and a dotted line to
+// Santa that the controller draws in its style from `line()`. With the event box given, the marker and both ends
 // of the line sit clamped to it, while the distance is always measured
 // between the true positions (on the same sphere as Google's geometry
 // library). Nothing about location is persisted. After `destroy` nothing
@@ -30,11 +29,6 @@ export function distanceMetres(a: LatLng, b: LatLng): number {
   const h =
     Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * EARTH_RADIUS_M * Math.asin(Math.min(1, Math.sqrt(h)));
-}
-
-function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 export type MapLibreUserLocation = {
@@ -95,7 +89,7 @@ export function createMapLibreUserLocation(
     } else {
       marker.setLngLat([at.lng, at.lat]);
     }
-    if (pulseTimer === null && !prefersReducedMotion()) {
+    if (pulseTimer === null) {
       pulseTimer = setInterval(() => {
         element.style.visibility = element.style.visibility === "hidden" ? "" : "hidden";
       }, PULSE_MS);

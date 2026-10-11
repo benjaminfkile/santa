@@ -3,8 +3,7 @@
 // the alerts bell, theme toggle and menu, the menu panel, banners, footer. The header is
 // sticky at the top of the viewport. The menu panel sits in the top right corner over the menu
 // button, which hides while the panel is open; the panel slides in from the
-// right on open and out to the right on close (instant under reduced
-// motion), and a press outside it, the choice of any row, or Escape closes
+// right on open and out to the right on close, and a press outside it, the choice of any row, or Escape closes
 // it and returns focus to the menu button. Crossing into the desktop
 // breakpoint (wider than 760 px) closes the panel at once, with no slide,
 // and releases everything an open panel holds: the focus trap, the
@@ -421,7 +420,8 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
 }
 
 // The panel's slide: "in" from the right while open, "out" to the right
-// while closing, "none" when closed or under reduced motion.
+// while closing, "none" when closed or when `reducedMotion` is true
+// (useReducedMotion returns false, so the slide always runs).
 function panelMotion(phase: PanelPhase, reducedMotion: boolean): "in" | "out" | "none" {
   if (reducedMotion || phase === "closed") return "none";
   return phase === "open" ? "in" : "out";

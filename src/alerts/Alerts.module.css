@@ -22,9 +22,6 @@
   80% { transform: rotate(-4deg); }
   100% { transform: rotate(0deg); }
 }
-@media (prefers-reduced-motion: reduce) {
-  .swing { animation: none; }
-}
 /* A plain round badge overlapping the glyph's top right: 16 px at the
    least, filled --err, the count in white through the icon snow fill. */
 .badge {

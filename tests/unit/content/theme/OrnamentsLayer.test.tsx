@@ -176,7 +176,7 @@ describe("OrnamentsLayer", () => {
     expect(spheres).toHaveLength(5);
   });
 
-  it("the sway class is absent under reduced motion", () => {
+  it("the ornaments sway when matchMedia reports reduced motion", () => {
     mockReducedMotion(true);
     seedLive(1);
     const bundle = bundleWith(true);
@@ -188,7 +188,7 @@ describe("OrnamentsLayer", () => {
     const ornaments = Array.from(container.querySelectorAll("[data-sway]"));
     expect(ornaments).toHaveLength(5);
     for (const o of ornaments) {
-      expect(o.getAttribute("data-sway")).toBe("off");
+      expect(o.getAttribute("data-sway")).toBe("on");
     }
   });
 

@@ -2,8 +2,7 @@
 // shown only while signed in and when the visitor holds an active
 // subscription or has been sent an alert. A notification bell glyph with
 // a plain round red badge counting the unread alerts ("9+" past nine); the bell
-// swings once when the count rises while it is on screen (no swing under
-// reduced motion). It opens the alerts dialog only when pressed; opening
+// swings once when the count rises while it is on screen. It opens the alerts dialog only when pressed; opening
 // marks every alert seen, so the badge clears, while the dialog keeps its
 // New markers until it closes.
 

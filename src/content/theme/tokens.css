@@ -170,12 +170,3 @@ a:hover { color: var(--accent); }
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
-
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0s !important;
-    animation-delay: 0s !important;
-    transition-duration: 0s !important;
-    transition-delay: 0s !important;
-  }
-}
