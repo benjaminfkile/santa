@@ -536,15 +536,60 @@ export function flightHistoryLayers(
 }
 
 // The dotted line from Santa to the viewer (site.md 8.6): one GeoJSON line
-// in `overlay.routeColor`, round dots 10 px apart.
+// in `overlay.routeColor`, round dots 10 px apart. With `fade` (the viewer
+// outside the event box) the source carries `lineMetrics` and the layer a
+// `line-gradient`: the route colour at `overlay.routeOpacity` up to
+// USER_LINE_FADE_START of the length, down to USER_LINE_FADE_END of that
+// opacity at the viewer's end.
 export const USER_LINE_SOURCE = "user-line";
 export const USER_LINE_LAYER = "user-line";
+export const USER_LINE_FADE_START = 0.6;
+export const USER_LINE_FADE_END = 0.15;
 
-export function userLineLayers(palette: OverlayPalette, from: LatLng, to: LatLng): RouteLayers {
+// `color` with its own alpha multiplied by `alpha`.
+function withAlpha(color: string, alpha: number): ExpressionSpecification {
+  const rgba: ExpressionSpecification = ["to-rgba", ["to-color", color]];
+  return [
+    "rgba",
+    ["at", 0, rgba],
+    ["at", 1, rgba],
+    ["at", 2, rgba],
+    ["*", alpha, ["at", 3, rgba]],
+  ];
+}
+
+export function userLineLayers(
+  palette: OverlayPalette,
+  from: LatLng,
+  to: LatLng,
+  fade = false,
+): RouteLayers {
+  const { routeColor, routeOpacity } = palette.overlay;
+  const paint: Record<string, unknown> = {
+    "line-color": routeColor,
+    "line-width": 4,
+    // Zero length dashes with round caps draw dots; the gap is in
+    // line widths, so 2.5 widths of 4 px put the dots 10 px apart.
+    "line-dasharray": [0, 2.5],
+  };
+  if (fade) {
+    paint["line-gradient"] = [
+      "interpolate",
+      ["linear"],
+      ["line-progress"],
+      0,
+      withAlpha(routeColor, routeOpacity),
+      USER_LINE_FADE_START,
+      withAlpha(routeColor, routeOpacity),
+      1,
+      withAlpha(routeColor, routeOpacity * USER_LINE_FADE_END),
+    ];
+  }
   return {
     sources: {
       [USER_LINE_SOURCE]: {
         type: "geojson",
+        ...(fade ? { lineMetrics: true } : {}),
         data: {
           type: "Feature",
           properties: {},
@@ -561,14 +606,8 @@ export function userLineLayers(palette: OverlayPalette, from: LatLng, to: LatLng
         type: "line",
         source: USER_LINE_SOURCE,
         layout: { "line-cap": "round" },
-        paint: {
-          "line-color": palette.overlay.routeColor,
-          "line-width": 4,
-          // Zero length dashes with round caps draw dots; the gap is in
-          // line widths, so 2.5 widths of 4 px put the dots 10 px apart.
-          "line-dasharray": [0, 2.5],
-        },
-      },
+        paint,
+      } as LayerSpecification,
     ],
   };
 }

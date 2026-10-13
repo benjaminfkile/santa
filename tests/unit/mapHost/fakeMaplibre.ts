@@ -1,7 +1,7 @@
 // A small stand-in for `maplibre-gl` for the live tracker's MapLibre
 // controller and the fallback tests: a `Map` that records its options,
 // every `setStyle`, the camera calls, and its handlers (`fire` runs them),
-// and a `Marker` that records where it stands and puts its element in the
+// and a `Marker` that records where it stands and its offset, and puts its element in the
 // map's container while it is on the map. Use it from a `vi.mock` factory:
 // `vi.mock("maplibre-gl", async () => (await import("./fakeMaplibre")).fakeMaplibreModule)`.
 
@@ -86,11 +86,17 @@ export class FakeMarker {
   static live = new Set<FakeMarker>();
   element: HTMLElement;
   anchor: string | undefined;
+  offset: [number, number] = [0, 0];
   lngLat: [number, number] | null = null;
   map: FakeMlMap | null = null;
-  constructor(opts: { element?: HTMLElement; anchor?: string } = {}) {
+  constructor(opts: { element?: HTMLElement; anchor?: string; offset?: [number, number] } = {}) {
     this.element = opts.element ?? document.createElement("div");
     this.anchor = opts.anchor;
+    if (opts.offset !== undefined) this.offset = opts.offset;
+  }
+  setOffset(offset: [number, number]) {
+    this.offset = offset;
+    return this;
   }
   setLngLat(lngLat: [number, number]) {
     this.lngLat = lngLat;

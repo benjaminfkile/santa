@@ -2,10 +2,19 @@
 // one mile, miles to two decimals otherwise, both through the tracker's
 // shared abbreviation from a thousand up. The user dot
 // rebuilds its icon from the tokens on every colour-scheme change and
-// renders nothing until the tokens resolve.
+// renders nothing until the tokens resolve. A fix outside the event box
+// reports `outside`, stands the marker on the clamped point with an SVG
+// icon anchored 20 px inward on each clamped axis and a chevron turned to
+// the bearing toward the true position, and splits the line into today's
+// polyline for the first 60 percent and five fading ones after it; a fix
+// inside keeps today's marker and one line. The distance is between the
+// true positions either way.
 
-import { describe, it, expect } from "vitest";
-import { formatDistanceMetres } from "../../../src/map/userLocation";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { createUserLocation, formatDistanceMetres } from "../../../src/map/userLocation";
+import { initialBearing } from "../../../src/map/outsideMarker";
+import { FakeMap, FakeMapObject, fakeLibs, installFakeGoogle, resetFakeGoogle } from "./fakeGoogle";
+import { SEEDED } from "./themeFixtures";
 
 describe("formatDistanceMetres", () => {
   it("returns the empty string for invalid input", () => {
@@ -29,5 +38,128 @@ describe("formatDistanceMetres", () => {
 
   it("abbreviates miles from a thousand up", () => {
     expect(formatDistanceMetres(1000 * 1609.344)).toBe("1k mi");
+  });
+});
+
+describe("createUserLocation and the event box", () => {
+  const BOX = { west: -114.5, south: 46.5, east: -113.5, north: 47.2 };
+  const SANTA = { lat: 46.9, lng: -113.9 };
+
+  beforeEach(() => {
+    installFakeGoogle();
+    resetFakeGoogle();
+    document.documentElement.style.setProperty("--link", "#3366ff");
+    document.documentElement.style.setProperty("--text-bright", "#ffffff");
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    document.documentElement.style.removeProperty("--link");
+    document.documentElement.style.removeProperty("--text-bright");
+  });
+
+  async function fixAt(lat: number, lng: number) {
+    vi.stubGlobal("navigator", {
+      geolocation: {
+        watchPosition: (onFix: PositionCallback) => {
+          onFix({ coords: { latitude: lat, longitude: lng } } as GeolocationPosition);
+          return 1;
+        },
+        clearWatch: vi.fn(),
+      },
+    });
+    const libs = fakeLibs();
+    const distance = vi.fn(() => 1234);
+    (libs.geometry.spherical as unknown as { computeDistanceBetween: unknown }).computeDistanceBetween = distance;
+    const onChange = vi.fn();
+    const map = new FakeMap(document.createElement("div"), {});
+    const loc = createUserLocation(libs, map as unknown as google.maps.Map, SEEDED.standard, onChange, BOX);
+    loc.setSanta(SANTA);
+    await loc.enable();
+    const objects = [...FakeMapObject.live];
+    const marker = objects.find((o) => "icon" in o.opts)!;
+    const lines = objects.filter((o) => "path" in o.opts);
+    return { loc, marker, lines, distance };
+  }
+
+  function currentIcon(marker: FakeMapObject): Record<string, unknown> {
+    return (marker.icons.at(-1) ?? marker.opts.icon) as Record<string, unknown>;
+  }
+
+  function fillOpacities(lines: FakeMapObject[]): number[] {
+    return lines.map(
+      (l) => ((l.opts.icons as { icon: { fillOpacity: number } }[])[0].icon.fillOpacity),
+    );
+  }
+
+  it("a fix outside reports outside, shifts the dot inward, turns the chevron, and fades the line", async () => {
+    // North and east of the box: clamped on both axes.
+    const { loc, marker, lines, distance } = await fixAt(48, -110);
+    const state = loc.getState();
+    expect(state.outside).toBe(true);
+    expect(state.position).toEqual({ lat: 48, lng: -110 });
+    expect(marker.opts.position).toEqual({ lat: BOX.north, lng: BOX.east });
+
+    const icon = currentIcon(marker);
+    // The dot at the centre of a 40 px image, moved 20 px left and 20 px down.
+    expect(icon.anchor).toEqual({ x: 40, y: 0 });
+    const svg = decodeURIComponent(icon.url as string);
+    const bearing = Math.round(initialBearing({ lat: BOX.north, lng: BOX.east }, { lat: 48, lng: -110 }) * 10) / 10;
+    expect(bearing).toBeGreaterThan(0);
+    expect(bearing).toBeLessThan(90);
+    expect(svg).toContain(`rotate(${bearing})`);
+    expect(svg).toContain("translate(0 -12)");
+    expect(svg).toContain('fill="#3366ff"');
+
+    expect(lines).toHaveLength(6);
+    expect(fillOpacities(lines)).toEqual([1, 0.8, 0.6, 0.45, 0.3, 0.15]);
+    const from = { lat: SANTA.lat, lng: SANTA.lng };
+    const to = { lat: BOX.north, lng: BOX.east };
+    const paths = lines.map((l) => l.opts.path as google.maps.LatLngLiteral[]);
+    expect(paths[0][0]).toEqual(from);
+    expect(paths[0][1].lat).toBeCloseTo(from.lat + (to.lat - from.lat) * 0.6);
+    expect(paths[5][1]).toEqual(to);
+    for (let i = 1; i < paths.length; i++) expect(paths[i][0]).toEqual(paths[i - 1][1]);
+
+    // The distance is between the true positions.
+    const [a, b] = distance.mock.calls.at(-1) as unknown as [google.maps.LatLngLiteral, google.maps.LatLngLiteral];
+    expect({ lat: a.lat, lng: a.lng }).toEqual({ lat: 48, lng: -110 });
+    expect({ lat: b.lat, lng: b.lng }).toEqual(SANTA);
+    expect(state.distanceMetres).toBe(1234);
+  });
+
+  it("a fix west of the box shifts the dot right only", async () => {
+    const { marker } = await fixAt(46.9, -116);
+    expect(currentIcon(marker).anchor).toEqual({ x: 0, y: 20 });
+    expect(decodeURIComponent(currentIcon(marker).url as string)).toContain("rotate(270");
+  });
+
+  it("a fix inside reports not outside with today's marker and one line", async () => {
+    const { loc, marker, lines, distance } = await fixAt(47, -114);
+    expect(loc.getState().outside).toBe(false);
+    expect(marker.opts.position).toEqual({ lat: 47, lng: -114 });
+    const icon = currentIcon(marker);
+    expect(icon.url).toBeUndefined();
+    expect(icon.scale).toBe(8);
+    expect(lines).toHaveLength(1);
+    expect(fillOpacities(lines)).toEqual([1]);
+    const [a] = distance.mock.calls.at(-1) as unknown as [google.maps.LatLngLiteral];
+    expect({ lat: a.lat, lng: a.lng }).toEqual({ lat: 47, lng: -114 });
+  });
+
+  it("without a box nothing is outside", async () => {
+    vi.stubGlobal("navigator", {
+      geolocation: {
+        watchPosition: (onFix: PositionCallback) => {
+          onFix({ coords: { latitude: 10, longitude: 10 } } as GeolocationPosition);
+          return 1;
+        },
+        clearWatch: vi.fn(),
+      },
+    });
+    const map = new FakeMap(document.createElement("div"), {});
+    const loc = createUserLocation(fakeLibs(), map as unknown as google.maps.Map, SEEDED.standard, vi.fn());
+    await loc.enable();
+    expect(loc.getState().outside).toBe(false);
   });
 });

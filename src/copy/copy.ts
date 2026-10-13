@@ -68,6 +68,9 @@ export const copy = {
     distance: {
       // The pill shows only the value; this is its accessible prefix.
       label: "Distance to Santa",
+      // After the value, past a middle dot, while the visitor is outside
+      // the event box.
+      outside: "outside the area",
     },
     flightDock: {
       title: "Flight data",

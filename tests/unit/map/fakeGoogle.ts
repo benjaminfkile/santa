@@ -133,8 +133,12 @@ export class FakeMapObject {
   getMap() {
     return this.map;
   }
-  setOptions() {}
-  setPath() {}
+  setOptions(opts: Record<string, unknown>) {
+    Object.assign(this.opts, opts);
+  }
+  setPath(path: unknown) {
+    this.opts.path = path;
+  }
   // Every `setIcon` argument, in order.
   icons: unknown[] = [];
   setIcon(icon: unknown) {
@@ -150,7 +154,9 @@ export class FakeMapObject {
   trigger(name: string) {
     for (const fn of [...(this.listeners.get(name) ?? [])]) fn();
   }
-  setPosition() {}
+  setPosition(position: unknown) {
+    this.opts.position = position;
+  }
   setVisible() {}
 }
 
@@ -162,7 +168,15 @@ export function fakeLibs() {
       Polyline: FakeMapObject,
     },
     marker: { Marker: FakeMapObject },
-    geometry: { spherical: { computeDistanceBetween: () => 1000 } },
+    geometry: {
+      spherical: {
+        computeDistanceBetween: () => 1000,
+        // A straight blend of the two ends, enough to see where a line splits.
+        interpolate: (a: google.maps.LatLngLiteral, b: google.maps.LatLngLiteral, f: number) => ({
+          toJSON: () => ({ lat: a.lat + (b.lat - a.lat) * f, lng: a.lng + (b.lng - a.lng) * f }),
+        }),
+      },
+    },
   } as unknown as import("../../../src/map/loadMaps").MapsLibs;
 }
 

@@ -13,7 +13,9 @@
 //  - The flight history is one source with a line, an arrow, and a time
 //    label layer while the toggle is on; the viewpoints are HTML markers
 //    from zoom 10, kept when the list says the same thing; the viewer's
-//    location is a marker and a dotted line, on the box edge from outside.
+//    location is a marker and a dotted line, on the box edge from outside
+//    with the marker offset 20 px inward, a chevron toward the true
+//    position, and the line fading toward the dot; inside, neither.
 //  - A style error before the first idle or a WebGL context lost for 5 s
 //    reports through `onFail`; `destroy` makes every method a no-op.
 
@@ -26,6 +28,8 @@ import { loadThemes, type MapTheme } from "../../../src/map/themes";
 import { protomapsKinds } from "../../../src/mapHost/places";
 import { SIGNAL_LOST_FILTER } from "../../../src/map/santaMarker";
 import { ROUTE_THEME_ROWS, routeStyle } from "./routeThemes";
+import { initialBearing } from "../../../src/map/outsideMarker";
+import { distanceMetres } from "../../../src/mapHost/userLocation";
 
 vi.mock("maplibre-gl", async () => (await import("./fakeMaplibre")).fakeMaplibreModule);
 vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
@@ -300,22 +304,62 @@ describe("the viewer's location", () => {
     vi.stubGlobal("navigator", { ...navigator, geolocation: { watchPosition, clearWatch: vi.fn() } });
   }
 
+  function userMarker(): FakeMarker | undefined {
+    return [...FakeMarker.live].find((m) => m.element.getAttribute("data-testid") === "user-location-marker");
+  }
+
+  function userLine(map: FakeMlMap) {
+    return map.style().layers.find((l) => l.id === "user-line");
+  }
+
   it("draws a marker and a dotted line to Santa, on the box edge from outside, measuring the true distance", async () => {
     stubGeolocation(48, -110);
     const onUserLocationChange = vi.fn();
     const { c, map } = build({ onUserLocationChange });
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.9 }, true);
     await c.enableUserLocation();
-    const user = [...FakeMarker.live].find((m) => m.element.getAttribute("data-testid") === "user-location-marker");
+    const user = userMarker();
     expect(user?.lngLat).toEqual([BOX.east, BOX.north]);
+    // Outside: 20 px left and 20 px down, the chevron toward the true position.
+    expect(user?.offset).toEqual([-20, 20]);
+    const chevron = user?.element.querySelector('[data-testid="user-location-chevron"]') as SVGElement | null;
+    expect(chevron).not.toBeNull();
+    const bearing = Math.round(initialBearing({ lat: BOX.north, lng: BOX.east }, { lat: 48, lng: -110 }) * 10) / 10;
+    expect(chevron?.style.transform).toContain(`rotate(${bearing}deg)`);
+    expect(chevron?.style.transform).toContain("translateY(-12px)");
     expect(layerIds(map.style())).toContain("user-line");
+    const source = map.style().sources["user-line"] as { lineMetrics?: boolean };
+    expect(source.lineMetrics).toBe(true);
+    const gradient = userLine(map)?.paint?.["line-gradient"] as unknown[];
+    expect(gradient.slice(0, 3)).toEqual(["interpolate", ["linear"], ["line-progress"]]);
+    expect(gradient[5]).toBe(0.6);
+    expect(gradient[7]).toBe(1);
     const state = c.getUserLocation();
     expect(state?.enabled).toBe(true);
+    expect(state?.outside).toBe(true);
     // About 340 km between the true positions, not the clamped ones.
     expect(state?.distanceMetres).toBeGreaterThan(300_000);
     c.disableUserLocation();
     expect(layerIds(map.style())).not.toContain("user-line");
     expect(c.getUserLocation()?.enabled).toBe(false);
+  });
+
+  it("inside the box the marker has no shift or chevron and the line no gradient", async () => {
+    stubGeolocation(47, -114);
+    const { c, map } = build({ onUserLocationChange: vi.fn() });
+    c.setLiveFix("tracking", { lat: 46.9, lng: -113.9 }, true);
+    await c.enableUserLocation();
+    const user = userMarker();
+    expect(user?.lngLat).toEqual([-114, 47]);
+    expect(user?.offset).toEqual([0, 0]);
+    expect(user?.element.querySelector('[data-testid="user-location-chevron"]')).toBeNull();
+    const source = map.style().sources["user-line"] as { lineMetrics?: boolean };
+    expect(source.lineMetrics).toBeUndefined();
+    expect(userLine(map)?.paint?.["line-gradient"]).toBeUndefined();
+    const state = c.getUserLocation();
+    expect(state?.outside).toBe(false);
+    // About 12 km between the true positions.
+    expect(state?.distanceMetres).toBeCloseTo(distanceMetres({ lat: 47, lng: -114 }, { lat: 46.9, lng: -113.9 }));
   });
 });
 

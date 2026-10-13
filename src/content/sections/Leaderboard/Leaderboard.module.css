@@ -1,5 +1,8 @@
-/* docs/site.md section 9. Leaderboard: full variant renders icon, name,
-   count, and a bar to the leader. Panel variant collapses to the top five. */
+/* docs/site.md section 9. Leaderboard: each row is the icon column, then
+   one text cell holding the name and the count in parentheses. The icon
+   column is 40 px, 32 px at 640 px and below. The full variant adds a bar
+   to the leader under the text cell; the panel variant collapses to the
+   top five. */
 
 .leaderboard { display: flex; flex-direction: column; gap: var(--space-3); }
 .leaderboardHeading {
@@ -18,7 +21,7 @@
 }
 .leaderboardRow {
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
+  grid-template-columns: 40px minmax(0, 1fr);
   gap: var(--space-2) var(--space-3);
   align-items: center;
   padding: var(--space-2) 0;
@@ -31,8 +34,15 @@
   /* The section frame supplies the card. */
 }
 .leaderboardIcon { display: flex; align-items: center; justify-content: center; color: var(--accent); }
-.leaderboardIconPlaceholder { width: 24px; height: 24px; background: var(--panel-2); border-radius: 50%; }
+.leaderboardIconPlaceholder { width: 40px; height: 40px; background: var(--panel-2); border-radius: 50%; }
+.leaderboardText {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+}
 .leaderboardName {
+  min-width: 0;
   font-family: var(--font-sans);
   font-size: 0.9375rem;
   color: var(--text-bright);
@@ -45,12 +55,12 @@
   font-variant-numeric: tabular-nums;
   font-weight: 500;
   color: var(--text-bright);
-  text-align: end;
   font-size: 0.9375rem;
+  flex: none;
+  white-space: nowrap;
 }
-.leaderboardFull .leaderboardRow { grid-template-columns: 28px minmax(0, 1fr) auto; }
 .leaderboardFull .leaderboardBar {
-  grid-column: 2 / 4;
+  grid-column: 2;
   height: 4px;
   border-radius: 2px;
   background: var(--accent);
@@ -63,3 +73,7 @@
 }
 .leaderboardEmptyText { margin: 0; color: var(--text-dim); }
 .leaderboardEmpty { color: var(--text-dim); }
+@media (max-width: 640px) {
+  .leaderboardRow { grid-template-columns: 32px minmax(0, 1fr); }
+  .leaderboardIconPlaceholder { width: 32px; height: 32px; }
+}
