@@ -12,5 +12,6 @@ export const leaderboardList: string;
 export const leaderboardName: string;
 export const leaderboardPanel: string;
 export const leaderboardRow: string;
+export const leaderboardText: string;
 export const leaderboardToggle: string;
 

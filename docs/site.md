@@ -1049,7 +1049,9 @@ export function rankCookieTypes(cookieTypes, tally) {
 }
 ```
 
-- One row per `snapshot.cookieTypes[]` entry: the type's `icon` through the `Icon` primitive with `alt=""` (a neutral placeholder when `icon` is null or unresolvable), `name`, `count`. Types with zero cookies show `0`.
+- One row per `snapshot.cookieTypes[]` entry, a two column grid: the type's `icon` through the `Icon` primitive with `alt=""` (a neutral placeholder circle when `icon` is null or unresolvable), then one text cell holding the `name` and, right after it, the count in parentheses through `formatCount`, `Chocolate chip (1.2k)` (`data-testid="leaderboard-count"`, mono tabular). The name takes an ellipsis when the row is narrow; the count is `flex: none` and never truncates. Types with zero cookies show `(0)`.
+- The icon column and the icon are 40 px from 641 px up and 32 px at 640 px and below, the section card's breakpoint; the placeholder takes the same sizes. `Icon` sizes through inline styles, so the size reaches its `size` prop from `useMediaQuery("(min-width: 641px)", true)` in `src/lib/useMediaQuery.ts` (wide where there is no `matchMedia`).
+- The `full` variant draws a bar to the leader under the text cell (grid column 2), its width the count over the leader's count.
 - Renders nothing when `cookieTypes` is empty or `snapshot` is null.
 - Counts update whenever a live object is applied; a count change animates the row order.
 - `variant: "panel"` (top five visible, expand for all) and `variant: "full"` wherever a `leaderboard` section asks for them, `full` on the ended page in the starter content. `data.emptyText` renders when there are no types.

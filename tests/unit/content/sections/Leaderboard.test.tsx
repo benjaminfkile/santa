@@ -1,7 +1,9 @@
 // docs/site.md section 22.1. Leaderboard.rankCookieTypes: zero fill; sort
-// by count, then `sort`, then `id`; empty types renders nothing.
+// by count, then `sort`, then `id`; empty types renders nothing. The row
+// reads the name then the count in parentheses; the icon is 40 px on a
+// wide viewport and 32 px below 641 px.
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { act, cleanup, render } from "@testing-library/react";
 import { Leaderboard, rankCookieTypes } from "../../../../src/content/sections/Leaderboard/Leaderboard";
 import { store } from "../../../../src/store/useStore";
@@ -21,6 +23,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   act(() => store.setState({ ...initialStore }));
 });
 
@@ -42,6 +45,22 @@ function setStore(patch: {
       snapshot: nextSnapshot,
       live: nextLive,
     }),
+  );
+}
+
+function mockWide(wide: boolean) {
+  vi.spyOn(window, "matchMedia").mockImplementation(
+    (query: string) =>
+      ({
+        matches: query === "(min-width: 641px)" ? wide : false,
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }) as unknown as MediaQueryList,
   );
 }
 
@@ -131,7 +150,55 @@ describe("Leaderboard section", () => {
       <Leaderboard data={{ variant: "full" }} items={[]} bundle={bundle} />,
     );
     const counts = getAllByTestId("leaderboard-count");
-    expect(counts.map((n) => n.textContent?.trim())).toEqual(["7", "3"]);
+    expect(counts.map((n) => n.textContent?.trim())).toEqual(["(7)", "(3)"]);
+  });
+
+  it("formats the count in parentheses right after the name", () => {
+    setStore({
+      cookieTypes: [{ id: 1, name: "Chocolate chip", icon: null, sort: 10 }],
+      cookieTally: { "1": 1204 },
+    });
+    const { container, getByTestId } = render(
+      <Leaderboard data={{ variant: "panel" }} items={[]} bundle={bundle} />,
+    );
+    expect(getByTestId("leaderboard-count").textContent).toBe("(1.2k)");
+    const name = container.querySelector("ol > li span span");
+    expect(name?.textContent).toBe("Chocolate chip");
+    expect(name?.nextElementSibling).toBe(getByTestId("leaderboard-count"));
+  });
+
+  it.each([
+    [true, "40"],
+    [false, "32"],
+  ])("renders the icon for a wide viewport %s at %s px", (wide, px) => {
+    mockWide(wide);
+    setStore({
+      cookieTypes: [{ id: 1, name: "Bell", icon: { source: "library", id: "bell" }, sort: 10 }],
+      cookieTally: { "1": 2 },
+    });
+    const { container } = render(
+      <Leaderboard data={{ variant: "panel" }} items={[]} bundle={bundle} />,
+    );
+    const svg = container.querySelector("ol > li svg");
+    expect(svg?.getAttribute("width")).toBe(px);
+    expect(svg?.getAttribute("height")).toBe(px);
+  });
+
+  it("full variant draws a bar per row scaled to the leader", () => {
+    setStore({
+      cookieTypes: [
+        { id: 1, name: "Chocolate", icon: null, sort: 10 },
+        { id: 2, name: "Ginger", icon: null, sort: 20 },
+      ],
+      cookieTally: { "1": 5, "2": 10 },
+    });
+    const { container } = render(
+      <Leaderboard data={{ variant: "full" }} items={[]} bundle={bundle} />,
+    );
+    const bars = Array.from(container.querySelectorAll("ol > li > span[aria-hidden]"))
+      .map((n) => (n as HTMLElement).style.width)
+      .filter((w) => w !== "");
+    expect(bars).toEqual(["100%", "50%"]);
   });
 
   it("panel variant caps to five rows until expanded", () => {
