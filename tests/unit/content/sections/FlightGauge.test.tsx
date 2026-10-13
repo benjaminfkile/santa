@@ -232,6 +232,7 @@ describe("the flight gauge", () => {
         position: { lat: 1, lng: 2 },
         error: null,
         distanceMetres: 5000,
+        outside: false,
       }),
     );
     const pill = utils.getByTestId("distance-pill");
@@ -246,6 +247,26 @@ describe("the flight gauge", () => {
     expect(order[order.length - 1]).toBe("messages-pill");
   });
 
+  it("the distance pill says outside the area while the visitor is outside the box", async () => {
+    seed(FULL);
+    const utils = await renderMap({ distanceChip: true });
+    const report = (outside: boolean) =>
+      act(() =>
+        mapView.options!.onUserLocationChange({
+          enabled: true,
+          position: { lat: 1, lng: 2 },
+          error: null,
+          distanceMetres: 5000,
+          outside,
+        }),
+      );
+    report(true);
+    const pill = utils.getByTestId("distance-pill");
+    expect(pill.textContent).toBe("Distance to Santa3.11 mi · outside the area");
+    report(false);
+    expect(utils.getByTestId("distance-pill").textContent).toBe("Distance to Santa3.11 mi");
+  });
+
   it("the distance pill follows the distance chip flag", async () => {
     seed(FULL);
     const utils = await renderMap({ distanceChip: false, liveIndicator: true });
@@ -255,6 +276,7 @@ describe("the flight gauge", () => {
         position: { lat: 1, lng: 2 },
         error: null,
         distanceMetres: 5000,
+        outside: false,
       }),
     );
     expect(utils.queryByTestId("distance-pill")).toBeNull();
