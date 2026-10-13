@@ -71,10 +71,12 @@ export function AirbornePill() {
 // one to show (the distance chip overlay, the location on, a finite value),
 // so the pill renders whatever it is handed. The value is not announced as
 // it changes: it moves every second and a live region would talk over
-// everything else.
-export function DistancePill({ metres }: { metres: number }) {
-  const text = formatDistanceMetres(metres);
-  if (text === "") return null;
+// everything else. While the visitor is outside the event box the value
+// is followed by a middle dot and "outside the area".
+export function DistancePill({ metres, outside = false }: { metres: number; outside?: boolean }) {
+  const distance = formatDistanceMetres(metres);
+  if (distance === "") return null;
+  const text = outside ? `${distance} · ${copy.map.distance.outside}` : distance;
   return (
     <div className={styles.distancePill} data-testid="distance-pill">
       <PersonPinGlyph size={14} />

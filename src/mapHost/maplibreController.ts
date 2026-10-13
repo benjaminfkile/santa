@@ -17,7 +17,8 @@
 // the signal is lost (8.7); the viewpoints are HTML markers holding the
 // same badges and popover (viewpointsOverlay.ts), rebuilt only when the
 // list says something new; the viewer's location is an HTML marker and a
-// dotted line (userLocation.ts).
+// dotted line (userLocation.ts), the line fading toward the dot while the
+// viewer is outside the box.
 // The map is locked to the event box: `maxBounds` and the least zoom that
 // fits it (recomputed when the container resizes), and every pan the
 // controller makes clamped to it. A fix outside the box draws Santa on its
@@ -164,7 +165,7 @@ export function createMaplibreController(
     const history = historyLayers(z);
     if (history !== null) extra.push(history);
     const line = userLoc?.line() ?? null;
-    if (line !== null) extra.push(userLineLayers(theme, line[0], line[1]));
+    if (line !== null) extra.push(userLineLayers(theme, line[0], line[1], userLoc?.getState().outside === true));
     drawnTables = tablesAt(z);
     return {
       ...style,

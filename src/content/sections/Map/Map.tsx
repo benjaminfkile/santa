@@ -260,6 +260,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     position: null,
     error: null,
     distanceMetres: null,
+    outside: false,
   });
 
   const takeover = useStore(selectTakeover);
@@ -503,7 +504,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
               <div className={styles.topLeft}>
                 {overlays.liveIndicator ? <LiveIndicator showCount={overlays.onlineCount} /> : null}
                 {overlays.liftoffTimer ? <AirbornePill /> : null}
-                {shownDistance !== null ? <DistancePill metres={shownDistance} /> : null}
+                {shownDistance !== null ? <DistancePill metres={shownDistance} outside={userState.outside} /> : null}
                 <FixStatus />
                 {/* The messages pill is last in the stack, whatever else is in it. */}
                 {overlays.latestMessage ? <MessagesPill bundle={bundle} /> : null}
