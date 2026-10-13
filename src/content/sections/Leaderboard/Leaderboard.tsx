@@ -1,6 +1,7 @@
 // docs/site.md section 9. Leaderboard: one row per `snapshot.cookieTypes`
-// entry; icon, name, count; `panel` collapses to five, `full` shows all.
-// A count change animates the row order.
+// entry; the icon, then the name with the count in parentheses after it.
+// The icon is 40 px from 641 px up and 32 px below, the section card's
+// breakpoint. `panel` collapses to five, `full` shows all and a bar.
 
 import { useState } from "react";
 import type { SectionComponent } from "../../registry";
@@ -10,6 +11,7 @@ import { Icon } from "../../primitives/Icon";
 import { useSnapshotEvent } from "../../blocks/useSnapshotEvent";
 import { useStore } from "../../../store/useStore";
 import { formatCount } from "../../../lib/number";
+import { useMediaQuery } from "../../../lib/useMediaQuery";
 import * as styles from "./Leaderboard.module.css";
 
 type LeaderboardData = {
@@ -36,6 +38,9 @@ export function rankCookieTypes(
 }
 
 const PANEL_LIMIT = 5;
+const WIDE_QUERY = "(min-width: 641px)";
+const ICON_WIDE = 40;
+const ICON_NARROW = 32;
 
 export const Leaderboard: SectionComponent = ({ data, bundle }) => {
   const d = (data ?? {}) as LeaderboardData;
@@ -45,6 +50,7 @@ export const Leaderboard: SectionComponent = ({ data, bundle }) => {
   const cookieTypes = useStore((s) => s.snapshot?.cookieTypes ?? null);
   const tally = useStore((s) => s.live?.cookieTally ?? {});
   const [expanded, setExpanded] = useState(false);
+  const iconSize = useMediaQuery(WIDE_QUERY, true) ? ICON_WIDE : ICON_NARROW;
 
   if (cookieTypes === null) return null;
   if (cookieTypes.length === 0) {
@@ -94,12 +100,18 @@ export const Leaderboard: SectionComponent = ({ data, bundle }) => {
                   bundle={bundle}
                   alt=""
                   decorative
+                  size={iconSize}
                 />
               </span>
             ) : (
               <span className={`${styles.leaderboardIcon} ${styles.leaderboardIconPlaceholder}`} aria-hidden />
             )}
-            <span className={styles.leaderboardName}>{row.name}</span>
+            <span className={styles.leaderboardText}>
+              <span className={styles.leaderboardName}>{row.name}</span>
+              <span className={styles.leaderboardCount} data-testid="leaderboard-count">
+                ({formatCount(row.count)})
+              </span>
+            </span>
             {variant === "full" ? (
               <span
                 className={styles.leaderboardBar}
@@ -109,9 +121,6 @@ export const Leaderboard: SectionComponent = ({ data, bundle }) => {
                 }}
               />
             ) : null}
-            <span className={styles.leaderboardCount} data-testid="leaderboard-count">
-              {formatCount(row.count)}
-            </span>
           </li>
         ))}
       </ol>
