@@ -95,6 +95,7 @@ export interface Snapshot {
     yearsAsSponsor?: number;
     lingerMs?: number;
   }[];
+  sponsorsYear?: number | null;
   cookieTypes?: {
     id?: number;
     name?: string;
