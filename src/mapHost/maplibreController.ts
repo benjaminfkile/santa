@@ -18,7 +18,8 @@
 // same badges and popover (viewpointsOverlay.ts), rebuilt only when the
 // list says something new; the viewer's location is an HTML marker and a
 // dotted line (userLocation.ts), the line fading toward the dot while the
-// viewer is outside the box.
+// viewer is outside the box, where the dot follows the view on its own
+// through the marker and the line source's `setData`.
 // The map is locked to the event box: `maxBounds` and the least zoom that
 // fits it (recomputed when the container resizes), and every pan the
 // controller makes clamped to it. A fix outside the box draws Santa on its

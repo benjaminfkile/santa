@@ -3,17 +3,22 @@
 // (src/map/userLocation.ts), drawn as an HTML marker (a 16 px circle in the
 // theme's `overlay.userColor`, pulsing every PULSE_MS) and a dotted line to
 // Santa that the controller draws in its style from `line()`. With the
-// event box given, the marker and both ends of the line sit clamped to it,
-// while the distance is always measured between the true positions (on the
-// same sphere as Google's geometry library). A fix outside the box sets
-// `outside`: the marker's `offset` moves the dot OUTSIDE_SHIFT_PX inside
-// the edge on each clamped axis and a chevron child element points toward
-// the true position (src/map/outsideMarker.ts); the controller fades the
-// line toward the dot. Nothing about location is persisted. After `destroy` nothing
+// event box given, Santa's end of the line sits clamped to it, and so do
+// the marker and the visitor's end inside the box, while the distance is
+// always measured between the true positions (on the same sphere as
+// Google's geometry library). A fix outside the box sets `outside`: the
+// visitor is drawn at the true position clamped to OUTSIDE_SHIFT_PX inside
+// the viewport edge (src/map/outsideMarker.ts), and when the clamp moves
+// it a chevron child element points toward the true position; the
+// controller fades the line toward the dot. On every `move` and `resize`
+// of the map that point is recomputed: the marker moves with `setLngLat`
+// and the line's source takes `setData`, with no style rebuild; only a
+// line appearing, disappearing, or a moved Santa calls `onLineChange`.
+// Nothing about location is persisted. After `destroy` nothing
 // starts a watch, draws, or reports a change, even an `enable` whose
 // permission query settles later.
 
-import { Marker, type Map as MapLibreMap } from "maplibre-gl";
+import { Marker, type GeoJSONSource, type Map as MapLibreMap } from "maplibre-gl";
 import type { UserLocationState } from "../map/userLocation";
 import type { MapTheme } from "../map/themes";
 import { clampToBbox, inBox, type Bbox, type LatLng } from "../map/bounds";
@@ -22,8 +27,9 @@ import {
   CHEVRON_PATH,
   CHEVRON_SIZE_PX,
   initialBearing,
-  outsideShift,
+  clampToViewport,
 } from "../map/outsideMarker";
+import { USER_LINE_SOURCE } from "./routeLayers";
 
 export type { UserLocationState } from "../map/userLocation";
 
@@ -109,6 +115,22 @@ export function createMapLibreUserLocation(
     return bbox === null ? p : clampToBbox(p, bbox);
   }
 
+  // Where the visitor is drawn, and whether the viewport clamp moved it
+  // there: inside the box the box clamp; outside it the true position
+  // clamped inside the viewport edge, or on the box edge while the
+  // container has no size.
+  function visitorAt(p: LatLng): { at: LatLng; moved: boolean } {
+    if (!state.outside) return { at: drawn(p), moved: false };
+    const container = map.getContainer();
+    const size = { width: container.clientWidth, height: container.clientHeight };
+    if (size.width === 0 || size.height === 0) return { at: drawn(p), moved: true };
+    const pixel = map.project([p.lng, p.lat]);
+    const clamped = clampToViewport({ x: pixel.x, y: pixel.y }, size);
+    if (!clamped.moved) return { at: p, moved: false };
+    const at = map.unproject([clamped.point.x, clamped.point.y]);
+    return { at: { lat: at.lat, lng: at.lng }, moved: true };
+  }
+
   function computeDistance(): number | null {
     if (state.position === null || santa === null) return null;
     return distanceMetres(state.position, santa);
@@ -119,31 +141,28 @@ export function createMapLibreUserLocation(
     chevronPath.setAttribute("fill", theme.overlay.userColor);
   }
 
-  // Inside the box: no shift, no chevron. Outside: the shift inward and
-  // the chevron turned to the bearing from the drawn point to the true one.
-  function outsideLook(at: LatLng, position: LatLng): [number, number] {
-    if (!state.outside || bbox === null) {
+  // No chevron unless the viewport clamp moved the dot; then the chevron
+  // turned to the bearing from the drawn point to the true one.
+  function outsideLook(at: LatLng, position: LatLng, moved: boolean): void {
+    if (!moved) {
       chevron.remove();
-      return [0, 0];
+      return;
     }
-    const shift = outsideShift(position, bbox);
     const rotate = Math.round(initialBearing(at, position) * 10) / 10;
     chevron.style.transform =
       `translate(-50%, -50%) rotate(${rotate}deg) translateY(${-CHEVRON_OFFSET_PX}px)`;
     if (chevron.parentNode !== element) element.appendChild(chevron);
-    return [shift.x, shift.y];
   }
 
   function placeMarker(): void {
     if (state.position === null) return;
-    const at = drawn(state.position);
+    const { at, moved } = visitorAt(state.position);
     paint();
-    const offset = outsideLook(at, state.position);
+    outsideLook(at, state.position, moved);
     if (marker === null) {
-      marker = new Marker({ element, anchor: "center", offset }).setLngLat([at.lng, at.lat]).addTo(map);
+      marker = new Marker({ element, anchor: "center" }).setLngLat([at.lng, at.lat]).addTo(map);
     } else {
       marker.setLngLat([at.lng, at.lat]);
-      marker.setOffset(offset);
     }
     if (pulseTimer === null) {
       pulseTimer = setInterval(() => {
@@ -158,6 +177,33 @@ export function createMapLibreUserLocation(
     if (pulseTimer !== null) clearInterval(pulseTimer);
     pulseTimer = null;
     element.style.visibility = "";
+  }
+
+  function line(): [LatLng, LatLng] | null {
+    if (destroyed || state.position === null || santa === null) return null;
+    return [drawn(santa), visitorAt(state.position).at];
+  }
+
+  // Moves the outside dot and the line's visitor end to the current view.
+  function followView(): void {
+    if (destroyed || !state.outside || state.position === null) return;
+    placeMarker();
+    const ends = line();
+    const source = map.getSource<GeoJSONSource>(USER_LINE_SOURCE);
+    if (ends === null || source === undefined) return;
+    source.setData({
+      type: "Feature",
+      properties: {},
+      geometry: {
+        type: "LineString",
+        coordinates: [[ends[0].lng, ends[0].lat], [ends[1].lng, ends[1].lat]],
+      },
+    });
+  }
+
+  if (bbox !== null) {
+    map.on("move", followView);
+    map.on("resize", followView);
   }
 
   function publish(): void {
@@ -253,13 +299,12 @@ export function createMapLibreUserLocation(
       publish();
     },
     getState: () => state,
-    line() {
-      if (destroyed || state.position === null || santa === null) return null;
-      return [drawn(santa), drawn(state.position)];
-    },
+    line,
     destroy() {
       if (destroyed) return;
       destroyed = true;
+      map.off("move", followView);
+      map.off("resize", followView);
       clearWatch();
       removeMarker();
     },

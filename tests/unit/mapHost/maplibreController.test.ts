@@ -13,9 +13,12 @@
 //  - The flight history is one source with a line, an arrow, and a time
 //    label layer while the toggle is on; the viewpoints are HTML markers
 //    from zoom 10, kept when the list says the same thing; the viewer's
-//    location is a marker and a dotted line, on the box edge from outside
-//    with the marker offset 20 px inward, a chevron toward the true
-//    position, and the line fading toward the dot; inside, neither.
+//    location is a marker and a dotted line; from outside the dot sits
+//    20 px inside the viewport edge on the way to the true position with a
+//    chevron toward it, follows every `move` through `setLngLat` and the
+//    line source's `setData` without a restyle, and the line fades toward
+//    the dot; an outside fix already inside that inset is drawn where it
+//    is with no chevron; inside the box, no chevron and no fade.
 //  - A style error before the first idle or a WebGL context lost for 5 s
 //    reports through `onFail`; `destroy` makes every method a no-op.
 
@@ -312,19 +315,41 @@ describe("the viewer's location", () => {
     return map.style().layers.find((l) => l.id === "user-line");
   }
 
-  it("draws a marker and a dotted line to Santa, on the box edge from outside, measuring the true distance", async () => {
+  // A 200 x 100 px viewport, 100 px per degree, its top left corner at
+  // (west, north).
+  function sizeView(container: HTMLElement, map: FakeMlMap, west: number, north: number) {
+    Object.defineProperty(container, "clientWidth", { configurable: true, value: 200 });
+    Object.defineProperty(container, "clientHeight", { configurable: true, value: 100 });
+    map.view = { west, north, scale: 100 };
+  }
+
+  function lineEnd(coordinates: number[][]): number[] {
+    return coordinates[coordinates.length - 1];
+  }
+
+  function styleLineEnd(map: FakeMlMap): number[] {
+    const source = map.style().sources["user-line"] as { data: { geometry: { coordinates: number[][] } } };
+    return lineEnd(source.data.geometry.coordinates);
+  }
+
+  it("draws a marker and a dotted line to Santa, 20 px inside the viewport edge from outside, measuring the true distance", async () => {
     stubGeolocation(48, -110);
     const onUserLocationChange = vi.fn();
-    const { c, map } = build({ onUserLocationChange });
+    const { c, map, container } = build({ onUserLocationChange });
+    sizeView(container, map, -114.5, 47.2);
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.9 }, true);
     await c.enableUserLocation();
     const user = userMarker();
-    expect(user?.lngLat).toEqual([BOX.east, BOX.north]);
-    // Outside: 20 px left and 20 px down, the chevron toward the true position.
-    expect(user?.offset).toEqual([-20, 20]);
+    // The true position projects to (450, -80): clamped to (180, 20).
+    expect(user?.lngLat?.[0]).toBeCloseTo(-112.7);
+    expect(user?.lngLat?.[1]).toBeCloseTo(47.0);
+    expect(user?.offset).toEqual([0, 0]);
+    expect(styleLineEnd(map)[0]).toBeCloseTo(-112.7);
+    expect(styleLineEnd(map)[1]).toBeCloseTo(47.0);
     const chevron = user?.element.querySelector('[data-testid="user-location-chevron"]') as SVGElement | null;
     expect(chevron).not.toBeNull();
-    const bearing = Math.round(initialBearing({ lat: BOX.north, lng: BOX.east }, { lat: 48, lng: -110 }) * 10) / 10;
+    const at = { lat: user!.lngLat![1], lng: user!.lngLat![0] };
+    const bearing = Math.round(initialBearing(at, { lat: 48, lng: -110 }) * 10) / 10;
     expect(chevron?.style.transform).toContain(`rotate(${bearing}deg)`);
     expect(chevron?.style.transform).toContain("translateY(-12px)");
     expect(layerIds(map.style())).toContain("user-line");
@@ -342,6 +367,47 @@ describe("the viewer's location", () => {
     c.disableUserLocation();
     expect(layerIds(map.style())).not.toContain("user-line");
     expect(c.getUserLocation()?.enabled).toBe(false);
+  });
+
+  it("an outside dot follows a move through setLngLat and setData, with no restyle", async () => {
+    stubGeolocation(48, -110);
+    const { c, map, container } = build({ onUserLocationChange: vi.fn() });
+    sizeView(container, map, -114.5, 47.2);
+    c.setLiveFix("tracking", { lat: 46.9, lng: -113.9 }, true);
+    await c.enableUserLocation();
+    const styles = map.setStyle.mock.calls.length;
+    // A pan east by half a degree: the clamped point moves with it.
+    map.view = { ...map.view, west: -114.0 };
+    map.fire("move");
+    const user = userMarker();
+    expect(user?.lngLat?.[0]).toBeCloseTo(-112.2);
+    expect(user?.lngLat?.[1]).toBeCloseTo(47.0);
+    const setData = map.sources.get("user-line")?.setData;
+    expect(setData).toHaveBeenCalledTimes(1);
+    const data = setData?.mock.calls[0][0] as { geometry: { coordinates: number[][] } };
+    expect(data.geometry.coordinates[0]).toEqual([-113.9, 46.9]);
+    expect(lineEnd(data.geometry.coordinates)[0]).toBeCloseTo(-112.2);
+    expect(map.setStyle.mock.calls.length).toBe(styles);
+    // A resize does the same.
+    Object.defineProperty(container, "clientWidth", { configurable: true, value: 300 });
+    map.fire("resize");
+    expect(userMarker()?.lngLat?.[0]).toBeCloseTo(-111.2);
+    expect(map.setStyle.mock.calls.length).toBe(styles);
+    c.destroy();
+  });
+
+  it("an outside fix already inside the viewport inset is drawn where it is, with no chevron", async () => {
+    stubGeolocation(47.3, -114);
+    const { c, map, container } = build({ onUserLocationChange: vi.fn() });
+    // The true position projects to (50, 30), inside the inset.
+    sizeView(container, map, -114.5, 47.6);
+    c.setLiveFix("tracking", { lat: 46.9, lng: -113.9 }, true);
+    await c.enableUserLocation();
+    const user = userMarker();
+    expect(user?.lngLat).toEqual([-114, 47.3]);
+    expect(user?.element.querySelector('[data-testid="user-location-chevron"]')).toBeNull();
+    expect(styleLineEnd(map)).toEqual([-114, 47.3]);
+    expect(c.getUserLocation()?.outside).toBe(true);
   });
 
   it("inside the box the marker has no shift or chevron and the line no gradient", async () => {
