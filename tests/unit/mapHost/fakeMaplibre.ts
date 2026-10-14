@@ -1,6 +1,7 @@
 // A small stand-in for `maplibre-gl` for the live tracker's MapLibre
 // controller and the fallback tests: a `Map` that records its options,
 // every `setStyle`, the camera calls, and its handlers (`fire` runs them),
+// a projection a test can move, the style's sources with their `setData`,
 // and a `Marker` that records where it stands and its offset, and puts its element in the
 // map's container while it is on the map. Use it from a `vi.mock` factory:
 // `vi.mock("maplibre-gl", async () => (await import("./fakeMaplibre")).fakeMaplibreModule)`.
@@ -63,8 +64,32 @@ export class FakeMlMap {
     this.zoom = z;
     this.fire("zoom");
   }
+  // The projection: container pixels `scale` per degree from the top left
+  // corner at (`west`, `north`); a test pans the map by changing `view`.
+  view = { west: 0, north: 0, scale: 1 };
   project([lng, lat]: [number, number]) {
-    return { x: lng, y: lat };
+    return { x: (lng - this.view.west) * this.view.scale, y: (this.view.north - lat) * this.view.scale };
+  }
+  unproject([x, y]: [number, number]) {
+    return { lng: this.view.west + x / this.view.scale, lat: this.view.north - y / this.view.scale };
+  }
+  getContainer() {
+    return this.container;
+  }
+  off(event: string, fn: Handler) {
+    this.handlers[event] = (this.handlers[event] ?? []).filter((h) => h !== fn);
+    return this;
+  }
+  // The GeoJSON sources by id, each recording its `setData` calls.
+  sources = new Map<string, { setData: ReturnType<typeof vi.fn> }>();
+  getSource(id: string) {
+    if (!(id in this.style().sources)) return undefined;
+    let source = this.sources.get(id);
+    if (source === undefined) {
+      source = { setData: vi.fn() };
+      this.sources.set(id, source);
+    }
+    return source;
   }
   getCanvas() {
     return this.canvas;

@@ -49,6 +49,9 @@ export class FakeMap {
   setOptions(opts: Record<string, unknown>) {
     this.optionsCalls.push(opts);
   }
+  getDiv() {
+    return this.container;
+  }
   getZoom() {
     return this.zoom;
   }
@@ -72,7 +75,8 @@ export class FakeMap {
 // Like the real API, `setMap` attaches later: `onAdd` and the first `draw`
 // run on a microtask, once the map's panes exist.
 // The projection maps a point to (lng * 10, lat * 10) plus `shift`, for
-// both div and container pixels; a test moves the map by changing `shift`.
+// both div and container pixels, and `fromContainerPixelToLatLng` inverts
+// it; a test moves the map by changing `shift`.
 export class FakeOverlayView {
   static instances: FakeOverlayView[] = [];
   static shift = { x: 0, y: 0 };
@@ -94,7 +98,14 @@ export class FakeOverlayView {
       x: p.lng * 10 + FakeOverlayView.shift.x,
       y: p.lat * 10 + FakeOverlayView.shift.y,
     });
-    return { fromLatLngToDivPixel: pixel, fromLatLngToContainerPixel: pixel };
+    const latLng = (p: { x: number; y: number }) => {
+      const at = {
+        lat: (p.y - FakeOverlayView.shift.y) / 10,
+        lng: (p.x - FakeOverlayView.shift.x) / 10,
+      };
+      return { lat: () => at.lat, lng: () => at.lng, toJSON: () => at };
+    };
+    return { fromLatLngToDivPixel: pixel, fromLatLngToContainerPixel: pixel, fromContainerPixelToLatLng: latLng };
   }
   getMap() {
     return this.map;

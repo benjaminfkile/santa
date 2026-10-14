@@ -7,7 +7,7 @@
 // disposed controller draws nothing and calls back into nothing.
 // The map is locked to the event box (8.2): a strict restriction to it, a
 // minimum zoom that fits it in the canvas (recomputed when the canvas
-// resizes), and every pan the controller makes clamped to it. A fix
+// resizes, which also moves an outside visitor's dot), and every pan the controller makes clamped to it. A fix
 // outside the box draws Santa on its edge and pans there; a flight history
 // point outside it is drawn but left out of `fitHistory`. `setTheme`
 // awaits the theme's style body before applying it; a later call wins over
@@ -115,6 +115,7 @@ export function createMapController(
     let lastMinZoom = minZoom();
     resizeObserver = new ResizeObserver(() => {
       if (disposed) return;
+      userLoc?.refreshView();
       const next = minZoom();
       if (next === lastMinZoom) return;
       lastMinZoom = next;
