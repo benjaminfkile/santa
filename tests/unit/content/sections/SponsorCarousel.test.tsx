@@ -264,7 +264,15 @@ describe("SponsorCarousel card variant", () => {
     expect(sheet).toMatch(/\.sponsorCarouselCard \.sponsorCarouselSlide \{[^}]*height: 144px;/);
     expect(sheet).toMatch(/@media \(min-width: 761px\) \{\s*\.sponsorCarouselCard \.sponsorCarouselSlide \{ height: 192px; \}/);
     expect(sheet).toMatch(/\.sponsorCarouselLogo \{[^}]*width: 112px;[^}]*height: 112px;/);
-    expect(sheet).toMatch(/\.sponsorCarouselCard \.sponsorCarouselNameOnly \{ width: 160px; height: 160px; \}/);
+    expect(sheet).toMatch(/@media \(min-width: 1100px\) \{\s*\.sponsorCarouselCard \.sponsorCarouselSlide \{ height: 232px; \}/);
+    expect(sheet).toMatch(
+      /@media \(min-width: 761px\) \{\s*\.sponsorCarouselCard \.sponsorCarouselLogo,\s*\.sponsorCarouselCard \.sponsorCarouselNameOnly \{ width: 240px; height: 160px; max-width: 100%; \}/,
+    );
+    expect(sheet).toMatch(
+      /@media \(min-width: 1100px\) \{\s*\.sponsorCarouselCard \.sponsorCarouselLogo,\s*\.sponsorCarouselCard \.sponsorCarouselNameOnly \{ width: 300px; height: 200px; \}/,
+    );
+    expect(sheet).toMatch(/\.sponsorCarouselTile \.sponsorCarouselLogo \{[^}]*height: 70px;[^}]*max-width: 180px;/);
+    expect(sheet).toMatch(/@media \(min-width: 761px\) \{\s*\.sponsorDialogLogo \{ max-height: 200px; \}/);
     expect(sheet).not.toMatch(/--sponsor-logo-width/);
     expect(sheet).not.toMatch(/\.sponsorCarouselCard \.sponsorCarouselName \{[^}]*white-space: normal/);
   });
