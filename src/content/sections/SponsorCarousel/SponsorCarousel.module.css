@@ -42,9 +42,10 @@
 .sponsorCarouselReducedMotion .sponsorCarouselSlide { transition: none; }
 /* The card stacks: the logo with the sponsor's name under it, never
    beside it, at one fixed height whatever the sponsor (the logo box is a
-   fixed square and the name one line), so stepping through sponsors never
-   moves the page: 144 px below 761 px (112 + 8 + 24) and 192 px from
-   761 px (160 + 8 + 24). The live tile keeps the legacy row. */
+   fixed box and the name one line), so stepping through sponsors never
+   moves the page: 144 px below 761 px (112 + 8 + 24), 192 px from
+   761 px (160 + 8 + 24), and 232 px from 1100 px (200 + 8 + 24). The live
+   tile keeps the legacy row. */
 .sponsorCarouselCard .sponsorCarouselSlide {
   flex-direction: column;
   align-items: center;
@@ -55,6 +56,9 @@
 }
 @media (min-width: 761px) {
   .sponsorCarouselCard .sponsorCarouselSlide { height: 192px; }
+}
+@media (min-width: 1100px) {
+  .sponsorCarouselCard .sponsorCarouselSlide { height: 232px; }
 }
 /* The card's slide row at every width: a 44 px Previous arrow, the slide,
    and a 44 px Next arrow (the slide alone with one sponsor). */
@@ -77,9 +81,11 @@
   text-align: center;
   max-width: 100%;
 }
-/* The card's logo box is a fixed square (112 px below 761 px, 160 px from
-   761 px) whatever the image's shape or the section's logoWidth, which only
-   picks the image size the browser fetches; the image fits inside it. */
+/* The card's logo box is a fixed size whatever the image's shape or the
+   section's logoWidth, which only picks the image size the browser fetches:
+   a 112 px square below 761 px, 240 by 160 px from 761 px, and 300 by
+   200 px from 1100 px, never wider than the slide. The image fits inside it
+   (object-fit: contain), never cropped or stretched. */
 .sponsorCarouselLogo {
   box-sizing: border-box;
   width: 112px;
@@ -106,8 +112,12 @@
   flex: none;
 }
 @media (min-width: 761px) {
-  .sponsorCarouselLogo,
-  .sponsorCarouselCard .sponsorCarouselNameOnly { width: 160px; height: 160px; }
+  .sponsorCarouselCard .sponsorCarouselLogo,
+  .sponsorCarouselCard .sponsorCarouselNameOnly { width: 240px; height: 160px; max-width: 100%; }
+}
+@media (min-width: 1100px) {
+  .sponsorCarouselCard .sponsorCarouselLogo,
+  .sponsorCarouselCard .sponsorCarouselNameOnly { width: 300px; height: 200px; }
 }
 .sponsorCarouselNameOnly {
   font-family: var(--font-sans);
@@ -206,6 +216,9 @@
   width: auto;
   height: auto;
   object-fit: contain;
+}
+@media (min-width: 761px) {
+  .sponsorDialogLogo { max-height: 200px; }
 }
 .sponsorDialogName {
   margin: 0;

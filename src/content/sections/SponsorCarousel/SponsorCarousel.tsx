@@ -163,10 +163,10 @@ export const SponsorCarousel: SectionComponent = ({ data, bundle }) => {
     .filter(Boolean)
     .join(" ");
 
-  // The card's logo box is a fixed square (the stylesheet), so stepping
-  // through sponsors never changes the slide's height; logoWidth only picks
-  // the image size fetched (sizeOverride on Media). The live tile keeps the
-  // legacy fixed tile.
+  // The card's logo box is a fixed size per breakpoint (the stylesheet), so
+  // stepping through sponsors never changes the slide's height; logoWidth
+  // only picks the image size fetched (sizeOverride on Media). The live tile
+  // keeps the legacy fixed tile.
 
   const card = variant === "card";
   const count = sponsors.length;
