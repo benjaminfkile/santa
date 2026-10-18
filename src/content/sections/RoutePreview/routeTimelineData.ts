@@ -1,4 +1,4 @@
-// docs/site.md section 8.9. The entries of `event.routeMap.timeline` with
+// docs/site.md section 8.9. The entries of `snapshot.routeMap.timeline` with
 // numeric minutes and coordinates, in minute order; the elapsed flight
 // time of a minute count in the "1h 15m" form (minutes only under an
 // hour, hours plus minutes from one hour, no padding); and the map's
@@ -15,7 +15,7 @@ export type TimelineLabel = { lat: number; lng: number; label: string };
 
 export const TIME_LABEL_EVERY = 15;
 
-type RouteMapData = NonNullable<NonNullable<Snapshot["event"]>["routeMap"]>;
+type RouteMapData = NonNullable<Snapshot["routeMap"]>;
 
 function finite(n: unknown): n is number {
   return typeof n === "number" && Number.isFinite(n);

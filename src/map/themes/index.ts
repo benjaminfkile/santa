@@ -8,11 +8,16 @@
 // appearance's default flag, then the first in list order.
 // `resolveDefaultTheme` is the same order without the stored key, the
 // route preview's choice (8.9): the stored tracker theme plays no part there.
+// `GOOGLE_DEFAULT_THEME` is what the route preview draws on Google when no
+// Google theme is enabled: Google's own roadmap (an empty style array) under
+// the overlay and chrome of the seeded `standard` theme, kept as data in
+// googleDefault.json.
 
 import type { StyleSpecification } from "maplibre-gl";
 import type { Snapshot } from "../../contracts";
 import { storageGet } from "../../lib/storage";
 import type { Renderer } from "../renderer";
+import googleDefault from "./googleDefault.json";
 
 export const THEME_STORAGE_KEY = "wmsfo.tracker.theme";
 
@@ -143,3 +148,17 @@ export function resolveDefaultTheme(
   );
   return flagged ?? offered[0] ?? null;
 }
+
+export const GOOGLE_DEFAULT_THEME: MapTheme = {
+  key: "google-default",
+  renderer: "google",
+  name: "Standard",
+  styleUrl: "",
+  spriteUrl: null,
+  thumbnailMediaId: null,
+  defaultLightMode: true,
+  defaultDarkMode: true,
+  overlay: googleDefault.overlay,
+  chrome: googleDefault.chrome,
+  getStyle: () => Promise.resolve([]),
+};

@@ -652,6 +652,10 @@ export interface SiteSettings {
   tracker?: {
     defaultBbox: Bbox;
   };
+  route?: {
+    routeId: number | null;
+    mapConfig?: RouteMapConfig | null;
+  };
 }
 export interface Display {
   sizePx?: number;
@@ -708,6 +712,19 @@ export interface Bbox {
   south: number;
   east: number;
   north: number;
+}
+export interface RouteMapConfig {
+  display?: {
+    timeLabelIntervalMinutes?: 0 | 5 | 10 | 15 | 30;
+    arrows?: boolean;
+    arrowSize?: "small" | "medium" | "large" | "xlarge";
+    routeWidth?: "thin" | "normal" | "thick" | "xthick";
+    labelSize?: "small" | "medium" | "large";
+  };
+  controls?: {
+    fullscreen?: boolean;
+    terrain?: boolean;
+  };
 }
 export interface Presentation {
   width: "full" | "wide" | "narrow";

@@ -1,6 +1,8 @@
 // docs/site.md section 22.2. Parallel page smoke: each ordinary page in
 // the published document renders its first section; the route-preview
-// page loads the map and draws a polyline; /preview of the ended page
+// page draws the map when the snapshot's top-level `routeMap` has two or
+// more points, whether or not an event is current, and its empty text
+// otherwise; /preview of the ended page
 // starts a preview session on / with the banner and Exit; /alerts/verify and /alerts/unsubscribe
 // with invalid tokens render the invalid copy; the CSP meta is present; no
 // published page scrolls sideways at 320, 375, or 390 px; the header nav
@@ -98,8 +100,12 @@ test("the header nav keeps its items on one line and moves the rest into More", 
 
 test("a page with a route_preview draws the route map or its empty text without loading the map chunk", async ({ page }) => {
   const adminSnap = await getAdminSnapshot();
-  const snap = (await fetchCdnSnapshot(adminSnap.url)) as { content?: { pages?: PublishedPage[] } };
+  const snap = (await fetchCdnSnapshot(adminSnap.url)) as {
+    content?: { pages?: PublishedPage[] };
+    routeMap?: { path?: unknown[] } | null;
+  };
   const pages = snap.content?.pages ?? [];
+  const hasRoute = (snap.routeMap?.path?.length ?? 0) >= 2;
   const target = pages.find(
     (p) => p.role === "none" && p.sections.some((s) => s.kind === "route_preview"),
   );
@@ -116,6 +122,10 @@ test("a page with a route_preview draws the route map or its empty text without 
   await expect(
     page.locator('[data-testid="route-preview-map"], [data-testid="route-preview-empty"]').first(),
   ).toBeVisible({ timeout: 20_000 });
+  // The site route is drawn from the top-level `routeMap`, with or without
+  // a current event.
+  if (hasRoute) await expect(page.getByTestId("route-preview-map")).toBeVisible();
+  else await expect(page.getByTestId("route-preview-map")).toHaveCount(0);
   expect(mapScripts).toEqual([]);
 });
 

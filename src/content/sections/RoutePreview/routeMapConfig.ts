@@ -1,4 +1,4 @@
-// docs/site.md section 8.9. The route map's inputs. The event's
+// docs/site.md section 8.9. The route map's inputs. The site-wide
 // `routeMapConfig` in the snapshot gives the display and the controls;
 // the site settings give the viewpoints and the places. Each value
 // resolves on its own: the config's value, else the default. A null or
@@ -20,7 +20,7 @@
 import type { IconRef, Snapshot } from "../../../contracts";
 import type { TrackerViewpoint } from "../../../map/viewpointsOverlay";
 
-export type RouteMapConfig = NonNullable<NonNullable<Snapshot["event"]>["routeMapConfig"]>;
+export type RouteMapConfig = NonNullable<Snapshot["routeMapConfig"]>;
 
 type ArrowSize = "small" | "medium" | "large" | "xlarge";
 type RouteWidth = "thin" | "normal" | "thick" | "xthick";

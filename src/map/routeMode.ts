@@ -33,7 +33,7 @@
 //    `bounds_changed`, the names following the zoom (`setNames`). A list
 //    that draws the same badges keeps them; a changed one replaces them.
 //  - `terrain` picks the `terrain` map type, else `roadmap`.
-//  - The map is restricted to the event box, its least zoom the zoom that
+//  - The map is restricted to the route view box, its least zoom the zoom that
 //    fits the box (recomputed on resize). The camera fits the path's
 //    bounds with FIT_PADDING px of padding (less on a very small frame) on
 //    mount and on every resize, the bounds clamped to the box only where
@@ -252,7 +252,7 @@ export function mountGoogleRoute(
     return Math.max(0, Math.min(FIT_PADDING, Math.floor(Math.min(width, height) / 4)));
   }
 
-  // The path's bounds as [south west, north east], clamped to the event
+  // The path's bounds as [south west, north east], clamped to the route view
   // box where they leave it; null for an empty path.
   function fitCorners(): [LatLng, LatLng] | null {
     const path = state.path;

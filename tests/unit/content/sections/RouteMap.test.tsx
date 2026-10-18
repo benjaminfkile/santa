@@ -4,22 +4,24 @@
 //  - A section with a recording and a basemap mounts the map, the heading
 //    and the disclaimer above it; a published document's `style` key,
 //    `viewer` included, is ignored.
-//  - The route line source is fed `event.routeMap.path`; the map fits its
-//    bounds, takes gestures directly (no cooperativeGestures option), and
-//    has the map row's zoom range and the OpenStreetMap attribution.
+//  - The route line source is fed the top-level `routeMap.path` with no
+//    current event; the map fits its bounds, is locked to `routeView.bbox`
+//    (`maxBounds`), takes gestures directly (no cooperativeGestures
+//    option), and has the map row's zoom range and the OpenStreetMap
+//    attribution.
 //  - The style is the seeded theme of the site appearance, including a
 //    live switch that diffs the style on the same map.
-//  - Every fallback (no route map, no `trackerMap`, an unreadable style
-//    body or a style or tile error on an event with no Google theme to
-//    fall back to) renders the heading and `emptyText`, never an `<img>`,
-//    and logs once; a MapLibre failure reports `map_renderer_fallback`
-//    with `style_failed`.
+//  - No route map renders the heading and `emptyText`, never an `<img>`;
+//    an unreadable style body or a style or tile error logs once, reports
+//    `map_renderer_fallback` with `style_failed`, and rebuilds on Google,
+//    in the built-in Google theme when none is enabled; no
+//    `routeView.map` draws on Google.
 //  - The map host chunk is imported only when a section with a recording
 //    mounts.
 //  - A section with a recording reports the renderer choice as the
 //    `route` surface; the host draws on `maplibre`, and on `google` it
-//    draws with the Google libraries (faked) when the event has a Google
-//    theme. A Google load that still fails after its retries renders
+//    draws with the Google libraries (faked) in the enabled Google theme,
+//    else the built-in one. A Google load that still fails after its retries renders
 //    `emptyText` and logs once.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -121,8 +123,8 @@ vi.mock("maplibre-gl", () => {
 
 vi.mock("../../../../src/map/renderer", () => ({
   reportRendererFallback: vi.fn(),
-  reportRenderer: vi.fn((_surface: string, snapshot: { event?: { trackerMap?: unknown } } | null) =>
-    snapshot?.event?.trackerMap == null ? "google" : mocks.renderer,
+  reportRenderer: vi.fn((_surface: string, snapshot: { routeView?: { map?: unknown } } | null) =>
+    snapshot?.routeView?.map == null ? "google" : mocks.renderer,
   ),
 }));
 
@@ -149,7 +151,7 @@ const PATH = [
   { lat: 46.85, lng: -113.9 },
 ];
 
-// The event's map, `snapshot.event.trackerMap`, with its archives under BASEMAP.
+// The route view's map, `snapshot.routeView.map`, with its archives under BASEMAP.
 const TRACKER_MAP = {
   id: 3,
   name: "Valley",
@@ -176,7 +178,10 @@ function setEvent(
     ...s,
     snapshot: {
       schemaVersion: 1,
-      event: { id: 1, routeMap, trackerMap },
+      event: null,
+      routeMap,
+      routeMapConfig: null,
+      routeView: { bbox: { west: -114.3, south: 46.75, east: -113.8, north: 47.05 }, map: trackerMap },
       trackerThemes,
     } as unknown as Snapshot,
   }));
@@ -285,7 +290,8 @@ describe("route_preview map", () => {
     expect(options.bounds).toEqual([[-114.0, 46.85], [-113.9, 46.9]]);
     expect(options.fitBoundsOptions).toHaveProperty("padding");
     expect(options).not.toHaveProperty("cooperativeGestures");
-    expect(options.minZoom).toBe(0);
+    expect(options.maxBounds).toEqual([[-114.3, 46.75], [-113.8, 47.05]]);
+    expect(options.minZoom).toBeGreaterThanOrEqual(0);
     expect(options.maxZoom).toBe(15);
     expect(JSON.stringify(options.attributionControl)).toContain("© OpenStreetMap contributors");
     expect(style.sources.basemap.url).toBe(`pmtiles://${BASEMAP}/tiles.pmtiles`);
@@ -361,7 +367,7 @@ describe("route_preview map fallbacks", () => {
     expect(container.querySelector('[data-testid="route-preview-map"]')).toBeNull();
   }
 
-  it("renders the heading and emptyText, and no <img>, when event.routeMap is null", async () => {
+  it("renders the heading and emptyText, and no <img>, when routeMap is null", async () => {
     setEvent(null);
     const { container } = renderSection({ heading: "The route", emptyText: EMPTY });
     await settle();
@@ -401,7 +407,7 @@ describe("route_preview map fallbacks", () => {
     expect(mocks.maps).toHaveLength(0);
   });
 
-  it("draws the Google map when the event has no trackerMap", async () => {
+  it("draws the Google map when routeView has no map", async () => {
     setEvent(routeMapOf(PATH), null, GOOGLE_THEME_ROWS);
     const { container } = renderSection({ emptyText: EMPTY });
     await settle();
@@ -440,14 +446,18 @@ describe("route_preview map fallbacks", () => {
     }
   });
 
-  it("renders emptyText on google when the event has no Google theme", async () => {
+  it("draws on google in the built-in theme when no Google theme is enabled", async () => {
     mocks.renderer = "google";
     setEvent(routeMapOf(PATH));
     const { container } = renderSection({ emptyText: EMPTY });
     await settle();
-    expectEmptyView(container);
+    await settle();
+    expect(container.querySelector('[data-testid="route-preview-empty"]')).toBeNull();
+    const host = container.querySelector('[data-testid="route-map"]');
+    expect(host?.getAttribute("data-renderer")).toBe("google");
+    expect(host?.getAttribute("data-map-theme")).toBe("google-default");
     expect(mocks.maps).toHaveLength(0);
-    expect(FakeMap.instances).toHaveLength(0);
+    expect(FakeMap.instances).toHaveLength(1);
   });
 
   it("reports no renderer when the path cannot make a map", async () => {
@@ -458,15 +468,17 @@ describe("route_preview map fallbacks", () => {
     expect(reportRenderer).not.toHaveBeenCalled();
   });
 
-  it("renders emptyText when the event has no trackerMap", async () => {
+  it("draws Google in the built-in theme with no routeView.map and no Google theme", async () => {
     setEvent(routeMapOf(PATH), null);
     const { container } = renderSection({ emptyText: EMPTY });
     await settle();
-    expectEmptyView(container);
+    await settle();
+    expect(container.querySelector('[data-testid="route-map"]')?.getAttribute("data-renderer")).toBe("google");
+    expect(FakeMap.instances).toHaveLength(1);
     expect(mocks.maps).toHaveLength(0);
   });
 
-  it("falls back, then renders emptyText with no Google theme, when the style body cannot be read", async () => {
+  it("falls back to Google in the built-in theme when the style body cannot be read", async () => {
     vi.mocked(reportRendererFallback).mockClear();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const missing = ROUTE_THEME_ROWS.map((row) => ({
@@ -476,13 +488,16 @@ describe("route_preview map fallbacks", () => {
     setEvent(routeMapOf(PATH), TRACKER_MAP, missing);
     const { container } = renderSection({ emptyText: EMPTY });
     await settle();
-    expectEmptyView(container);
+    await settle();
+    expect(container.querySelector('[data-testid="route-preview-empty"]')).toBeNull();
+    expect(container.querySelector('[data-testid="route-map"]')?.getAttribute("data-map-theme")).toBe("google-default");
+    expect(FakeMap.instances).toHaveLength(1);
     expect(mocks.maps).toHaveLength(0);
     expect(warn).toHaveBeenCalledTimes(1);
     expect(reportRendererFallback).toHaveBeenCalledWith("route", "style_failed");
   });
 
-  it("falls back, then renders emptyText with no Google theme, when the style or tiles fail to load", async () => {
+  it("falls back to Google in the built-in theme when the style or tiles fail to load", async () => {
     vi.mocked(reportRendererFallback).mockClear();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     setEvent(routeMapOf(PATH));
@@ -494,7 +509,10 @@ describe("route_preview map fallbacks", () => {
       map.fire("error", { error: new Error("glyphs 404") });
       map.fire("error", { error: new Error("tile 404") });
     });
-    expectEmptyView(container);
+    await settle();
+    expect(container.querySelector('[data-testid="route-preview-empty"]')).toBeNull();
+    expect(container.querySelector('[data-testid="route-map"]')?.getAttribute("data-renderer")).toBe("google");
+    expect(FakeMap.instances).toHaveLength(1);
     expect(map.remove).toHaveBeenCalledTimes(1);
     expect(warn).toHaveBeenCalledTimes(1);
     expect(reportRendererFallback).toHaveBeenCalledTimes(1);

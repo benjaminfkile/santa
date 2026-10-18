@@ -1,11 +1,11 @@
-// docs/site.md section 8.9. The points of `event.routeMap.path` with
+// docs/site.md section 8.9. The points of `snapshot.routeMap.path` with
 // numeric coordinates, in order.
 
 import type { Snapshot } from "../../../contracts";
 
 export type LatLng = { lat: number; lng: number };
 
-type RouteMapData = NonNullable<NonNullable<Snapshot["event"]>["routeMap"]>;
+type RouteMapData = NonNullable<Snapshot["routeMap"]>;
 
 export function routeMapPath(routeMap: RouteMapData | null | undefined): LatLng[] {
   const out: LatLng[] = [];

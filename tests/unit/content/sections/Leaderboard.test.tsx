@@ -33,7 +33,7 @@ function setStore(patch: {
 }) {
   const s = store.getState();
   const nextSnapshot: Snapshot = {
-    ...(s.snapshot ?? { schemaVersion: 1, trackerThemes: [] }),
+    ...(s.snapshot ?? { schemaVersion: 1, routeMap: null, routeMapConfig: null, routeView: { bbox: {}, map: null }, trackerThemes: [] }),
     cookieTypes: patch.cookieTypes,
   };
   const nextLive: LiveObject = {

@@ -6,12 +6,12 @@
 // the live mode controller the same way, so the Google branch downloads
 // neither. A failed import of the handle module reports through `onFail`
 // as `chunk_failed`. In route mode (`route_preview`) it draws the route
-// over the event's map (`trackerMap`, read once when the map mounts) in
+// over the route view's map (`trackerMap`, read once when the map mounts) in
 // the given theme's style: the body comes through the theme's
 // `getStyle()` (fetched once per page, so the section's own early call
 // has usually brought it), and a new theme (the section re-resolves it on
 // every scheme change) is applied to the same map as a style diff once
-// its body is in hand. The event box (`trackerBbox`) is the pan limit and
+// its body is in hand. The route view box (`trackerBbox`) is the pan limit and
 // the least zoom. Any failure is logged once and reported through
 // `onFail` with its reason: `style_failed` for the style body, the style,
 // or the tiles before the first complete render, `context_lost` for a
@@ -32,7 +32,7 @@
 // fullscreen button when `fullscreenControl` is set (the caller owns the
 // fullscreen state and passes `fullscreen` and `onToggleFullscreen`;
 // each change of `fullscreen` resizes the map and refits the path), and a
-// terrain toggle when `terrainControl` is set, the event's map has a
+// terrain toggle when `terrainControl` is set, the route view's map has a
 // terrain URL, and the theme has a layer on the `terrain` source. The
 // terrain choice is kept in storage under TERRAIN_KEY ("on" or "off", on
 // when absent) and applied to every style the map builds, so a theme
