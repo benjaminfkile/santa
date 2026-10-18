@@ -29,4 +29,5 @@ export const blockParagraph: string;
 export const blockQuote: string;
 export const blockQuoteCite: string;
 export const richText: string;
+export const textLarge: string;
 
