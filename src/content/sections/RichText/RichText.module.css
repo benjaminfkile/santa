@@ -73,6 +73,18 @@
   text-transform: uppercase;
 }
 
+/* textSize "large": paragraphs, list items, and the quote's text draw at
+   1.25rem from 641 px up and 1.125rem below. The quote's cite, headings,
+   captions, and the other blocks keep their sizes. */
+.textLarge .blockParagraph,
+.textLarge .blockListItem,
+.textLarge .blockQuote > p { font-size: 1.25rem; line-height: 1.5; }
+@media (max-width: 640px) {
+  .textLarge .blockParagraph,
+  .textLarge .blockListItem,
+  .textLarge .blockQuote > p { font-size: 1.125rem; }
+}
+
 .blockMedia { margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .blockMediaSmall img { max-width: 320px; }
 .blockMediaMedium img { max-width: 640px; }

@@ -45,7 +45,7 @@ function renderNode(
   if (node.kind === "code") return <code>{node.text}</code>;
   if (node.kind === "link") {
     return (
-      <LinkView href={node.href} bundle={bundle}>
+      <LinkView href={node.href} bundle={bundle} newTab={node.newTab === true}>
         {renderNodes(node.label, bundle, event)}
       </LinkView>
     );

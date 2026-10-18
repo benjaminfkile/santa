@@ -1,7 +1,9 @@
 // docs/site.md section 7.5. Parses the inline grammar into a token list.
 // Mirrors the API's parser: **, *, backtick, [label](href), {icon:<id>},
 // {icon:media:<uuid>}, {event:name}, {event:year}, {event:scheduledAt}, and
-// newlines. Everything else is text. Unbalanced markers stay as text.
+// newlines. A link directly followed by {newtab} consumes the marker and opens
+// in a new tab; {newtab} anywhere else is text. Everything else is text.
+// Unbalanced markers stay as text.
 
 export type InlineNode =
   | { kind: "text"; text: string }
@@ -9,9 +11,11 @@ export type InlineNode =
   | { kind: "strong"; children: InlineNode[] }
   | { kind: "em"; children: InlineNode[] }
   | { kind: "code"; text: string }
-  | { kind: "link"; label: InlineNode[]; href: string }
+  | { kind: "link"; label: InlineNode[]; href: string; newTab?: true }
   | { kind: "icon"; source: "library" | "media"; id: string }
   | { kind: "placeholder"; field: "name" | "year" | "scheduledAt" };
+
+const NEW_TAB_MARKER = "{newtab}";
 
 const PLACEHOLDER_FIELDS: ReadonlySet<string> = new Set(["name", "year", "scheduledAt"]);
 
@@ -151,6 +155,10 @@ function tryParseLink(env: Env): InlineNode | null {
   const href = env.input.slice(hrefStart, hrefEnd);
   const label = parseInline(labelText);
   env.i = hrefEnd + 1;
+  if (env.input.startsWith(NEW_TAB_MARKER, env.i)) {
+    env.i += NEW_TAB_MARKER.length;
+    return { kind: "link", label, href, newTab: true };
+  }
   return { kind: "link", label, href };
 }
 

@@ -31,6 +31,26 @@ describe("parseInline tokens", () => {
     ]);
   });
 
+  it("{newtab} after an external link marks it new tab and is consumed", () => {
+    expect(parseInline("[a](https://x.org){newtab}")).toEqual([
+      { kind: "link", label: [text("a")], href: "https://x.org", newTab: true },
+    ]);
+  });
+
+  it("{newtab} after an internal link marks it new tab and is consumed", () => {
+    expect(parseInline("[a](/about){newtab}")).toEqual([
+      { kind: "link", label: [text("a")], href: "/about", newTab: true },
+    ]);
+  });
+
+  it("{newtab} alone or after a space is text", () => {
+    expect(parseInline("{newtab}")).toEqual([text("{newtab}")]);
+    expect(parseInline("[a](/about) {newtab}")).toEqual([
+      { kind: "link", label: [text("a")], href: "/about" },
+      text(" {newtab}"),
+    ]);
+  });
+
   it("newlines become br", () => {
     expect(parseInline("a\nb")).toEqual([text("a"), { kind: "br" }, text("b")]);
   });

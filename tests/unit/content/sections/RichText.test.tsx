@@ -43,6 +43,28 @@ describe("RichText", () => {
     expect(container.querySelector("p")?.textContent).toBe("Two");
   });
 
+  it("textSize large sets the data-text-size attribute", () => {
+    const { container } = render(
+      wrap(
+        <RichText
+          data={{ blocks: [{ kind: "paragraph", text: "Big" }], textSize: "large" }}
+          items={[]}
+          bundle={bundle}
+        />,
+      ),
+    );
+    expect(container.querySelector("[data-text-size=\"large\"]")).not.toBeNull();
+  });
+
+  it("an absent textSize sets no data-text-size attribute", () => {
+    const { container } = render(
+      wrap(
+        <RichText data={{ blocks: [{ kind: "paragraph", text: "Plain" }] }} items={[]} bundle={bundle} />,
+      ),
+    );
+    expect(container.querySelector("[data-text-size]")).toBeNull();
+  });
+
   it("skips unknown block kinds", () => {
     const { container } = render(
       wrap(

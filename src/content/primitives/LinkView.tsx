@@ -1,5 +1,6 @@
 // docs/site.md section 7.3. Renders links: router links for site paths,
-// <a> for absolute URLs and mailto.
+// <a> for absolute URLs and mailto. A site path that opens in a new tab is
+// a plain <a> with target _blank, since the router link stays in this tab.
 
 import { Link as RouterLink } from "react-router-dom";
 import type { ReactNode } from "react";
@@ -22,6 +23,13 @@ export type LinkViewProps = {
 export function LinkView({ href, bundle: _bundle, newTab = false, className, children }: LinkViewProps) {
   void _bundle;
   if (isInternal(href)) {
+    if (newTab) {
+      return (
+        <a href={href} className={className} target="_blank" rel="noopener">
+          {children}
+        </a>
+      );
+    }
     return (
       <RouterLink to={href} className={className}>
         {children}
