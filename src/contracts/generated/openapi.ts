@@ -852,41 +852,6 @@ export interface paths {
         };
         trace?: never;
     };
-    "/admin/events/{id}/route-map": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["RouteMapResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/events/{id}/current": {
         parameters: {
             query?: never;
@@ -1321,6 +1286,41 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["DeleteImpactDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/route": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SiteRouteResponse"];
                     };
                 };
             };
@@ -6093,8 +6093,6 @@ export interface components {
         };
         CloneEventCopy: {
             sponsors?: boolean;
-            route?: boolean;
-            routeMapConfig?: boolean;
             tracker?: boolean;
         };
         CloneEventRequest: {
@@ -6243,9 +6241,6 @@ export interface components {
             scheduledAt?: null | string;
             /** Format: int32 */
             fundsPercent?: number | string;
-            /** Format: int64 */
-            routeId?: null | number | string;
-            inheritRoute?: boolean;
             scheduleTimeZone?: null | string;
             trackerBbox?: components["schemas"]["JsonElement"];
         };
@@ -6269,7 +6264,6 @@ export interface components {
         };
         CreatePosterRequest: {
             name?: string;
-            routeId?: components["schemas"]["JsonElement"];
             layout?: components["schemas"]["JsonElement"];
         };
         CreateSectionItemRequest: {
@@ -6334,6 +6328,12 @@ export interface components {
             /** Format: int64 */
             replacementId?: null | number | string;
         };
+        DraftSiteRouteDto: {
+            /** Format: int64 */
+            routeId?: number | string;
+            name?: null | string;
+            mapConfig?: null | components["schemas"]["RouteMapConfig"];
+        };
         EmailQuota: {
             available?: boolean;
             dryRun?: boolean;
@@ -6394,10 +6394,6 @@ export interface components {
             statusNotifiedAt?: null | string;
             /** Format: int32 */
             fundsPercent?: number | string;
-            /** Format: int64 */
-            routeId?: null | number | string;
-            routeUrl?: null | string;
-            routeMapConfig?: null | components["schemas"]["RouteMapConfig"];
             trackerBbox?: components["schemas"]["Bbox"];
             /** Format: int64 */
             trackerMapId?: null | number | string;
@@ -6968,10 +6964,7 @@ export interface components {
             endedAt?: components["schemas"]["JsonElement"];
             /** Format: int32 */
             fundsPercent?: null | number | string;
-            /** Format: int64 */
-            routeId?: null | number | string;
             scheduleTimeZone?: components["schemas"]["JsonElement"];
-            routeMapConfig?: components["schemas"]["JsonElement"];
             trackerBbox?: components["schemas"]["JsonElement"];
             trackerMapId?: components["schemas"]["JsonElement"];
             trackerThemeIds?: components["schemas"]["JsonElement"];
@@ -6999,7 +6992,6 @@ export interface components {
         };
         PatchPosterRequest: {
             name?: null | string;
-            routeId?: components["schemas"]["JsonElement"];
             layout?: components["schemas"]["JsonElement"];
         };
         PatchQrCodeRequest: {
@@ -7149,8 +7141,6 @@ export interface components {
             /** Format: int64 */
             id?: number | string;
             name?: string;
-            /** Format: int64 */
-            routeId?: null | number | string;
             layout?: null | components["schemas"]["JsonElement"];
             createdBy?: string;
             /** Format: date-time */
@@ -7163,8 +7153,6 @@ export interface components {
             /** Format: int64 */
             id?: number | string;
             name?: string;
-            /** Format: int64 */
-            routeId?: null | number | string;
             /** Format: date-time */
             updatedAt?: string;
         };
@@ -7210,6 +7198,13 @@ export interface components {
         };
         PublishContentRequest: {
             label?: null | string;
+        };
+        PublishedSiteRouteDto: {
+            /** Format: int64 */
+            routeId?: number | string;
+            name?: null | string;
+            routeMap?: null | components["schemas"]["RouteMap"];
+            mapConfig?: null | components["schemas"]["RouteMapConfig"];
         };
         PutHelpLinkRequest: {
             label?: null | string;
@@ -7347,6 +7342,8 @@ export interface components {
             uploadedBy?: string;
             /** Format: date-time */
             createdAt?: string;
+            isSiteRoute?: boolean;
+            isDraftRoute?: boolean;
             audit?: null | components["schemas"]["AuditStampDto"];
         };
         RouteFromEventRequest: {
@@ -7462,6 +7459,10 @@ export interface components {
         };
         SettingUpdateRequest: {
             value?: components["schemas"]["JsonElement"];
+        };
+        SiteRouteResponse: {
+            published?: null | components["schemas"]["PublishedSiteRouteDto"];
+            draft?: null | components["schemas"]["DraftSiteRouteDto"];
         };
         SiteSettingsDraftDto: {
             data?: components["schemas"]["JsonElement"];

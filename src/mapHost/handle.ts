@@ -1,10 +1,10 @@
 // docs/site.md sections 8.9 and 8.10. The map handle of route mode:
-// MapLibre over the event's map (`snapshot.event.trackerMap`) in the
+// MapLibre over the route view's map (`snapshot.routeView.map`) in the
 // theme's style (themeStyle.ts), the place filter on the theme's marked
 // layers (places.ts), and the route overlay (routeLayers.ts) above the
 // theme's last layer. MapLibre's worker is the bundled one and the
-// `pmtiles://` protocol is registered once per page. The event box
-// (`trackerBbox`) is the pan limit and sets the least zoom to the zoom
+// `pmtiles://` protocol is registered once per page. The route view box
+// (`trackerBbox`, `snapshot.routeView.bbox`) is the pan limit and sets the least zoom to the zoom
 // that fits it, never under the map row's `minZoom`; the row's `maxZoom`
 // is the most. A style, glyph, or tile error before the first complete
 // render reports through `onError` as `style_failed`; later errors (a
@@ -242,12 +242,12 @@ function sameState(a: State, b: State): boolean {
 
 export function mountRouteMap(options: RouteMapOptions): RouteMapHandle {
   const { container, onError, trackerMap, bbox } = options;
-  if (trackerMap.tilesUrl === "") throw new Error("The event's map has no tiles");
+  if (trackerMap.tilesUrl === "") throw new Error("The route view's map has no tiles");
   ensureProtocol();
   let state = stateOf(options);
   const startElement = options.startElement;
 
-  // The theme's style for the event's map, kept per theme body.
+  // The theme's style for the route view's map, kept per theme body.
   let based: { theme: HostTheme; style: StyleSpecification } | null = null;
   function baseStyle(theme: HostTheme): StyleSpecification {
     if (based === null || based.theme.style !== theme.style || based.theme.spriteUrl !== theme.spriteUrl) {
@@ -284,7 +284,7 @@ export function mountRouteMap(options: RouteMapOptions): RouteMapHandle {
     return { width: container.clientWidth, height: container.clientHeight };
   }
 
-  // The path's bounds, clamped to the event box where they leave it.
+  // The path's bounds, clamped to the route view box where they leave it.
   function fitBounds(): [[number, number], [number, number]] | null {
     const bounds = pathBounds(state.path);
     if (bounds === null || bbox === null) return bounds;

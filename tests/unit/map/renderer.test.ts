@@ -1,7 +1,8 @@
 // docs/site.md sections 8.1 and 16. The renderer choice: no map, no
 // MapLibre theme, and no WebGL 2 each give `google` with their reason, in
 // that order of precedence; a map, a MapLibre theme, and WebGL 2 give
-// `maplibre`. The WebGL 2 probe runs once per page. `reportRenderer` sends
+// `maplibre`. The live surface reads `event.trackerMap` and the route
+// surface `routeView.map`. The WebGL 2 probe runs once per page. `reportRenderer` sends
 // one `map_renderer` event per surface with `surface`, `renderer`, and
 // `reason`.
 
@@ -14,9 +15,10 @@ type RendererModule = typeof import("../../../src/map/renderer");
 
 const MAP = { id: 3, tilesUrl: "https://cdn.example/basemap/tiles.pmtiles", terrainUrl: null };
 
-function snapshot(opts: { map?: boolean; maplibre?: boolean }) {
+function snapshot(opts: { map?: boolean; routeMap?: boolean; event?: boolean; maplibre?: boolean }) {
   return {
-    event: { trackerBbox: {}, trackerMap: opts.map === false ? null : MAP },
+    event: opts.event === false ? null : { trackerBbox: {}, trackerMap: opts.map === false ? null : MAP },
+    routeView: { bbox: {}, map: opts.routeMap === false ? null : MAP },
     trackerThemes: [
       { key: "standard", renderer: "google" },
       ...(opts.maplibre === false ? [] : [{ key: "light", renderer: "maplibre" }]),
@@ -57,6 +59,15 @@ describe("pickRenderer", () => {
     expect(getContext).not.toHaveBeenCalled();
   });
 
+  it("reads routeView.map on the route surface, with or without an event", async () => {
+    await load(true);
+    expect(mod.rendererChoice(snapshot({ event: false }), "route")).toEqual({ renderer: "maplibre", reason: "ok" });
+    expect(mod.rendererChoice(snapshot({ event: false }), "live")).toEqual({ renderer: "google", reason: "no_map" });
+    expect(mod.rendererChoice(snapshot({ routeMap: false }), "route")).toEqual({ renderer: "google", reason: "no_map" });
+    expect(mod.rendererChoice(snapshot({ map: false }), "route")).toEqual({ renderer: "maplibre", reason: "ok" });
+    expect(mod.pickRenderer(snapshot({ event: false, maplibre: false }), "route")).toBe("google");
+  });
+
   it("gives google with no_theme when no MapLibre theme is enabled", async () => {
     await load(true);
     expect(mod.rendererChoice(snapshot({ maplibre: false }))).toEqual({ renderer: "google", reason: "no_theme" });
@@ -93,6 +104,7 @@ describe("reportRenderer", () => {
     mod.reportRenderer("route", snapshot({}));
     mod.reportRenderer("live", snapshot({ map: false }));
     mod.reportRenderer("live", snapshot({}));
+    mod.reportRenderer("route", snapshot({ routeMap: false }));
     expect(sendEvent).toHaveBeenCalledTimes(2);
     expect(sendEvent).toHaveBeenNthCalledWith(1, "map_renderer", {
       surface: "route",

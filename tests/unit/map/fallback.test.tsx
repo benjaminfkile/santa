@@ -361,12 +361,10 @@ describe("the route surface", () => {
         ...s,
         snapshot: {
           schemaVersion: 1,
-          event: {
-            id: 1,
-            routeMap: { path: PATH, timeline: [], durationMinutes: 5, timed: false },
-            trackerMap: TRACKER_MAP,
-            trackerBbox: BOX,
-          },
+          event: null,
+          routeMap: { path: PATH, timeline: [], durationMinutes: 5, timed: false },
+          routeMapConfig: null,
+          routeView: { bbox: BOX, map: TRACKER_MAP },
           trackerThemes: [...ROUTE_THEME_ROWS, ...GOOGLE_THEME_ROWS],
         } as unknown as Snapshot,
       }));

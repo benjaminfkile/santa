@@ -159,7 +159,7 @@ const LONG_TIMELINE = [
 
 const SCHEDULED_AT = "2026-12-22T01:00:00.000Z";
 
-// The event's map, `snapshot.event.trackerMap`.
+// The route view's map, `snapshot.routeView.map`.
 const TRACKER_MAP = {
   id: 3,
   tilesUrl: "https://cdn.example/basemap/tiles.pmtiles",
@@ -182,13 +182,10 @@ function setEvent(
     ...s,
     snapshot: {
       schemaVersion: 1,
-      event: {
-        id: 1,
-        scheduledAt,
-        routeMap: { path: PATH, timeline, durationMinutes: 72, timed: true },
-        routeMapConfig,
-        trackerMap: TRACKER_MAP,
-      },
+      event: { id: 1, scheduledAt },
+      routeMap: { path: PATH, timeline, durationMinutes: 72, timed: true },
+      routeMapConfig,
+      routeView: { bbox: { west: -114.3, south: 46.75, east: -113.8, north: 47.05 }, map: TRACKER_MAP },
       trackerThemes: ROUTE_THEME_ROWS,
     } as unknown as Snapshot,
   }));

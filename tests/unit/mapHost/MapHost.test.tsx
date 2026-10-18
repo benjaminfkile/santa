@@ -202,11 +202,10 @@ async function renderSection(trackerThemes: unknown = ROUTE_THEME_ROWS) {
     ...s,
     snapshot: {
       schemaVersion: 1,
-      event: {
-        id: 1,
-        routeMap: { path: PATH, timeline: [], durationMinutes: 10, timed: false },
-        trackerMap: { id: 3, ...TRACKER_MAP },
-      },
+      event: null,
+      routeMap: { path: PATH, timeline: [], durationMinutes: 10, timed: false },
+      routeMapConfig: null,
+      routeView: { bbox: null, map: { id: 3, ...TRACKER_MAP } },
       trackerThemes,
     } as unknown as Snapshot,
   }));

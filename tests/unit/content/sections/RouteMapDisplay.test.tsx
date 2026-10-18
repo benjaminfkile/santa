@@ -1,7 +1,7 @@
 // docs/site.md section 8.9. The route map's config, viewpoint markers,
 // and gestures, with MapLibre and pmtiles mocked and the seeded route
 // themes served from the contracts fixtures:
-//  - The display and the controls come from the event's `routeMapConfig`: each of the
+//  - The display and the controls come from the snapshot's `routeMapConfig`: each of the
 //    five display values (time label interval, arrows, arrow size, route
 //    width, label size) resolves from the config's `display`, then the
 //    default (15, true, medium, normal, medium), and reaches the style:
@@ -109,6 +109,7 @@ vi.mock("maplibre-gl", () => {
     setStyle = vi.fn();
     fitBounds = vi.fn();
     resize = vi.fn();
+    setMinZoom = vi.fn();
     remove = vi.fn();
     addImage = vi.fn((id: string) => {
       this.images.add(id);
@@ -236,7 +237,7 @@ const TIMELINE = [
   { minutes: 93, lat: 47.0, lng: -113.8 },
 ];
 
-// The event's map, `snapshot.event.trackerMap`.
+// The route view's map, `snapshot.routeView.map`.
 const TRACKER_MAP = {
   id: 3,
   tilesUrl: "https://cdn.example/basemap/tiles.pmtiles",
@@ -268,13 +269,10 @@ function setEvent(routeMapConfig?: Config | null): void {
     ...s,
     snapshot: {
       schemaVersion: 1,
-      event: {
-        id: 1,
-        scheduledAt: null,
-        routeMap: { path: PATH, timeline: TIMELINE, durationMinutes: 93, timed: true },
-        trackerMap: TRACKER_MAP,
-        ...(routeMapConfig === undefined ? {} : { routeMapConfig }),
-      },
+      event: { id: 1, scheduledAt: null },
+      routeMap: { path: PATH, timeline: TIMELINE, durationMinutes: 93, timed: true },
+      ...(routeMapConfig === undefined ? {} : { routeMapConfig }),
+      routeView: { bbox: { west: -114.3, south: 46.75, east: -113.8, north: 47.05 }, map: TRACKER_MAP },
       trackerThemes: ROUTE_THEME_ROWS,
     } as unknown as Snapshot,
   }));
@@ -289,7 +287,7 @@ async function settle(): Promise<void> {
   });
 }
 
-// Renders a `map` section with `config` as the event's `routeMapConfig`
+// Renders a `map` section with `config` as the snapshot's `routeMapConfig`
 // (left out of the event when undefined), `data` added to the section
 // data, and `settings` as the content document's site settings.
 async function renderSection(

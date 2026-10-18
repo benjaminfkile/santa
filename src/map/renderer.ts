@@ -1,5 +1,6 @@
 // docs/site.md section 8.1. The renderer choice for a map surface: MapLibre
-// when the event carries a map, at least one enabled MapLibre theme, and the
+// when the surface has a map (the tracker `event.trackerMap`, the route
+// preview `routeView.map`), at least one enabled MapLibre theme, and the
 // browser gives a WebGL 2 context without a major performance caveat; Google
 // otherwise. `canUseWebGl2` asks once per page and keeps the answer.
 // `reportRenderer` sends one `map_renderer` event per surface per page with
@@ -16,7 +17,10 @@ export type RendererSurface = "route" | "live";
 export type RendererReason = "ok" | "no_map" | "no_theme" | "webgl2_unavailable";
 export type FallbackReason = "context_lost" | "chunk_failed" | "style_failed";
 
-type RendererInput = Pick<Snapshot, "event" | "trackerThemes"> | null | undefined;
+type RendererInput =
+  | (Pick<Snapshot, "event" | "trackerThemes"> & Partial<Pick<Snapshot, "routeView">>)
+  | null
+  | undefined;
 
 let webGl2: boolean | null = null;
 
@@ -37,12 +41,19 @@ export function canUseWebGl2(): boolean {
   return ok;
 }
 
-export function rendererChoice(snapshot: RendererInput): {
+function surfaceMap(snapshot: RendererInput, surface: RendererSurface) {
+  return surface === "route" ? snapshot?.routeView?.map : snapshot?.event?.trackerMap;
+}
+
+export function rendererChoice(
+  snapshot: RendererInput,
+  surface: RendererSurface = "live",
+): {
   renderer: Renderer;
   reason: RendererReason;
 } {
-  if (snapshot?.event?.trackerMap == null) return { renderer: "google", reason: "no_map" };
-  const themes = snapshot.trackerThemes ?? [];
+  if (surfaceMap(snapshot, surface) == null) return { renderer: "google", reason: "no_map" };
+  const themes = snapshot?.trackerThemes ?? [];
   if (!themes.some((t) => t.renderer === "maplibre")) {
     return { renderer: "google", reason: "no_theme" };
   }
@@ -50,14 +61,14 @@ export function rendererChoice(snapshot: RendererInput): {
   return { renderer: "maplibre", reason: "ok" };
 }
 
-export function pickRenderer(snapshot: RendererInput): Renderer {
-  return rendererChoice(snapshot).renderer;
+export function pickRenderer(snapshot: RendererInput, surface: RendererSurface = "live"): Renderer {
+  return rendererChoice(snapshot, surface).renderer;
 }
 
 const reported = new Set<RendererSurface>();
 
 export function reportRenderer(surface: RendererSurface, snapshot: RendererInput): Renderer {
-  const { renderer, reason } = rendererChoice(snapshot);
+  const { renderer, reason } = rendererChoice(snapshot, surface);
   if (!reported.has(surface)) {
     reported.add(surface);
     sendEvent("map_renderer", { surface, renderer, reason });

@@ -5,9 +5,14 @@
 //  - The map frame height comes from `--route-preview-max-h` in tokens.css.
 // And the host's loading, with the host module mocked:
 //  - The host is lazy-imported only for a path of two or more points.
+//  - The section reads the top-level `routeMap`, `routeView`, and
+//    `trackerThemes` of the vendored snapshot fixture: it draws with
+//    `event` null, renders `emptyText` with `routeMap` null while an event
+//    is current, and hands the host `routeView.bbox` as its pan limit and
+//    `routeView.map` as its tiles.
 //  - The renderer choice is reported once as the `route` surface; on
 //    `google` the host gets the renderer and the Google theme of the
-//    appearance, and with no Google theme the section renders `emptyText`.
+//    appearance, and with no Google theme the built-in default.
 // The map itself is covered in RouteMap.test.tsx.
 
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
@@ -27,13 +32,16 @@ const mocks = vi.hoisted(() => ({
   hostImports: 0,
   hostThemes: [] as string[],
   hostRenderers: [] as (string | undefined)[],
+  hostProps: [] as Record<string, unknown>[],
   renderer: "maplibre" as "maplibre" | "google",
 }));
 
 vi.mock("../../../../src/mapHost/MapHost", () => {
   mocks.hostImports++;
   return {
-    MapHost: ({ theme, renderer }: { theme: { key: string }; renderer?: string }) => {
+    MapHost: (props: { theme: { key: string }; renderer?: string }) => {
+      const { theme, renderer } = props;
+      mocks.hostProps.push(props);
       mocks.hostThemes.push(theme.key);
       mocks.hostRenderers.push(renderer);
       return <div data-testid="fake-host" />;
@@ -48,6 +56,12 @@ vi.mock("../../../../src/map/renderer", () => ({
 
 const ROOT = resolve(__dirname, "..", "..", "..", "..");
 
+// The vendored contracts' snapshot fixture: an event current, the site
+// route at the top level.
+const FIXTURE = JSON.parse(
+  readFileSync(resolve(ROOT, "contracts", "fixtures", "snapshot.json"), "utf8"),
+) as Snapshot;
+
 function buildBundle(): ContentBundle {
   return {
     content: { pages: [], nav: [] } as unknown as ContentDocument,
@@ -59,7 +73,7 @@ function buildBundle(): ContentBundle {
 function setSnapshotEvent(): void {
   store.setState((s) => ({
     ...s,
-    snapshot: { schemaVersion: 1, event: { id: 1, routeMap: null } } as unknown as Snapshot,
+    snapshot: { ...FIXTURE, routeMap: null },
   }));
 }
 
@@ -123,12 +137,9 @@ function setRoute(path: { lat: number; lng: number }[], trackerThemes: unknown =
   store.setState((s) => ({
     ...s,
     snapshot: {
-      schemaVersion: 1,
-      event: {
-        id: 1,
-        routeMap: { path, timeline: [], durationMinutes: 5, timed: false },
-        trackerMap: { id: 3, tilesUrl: "https://cdn.example/basemap/tiles.pmtiles", terrainUrl: null },
-      },
+      ...FIXTURE,
+      event: null,
+      routeMap: { path, timeline: [], durationMinutes: 5, timed: false },
       trackerThemes,
     } as unknown as Snapshot,
   }));
@@ -147,6 +158,7 @@ describe("RoutePreview loading the map host", () => {
   beforeEach(() => {
     mocks.renderer = "maplibre";
     mocks.hostThemes.length = 0;
+    mocks.hostProps.length = 0;
     vi.mocked(reportRenderer).mockClear();
     stubThemeFetch();
     document.documentElement.setAttribute("data-theme", "light");
@@ -185,14 +197,48 @@ describe("RoutePreview loading the map host", () => {
     expect(mocks.hostRenderers.at(-1)).toBe("google");
   });
 
-  it("renders emptyText on the google choice when the event has no Google theme", async () => {
+  it("draws on the google choice in the built-in theme when no Google theme is enabled", async () => {
     mocks.renderer = "google";
-    setRoute(PATH);
+    setRoute(PATH, []);
+    const { container } = renderSection({ heading: "The route", emptyText: "Not yet." });
+    await settle();
+    expect(container.querySelector('[data-testid="fake-host"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="route-preview-empty"]')).toBeNull();
+    expect(mocks.hostThemes.at(-1)).toBe("google-default");
+    expect(mocks.hostRenderers.at(-1)).toBe("google");
+    expect(reportRenderer).toHaveBeenCalledTimes(1);
+  });
+
+  it("draws the site route with event null from the top-level routeMap", async () => {
+    store.setState((s) => ({ ...s, snapshot: { ...FIXTURE, event: null } }));
+    const { container } = renderSection({ heading: "The route", emptyText: "Not yet." });
+    await settle();
+    expect(container.querySelector('[data-testid="route-preview-map"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="fake-host"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="route-preview-empty"]')).toBeNull();
+    expect(mocks.hostProps.at(-1)?.path).toEqual(FIXTURE.routeMap?.path);
+    expect(vi.mocked(reportRenderer).mock.calls[0][0]).toBe("route");
+  });
+
+  it("renders emptyText with routeMap null while an event is current", async () => {
+    store.setState((s) => ({ ...s, snapshot: { ...FIXTURE, routeMap: null } }));
     const { container } = renderSection({ heading: "The route", emptyText: "Not yet." });
     await settle();
     expect(container.querySelector('[data-testid="route-preview-empty"]')).not.toBeNull();
     expect(container.textContent).toContain("Not yet.");
     expect(container.querySelector('[data-testid="fake-host"]')).toBeNull();
-    expect(reportRenderer).toHaveBeenCalledTimes(1);
+    expect(reportRenderer).not.toHaveBeenCalled();
+  });
+
+  it("uses routeView.bbox as the pan limit and routeView.map as the tiles, not the event's", async () => {
+    const bbox = { west: -115, south: 46, east: -113, north: 47.5 };
+    const map = { ...FIXTURE.routeView.map, tilesUrl: "https://cdn.example/maps/last-year/tiles.pmtiles" };
+    store.setState((s) => ({ ...s, snapshot: { ...FIXTURE, routeView: { bbox, map } } }));
+    renderSection({ emptyText: "Not yet." });
+    await settle();
+    const props = mocks.hostProps.at(-1);
+    expect(props?.trackerBbox).toEqual(bbox);
+    expect(props?.trackerBbox).not.toEqual(FIXTURE.event?.trackerBbox);
+    expect(props?.trackerMap).toMatchObject({ tilesUrl: map.tilesUrl, terrainUrl: map.terrainUrl });
   });
 });

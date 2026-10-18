@@ -23,32 +23,6 @@ export interface Snapshot {
         recordedAt?: string | null;
       }[];
     } | null;
-    routeMap?: {
-      path?: {
-        lat?: number;
-        lng?: number;
-      }[];
-      timeline?: {
-        minutes?: number;
-        lat?: number;
-        lng?: number;
-      }[];
-      durationMinutes?: number;
-      timed?: boolean;
-    } | null;
-    routeMapConfig?: {
-      display?: {
-        timeLabelIntervalMinutes?: number | null;
-        arrows?: boolean | null;
-        arrowSize?: string | null;
-        routeWidth?: string | null;
-        labelSize?: string | null;
-      } | null;
-      controls?: {
-        fullscreen?: boolean | null;
-        terrain?: boolean | null;
-      } | null;
-    } | null;
     latestMessage?: {
       id?: number;
       body?: string;
@@ -63,12 +37,7 @@ export interface Snapshot {
     trackerMap: {
       id?: number;
       name?: string;
-      bbox?: {
-        west?: number;
-        south?: number;
-        east?: number;
-        north?: number;
-      };
+      bbox?: Bbox;
       minZoom?: number;
       maxZoom?: number;
       terrainMaxZoom?: number | null;
@@ -143,6 +112,50 @@ export interface Snapshot {
   icons?: {
     [k: string]: string | undefined;
   };
+  routeMap: {
+    path?: {
+      lat?: number;
+      lng?: number;
+    }[];
+    timeline?: {
+      minutes?: number;
+      lat?: number;
+      lng?: number;
+    }[];
+    durationMinutes?: number;
+    timed?: boolean;
+  } | null;
+  routeMapConfig: {
+    display?: {
+      timeLabelIntervalMinutes?: number | null;
+      arrows?: boolean | null;
+      arrowSize?: string | null;
+      routeWidth?: string | null;
+      labelSize?: string | null;
+    } | null;
+    controls?: {
+      fullscreen?: boolean | null;
+      terrain?: boolean | null;
+    } | null;
+  } | null;
+  routeView: {
+    bbox: {
+      west?: number;
+      south?: number;
+      east?: number;
+      north?: number;
+    };
+    map: {
+      id?: number;
+      name?: string;
+      bbox?: Bbox;
+      minZoom?: number;
+      maxZoom?: number;
+      terrainMaxZoom?: number | null;
+      tilesUrl?: string;
+      terrainUrl?: string | null;
+    } | null;
+  };
   trackerThemes: {
     id?: number;
     renderer?: string;
@@ -172,6 +185,12 @@ export interface Snapshot {
     defaultLightMode?: boolean;
     defaultDarkMode?: boolean;
   }[];
+}
+export interface Bbox {
+  west?: number;
+  south?: number;
+  east?: number;
+  north?: number;
 }
 export interface Variants {
   [k: string]: string | undefined;

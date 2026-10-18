@@ -2,7 +2,7 @@
 // MapLibre and pmtiles mocked and the seeded route themes served from the
 // contracts fixtures:
 //  - The fullscreen button and the terrain toggle render by default and
-//    hide when the event's `routeMapConfig.controls.fullscreen` or
+//    hide when the snapshot's `routeMapConfig.controls.fullscreen` or
 //    `routeMapConfig.controls.terrain` is false, and a null config shows
 //    both; the same switches in the section data change nothing; the
 //    terrain toggle also hides when the theme has no terrain layer.
@@ -54,6 +54,7 @@ vi.mock("maplibre-gl", () => {
     setStyle = vi.fn();
     fitBounds = vi.fn();
     resize = vi.fn();
+    setMinZoom = vi.fn();
     remove = vi.fn();
     constructor(options: Record<string, unknown>) {
       this.options = options;
@@ -160,11 +161,12 @@ function setEvent(
     ...s,
     snapshot: {
       schemaVersion: 1,
-      event: {
-        id: 1,
-        routeMap: { path: PATH, timeline: TIMELINE, durationMinutes: 10, timed: true },
-        routeMapConfig,
-        trackerMap: { id: 3, tilesUrl: `${BASEMAP}/tiles.pmtiles`, terrainUrl },
+      event: null,
+      routeMap: { path: PATH, timeline: TIMELINE, durationMinutes: 10, timed: true },
+      routeMapConfig,
+      routeView: {
+        bbox: { west: -114.3, south: 46.75, east: -113.8, north: 47.05 },
+        map: { id: 3, tilesUrl: `${BASEMAP}/tiles.pmtiles`, terrainUrl },
       },
       trackerThemes,
     } as unknown as Snapshot,
@@ -180,7 +182,7 @@ async function settle(): Promise<void> {
   });
 }
 
-// Renders a `map` section with `config` as the event's `routeMapConfig`
+// Renders a `map` section with `config` as the snapshot's `routeMapConfig`
 // and `data` added to the section data.
 async function renderSection(
   config: Record<string, unknown> | null = null,

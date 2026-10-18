@@ -47,7 +47,7 @@ function setLive(preview: ContentBundle | null) {
     store.setState({
       ...initialStore,
       live: live(),
-      snapshot: { schemaVersion: 1, content: content("") as unknown, media: {}, icons: {}, trackerThemes: [] },
+      snapshot: { schemaVersion: 1, content: content("") as unknown, media: {}, icons: {}, routeMap: null, routeMapConfig: null, routeView: { bbox: {}, map: null }, trackerThemes: [] },
       preview,
     });
   });

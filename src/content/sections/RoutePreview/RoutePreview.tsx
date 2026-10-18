@@ -1,32 +1,37 @@
 // docs/site.md section 7.4 and 8.9. `route_preview` renders the heading,
 // `data.disclaimer` in the disclaimer recipe (above the map, when set), and
-// the route map. It decides from the path alone whether a map can render
-// (a route map with two or more points); with fewer points it renders the
+// the site route's map, whether or not an event is current: it reads the
+// top-level `snapshot.routeMap`, `snapshot.routeMapConfig`,
+// `snapshot.routeView` (`bbox`, the pan limit and least zoom, and `map`,
+// the tile package), and `snapshot.trackerThemes`, never the event. It
+// decides from the path alone whether a map can render (a route map with
+// two or more points); with fewer points it renders the
 // heading and `emptyText`, or nothing when `emptyText` is empty, and never
 // draws a picture. Otherwise it reports the renderer choice of 8.1 as the
 // `route` surface and lazy-imports the map host
 // (`src/mapHost/MapHost.tsx`, the `tracker-maplibre` chunk) and, in
-// parallel, the theme loader, then resolves the route theme: the event's
-// enabled theme of the chosen renderer carrying the default flag for the
+// parallel, the theme loader, then resolves the route theme: the
+// snapshot's enabled theme of the chosen renderer carrying the default flag for the
 // page's appearance (`<html data-theme>`), else the first one, re-resolved
 // on every scheme change. The theme's style body is fetched as soon as the
 // theme is known, alongside the host's chunk. The host draws on the chosen
 // renderer (MapLibre, or Google primitives on `google`). A MapLibre
 // failure (the host's chunk, the style body or the style, a lost WebGL
 // context) falls back once to the same view on Google, with one
-// `map_renderer_fallback` event. With no theme for the renderer, or when
-// the Google host fails (its libraries, its theme), the section renders
-// the heading and `emptyText`. The start marker (routeStartMarker:
+// `map_renderer_fallback` event. On Google with no enabled Google theme
+// the map draws in the built-in `GOOGLE_DEFAULT_THEME`. When the Google
+// host fails (its libraries, its theme), the section renders the heading
+// and `emptyText`. The start marker (routeStartMarker:
 // a gold star flag and a "Starts here" label) stands on the path's first
 // point and the end keeps its circle; nothing on the map moves. With two
-// or more `event.routeMap.timeline` entries the map also carries a dot at
+// or more `routeMap.timeline` entries the map also carries a dot at
 // every entry and a labelled dot at every interior multiple of the time
 // label interval; with fewer, only the path and its end are drawn. The
 // frame sits in one wrapper, the fullscreen target (useRouteMapFullscreen),
 // rendered through TakeoverPortal so the takeover sits under
 // document.body. The map region is labelled `copy.map.routeMap.region`,
 // which speaks the start.
-// The display and the controls come from `event.routeMapConfig`
+// The display and the controls come from `routeMapConfig`
 // (routeMapConfig), each value falling back to its default; a null config
 // draws the default map. The viewpoints come from the site settings'
 // `landmarks` and the places from `places.routeMap`; absent means none.
@@ -126,10 +131,10 @@ type RoutePreviewData = {
 export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   const d = (data ?? {}) as RoutePreviewData;
   const emptyText = d.emptyText ?? null;
-  const routeMap = useStore((s) => s.snapshot?.event?.routeMap ?? null);
-  const routeMapConfig = useStore((s) => s.snapshot?.event?.routeMapConfig ?? null);
-  const rawTrackerMap = useStore((s) => s.snapshot?.event?.trackerMap ?? null);
-  const trackerBbox = useStore((s) => s.snapshot?.event?.trackerBbox ?? null);
+  const routeMap = useStore((s) => s.snapshot?.routeMap ?? null);
+  const routeMapConfig = useStore((s) => s.snapshot?.routeMapConfig ?? null);
+  const rawTrackerMap = useStore((s) => s.snapshot?.routeView?.map ?? null);
+  const trackerBbox = useStore((s) => s.snapshot?.routeView?.bbox ?? null);
   const themeRows = useStore((s) => s.snapshot?.trackerThemes ?? null);
   const tilesUrl = rawTrackerMap?.tilesUrl ?? "";
   const terrainUrl = rawTrackerMap?.terrainUrl ?? null;
@@ -240,7 +245,9 @@ export const RoutePreview: SectionComponent = ({ data, bundle }) => {
   const theme = useMemo(() => {
     if (themesModule === null || renderer === null) return null;
     const themes = themesModule.loadThemes({ trackerThemes: themeRows ?? undefined });
-    return themesModule.resolveDefaultTheme(themes, renderer, appearance);
+    const resolved = themesModule.resolveDefaultTheme(themes, renderer, appearance);
+    if (resolved === null && renderer === "google") return themesModule.GOOGLE_DEFAULT_THEME;
+    return resolved;
   }, [themesModule, themeRows, appearance, renderer]);
 
   // The style body starts with the chunk; the host reports a failure.

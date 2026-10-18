@@ -4,9 +4,14 @@
 // next call; `themesFor` filters by renderer; `resolveInitialTheme` picks
 // the stored key when it names an enabled theme of the renderer, then the
 // holder of the appearance's default flag, then the first in list order.
+// `GOOGLE_DEFAULT_THEME` is Google's own roadmap under the seeded
+// `standard` theme's palettes (contracts/fixtures/themes/seed.json).
 
 import { describe, it, expect, vi, afterEach } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import {
+  GOOGLE_DEFAULT_THEME,
   loadThemes,
   resolveInitialTheme,
   themesFor,
@@ -193,5 +198,18 @@ describe("resolveInitialTheme", () => {
   it("is null when the renderer has no theme", () => {
     const googleOnly = themesFor(themes, "google");
     expect(resolveInitialTheme(googleOnly, "maplibre", "light")).toBeNull();
+  });
+});
+
+describe("GOOGLE_DEFAULT_THEME", () => {
+  it("draws Google's roadmap in the seeded standard theme's palettes", async () => {
+    const seed = JSON.parse(
+      readFileSync(resolve(__dirname, "..", "..", "..", "contracts", "fixtures", "themes", "seed.json"), "utf8"),
+    ) as { key: string; renderer: string; overlay: unknown; chrome: unknown }[];
+    const standard = seed.find((r) => r.key === "standard" && r.renderer === "google");
+    expect(GOOGLE_DEFAULT_THEME.renderer).toBe("google");
+    expect(GOOGLE_DEFAULT_THEME.overlay).toEqual(standard?.overlay);
+    expect(GOOGLE_DEFAULT_THEME.chrome).toEqual(standard?.chrome);
+    await expect(GOOGLE_DEFAULT_THEME.getStyle()).resolves.toEqual([]);
   });
 });
