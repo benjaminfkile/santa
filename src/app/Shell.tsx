@@ -21,7 +21,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useStore } from "../store/useStore";
 import { selectBundle, selectRole, selectTakeover } from "../content/selectPage";
 import { buildNav, type NavEntry } from "../content/nav";
@@ -348,6 +348,7 @@ function Header({ bundle }: { bundle: ContentBundle | null }) {
             .filter((entry) => entry.kind === "home" || entry.kind === "page" || entry.kind === "extra")
             .map((entry, i) => ({
               key: navKey(entry, i),
+              current: isCurrentEntry(entry, location.pathname),
               node: renderEntry(entry, bundle, {
                 onSignIn: onSignInClick,
                 onSignOut: () => void signOut(),
@@ -601,13 +602,34 @@ function navKey(entry: NavEntry, index: number): string {
   return `${index}:${entry.kind}:${entry.label}`;
 }
 
+// Whether a home or page entry is the current page, by the rule NavLink
+// applies to set `aria-current="page"`: home only on "/", a page on its
+// own path and the paths below it, letter case, the hash, and the search
+// ignored. Extra links and the account entries are never current.
+function isCurrentEntry(entry: NavEntry, pathname: string): boolean {
+  if (entry.kind !== "home" && entry.kind !== "page") return false;
+  const path = pathname.toLowerCase();
+  const to = entry.href.toLowerCase();
+  if (path === to) return true;
+  if (entry.kind === "home") return false;
+  const base = to.endsWith("/") ? to.slice(0, -1) : to;
+  return path.startsWith(base) && path.charAt(base.length) === "/";
+}
+
+// Home and page entries are NavLinks, which set `aria-current="page"` on
+// the current page (home with `end`, so only on "/").
 function renderEntry(
   entry: NavEntry,
   bundle: ContentBundle | null,
   actions: { onSignIn: () => void; onSignOut: () => void },
 ) {
-  if (entry.kind === "home") return <Link to="/">{entry.label}</Link>;
-  if (entry.kind === "page") return <Link to={entry.href}>{entry.label}</Link>;
+  if (entry.kind === "home" || entry.kind === "page") {
+    return (
+      <NavLink to={entry.href} end={entry.kind === "home"}>
+        {entry.label}
+      </NavLink>
+    );
+  }
   if (entry.kind === "extra") {
     // The inline nav and its More menu are text only: no link icon.
     return bundle !== null ? (
@@ -655,9 +677,9 @@ function renderRow(
   );
   if (entry.kind === "home" || entry.kind === "page") {
     return (
-      <Link to={entry.href} className={styles.row}>
+      <NavLink to={entry.href} end={entry.kind === "home"} className={styles.row}>
         {body(entry.icon, entry.label)}
-      </Link>
+      </NavLink>
     );
   }
   if (entry.kind === "extra") {

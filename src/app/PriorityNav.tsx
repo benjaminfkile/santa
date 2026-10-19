@@ -4,7 +4,9 @@
 // inert copy of the whole row (with a More button) is measured in a layout
 // effect, on every resize of the nav or of the copy (which covers a font
 // load), and when the fonts finish loading, so the row is settled before
-// the browser paints and never wraps or clips.
+// the browser paints and never wraps or clips. When an item marked
+// `current` sits in the More menu, the More button carries
+// `data-current="true"` and draws the current page underline.
 
 import {
   useCallback,
@@ -20,7 +22,9 @@ import { copy } from "../copy/copy";
 import { visibleCount } from "./navOverflow";
 import * as styles from "./Shell.module.css";
 
-export type PriorityNavItem = { key: string; node: ReactNode };
+// `current` marks the item for the page on screen (its node carries
+// `aria-current="page"`).
+export type PriorityNavItem = { key: string; node: ReactNode; current?: boolean };
 
 export type PriorityNavProps = { items: PriorityNavItem[] };
 
@@ -80,6 +84,7 @@ export function PriorityNav({ items }: PriorityNavProps) {
   const overflow = items.slice(count);
   const hasMore = overflow.length > 0;
   const expanded = open && hasMore;
+  const currentInMore = overflow.some((item) => item.current === true);
 
   // The menu starts closed whenever More comes back.
   useEffect(() => {
@@ -129,6 +134,7 @@ export function PriorityNav({ items }: PriorityNavProps) {
               className={styles.moreButton}
               aria-expanded={expanded}
               aria-controls={menuId}
+              data-current={currentInMore ? "true" : undefined}
               data-testid="nav-more"
               onClick={() => setOpen((v) => !v)}
             >
