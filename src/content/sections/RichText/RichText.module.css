@@ -19,6 +19,10 @@
    start. */
 :global(section[data-align="center"]) .blockHeading { justify-content: center; }
 :global(section[data-align="end"]) .blockHeading { justify-content: flex-end; }
+/* Under centre and end the heading's text span keeps its content width so
+   the icon and the text justify together as one group. */
+:global(section[data-align="center"]) .blockHeadingText { flex-grow: 0; }
+:global(section[data-align="end"]) .blockHeadingText { flex-grow: 0; }
 :global(section[data-align="center"]) .blockLinksButtons { justify-content: center; }
 :global(section[data-align="end"]) .blockLinksButtons { justify-content: flex-end; }
 :global(section[data-align="center"]) .blockLinksList { align-items: center; }
@@ -47,6 +51,9 @@
 .blockHeadingH2 { font-size: 1.5rem; line-height: 1.15; }
 .blockHeadingH3 { font-size: var(--font-size-h3); font-family: var(--font-sans); font-weight: 600; line-height: 1.15; }
 .blockHeadingIcon { color: var(--accent); display: inline-flex; }
+/* The heading's inline text sits in one span, so its runs, strongs, and
+   links wrap as one line of text instead of becoming flex items. */
+.blockHeadingText { flex: 1 1 auto; min-width: 0; }
 
 .blockParagraph { margin: 0; line-height: 1.55; }
 
@@ -54,6 +61,9 @@
 .blockListIcon { list-style: none; padding-inline-start: 0; }
 .blockListItem { display: flex; gap: var(--space-2); align-items: baseline; }
 .blockListIconMark { flex: 0 0 auto; color: var(--accent); }
+/* The item's inline text sits in one span beside the icon mark, so a link
+   mid-sentence stays in the paragraph instead of becoming a flex item. */
+.blockListText { flex: 1 1 auto; min-width: 0; }
 
 .blockQuote {
   margin: 0;

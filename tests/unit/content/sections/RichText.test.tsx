@@ -178,4 +178,20 @@ describe("RichText section align", () => {
     expect(css).toMatch(/\.blockQuote \{[^}]*border-inline-start: 3px solid var\(--accent\);/);
     expect(css).toMatch(/\.blockList \{[^}]*padding-inline-start: 1\.25rem;/);
   });
+
+  it("wraps heading and list item text in one min-width 0 span that keeps the align rules", () => {
+    expect(css).toMatch(/^\.blockHeadingText \{[^}]*flex: 1 1 auto;[^}]*min-width: 0;/m);
+    expect(css).toMatch(/^\.blockListText \{[^}]*flex: 1 1 auto;[^}]*min-width: 0;/m);
+    expect(rule("center", "blockHeadingText")).toMatch(/flex-grow: 0;/);
+    expect(rule("end", "blockHeadingText")).toMatch(/flex-grow: 0;/);
+    expect(css).not.toMatch(/data-align="start"\]\) \.blockHeadingText/);
+    for (const align of ["start", "center"] as const) {
+      const { container, unmount } = renderAligned(align);
+      const h2 = container.querySelector("h2")!;
+      expect(h2.children.length).toBe(1);
+      expect(h2.children[0].tagName).toBe("SPAN");
+      expect(h2.children[0].textContent).toBe("Give");
+      unmount();
+    }
+  });
 });
