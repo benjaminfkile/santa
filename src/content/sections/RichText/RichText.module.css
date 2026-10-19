@@ -98,7 +98,10 @@
 .blockMedia { margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .blockMediaSmall img { max-width: 320px; }
 .blockMediaMedium img { max-width: 640px; }
-.blockMediaFull img { max-width: 100%; height: auto; }
+.blockMediaSmall video { max-width: min(320px, 100%); }
+.blockMediaMedium video { max-width: min(640px, 100%); }
+.blockMediaFull img,
+.blockMediaFull video { max-width: 100%; height: auto; }
 .blockMediaCaption { color: var(--text-dim); font-size: 0.875rem; }
 .blockMediaCredit { max-width: 100%; }
 .blockMediaSmall .blockMediaCredit { max-width: 320px; }

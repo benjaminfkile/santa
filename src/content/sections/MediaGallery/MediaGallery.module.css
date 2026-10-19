@@ -6,10 +6,14 @@
 .mediaGalleryLink { display: block; }
 .mediaGalleryLink:hover { opacity: 0.9; }
 .mediaGalleryFigure { margin: 0; display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
-/* An image never grows past its figure; the width and height attributes
-   only set the aspect ratio. */
-.mediaGalleryFigure img { display: block; max-width: 100%; height: auto; }
+/* An image or a video never grows past its figure; the width and height
+   attributes only set the aspect ratio. */
+.mediaGalleryFigure img,
+.mediaGalleryFigure video { display: block; max-width: 100%; height: auto; }
 .mediaGalleryCaption { color: var(--text-dim); font-size: 0.875rem; }
+/* A video's link sits under it as a caption line, never around it. */
+.mediaGalleryLinkCaption { margin: 0; font-size: 0.875rem; }
+.mediaGalleryLinkCaption a { color: var(--accent); }
 .mediaGalleryGrid {
   display: grid;
   grid-template-columns: repeat(var(--media-columns, 3), minmax(0, 1fr));
@@ -23,7 +27,10 @@
   opacity: 0;
   transition: opacity 250ms ease-in-out;
 }
-.mediaGallerySlideActive { opacity: 1; }
+/* Only the shown slide takes the pointer, so the controls of its video
+   are not covered by the hidden slides stacked over it. */
+.mediaGallerySlide { pointer-events: none; }
+.mediaGallerySlideActive { opacity: 1; pointer-events: auto; }
 .mediaGalleryReducedMotion .mediaGallerySlide { transition: none; }
 .mediaGalleryControls { display: flex; justify-content: space-between; gap: var(--space-2); margin-top: var(--space-3); }
 .mediaGalleryPrev,

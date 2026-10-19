@@ -106,6 +106,8 @@ export interface Snapshot {
           } | null;
           smallMediaId?: string | null;
           credit?: string | null;
+          durationMs?: number | null;
+          posterMediaId?: string | null;
         }
       | undefined;
   };
