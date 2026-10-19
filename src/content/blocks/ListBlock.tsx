@@ -29,7 +29,9 @@ export const ListBlock: BlockComponent = ({ data, bundle }) => {
               <Icon icon={d.icon} bundle={bundle} decorative inline />
             </span>
           ) : null}
-          <Inline text={text} bundle={bundle} event={event} />
+          <span className={styles.blockListText}>
+            <Inline text={text} bundle={bundle} event={event} />
+          </span>
         </li>
       ))}
     </Tag>

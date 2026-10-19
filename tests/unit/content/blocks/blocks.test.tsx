@@ -64,6 +64,32 @@ describe("HeadingBlock", () => {
   });
 });
 
+describe("HeadingBlock inline text", () => {
+  it("a link in the heading renders inside the one text span after the icon", () => {
+    const { container } = render(
+      wrap(
+        <HeadingBlock
+          data={{
+            kind: "heading",
+            level: 2,
+            text: "Visit the [donate page](https://example.org/give) **today**",
+            icon: { source: "library", id: "star" },
+          }}
+          bundle={bundle}
+        />,
+      ),
+    );
+    const h2 = container.querySelector("h2")!;
+    expect(h2.children.length).toBe(2);
+    expect(h2.children[0].getAttribute("aria-hidden")).toBe("true");
+    const text = h2.children[1];
+    expect(text.tagName).toBe("SPAN");
+    expect(text.querySelector("a")?.textContent).toBe("donate page");
+    expect(text.querySelector("strong")?.textContent).toBe("today");
+    expect(text.textContent).toBe("Visit the donate page today");
+  });
+});
+
 describe("ParagraphBlock", () => {
   it("renders a paragraph with inline grammar", () => {
     const { container } = render(
@@ -121,6 +147,44 @@ describe("ListBlock", () => {
     items.forEach((item) => {
       expect(item.querySelector('span[aria-hidden="true"] svg')).not.toBeNull();
     });
+  });
+
+  it("a link mid-item renders inside the one text span after the icon mark", () => {
+    const { container } = render(
+      wrap(
+        <ListBlock
+          data={{
+            kind: "list",
+            style: "icon",
+            icon: { source: "library", id: "star" },
+            items: ["Give on the [donate page](https://example.org/give) before **Christmas** eve"],
+          }}
+          bundle={bundle}
+        />,
+      ),
+    );
+    const li = container.querySelector("li")!;
+    expect(li.children.length).toBe(2);
+    expect(li.children[0].getAttribute("aria-hidden")).toBe("true");
+    const text = li.children[1];
+    expect(text.tagName).toBe("SPAN");
+    expect(text.querySelector("a")?.textContent).toBe("donate page");
+    expect(text.querySelector("strong")?.textContent).toBe("Christmas");
+    expect(text.textContent).toBe("Give on the donate page before Christmas eve");
+  });
+
+  it("a bullet item without a mark holds only the text span", () => {
+    const { container } = render(
+      wrap(
+        <ListBlock
+          data={{ kind: "list", style: "bullet", icon: null, items: ["see [here](https://example.org) now"] }}
+          bundle={bundle}
+        />,
+      ),
+    );
+    const li = container.querySelector("li")!;
+    expect(li.children.length).toBe(1);
+    expect(li.children[0].querySelector("a")?.textContent).toBe("here");
   });
 });
 

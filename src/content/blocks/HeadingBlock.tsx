@@ -36,7 +36,9 @@ export const HeadingBlock: BlockComponent = ({ data, bundle }) => {
           <Icon icon={d.icon} bundle={bundle} decorative inline />
         </span>
       ) : null}
-      <Inline text={d.text ?? ""} bundle={bundle} event={event} />
+      <span className={styles.blockHeadingText}>
+        <Inline text={d.text ?? ""} bundle={bundle} event={event} />
+      </span>
     </Tag>
   );
 };
