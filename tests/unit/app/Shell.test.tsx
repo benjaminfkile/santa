@@ -863,3 +863,150 @@ describe("Shell menu panel row icons", () => {
     expect(links).toContain("Track Santa");
   });
 });
+
+describe("Shell current page", () => {
+  const css = (): string =>
+    readFileSync(resolve(__dirname, "..", "..", "..", "src", "app", "Shell.module.css"), "utf8");
+
+  function withPages(): ContentDocument {
+    const content = makeContent();
+    content.pages.push(
+      { ...content.pages[0], id: 2, slug: "about", title: "About", navLabel: "About", navPosition: 1, role: "none", icon: null },
+      { ...content.pages[0], id: 3, slug: "faq", title: "FAQ", navLabel: "FAQ", navPosition: 2, role: "none", icon: null },
+    );
+    content.settings.navExtraLinks = [
+      { label: "Plain", href: "/about", icon: null, newTab: false },
+      { label: "Home extra", href: "/", icon: null, newTab: false },
+    ] as typeof content.settings.navExtraLinks;
+    return content;
+  }
+
+  function renderAt(path: string) {
+    return render(
+      <MemoryRouter initialEntries={[path]}>
+        <AuthProvider>
+          <Shell>
+            <div>body</div>
+          </Shell>
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+  }
+
+  function current(root: Element): string[] {
+    return Array.from(root.querySelectorAll('[aria-current="page"]')).map((el) => el.textContent ?? "");
+  }
+
+  function panel(getByLabelText: (t: string) => HTMLElement): HTMLElement {
+    return document.getElementById(getByLabelText("Menu").getAttribute("aria-controls")!)!;
+  }
+
+  // The inline nav measures 200 px and every item 100 px, More 60 px, so
+  // the first item stays in the row and the rest go to More.
+  function stubNarrowNav(): void {
+    vi.stubGlobal("ResizeObserver", undefined);
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+      const w = (width: number) =>
+        ({ width, height: 44, top: 0, left: 0, right: width, bottom: 44, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+      if (this.getAttribute("aria-label") === "Pages") return w(200);
+      if (this.tagName === "LI" && this.closest('[data-testid="nav-measure"]') !== null) {
+        return w(this.nextElementSibling === null ? 60 : 100);
+      }
+      return w(0);
+    });
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  for (const [path, label] of [
+    ["/", "Track Santa"],
+    ["/about", "About"],
+    ["/about#crew", "About"],
+  ] as const) {
+    it(`marks ${label} current on ${path} in the inline nav and the panel, and no extra or account entry`, () => {
+      seed(withPages());
+      const { getByRole, getByLabelText } = renderAt(path);
+      const inline = getByRole("navigation", { name: "Pages" });
+      const row = inline.querySelector("ul")!;
+      expect(current(row)).toEqual([label]);
+      const rows = panel(getByLabelText);
+      expect(current(rows)).toEqual([label]);
+      for (const el of Array.from(document.querySelectorAll("button"))) {
+        expect(el.hasAttribute("aria-current")).toBe(false);
+      }
+      expect(getByLabelText("Menu").getAttribute("aria-current")).toBeNull();
+    });
+  }
+
+  it("marks nothing on a path no entry matches", () => {
+    seed(withPages());
+    const { getByRole, getByLabelText } = renderAt("/plainly");
+    expect(current(getByRole("navigation", { name: "Pages" }))).toEqual([]);
+    expect(current(panel(getByLabelText))).toEqual([]);
+  });
+
+  it("marks the More button when the current entry overflows, and the menu row", () => {
+    stubNarrowNav();
+    try {
+      seed(withPages());
+      const { getByTestId } = renderAt("/faq");
+      const more = getByTestId("nav-more");
+      expect(more.getAttribute("data-current")).toBe("true");
+      fireEvent.click(more);
+      expect(current(getByTestId("nav-more-menu"))).toEqual(["FAQ"]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("leaves the More button unmarked when the current entry stays in the row", () => {
+    stubNarrowNav();
+    try {
+      seed(withPages());
+      const { getByTestId } = renderAt("/");
+      expect(getByTestId("nav-more").hasAttribute("data-current")).toBe(false);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("draws the desktop underline: 2 px accent, 8 px below the text, across the link", () => {
+    const sheet = css();
+    expect(sheet).toMatch(/\.inlineNav a\[aria-current="page"\],\s*\.moreButton\[data-current="true"\] \{ position: relative; \}/);
+    const rule = sheet.match(
+      /\.inlineNav a\[aria-current="page"\]::after,\s*\.moreButton\[data-current="true"\]::after \{([^}]*)\}/,
+    );
+    expect(rule).not.toBeNull();
+    const body = rule![1];
+    expect(body).toContain("position: absolute;");
+    expect(body).toContain("left: 0;");
+    expect(body).toContain("right: 0;");
+    expect(body).toContain("+ 8px)");
+    expect(body).toContain("height: 2px;");
+    expect(body).toContain("background: var(--accent);");
+    expect(body).toContain("transition: var(--hover-transition);");
+    expect(sheet).toMatch(/\.moreButton\[data-current="true"\] \{ color: var\(--accent\); \}/);
+    expect(sheet).toMatch(
+      /\.inlineNav \.moreMenu a\[aria-current="page"\] \{ background: var\(--accent-soft\); color: var\(--accent\); \}/,
+    );
+  });
+
+  it("draws the panel bar: 3 px accent on the start edge, inset 10 px, and a bold label", () => {
+    const sheet = css();
+    const rule = sheet.match(/\.row\[aria-current="page"\]::before \{([^}]*)\}/);
+    expect(rule).not.toBeNull();
+    const body = rule![1];
+    expect(body).toContain("position: absolute;");
+    expect(body).toContain("left: 0;");
+    expect(body).toContain("top: 10px;");
+    expect(body).toContain("bottom: 10px;");
+    expect(body).toContain("width: 3px;");
+    expect(body).toContain("border-radius: 0 2px 2px 0;");
+    expect(body).toContain("background: var(--accent);");
+    expect(sheet).toMatch(/\.row\[aria-current="page"\] \.rowLabel \{ font-weight: 700; \}/);
+    // The hover wash leaves the bar alone.
+    expect(sheet).not.toMatch(/\.row:hover::before/);
+  });
+});

@@ -103,6 +103,24 @@
 }
 .inlineNav a:hover,
 .inlineNav a[aria-current="page"] { color: var(--accent); }
+/* The current page (NavLink's aria-current, or the More button while the
+   current entry sits in its menu) keeps the accent and draws a 2 px accent
+   underline 8 px below its text, across the link's width. */
+.inlineNav a[aria-current="page"],
+.moreButton[data-current="true"] { position: relative; }
+.inlineNav a[aria-current="page"]::after,
+.moreButton[data-current="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% + 0.625em + 8px);
+  top: calc(50% + 0.5lh + 8px);
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  transition: var(--hover-transition);
+}
 .inlineNavMeasure {
   position: absolute;
   inset: 0;
@@ -130,7 +148,8 @@
   transition: var(--hover-transition);
 }
 .moreButton:hover,
-.moreButton[aria-expanded="true"] { color: var(--accent); }
+.moreButton[aria-expanded="true"],
+.moreButton[data-current="true"] { color: var(--accent); }
 .moreMenu {
   position: absolute;
   top: calc(100% + var(--space-2));
@@ -161,7 +180,10 @@
   font-size: 0.9375rem;
   text-align: start;
 }
-.inlineNav .moreMenu a:hover { background: var(--accent-soft); color: var(--accent); }
+.inlineNav .moreMenu a:hover,
+.inlineNav .moreMenu a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
+/* In the More menu the current row shows by its fill alone: no underline. */
+.inlineNav .moreMenu a[aria-current="page"]::after { content: none; }
 @media (min-width: 761px) {
   .inlineNav {
     display: flex;
@@ -340,6 +362,22 @@
   border-color: var(--accent);
   color: var(--accent);
 }
+/* The current page's row (NavLink's aria-current) draws a 3 px accent bar
+   on its start edge, inset 10 px from the top and the bottom, and a bold
+   label; its fill, border, icon, and hover wash are the other rows'. The
+   bar stays under hover. */
+.row[aria-current="page"] { position: relative; }
+.row[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--accent);
+}
+.row[aria-current="page"] .rowLabel { font-weight: 700; }
 /* The leading icon slot keeps its width with or without an icon, so every
    label starts at the same inset. */
 .rowIcon {
