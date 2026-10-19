@@ -1,6 +1,6 @@
 // docs/site.md section 4. App root: router, favicon, the tab's preview
-// session, the alerts provider, shell, and the seasonal snow and lights
-// overlays.
+// session, scroll on navigation, the alerts provider, shell, and the
+// seasonal snow and lights overlays.
 
 import { useEffect } from "react";
 import { BrowserRouter } from "react-router-dom";
@@ -8,6 +8,7 @@ import "../content/theme/tokens.css";
 import { Shell } from "./Shell";
 import { AppRoutes } from "./routes";
 import { PreviewSession } from "./PreviewSession";
+import { ScrollToTop } from "./ScrollToTop";
 import { useStore } from "../store/useStore";
 import { selectBundle } from "../content/selectPage";
 import { AuthProvider } from "../auth/AuthProvider";
@@ -28,6 +29,7 @@ export function App() {
     <BrowserRouter>
       <AuthProvider>
         <PreviewSession />
+        <ScrollToTop />
         <OrnamentsLayer bundle={bundle} />
         <SnowLayer bundle={bundle} />
         <AlertsProvider>
