@@ -11,12 +11,18 @@
 // `data-screen` names the branch. `small={false}` draws the entry alone.
 // A ref with `display` renders inside a wrapper from `displayStyle`,
 // which sizes the box, fits and shapes the image, and places the wrapper.
+// An entry of kind `video` renders one controlled `<video>` that plays
+// inline with one MP4 `<source>`, in the box an image would take, with
+// the poster entry's 960 variant (or its url) as `poster` when
+// `posterMediaId` resolves; the dark mode, small screen, and srcset rules
+// do not apply to it.
 
 import type { CSSProperties } from "react";
 import type { MediaRef } from "../../contracts";
 import type { ContentBundle } from "../../store/types";
 import { resolveMedia } from "./resolve";
 import * as darkStyles from "./DarkMedia.module.css";
+import * as videoStyles from "./Video.module.css";
 import { displayStyle, readDisplay } from "./display";
 
 // Which dark mode rule an image carries: shown only in light mode, shown
@@ -65,6 +71,10 @@ function isRasterKind(kind: string | undefined): boolean {
   return RASTER_KINDS.has(lower) || !["svg", "gif"].includes(lower);
 }
 
+export function isVideoKind(kind: string | undefined): boolean {
+  return (kind ?? "").toLowerCase() === "video";
+}
+
 export function Media(props: MediaProps) {
   const display = readDisplay(props.media.display);
   if (display === null) return <MediaBody {...props} />;
@@ -104,6 +114,27 @@ function MediaBody({
   const url = entry.url ?? "";
   const width = entry.width ?? undefined;
   const height = entry.height ?? undefined;
+  if (isVideoKind(entry.kind)) {
+    const posterId = entry.posterMediaId ?? null;
+    const posterEntry = posterId !== null ? resolveMedia(bundle, posterId) : null;
+    const poster = (posterEntry && (posterEntry.variants?.["960"] || posterEntry.url)) || undefined;
+    return (
+      <video
+        controls
+        playsInline
+        preload="metadata"
+        width={width}
+        height={height}
+        poster={poster}
+        aria-label={alt === "" ? undefined : alt}
+        className={joinClasses(className, videoStyles.video)}
+        style={imageStyle}
+        data-testid={testId}
+      >
+        <source src={url} type="video/mp4" />
+      </video>
+    );
+  }
   const raster = isRasterKind(entry.kind);
   const sizes = sizeOverride ?? SIZES_BY_FRAME[frame];
 

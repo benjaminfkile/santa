@@ -1,13 +1,16 @@
 // docs/site.md section 7.4. Media gallery section: single, grid, carousel.
 // Each figure draws the entry's credit line directly under the image.
+// A video plays inline with its controls in every layout; an item's link
+// wraps an image but never a video, whose link renders as a caption link
+// under it instead.
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { Link, MediaRef } from "../../../contracts";
 import type { ContentBundle } from "../../../store/types";
 import type { SectionComponent } from "../../registry";
 import type { FrameWidth } from "../../primitives/Media";
-import { Media } from "../../primitives/Media";
+import { Media, isVideoKind } from "../../primitives/Media";
 import { MediaCredit } from "../../primitives/MediaCredit";
 import { LinkView } from "../../primitives/LinkView";
 import { Inline } from "../../inline/Inline";
@@ -77,6 +80,7 @@ function MediaFigure({
   frame: FrameWidth;
 }) {
   const event = useSnapshotEvent();
+  const video = isVideoKind(bundle.media?.[item.media.mediaId]?.kind);
   const inner = (
     <>
       <Media media={item.media} bundle={bundle} frame={frame} />
@@ -88,6 +92,20 @@ function MediaFigure({
       ) : null}
     </>
   );
+  if (video) {
+    return (
+      <figure className={styles.mediaGalleryFigure}>
+        {inner}
+        {item.link ? (
+          <p className={styles.mediaGalleryLinkCaption} data-testid="media-link-caption">
+            <LinkView href={item.link.href} bundle={bundle} newTab={item.link.newTab}>
+              <Inline text={item.link.label || item.link.href} bundle={bundle} event={event} />
+            </LinkView>
+          </p>
+        ) : null}
+      </figure>
+    );
+  }
   return (
     <figure className={styles.mediaGalleryFigure}>
       {item.link ? (
@@ -118,7 +136,20 @@ function MediaCarousel({
   const [index, setIndex] = useState(0);
   const reducedMotion = useReducedMotion();
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
   const total = items.length;
+  // A video on a slide that leaves the view pauses, so no hidden slide
+  // keeps playing.
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (viewport === null) return;
+    viewport.querySelectorAll<HTMLElement>("[data-slide]").forEach((slide) => {
+      if (Number(slide.dataset.slide) === index) return;
+      slide.querySelectorAll("video").forEach((v) => {
+        if (!v.paused) v.pause();
+      });
+    });
+  }, [index]);
   const clamp = useCallback((n: number) => (n + total) % total, [total]);
   const next = useCallback(() => setIndex((i) => clamp(i + 1)), [clamp]);
   const prev = useCallback(() => setIndex((i) => clamp(i - 1)), [clamp]);
@@ -129,6 +160,7 @@ function MediaCarousel({
       data-total={total}
     >
       <div
+        ref={viewportRef}
         className={styles.mediaGalleryViewport}
         onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
         onTouchEnd={(e) => {
@@ -144,6 +176,7 @@ function MediaCarousel({
             key={i}
             className={`${styles.mediaGallerySlide}${i === index ? " " + styles.mediaGallerySlideActive : ""}`}
             aria-hidden={i === index ? undefined : true}
+            data-slide={i}
           >
             <MediaFigure item={item} bundle={bundle} frame={frame} />
           </div>

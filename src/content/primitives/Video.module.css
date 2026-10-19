@@ -1,0 +1,9 @@
+/* docs/site.md section 7.3. A video takes the box an image would: its
+   width attribute up to the width of its container, and the height from
+   the aspect of its width and height attributes. */
+
+.video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}

@@ -25,6 +25,10 @@ describe("index.html", () => {
     expect(INDEX_HTML).toContain("base-uri 'self'");
   });
 
+  it("lets video load from the CDN through media-src", () => {
+    expect(INDEX_HTML).toContain("media-src 'self' %VITE_CDN_BASE_URL%;");
+  });
+
   it("names no basemap origin beyond the CDN base", () => {
     expect(INDEX_HTML).not.toContain("VITE_ROUTE_BASEMAP_URL");
     expect(INDEX_HTML).not.toContain("ROUTE_BASEMAP_ORIGIN");

@@ -6,6 +6,7 @@ export const mediaGalleryControls: string;
 export const mediaGalleryFigure: string;
 export const mediaGalleryGrid: string;
 export const mediaGalleryLink: string;
+export const mediaGalleryLinkCaption: string;
 export const mediaGalleryNext: string;
 export const mediaGalleryPrev: string;
 export const mediaGalleryReducedMotion: string;
