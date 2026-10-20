@@ -176,8 +176,36 @@ describe("AlertsSignup", () => {
     expect(storedFlag()).toBeNull();
   });
 
-  it("409 already_subscribed shows a field error and writes no flag", async () => {
+  it("409 already_subscribed adopts the existing row through one GET and shows it", async () => {
     vi.mocked(subsApi.createSubscription).mockRejectedValueOnce(apiError(409, "already_subscribed"));
+    vi.mocked(subsApi.listMySubscriptions).mockResolvedValueOnce({
+      items: [
+        { id: 7, channel: "email", address: EMAIL, verifiedAt: "2024-12-24T00:00:00Z", unsubscribedAt: null, createdAt: "2024-12-01T00:00:00Z" },
+        { id: 5, channel: "email", address: "old@example.com", verifiedAt: "2024-11-01T00:00:00Z", unsubscribedAt: "2024-11-02T00:00:00Z", createdAt: "2024-11-01T00:00:00Z" },
+      ],
+    } as never);
+    const { getByTestId, queryByTestId } = renderWith(SIGNED_IN);
+    await userEvent.click(getByTestId("alerts-submit"));
+    await waitFor(() => expect(getByTestId("subscription-state-label").textContent).toBe("Active"));
+    expect(subsApi.listMySubscriptions).toHaveBeenCalledTimes(1);
+    expect(storedFlag()).toEqual({ account: EMAIL, id: 7, address: EMAIL, state: "active" });
+    expect(getByTestId("alerts-notice").textContent).toMatch(/already subscribed/);
+    expect(queryByTestId("alerts-submit")).toBeNull();
+    expect(queryByTestId("alerts-field-error")).toBeNull();
+  });
+
+  it("409 already_subscribed with no open row falls back to the field error and writes no flag", async () => {
+    vi.mocked(subsApi.createSubscription).mockRejectedValueOnce(apiError(409, "already_subscribed"));
+    vi.mocked(subsApi.listMySubscriptions).mockResolvedValueOnce({ items: [] } as never);
+    const { getByTestId } = renderWith(SIGNED_IN);
+    await userEvent.click(getByTestId("alerts-submit"));
+    await waitFor(() => expect(getByTestId("alerts-field-error").textContent).toMatch(/already receiving/));
+    expect(storedFlag()).toBeNull();
+  });
+
+  it("409 already_subscribed with a failed GET falls back to the field error", async () => {
+    vi.mocked(subsApi.createSubscription).mockRejectedValueOnce(apiError(409, "already_subscribed"));
+    vi.mocked(subsApi.listMySubscriptions).mockRejectedValueOnce(apiError(500, "internal"));
     const { getByTestId } = renderWith(SIGNED_IN);
     await userEvent.click(getByTestId("alerts-submit"));
     await waitFor(() => expect(getByTestId("alerts-field-error").textContent).toMatch(/already receiving/));

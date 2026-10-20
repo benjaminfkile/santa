@@ -3,7 +3,10 @@
 // the one subscription from the subscription flag as a row (address,
 // state, Resend confirmation while pending, Unsubscribe), or the subscribe
 // form when there is no flag (prefilled with the account email), and the
-// alerts list from the snapshot (`snapshot.event.alerts`, newest first,
+// alerts list from the snapshot. A `409 already_subscribed` on the form
+// (a cleared browser or another device) adopts the existing row through
+// one `GET /me/subscriptions` and shows it in place of the form. The
+// alerts list comes from the snapshot (`snapshot.event.alerts`, newest first,
 // each with its message under the subject when it carries one). While
 // `snapshot.subscriptionsOpen` is false, or after a `409
 // subscriptions_closed`, the closed copy stands in place of the form and
@@ -20,6 +23,7 @@ import { Inline } from "../../inline/Inline";
 import {
   createSubscription,
   deleteSubscription,
+  listMySubscriptions,
   resendVerification,
 } from "../../../api/subscriptions";
 import { ApiRequestError, surfaceFor } from "../../../api/errors";
@@ -29,7 +33,7 @@ import { formatEventTime } from "../../../lib/time";
 import { useStore } from "../../../store/useStore";
 import { selectAlerts } from "../../../alerts/AlertsProvider";
 import { useSubscription } from "../../../alerts/SubscriptionProvider";
-import { flagFromRow, type SubscriptionFlag } from "../../../alerts/subscriptionFlag";
+import { flagFromRow, newestOpenRow, type SubscriptionFlag } from "../../../alerts/subscriptionFlag";
 import { alertKindLabel } from "../../../alerts/alertKind";
 import { sortAlerts } from "../../../alerts/sortAlerts";
 import { copy } from "../../../copy/copy";
@@ -137,6 +141,23 @@ function SignedIn({
     return false;
   }, []);
 
+  // One `GET /me/subscriptions` after a `409 already_subscribed`: writes
+  // the flag from the newest row that is not unsubscribed and shows it.
+  // True when a row was adopted; false (no row, or a failure) leaves the
+  // caller to show the field error.
+  const adoptExisting = useCallback(async (): Promise<boolean> => {
+    try {
+      const res = await listMySubscriptions();
+      const row = newestOpenRow(res.items ?? []);
+      if (row === null) return false;
+      setFlag(flagFromRow(email, row));
+      setNotice("You are already subscribed.");
+      return true;
+    } catch {
+      return false;
+    }
+  }, [email, setFlag]);
+
   const submitCreate = useCallback(async () => {
     const address = formAddress.trim();
     if (cooldownUntil !== null && cooldownUntil > Date.now()) return;
@@ -154,7 +175,11 @@ function SignedIn({
       if (s.code === "address_taken") {
         setFieldError("That address is attached to a different account.");
       } else if (s.code === "already_subscribed") {
-        setFieldError("You are already receiving alerts at that address.");
+        // This browser holds no flag but the account is subscribed (a
+        // cleared browser, or another device): adopt the existing row.
+        if (!(await adoptExisting())) {
+          setFieldError("You are already receiving alerts at that address.");
+        }
       } else if (s.code === "validation_failed") {
         setFieldError(s.fieldErrors.address ?? "Please enter a valid email address.");
       } else if (s.code === "rate_limited") {
@@ -168,7 +193,7 @@ function SignedIn({
     } finally {
       setSubmitting(false);
     }
-  }, [cooldownUntil, email, formAddress, handleCommon, setFlag]);
+  }, [adoptExisting, cooldownUntil, email, formAddress, handleCommon, setFlag]);
 
   const resend = useCallback(
     async (current: SubscriptionFlag) => {

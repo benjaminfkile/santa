@@ -754,7 +754,8 @@ Data row units: speed as mph from `speedMps`, heading as degrees plus cardinal f
 | `202` from resend | Rewritten with its state unchanged |
 | `409 already_verified` from resend | Rewritten as `active` (13.1) |
 | `200` on the verify page (13.2) with a pending flag | Becomes `active`; the token does not name its address, so the pending flag this browser holds is taken as the one confirmed |
-| `409 already_subscribed`, `409 address_taken`, `409 subscriptions_closed` | Not written |
+| `409 already_subscribed` from `POST /me/subscriptions` | The account is subscribed but this browser holds no flag (a cleared browser, another device): one `GET /me/subscriptions`, then written from the newest row that is not unsubscribed as for `201` (13.1); not written when there is no such row or the call fails |
+| `409 address_taken`, `409 subscriptions_closed` | Not written |
 | `204` from `DELETE /me/subscriptions/{id}` | Cleared |
 | `204` on the unsubscribe page (13.3) | Cleared |
 | Sign-out (the auth state `signedOut`) | Cleared |
@@ -1224,7 +1225,7 @@ Endpoints the site calls, and nothing else:
 
 | Call | Auth | Used by |
 |---|---|---|
-| `GET /me/subscriptions` | bearer | `SubscriptionProvider`, once per app load with a matching flag (6.1 step 4) |
+| `GET /me/subscriptions` | bearer | `SubscriptionProvider`, once per app load with a matching flag (6.1 step 4); the alerts form once after a `409 already_subscribed` (13.1) |
 | `POST /me/subscriptions` | bearer | Alerts page |
 | `POST /me/subscriptions/{id}/resend-verification` | bearer | Alerts page |
 | `DELETE /me/subscriptions/{id}` | bearer | Alerts page |
@@ -1258,7 +1259,7 @@ The section makes no API call on mount; a live poll or a new snapshot re-renders
 | `202` (resend) | Flag rewritten with its state unchanged; copy says the confirmation was resent |
 | `204` (unsubscribe) | Flag cleared; the form returns |
 | `409 address_taken` | Field error: that address is attached to a different account; no flag |
-| `409 already_subscribed` | Field error: already receiving alerts at that address; no flag |
+| `409 already_subscribed` | One `GET /me/subscriptions`; the flag is written from the newest row that is not unsubscribed, the row replaces the form, and the notice says "You are already subscribed." When there is no such row or the call fails: field error, already receiving alerts at that address; no flag |
 | `409 already_verified` (resend) | Flag rewritten as `active`; the row is Active |
 | `409 subscriptions_closed` | `copy.alerts.closed` in place of the form; no flag written |
 | `400 validation_failed` | Field error from `details.fields.address` |
