@@ -32,7 +32,7 @@ import { storageSet } from "../../../lib/storage";
 import { describeError } from "../../../lib/analytics";
 import { setSnowOverride, useSnowEnabled } from "../../theme/seasonalLayers";
 import { SponsorCarousel } from "../SponsorCarousel/SponsorCarousel";
-import { CookieDialog } from "../CookieControl/CookieControl";
+import { CookieDialog, selectCookiesClosed } from "../CookieControl/CookieControl";
 import { MapView, type MapViewOptions } from "../../../map/MapView";
 import type { MapController } from "../../../map/mapController";
 import type { UserLocationState } from "../../../map/userLocation";
@@ -266,7 +266,11 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const takeover = useStore(selectTakeover);
   const flightHistory = useStore((s) => s.snapshot?.event?.flightHistory ?? null);
   const isLive = useStore((s) => s.live?.eventStatusId === 3);
-  const showLeave = overlays.cookieControl && isLive;
+  const cookieDialogAllowed = overlays.cookieControl && isLive;
+  // The glyph hides while cookies are closed (a per-person limit of 0); a
+  // dialog already open stays and shows the closed line.
+  const cookiesClosed = useStore(selectCookiesClosed);
+  const showLeave = cookieDialogAllowed && !cookiesClosed;
   // A visitor who is not signed in gets the button all the same: pressing it
   // opens the dialog that asks them to sign in, so the label says that rather
   // than promising something the press does not do.
@@ -598,7 +602,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 onEnable={onEnableLocation}
                 onDisable={onDisableLocation}
               />
-              {showLeave && cookieOpen ? (
+              {cookieDialogAllowed && cookieOpen ? (
                 <CookieDialog bundle={bundle} onClose={() => setCookieOpen(false)} />
               ) : null}
               <RouteDisclaimer />

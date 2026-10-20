@@ -8,6 +8,7 @@ import { AuthCard } from "./AuthCard";
 import { cognito } from "../../auth/cognito";
 import { forgotMessage } from "../../auth/errors";
 import { copy } from "../../copy/copy";
+import { useStore } from "../../store/useStore";
 import * as field from "../../ui/Field.module.css";
 import * as btn from "../../ui/Button.module.css";
 import * as styles from "./AuthCard.module.css";
@@ -17,6 +18,7 @@ export function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const signUpsOpen = useStore((s) => s.snapshot?.signUpsOpen !== false);
   const t = copy.auth.forgot;
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -45,7 +47,7 @@ export function ForgotPasswordPage() {
       title={t.title}
       links={[
         { to: "/auth/sign-in", label: t.links.signIn },
-        { to: "/auth/sign-up", label: t.links.signUp },
+        ...(signUpsOpen ? [{ to: "/auth/sign-up", label: t.links.signUp }] : []),
         { to: "/", label: t.links.home },
       ]}
     >

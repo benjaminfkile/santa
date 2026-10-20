@@ -325,4 +325,24 @@ describe("CookieControl", () => {
     await waitFor(() => expect(getByTestId("cookie-error")).toBeInTheDocument());
     expect(queryByText(/Failed to fetch/)).toBeNull();
   });
+
+  it("at a per-person limit of 0 renders the closed line in place of its button and fetches nothing", async () => {
+    setLiveStatus(3);
+    setCookieTypes([{ id: 10, name: "Chip" }]);
+    act(() => {
+      store.setState((s) => ({
+        ...s,
+        snapshot: { ...(s.snapshot as NonNullable<(typeof s)["snapshot"]>), cookieLimitPerPerson: 0 },
+      }));
+    });
+    for (const auth of [signedIn, { status: "signedOut" } as AuthState]) {
+      const { getByTestId, queryByTestId, queryByRole, unmount } = renderWith(auth);
+      expect(getByTestId("cookie-control-closed").textContent).toBe("Cookies are closed for now");
+      expect(queryByTestId("cookie-control-open")).toBeNull();
+      expect(queryByRole("button")).toBeNull();
+      expect(queryByTestId("cookie-sheet")).toBeNull();
+      unmount();
+    }
+    expect(cookiesApi.getMyCookies).not.toHaveBeenCalled();
+  });
 });

@@ -1,6 +1,6 @@
 // docs/site.md section 14. Contact form: name 1..100, email 3..254 and a
 // valid address shape, message 1..2000; whitespace trimmed before checks.
-// Renders successText on 201; field errors from details.fields on 400;
+// Renders successText on 202; field errors from details.fields on 400;
 // disables submit for retryAfterSeconds on 429; keeps text on network.
 
 import { useCallback, useEffect, useState } from "react";
