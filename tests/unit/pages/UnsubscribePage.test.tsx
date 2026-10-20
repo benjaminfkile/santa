@@ -1,5 +1,6 @@
 // docs/site.md section 22.1. UnsubscribePage covers each response row
-// from section 13.3 plus the token regex gate and post-on-mount.
+// from section 13.3 plus the token regex gate, post-on-mount, and the
+// subscription flag cleared on 204.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { cleanup, render, waitFor } from "@testing-library/react";
@@ -7,6 +8,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { UnsubscribePage } from "../../../src/pages/Alerts/UnsubscribePage";
 import { ApiRequestError } from "../../../src/api/client";
+import { SUBSCRIPTION_FLAG_KEY, readFlag } from "../../../src/alerts/subscriptionFlag";
 
 vi.mock("../../../src/api/subscriptions", () => ({
   verifySubscription: vi.fn(),
@@ -26,7 +28,10 @@ function renderAt(url: string) {
   );
 }
 
+const FLAG = { account: "p@e.com", id: 5, address: "p@e.com", state: "active" as const };
+
 beforeEach(() => {
+  window.localStorage.clear();
   vi.mocked(subsApi.unsubscribe).mockReset();
 });
 afterEach(() => cleanup());
@@ -72,5 +77,22 @@ describe("UnsubscribePage", () => {
     await waitFor(() => expect(container.textContent).toContain("Could not reach the server"));
     await userEvent.click(getByText("Retry"));
     await waitFor(() => expect(container.textContent).toContain("You are unsubscribed"));
+  });
+  it("204 clears the subscription flag", async () => {
+    window.localStorage.setItem(SUBSCRIPTION_FLAG_KEY, JSON.stringify(FLAG));
+    vi.mocked(subsApi.unsubscribe).mockResolvedValueOnce(undefined);
+    const { container } = renderAt(`/alerts/unsubscribe?token=${validToken}`);
+    await waitFor(() => expect(container.textContent).toContain("You are unsubscribed"));
+    expect(readFlag()).toBeNull();
+  });
+
+  it("404 leaves the subscription flag", async () => {
+    window.localStorage.setItem(SUBSCRIPTION_FLAG_KEY, JSON.stringify(FLAG));
+    vi.mocked(subsApi.unsubscribe).mockRejectedValueOnce(
+      new ApiRequestError(404, { code: "not_found", message: "x", details: null, requestId: "r" }, null),
+    );
+    const { container } = renderAt(`/alerts/unsubscribe?token=${validToken}`);
+    await waitFor(() => expect(container.textContent).toContain("This link is not valid"));
+    expect(readFlag()).toEqual(FLAG);
   });
 });

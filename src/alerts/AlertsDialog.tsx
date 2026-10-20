@@ -2,18 +2,18 @@
 // dialog recipe: a native <dialog> opened with showModal that closes on a
 // backdrop press, Escape, the close X in its head, and the Close button.
 // The list (or the empty text) sits in the recipe's scroll region between
-// the head and the footer, which stay put. It lists the alerts sent
-// to the visitor newest first (the time in the viewer's timezone, the
-// event name, the subject line, the message under it when the alert
+// the head and the footer, which stay put. It lists the snapshot's
+// alerts newest first (`createdAt` in the viewer's timezone, the event
+// name from `snapshot.event.name`, the subject line, the message under it when the alert
 // carries one, and the kind label of section 13.1), with
 // a New marker on each alert whose id is above `seenId`, the seen mark
 // held when the dialog opened. The footer carries Close.
 
 import { useEffect, useMemo, useRef } from "react";
-import type { AlertItem } from "../api/subscriptions";
+import type { SnapshotAlert } from "../contracts";
 import { copy } from "../copy/copy";
 import { formatEventTime } from "../lib/time";
-import { alertId } from "./alertId";
+import { sortAlerts } from "./sortAlerts";
 import { alertKindLabel } from "./alertKind";
 import * as dlg from "../ui/Dialog.module.css";
 import * as btn from "../ui/Button.module.css";
@@ -22,12 +22,13 @@ import { CloseGlyph } from "../content/sections/Map/glyphs";
 import * as styles from "./Alerts.module.css";
 
 export type AlertsDialogProps = {
-  alerts: AlertItem[];
+  alerts: SnapshotAlert[];
+  eventName: string;
   seenId: number | null;
   onClose: () => void;
 };
 
-export function AlertsDialog({ alerts, seenId, onClose }: AlertsDialogProps) {
+export function AlertsDialog({ alerts, eventName, seenId, onClose }: AlertsDialogProps) {
   const ref = useRef<HTMLDialogElement | null>(null);
 
   useEffect(() => {
@@ -42,16 +43,7 @@ export function AlertsDialog({ alerts, seenId, onClose }: AlertsDialogProps) {
     }
   }, []);
 
-  const sorted = useMemo(() => {
-    const list = alerts.slice();
-    list.sort((a, b) => {
-      const aa = a.sentAt ?? "";
-      const bb = b.sentAt ?? "";
-      if (aa !== bb) return aa < bb ? 1 : -1;
-      return alertId(b) - alertId(a);
-    });
-    return list;
-  }, [alerts]);
+  const sorted = useMemo(() => sortAlerts(alerts), [alerts]);
 
   const close = () => {
     const el = ref.current;
@@ -89,14 +81,14 @@ export function AlertsDialog({ alerts, seenId, onClose }: AlertsDialogProps) {
           ) : (
             <ul className={styles.rows} data-testid="alerts-dialog-list">
               {sorted.map((row) => {
-                const id = alertId(row);
+                const id = row.id;
                 const fresh = seenId === null || id > seenId;
                 const label = alertKindLabel(row.kind);
                 const update = label === copy.alerts.kindUpdate;
                 return (
                   <li key={id} className={styles.row} data-testid={`alerts-dialog-row-${id}`}>
                     <div className={styles.rowHead}>
-                      <span className={styles.when}>{formatEventTime(row.sentAt)}</span>
+                      <span className={styles.when}>{formatEventTime(row.createdAt)}</span>
                       <span className={`${styles.kind} ${update ? styles.kindUpdate : styles.kindStatus}`}>
                         {label}
                       </span>
@@ -104,8 +96,8 @@ export function AlertsDialog({ alerts, seenId, onClose }: AlertsDialogProps) {
                         <span className={styles.fresh} data-testid="alerts-dialog-new">{copy.alerts.newMarker}</span>
                       ) : null}
                     </div>
-                    <div className={styles.event}>{row.eventName ?? ""}</div>
-                    <div className={styles.subject}>{row.subject ?? ""}</div>
+                    <div className={styles.event}>{eventName}</div>
+                    <div className={styles.subject}>{row.subject}</div>
                     {row.message != null ? (
                       <div className={styles.message} data-testid="alerts-dialog-message">{row.message}</div>
                     ) : null}

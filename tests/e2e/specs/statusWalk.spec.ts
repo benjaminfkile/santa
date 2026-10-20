@@ -10,6 +10,7 @@
 
 import { test, expect } from "@playwright/test";
 import {
+  AdminApiError,
   activateBeacon,
   assertDevApi,
   createBeacon,
@@ -17,7 +18,6 @@ import {
   enrollBeacon,
   fetchCdnSnapshot,
   getAdminSnapshot,
-  getMe,
   getState,
   goto,
   heartbeat,
@@ -40,9 +40,11 @@ const POLL_PLUS = POLL_INTERVAL_MS + 2000;
 
 test.beforeAll(async () => {
   assertDevApi();
-  const me = await getMe();
-  if (!me.isAdmin) throw new Error("E2E admin token is not admin");
-  const events = await listEvents();
+  // The admin event list answers 403 for a token that is not an admin's.
+  const events = await listEvents().catch((e: unknown) => {
+    if (e instanceof AdminApiError && e.status === 403) throw new Error("E2E admin token is not admin");
+    throw e;
+  });
   const live = events.find((e) => e.statusId === 3);
   if (live) throw new Error(`Refusing to run: event ${live.id} is currently live`);
 });

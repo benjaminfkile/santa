@@ -23,6 +23,7 @@ const COPY_BY_CODE: Record<string, string> = {
   address_taken: "That address is attached to a different account.",
   already_subscribed: "You are already receiving alerts at that address.",
   already_verified: "That address has already been confirmed.",
+  subscriptions_closed: "New alert sign-ups are closed for now.",
   invalid_token: "This link is not valid.",
   expired_token: "This link has expired.",
   contact_disabled: "The contact form is closed right now.",

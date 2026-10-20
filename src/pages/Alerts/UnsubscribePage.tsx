@@ -1,11 +1,12 @@
 // docs/site.md section 13.3. /alerts/unsubscribe?token=wsu_...: POST on
 // mount; reads token from the query string; validates the token shape
-// client-side.
+// client-side. A `204` clears the subscription flag.
 
 import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { unsubscribe } from "../../api/subscriptions";
 import { ApiRequestError } from "../../api/errors";
+import { useSubscription } from "../../alerts/SubscriptionProvider";
 import * as btn from "../../ui/Button.module.css";
 
 const TOKEN_RE = /^wsu_[A-Za-z0-9_-]{43}$/;
@@ -22,12 +23,14 @@ export function UnsubscribePage() {
   const token = params.get("token") ?? "";
   const validToken = TOKEN_RE.test(token);
   const [state, setState] = useState<State>({ kind: "idle" });
+  const { clearFlag } = useSubscription();
 
   const run = useCallback(async () => {
     if (!validToken) return;
     setState({ kind: "submitting" });
     try {
       await unsubscribe(token);
+      clearFlag();
       setState({ kind: "success" });
     } catch (e) {
       if (e instanceof ApiRequestError) {
@@ -36,7 +39,7 @@ export function UnsubscribePage() {
         setState({ kind: "network" });
       }
     }
-  }, [token, validToken]);
+  }, [token, validToken, clearFlag]);
 
   useEffect(() => {
     void run();

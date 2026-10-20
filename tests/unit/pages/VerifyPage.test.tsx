@@ -1,5 +1,6 @@
 // docs/site.md section 22.1. VerifyPage covers each response row from
-// section 13.2 plus the token regex gate and post-on-mount.
+// section 13.2 plus the token regex gate, post-on-mount, and the pending
+// subscription flag becoming active on 200.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { cleanup, render, waitFor } from "@testing-library/react";
@@ -7,6 +8,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { VerifyPage } from "../../../src/pages/Alerts/VerifyPage";
 import { ApiRequestError } from "../../../src/api/client";
+import { SUBSCRIPTION_FLAG_KEY, readFlag } from "../../../src/alerts/subscriptionFlag";
 
 vi.mock("../../../src/api/subscriptions", () => ({
   verifySubscription: vi.fn(),
@@ -26,7 +28,10 @@ function renderAt(url: string) {
   );
 }
 
+const PENDING = { account: "p@e.com", id: 5, address: "p@e.com", state: "pending" as const };
+
 beforeEach(() => {
+  window.localStorage.clear();
   vi.mocked(subsApi.verifySubscription).mockReset();
 });
 afterEach(() => cleanup());
@@ -54,6 +59,31 @@ describe("VerifyPage", () => {
     vi.mocked(subsApi.verifySubscription).mockResolvedValueOnce({ verifiedAt: "2024-12-24T00:00:00Z" });
     const { container } = renderAt(`/alerts/verify?token=${validToken}`);
     await waitFor(() => expect(container.textContent).toContain("Your alerts are confirmed"));
+  });
+
+  it("200 makes a pending flag active", async () => {
+    window.localStorage.setItem(SUBSCRIPTION_FLAG_KEY, JSON.stringify(PENDING));
+    vi.mocked(subsApi.verifySubscription).mockResolvedValueOnce({ verifiedAt: "2024-12-24T00:00:00Z" });
+    const { container } = renderAt(`/alerts/verify?token=${validToken}`);
+    await waitFor(() => expect(container.textContent).toContain("Your alerts are confirmed"));
+    await waitFor(() => expect(readFlag()).toEqual({ ...PENDING, state: "active" }));
+  });
+
+  it("200 writes no flag when there is none", async () => {
+    vi.mocked(subsApi.verifySubscription).mockResolvedValueOnce({ verifiedAt: "2024-12-24T00:00:00Z" });
+    const { container } = renderAt(`/alerts/verify?token=${validToken}`);
+    await waitFor(() => expect(container.textContent).toContain("Your alerts are confirmed"));
+    expect(readFlag()).toBeNull();
+  });
+
+  it("404 leaves a pending flag pending", async () => {
+    window.localStorage.setItem(SUBSCRIPTION_FLAG_KEY, JSON.stringify(PENDING));
+    vi.mocked(subsApi.verifySubscription).mockRejectedValueOnce(
+      new ApiRequestError(404, { code: "not_found", message: "x", details: null, requestId: "r" }, null),
+    );
+    const { container } = renderAt(`/alerts/verify?token=${validToken}`);
+    await waitFor(() => expect(container.textContent).toContain("expired or is not valid"));
+    expect(readFlag()).toEqual(PENDING);
   });
 
   it("404 renders 'expired or is not valid'", async () => {

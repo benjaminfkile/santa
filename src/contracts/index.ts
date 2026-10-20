@@ -9,6 +9,7 @@ import type { ContentDocument, Link, Presentation, MediaRef, SiteSettings } from
 export type { LiveObject, Snapshot, Route, ContentDocument, Link, Presentation, MediaRef, SiteSettings };
 export type Sponsor = NonNullable<Snapshot["sponsors"]>[number];
 export type CookieType = NonNullable<Snapshot["cookieTypes"]>[number];
+export type SnapshotAlert = NonNullable<Snapshot["event"]>["alerts"][number];
 export type ContentPage = ContentDocument["pages"][number];
 export type ContentSection = ContentPage["sections"][number];
 export type PageRole = ContentPage["role"];
