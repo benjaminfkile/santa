@@ -13,7 +13,9 @@
 // `SignInRequired` or any failure leaves the flag as it was. No flag, or
 // signed out: no call. Route changes and store updates never call again;
 // signing in to an account later in the session with a flag for it runs
-// the same check once for that account.
+// the same check once for that account. A flag written through `setFlag`
+// (a row the API just returned) marks its account checked, so a sign-up
+// or an adopted row never triggers a second read.
 
 import {
   createContext,
@@ -56,7 +58,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   // The signed-in account; a check that lands after it changed is dropped.
   const accountRef = useRef<string | null>(account);
 
+  // A flag written during the session comes from a row the API just
+  // returned, so that account counts as checked for this page load.
   const setFlag = useCallback((next: SubscriptionFlag) => {
+    checkedRef.current.add(next.account);
     writeFlag(next);
     setFlagState(next);
   }, []);

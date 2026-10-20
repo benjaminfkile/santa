@@ -223,6 +223,37 @@ describe("the one check per app load", () => {
     expect(shownFlag(view)?.state).toBe("pending");
   });
 
+  it("a flag written through setFlag counts as checked: no GET follows it", async () => {
+    vi.mocked(subsApi.listMySubscriptions).mockResolvedValue({ items: [row(5, "2026-09-01", null)] } as never);
+    function Writer() {
+      const { setFlag } = useSubscription();
+      return (
+        <button type="button" onClick={() => setFlag({ account: EMAIL, id: 9, address: EMAIL, state: "active" })}>
+          write
+        </button>
+      );
+    }
+    const view = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <AuthProvider initialState={SIGNED_IN}>
+          <SubscriptionProvider>
+            <Probe />
+            <Writer />
+          </SubscriptionProvider>
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+    applyLive();
+    await act(async () => {});
+    expect(subsApi.listMySubscriptions).not.toHaveBeenCalled();
+    fireEvent.click(view.getByText("write"));
+    await act(async () => {});
+    applyLive(2);
+    await act(async () => {});
+    expect(subsApi.listMySubscriptions).not.toHaveBeenCalled();
+    expect(shownFlag(view)?.id).toBe(9);
+  });
+
   it("clears the flag on sign-out", async () => {
     storeFlag(FLAG);
     vi.mocked(subsApi.listMySubscriptions).mockResolvedValue({ items: [row(5, "2026-09-01", null)] } as never);
