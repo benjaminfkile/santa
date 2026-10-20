@@ -76,10 +76,6 @@ export class AdminApiError extends Error {
   }
 }
 
-export async function getMe(): Promise<{ isAdmin: boolean }> {
-  return request<{ isAdmin: boolean }>("GET", "/me");
-}
-
 export async function listEvents(): Promise<AdminEvent[]> {
   const res = await request<{ items: AdminEvent[] }>("GET", "/admin/events");
   return res.items;

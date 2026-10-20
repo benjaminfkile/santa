@@ -1,33 +1,37 @@
-// docs/site.md section 13.1. Signed-in: fetches /me, /me/subscriptions, and
-// /me/alerts in parallel once per mount (a store update never refetches),
-// shows an account line, a form (address prefilled with the account email;
-// hidden behind an "Add another address" link when any subscription is
-// already active), one row per subscription with resend/unsubscribe/
-// re-subscribe actions, and the alerts-sent-to-you list (each row shows
-// the alert's message under its subject when it carries one). Signed-out:
+// docs/site.md section 13.1. Signed-in: makes no API call on mount. Shows
+// `data.copy`, the account line from the id token's email (`useAuth()`),
+// the one subscription from the subscription flag as a row (address,
+// state, Resend confirmation while pending, Unsubscribe), or the subscribe
+// form when there is no flag (prefilled with the account email), and the
+// alerts list from the snapshot (`snapshot.event.alerts`, newest first,
+// each with its message under the subject when it carries one). While
+// `snapshot.subscriptionsOpen` is false, or after a `409
+// subscriptions_closed`, the closed copy stands in place of the form and
+// of Resend; Unsubscribe stays on an existing flag. Signed-out:
 // signedOutCopy plus a sign-in link.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import type { SectionComponent } from "../../registry";
 import type { ContentBundle } from "../../../store/types";
+import type { SnapshotAlert } from "../../../contracts";
 import { useAuth } from "../../../auth/AuthProvider";
 import { Inline } from "../../inline/Inline";
 import {
   createSubscription,
   deleteSubscription,
-  getMe,
-  listAlerts,
-  listMySubscriptions,
   resendVerification,
-  type AlertItem,
-  type Subscription,
 } from "../../../api/subscriptions";
 import { ApiRequestError, surfaceFor } from "../../../api/errors";
 import { SignInRequired } from "../../../auth/getIdToken";
 import { StatusPill } from "../../primitives/StatusPill";
 import { formatEventTime } from "../../../lib/time";
+import { useStore } from "../../../store/useStore";
+import { selectAlerts } from "../../../alerts/AlertsProvider";
+import { useSubscription } from "../../../alerts/SubscriptionProvider";
+import { flagFromRow, type SubscriptionFlag } from "../../../alerts/subscriptionFlag";
 import { alertKindLabel } from "../../../alerts/alertKind";
+import { sortAlerts } from "../../../alerts/sortAlerts";
 import { copy } from "../../../copy/copy";
 import * as styles from "./AlertsSignup.module.css";
 import * as btn from "../../../ui/Button.module.css";
@@ -49,27 +53,11 @@ function readData(data: unknown): AlertsSignupData {
   };
 }
 
-type LoadState =
-  | { kind: "loading" }
-  | {
-      kind: "ready";
-      email: string;
-      subscriptions: Subscription[];
-      alerts: AlertItem[];
-      formAddress: string;
-      submitting: boolean;
-      fieldError: string | null;
-      cooldownUntil: number | null;
-      notice: string | null;
-      addAnotherOpen: boolean;
-    }
-  | { kind: "error"; message: string }
-  | { kind: "signedOut" };
-
 export const AlertsSignup: SectionComponent = ({ data, bundle }) => {
   const d = readData(data);
   const { state: auth, signIn } = useAuth();
   const location = useLocation();
+  const onSignIn = () => void signIn(location.pathname + location.search);
 
   if (auth.status === "unknown") {
     return (
@@ -77,15 +65,9 @@ export const AlertsSignup: SectionComponent = ({ data, bundle }) => {
     );
   }
   if (auth.status !== "signedIn") {
-    return (
-      <SignedOut
-        data={d}
-        bundle={bundle}
-        onSignIn={() => void signIn(location.pathname + location.search)}
-      />
-    );
+    return <SignedOut data={d} bundle={bundle} onSignIn={onSignIn} />;
   }
-  return <SignedIn data={d} bundle={bundle} />;
+  return <SignedIn data={d} bundle={bundle} email={auth.email} onSignIn={onSignIn} />;
 };
 
 function SignedOut({
@@ -109,218 +91,138 @@ function SignedOut({
 function SignedIn({
   data,
   bundle,
+  email,
+  onSignIn,
 }: {
   data: AlertsSignupData;
   bundle: ContentBundle;
+  email: string;
+  onSignIn: () => void;
 }) {
-  const [state, setState] = useState<LoadState>({ kind: "loading" });
+  const { flag: anyFlag, setFlag, clearFlag } = useSubscription();
+  const alerts = useStore(selectAlerts);
+  const subscriptionsOpen = useStore((s) => s.snapshot?.subscriptionsOpen !== false);
+  // A flag of another account is never shown; the provider clears it.
+  const flag = anyFlag !== null && anyFlag.account === email ? anyFlag : null;
+  const [formAddress, setFormAddress] = useState(email);
+  const [submitting, setSubmitting] = useState(false);
+  const [fieldError, setFieldError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  const [closedByApi, setClosedByApi] = useState(false);
+  const [signInRequired, setSignInRequired] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
-
-  const load = useCallback(async () => {
-    setState({ kind: "loading" });
-    try {
-      const [me, subs, alerts] = await Promise.all([
-        getMe(),
-        listMySubscriptions(),
-        listAlerts(),
-      ]);
-      const email = (me.person?.email as string | undefined) ?? "";
-      setState({
-        kind: "ready",
-        email,
-        subscriptions: subs.items ?? [],
-        alerts: alerts.items ?? [],
-        formAddress: email,
-        submitting: false,
-        fieldError: null,
-        cooldownUntil: null,
-        notice: null,
-        addAnotherOpen: false,
-      });
-    } catch (e) {
-      const s = surfaceFor(e);
-      if (e instanceof SignInRequired || s.code === "unauthenticated") {
-        setState({ kind: "signedOut" });
-        return;
-      }
-      setState({ kind: "error", message: s.message });
-    }
-  }, []);
+  const closed = !subscriptionsOpen || closedByApi;
 
   useEffect(() => {
-    void load();
-  }, [load]);
-
-  useEffect(() => {
-    if (state.kind !== "ready" || state.cooldownUntil === null) return;
+    if (cooldownUntil === null) return;
     const id = window.setInterval(() => setNowMs(Date.now()), 500);
     return () => window.clearInterval(id);
-  }, [state]);
+  }, [cooldownUntil]);
 
-  const setReady = useCallback(
-    (updater: (s: Extract<LoadState, { kind: "ready" }>) => Extract<LoadState, { kind: "ready" }>) => {
-      setState((prev) => (prev.kind !== "ready" ? prev : updater(prev)));
-    },
-    [],
-  );
+  // The handling shared by every action: true when the error was one of
+  // the common cases and has been rendered.
+  const handleCommon = useCallback((e: unknown): boolean => {
+    const s = surfaceFor(e);
+    if (e instanceof SignInRequired || s.code === "unauthenticated") {
+      setSignInRequired(true);
+      return true;
+    }
+    if (e instanceof ApiRequestError && s.code === "subscriptions_closed") {
+      setClosedByApi(true);
+      setNotice(null);
+      setFieldError(null);
+      return true;
+    }
+    return false;
+  }, []);
 
   const submitCreate = useCallback(async () => {
-    if (state.kind !== "ready") return;
-    const address = state.formAddress.trim();
-    if (state.cooldownUntil !== null && state.cooldownUntil > Date.now()) return;
-    setReady((s) => ({ ...s, submitting: true, fieldError: null, notice: null }));
+    const address = formAddress.trim();
+    if (cooldownUntil !== null && cooldownUntil > Date.now()) return;
+    setSubmitting(true);
+    setFieldError(null);
+    setNotice(null);
     try {
       const row = await createSubscription(address);
-      setReady((s) => ({
-        ...s,
-        submitting: false,
-        subscriptions: mergeSubscription(s.subscriptions, row),
-        addAnotherOpen: false,
-        notice:
-          row.verifiedAt === null || row.verifiedAt === undefined
-            ? "Check your email to confirm."
-            : "You are subscribed.",
-      }));
+      const next = flagFromRow(email, row);
+      setFlag(next);
+      setNotice(next.state === "pending" ? "Check your email to confirm." : "You are subscribed.");
     } catch (e) {
-      handleCreateError(e);
-    }
-  }, [setReady, state]);
-
-  function handleCreateError(e: unknown) {
-    const s = surfaceFor(e);
-    if (e instanceof ApiRequestError) {
+      if (handleCommon(e)) return;
+      const s = surfaceFor(e);
       if (s.code === "address_taken") {
-        setReady((prev) => ({
-          ...prev,
-          submitting: false,
-          fieldError: "That address is attached to a different account.",
-        }));
-        return;
-      }
-      if (s.code === "already_subscribed") {
-        setReady((prev) => ({
-          ...prev,
-          submitting: false,
-          fieldError: "You are already receiving alerts at that address.",
-        }));
-        return;
-      }
-      if (s.code === "validation_failed") {
-        setReady((prev) => ({
-          ...prev,
-          submitting: false,
-          fieldError: s.fieldErrors.address ?? "Please enter a valid email address.",
-        }));
-        return;
-      }
-      if (s.code === "rate_limited") {
+        setFieldError("That address is attached to a different account.");
+      } else if (s.code === "already_subscribed") {
+        setFieldError("You are already receiving alerts at that address.");
+      } else if (s.code === "validation_failed") {
+        setFieldError(s.fieldErrors.address ?? "Please enter a valid email address.");
+      } else if (s.code === "rate_limited") {
         const secs = s.retryAfterSeconds ?? 30;
-        setReady((prev) => ({
-          ...prev,
-          submitting: false,
-          cooldownUntil: Date.now() + secs * 1000,
-          fieldError: `Too many requests. Try again in ${secs}s.`,
-        }));
-        return;
+        setCooldownUntil(Date.now() + secs * 1000);
+        setNowMs(Date.now());
+        setFieldError(`Too many requests. Try again in ${secs}s.`);
+      } else {
+        setFieldError(s.message);
       }
+    } finally {
+      setSubmitting(false);
     }
-    if (e instanceof SignInRequired || s.code === "unauthenticated") {
-      setState({ kind: "signedOut" });
-      return;
-    }
-    setReady((prev) => ({ ...prev, submitting: false, fieldError: s.message }));
-  }
+  }, [cooldownUntil, email, formAddress, handleCommon, setFlag]);
 
   const resend = useCallback(
-    async (id: number) => {
+    async (current: SubscriptionFlag) => {
+      setFieldError(null);
+      setNotice(null);
       try {
-        const row = await resendVerification(id);
-        setReady((s) => ({
-          ...s,
-          subscriptions: mergeSubscription(s.subscriptions, row),
-          notice: "Confirmation resent.",
-        }));
+        const row = await resendVerification(current.id);
+        setFlag({ ...current, address: row.address ?? current.address });
+        setNotice("Confirmation resent.");
       } catch (e) {
+        if (handleCommon(e)) return;
         const s = surfaceFor(e);
         if (e instanceof ApiRequestError && s.code === "already_verified") {
-          await load();
+          setFlag({ ...current, state: "active" });
           return;
         }
-        setReady((prev) => ({ ...prev, notice: null, fieldError: s.message }));
+        setFieldError(s.message);
       }
     },
-    [load, setReady],
+    [handleCommon, setFlag],
   );
 
-  const unsubOne = useCallback(
-    async (id: number) => {
+  const unsubscribeFlag = useCallback(
+    async (current: SubscriptionFlag) => {
+      setFieldError(null);
+      setNotice(null);
       try {
-        await deleteSubscription(id);
-        setReady((s) => ({
-          ...s,
-          subscriptions: s.subscriptions.map((row) =>
-            num(row.id) === id ? { ...row, unsubscribedAt: new Date().toISOString() } : row,
-          ),
-        }));
+        await deleteSubscription(current.id);
+        clearFlag();
+        setNotice("You are unsubscribed.");
       } catch (e) {
-        const s = surfaceFor(e);
-        setReady((prev) => ({ ...prev, fieldError: s.message }));
+        if (handleCommon(e)) return;
+        setFieldError(surfaceFor(e).message);
       }
     },
-    [setReady],
+    [clearFlag, handleCommon],
   );
 
-  const resubscribe = useCallback(
-    async (address: string) => {
-      try {
-        const row = await createSubscription(address);
-        setReady((s) => ({ ...s, subscriptions: mergeSubscription(s.subscriptions, row) }));
-      } catch (e) {
-        handleCreateError(e);
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [setReady],
-  );
-
-  if (state.kind === "loading") {
-    return <div className={styles.alertsSignup} data-testid="alerts-loading">Loading…</div>;
-  }
-  if (state.kind === "signedOut") {
-    return (
-      <SignedOut
-        data={data}
-        bundle={bundle}
-        onSignIn={() => {}}
-      />
-    );
-  }
-  if (state.kind === "error") {
-    return (
-      <div className={styles.alertsSignup} data-testid="alerts-error">
-        <p role="alert">{state.message}</p>
-        <button type="button" className={btn.btn} onClick={() => void load()}>Retry</button>
-      </div>
-    );
+  if (signInRequired) {
+    return <SignedOut data={data} bundle={bundle} onSignIn={onSignIn} />;
   }
 
   const cooldownSecs =
-    state.cooldownUntil !== null ? Math.max(0, Math.ceil((state.cooldownUntil - nowMs) / 1000)) : 0;
-
-  const hasActive = state.subscriptions.some(isActive);
-  const showForm = !hasActive || state.addAnotherOpen;
-  const uniqueAddresses = new Set(
-    state.subscriptions.map((s) => (s.address ?? "").toLowerCase()).filter((a) => a !== ""),
-  );
-  const showAlertAddresses = uniqueAddresses.size > 1;
+    cooldownUntil !== null ? Math.max(0, Math.ceil((cooldownUntil - nowMs) / 1000)) : 0;
 
   return (
     <div className={styles.alertsSignup} data-testid="alerts-signed-in">
       {data.heading ? <h2>{data.heading}</h2> : null}
       {data.copy ? <p><Inline text={data.copy} bundle={bundle} /></p> : null}
-      <p className={styles.alertsSignupAccount} data-testid="alerts-account">Account: {state.email}</p>
+      <p className={styles.alertsSignupAccount} data-testid="alerts-account">Account: {email}</p>
 
-      {showForm ? (
+      {closed ? <p data-testid="alerts-closed">{copy.alerts.closed}</p> : null}
+
+      {flag === null && !closed ? (
         <form
           className={styles.alertsSignupForm}
           onSubmit={(e) => {
@@ -333,140 +235,93 @@ function SignedIn({
             <input
               className={field.input}
               type="email"
-              value={state.formAddress}
-              onChange={(e) => setReady((s) => ({ ...s, formAddress: e.target.value }))}
-              aria-invalid={state.fieldError !== null}
-              aria-describedby={state.fieldError !== null ? "alerts-field-error" : undefined}
+              value={formAddress}
+              onChange={(e) => setFormAddress(e.target.value)}
+              aria-invalid={fieldError !== null}
+              aria-describedby={fieldError !== null ? "alerts-field-error" : undefined}
             />
           </label>
-          {state.fieldError !== null ? (
-            <p id="alerts-field-error" role="alert" data-testid="alerts-field-error">
-              {state.fieldError}
-            </p>
-          ) : null}
-          {state.notice !== null ? (
-            <p data-testid="alerts-notice">{state.notice}</p>
-          ) : null}
           <button
             type="submit"
             className={btn.btnFill}
-            disabled={state.submitting || cooldownSecs > 0 || state.formAddress.trim() === ""}
+            disabled={submitting || cooldownSecs > 0 || formAddress.trim() === ""}
             data-testid="alerts-submit"
           >
             {cooldownSecs > 0 ? `Wait ${cooldownSecs}s` : "Subscribe"}
           </button>
         </form>
-      ) : (
-        <>
-          {state.notice !== null ? (
-            <p data-testid="alerts-notice">{state.notice}</p>
-          ) : null}
-          <button
-            type="button"
-            className={styles.alertsSignupAddAnother}
-            onClick={() => setReady((s) => ({ ...s, addAnotherOpen: true, fieldError: null }))}
-            data-testid="alerts-add-another"
-          >
-            Add another address
-          </button>
-        </>
-      )}
+      ) : null}
 
-      <ul className={styles.alertsSignupRows} data-testid="alerts-subscriptions">
-        {state.subscriptions.map((row) => (
+      {fieldError !== null ? (
+        <p id="alerts-field-error" role="alert" data-testid="alerts-field-error">
+          {fieldError}
+        </p>
+      ) : null}
+      {notice !== null ? <p data-testid="alerts-notice">{notice}</p> : null}
+
+      {flag !== null ? (
+        <ul className={styles.alertsSignupRows} data-testid="alerts-subscriptions">
           <SubscriptionRow
-            key={num(row.id)}
-            row={row}
-            onResend={() => void resend(num(row.id))}
-            onUnsubscribe={() => void unsubOne(num(row.id))}
-            onResubscribe={() => void resubscribe(row.address ?? "")}
+            flag={flag}
+            closed={closed}
+            onResend={() => void resend(flag)}
+            onUnsubscribe={() => void unsubscribeFlag(flag)}
           />
-        ))}
-      </ul>
+        </ul>
+      ) : null}
 
-      <AlertsSent
-        alerts={state.alerts}
-        showAddresses={showAlertAddresses}
-      />
+      <AlertsList alerts={alerts} />
     </div>
   );
 }
 
 function SubscriptionRow({
-  row,
+  flag,
+  closed,
   onResend,
   onUnsubscribe,
-  onResubscribe,
 }: {
-  row: Subscription;
+  flag: SubscriptionFlag;
+  closed: boolean;
   onResend: () => void;
   onUnsubscribe: () => void;
-  onResubscribe: () => void;
 }) {
-  const pending = (row.verifiedAt === null || row.verifiedAt === undefined) && (row.unsubscribedAt === null || row.unsubscribedAt === undefined);
-  const unsubscribed = row.unsubscribedAt !== null && row.unsubscribedAt !== undefined;
-  const tone = unsubscribed ? "dim" : pending ? "warn" : "ok";
-  const label = unsubscribed ? "Unsubscribed" : pending ? "Pending, check your email" : "Active";
-  const createdAt = formatEventTime(row.createdAt);
+  const pending = flag.state === "pending";
   return (
-    <li className={styles.alertsSignupRow} data-testid={`subscription-${num(row.id)}`}>
+    <li className={styles.alertsSignupRow} data-testid={`subscription-${flag.id}`}>
       <div className={styles.alertsSignupRowWho}>
-        <span className={styles.alertsSignupRowAddress}>{row.address}</span>
-        {createdAt ? (
-          <span className={styles.alertsSignupRowMeta} data-testid="subscription-created">
-            {createdAt}
-          </span>
-        ) : null}
+        <span className={styles.alertsSignupRowAddress}>{flag.address}</span>
       </div>
-      <StatusPill tone={tone} testId="subscription-state">
-        <span data-testid="subscription-state-label">{label}</span>
+      <StatusPill tone={pending ? "warn" : "ok"} testId="subscription-state">
+        <span data-testid="subscription-state-label">
+          {pending ? copy.alerts.pending : copy.alerts.active}
+        </span>
       </StatusPill>
-      {pending ? (
+      {pending && !closed ? (
         <button
           type="button"
           className={styles.alertsSignupRowAction}
           onClick={onResend}
+          data-testid="subscription-resend"
         >
           Resend confirmation
         </button>
-      ) : !unsubscribed ? (
-        <button
-          type="button"
-          className={styles.alertsSignupRowAction}
-          onClick={onUnsubscribe}
-        >
-          Unsubscribe
-        </button>
-      ) : (
-        <button
-          type="button"
-          className={styles.alertsSignupRowAction}
-          onClick={onResubscribe}
-        >
-          Re-subscribe
-        </button>
-      )}
+      ) : null}
+      <button
+        type="button"
+        className={styles.alertsSignupRowAction}
+        onClick={onUnsubscribe}
+        data-testid="subscription-unsubscribe"
+      >
+        Unsubscribe
+      </button>
     </li>
   );
 }
 
-function AlertsSent({
-  alerts,
-  showAddresses,
-}: {
-  alerts: AlertItem[];
-  showAddresses: boolean;
-}) {
-  const sorted = useMemo(() => {
-    const list = alerts.slice();
-    list.sort((a, b) => {
-      const aa = a.sentAt ?? "";
-      const bb = b.sentAt ?? "";
-      if (aa === bb) return 0;
-      return aa < bb ? 1 : -1;
-    });
-    return list;
-  }, [alerts]);
+function AlertsList({ alerts }: { alerts: SnapshotAlert[] }) {
+  const eventName = useStore((s) => s.snapshot?.event?.name ?? "");
+  const sorted = useMemo(() => sortAlerts(alerts), [alerts]);
   return (
     <section
       className={styles.alertsSignupSent}
@@ -474,16 +329,16 @@ function AlertsSent({
       aria-labelledby="alerts-sent-heading"
     >
       <h3 id="alerts-sent-heading" className={styles.alertsSignupSentHeading}>
-        Alerts sent to you
+        {copy.alerts.listHeading}
       </h3>
       {sorted.length === 0 ? (
         <p className={styles.alertsSignupSentEmpty} data-testid="alerts-sent-empty">
-          No alerts have been sent to you yet.
+          {copy.alerts.empty}
         </p>
       ) : (
         <ul className={styles.alertsSignupSentRows}>
           {sorted.map((row) => (
-            <AlertRow key={num(row.id)} row={row} showAddress={showAddresses} />
+            <AlertRow key={row.id} row={row} eventName={eventName} />
           ))}
         </ul>
       )}
@@ -491,20 +346,13 @@ function AlertsSent({
   );
 }
 
-function AlertRow({
-  row,
-  showAddress,
-}: {
-  row: AlertItem;
-  showAddress: boolean;
-}) {
-  const sentAt = formatEventTime(row.sentAt);
+function AlertRow({ row, eventName }: { row: SnapshotAlert; eventName: string }) {
   const kindLabel = alertKindLabel(row.kind);
   return (
-    <li className={styles.alertsSignupSentRow} data-testid={`alert-${num(row.id)}`}>
+    <li className={styles.alertsSignupSentRow} data-testid={`alert-${row.id}`}>
       <div className={styles.alertsSignupSentHead}>
         <span className={styles.alertsSignupSentWhen} data-testid="alert-sent-at">
-          {sentAt}
+          {formatEventTime(row.createdAt)}
         </span>
         <span
           className={`${styles.alertsSignupSentKind} ${
@@ -518,45 +366,18 @@ function AlertRow({
         </span>
       </div>
       <div className={styles.alertsSignupSentEvent} data-testid="alert-event">
-        {row.eventName ?? ""}
+        {eventName}
       </div>
       <div className={styles.alertsSignupSentSubject} data-testid="alert-subject">
-        {row.subject ?? ""}
+        {row.subject}
       </div>
-      {row.message != null ? (
+      {row.message !== null ? (
         <div className={styles.alertsSignupSentMessage} data-testid="alert-message">
           {row.message}
         </div>
       ) : null}
-      {showAddress && row.address ? (
-        <div className={styles.alertsSignupSentAddress} data-testid="alert-address">
-          {row.address}
-        </div>
-      ) : null}
     </li>
   );
-}
-
-function isActive(row: Subscription): boolean {
-  const verified = row.verifiedAt !== null && row.verifiedAt !== undefined;
-  const unsubscribed = row.unsubscribedAt !== null && row.unsubscribedAt !== undefined;
-  return verified && !unsubscribed;
-}
-
-function mergeSubscription(list: Subscription[], row: Subscription): Subscription[] {
-  const id = num(row.id);
-  const found = list.some((r) => num(r.id) === id);
-  if (found) return list.map((r) => (num(r.id) === id ? row : r));
-  return [...list, row];
-}
-
-function num(v: number | string | null | undefined): number {
-  if (typeof v === "number") return v;
-  if (typeof v === "string") {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : 0;
-  }
-  return 0;
 }
 
 export default AlertsSignup;

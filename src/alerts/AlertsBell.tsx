@@ -1,15 +1,15 @@
 // docs/site.md section 7.7, Alerts bell. The header's alerts button,
-// shown only while signed in and when the visitor holds an active
-// subscription or has been sent an alert. A notification bell glyph with
+// shown for every visitor, signed in or not, whenever the snapshot has an
+// event, and hidden while `event` is null. A notification bell glyph with
 // a plain round red badge counting the unread alerts ("9+" past nine); the bell
 // swings once when the count rises while it is on screen. It opens the alerts dialog only when pressed; opening
 // marks every alert seen, so the badge clears, while the dialog keeps its
 // New markers until it closes.
 
 import { useEffect, useRef, useState } from "react";
-import { useAuth } from "../auth/AuthProvider";
 import { useReducedMotion } from "../lib/motion";
 import { copy } from "../copy/copy";
+import { useStore } from "../store/useStore";
 import { useAlerts } from "./AlertsProvider";
 import { AlertsDialog } from "./AlertsDialog";
 import * as styles from "./Alerts.module.css";
@@ -19,13 +19,13 @@ import * as styles from "./Alerts.module.css";
 const SWING_MS = 700;
 
 export function AlertsBell({ className }: { className?: string }) {
-  const { state: auth } = useAuth();
-  const { alerts, subscribed, unreadCount, seenId, markSeen } = useAlerts();
+  const { alerts, unreadCount, seenId, markSeen } = useAlerts();
+  const eventName = useStore((s) => (s.snapshot?.event ? (s.snapshot.event.name ?? "") : null));
   const reducedMotion = useReducedMotion();
   // The seen mark held when the dialog opened; null while it is closed.
   const [openedWith, setOpenedWith] = useState<{ seenId: number | null } | null>(null);
   const [swinging, setSwinging] = useState(false);
-  const visible = auth.status === "signedIn" && (subscribed || alerts.length > 0);
+  const visible = eventName !== null;
   // The count and visibility the bell last rendered with: a rise swings
   // only a bell that was already on screen, not one appearing with it.
   const lastRef = useRef({ count: unreadCount, visible });
@@ -77,6 +77,7 @@ export function AlertsBell({ className }: { className?: string }) {
       {openedWith !== null ? (
         <AlertsDialog
           alerts={alerts}
+          eventName={eventName ?? ""}
           seenId={openedWith.seenId}
           onClose={() => setOpenedWith(null)}
         />

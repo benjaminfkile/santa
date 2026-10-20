@@ -5,7 +5,7 @@
 // drawn, only the accessible name; the links come first in the actions row,
 // before sign-in, the bell, the theme toggle, and the menu button.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { act, cleanup, render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { readFileSync } from "node:fs";
@@ -16,13 +16,6 @@ import { AlertsProvider } from "../../../src/alerts/AlertsProvider";
 import { store } from "../../../src/store/useStore";
 import { initialStore } from "../../../src/store/types";
 import type { ContentDocument, Link } from "../../../src/contracts";
-
-vi.mock("../../../src/api/subscriptions", () => ({
-  listMySubscriptions: vi.fn(),
-  listAlerts: vi.fn(),
-}));
-
-import * as subsApi from "../../../src/api/subscriptions";
 
 const THREE_LINKS: Link[] = [
   { label: "Facebook", href: "https://facebook.example/flyover", icon: { source: "library", id: "facebook" }, newTab: true },
@@ -69,7 +62,7 @@ function seed(content: ContentDocument) {
   act(() => {
     store.setState({
       ...initialStore,
-      snapshot: { schemaVersion: 1, content: content as unknown, media: MEDIA, icons: {}, event: { statusId: 1 } },
+      snapshot: { schemaVersion: 1, content: content as unknown, media: MEDIA, icons: {}, event: { statusId: 1, alerts: [] } },
       snapshotUrl: "https://cdn/snap.json",
     } as never);
   });
@@ -91,11 +84,6 @@ function renderShell(auth: AuthState = { status: "signedOut" }) {
 
 const css = (): string =>
   readFileSync(resolve(__dirname, "..", "..", "..", "src", "app", "Shell.module.css"), "utf8");
-
-beforeEach(() => {
-  vi.mocked(subsApi.listMySubscriptions).mockReset();
-  vi.mocked(subsApi.listAlerts).mockReset();
-});
 
 afterEach(() => {
   cleanup();
@@ -179,19 +167,6 @@ describe("Header links", () => {
   });
 
   it("comes first in the actions row: header links, sign-in, bell, theme, menu", async () => {
-    vi.mocked(subsApi.listMySubscriptions).mockResolvedValue({
-      items: [
-        {
-          id: 1,
-          channel: "email",
-          address: "p@example.com",
-          verifiedAt: "2026-09-01T00:00:00Z",
-          unsubscribedAt: null,
-          createdAt: "2026-09-01T00:00:00Z",
-        },
-      ],
-    } as never);
-    vi.mocked(subsApi.listAlerts).mockResolvedValue({ items: [] } as never);
     seed(makeContent(THREE_LINKS));
     const { findByTestId, getAllByTestId, getByTestId, getByLabelText } = renderShell({
       status: "signedIn",

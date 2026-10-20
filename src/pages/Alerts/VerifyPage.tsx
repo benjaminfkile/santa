@@ -1,11 +1,14 @@
 // docs/site.md section 13.2. /alerts/verify?token=wsv_...: POST on mount
 // with a JSON body; reads token from the query string; validates the
-// token shape client-side.
+// token shape client-side. On `200` a pending subscription flag becomes
+// active: the token does not name its address, and the browser holds at
+// most one flag, so the pending flag is the address the link confirms.
 
 import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { verifySubscription } from "../../api/subscriptions";
 import { ApiRequestError } from "../../api/errors";
+import { useSubscription } from "../../alerts/SubscriptionProvider";
 import * as btn from "../../ui/Button.module.css";
 
 const TOKEN_RE = /^wsv_[A-Za-z0-9_-]{43}$/;
@@ -22,6 +25,7 @@ export function VerifyPage() {
   const token = params.get("token") ?? "";
   const validToken = TOKEN_RE.test(token);
   const [state, setState] = useState<State>({ kind: "idle" });
+  const { flag, setFlag } = useSubscription();
 
   const run = useCallback(async () => {
     if (!validToken) return;
@@ -41,6 +45,12 @@ export function VerifyPage() {
   useEffect(() => {
     void run();
   }, [run]);
+
+  // After a `200` the pending flag, when there is one, becomes active.
+  const confirmed = state.kind === "success";
+  useEffect(() => {
+    if (confirmed && flag !== null && flag.state === "pending") setFlag({ ...flag, state: "active" });
+  }, [confirmed, flag, setFlag]);
 
   if (!validToken) {
     return (

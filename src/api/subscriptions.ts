@@ -1,24 +1,15 @@
-// docs/site.md sections 13 and 12. Alerts subscription API wrappers.
+// docs/site.md sections 13 and 12. Alerts subscription API wrappers. The
+// alerts themselves ride in the snapshot (`snapshot.event.alerts`), so
+// nothing here reads them.
 
 import { api } from "./client";
 import type { components } from "../contracts";
 
-export type Me = components["schemas"]["MeResponse"];
 export type Subscription = components["schemas"]["SubscriptionDto"];
 export type Subscriptions = components["schemas"]["ItemsResponseOfSubscriptionDto"];
-export type AlertItem = components["schemas"]["AlertItemDto"];
-export type Alerts = components["schemas"]["ItemsResponseOfAlertItemDto"];
-
-export function getMe(): Promise<Me> {
-  return api<Me>("/me", { method: "GET", auth: true });
-}
 
 export function listMySubscriptions(): Promise<Subscriptions> {
   return api<Subscriptions>("/me/subscriptions", { method: "GET", auth: true });
-}
-
-export function listAlerts(): Promise<Alerts> {
-  return api<Alerts>("/me/alerts", { method: "GET", auth: true });
 }
 
 export function createSubscription(address: string): Promise<Subscription> {

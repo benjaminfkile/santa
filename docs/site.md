@@ -247,7 +247,7 @@ Menu entries come from `content/nav.ts`: the home entry (`settings.homeNavLabel`
 
 ### 5.1 Shape
 
-The store holds exactly the contract's `Store` (contracts 1.9) plus a `diag` object for connectivity indicators. Nothing in `diag` influences which screen renders.
+The store holds exactly the contract's `Store` (contracts 1.9) plus a `diag` object for connectivity indicators. Nothing in `diag` influences which screen renders. The store carries nothing for alerts beyond the snapshot itself: the alerts list is `snapshot.event.alerts` and the sign-up switch `snapshot.subscriptionsOpen` (contracts 1.3), and the subscription flag (7.7) lives in `localStorage` outside the store.
 
 ```ts
 // src/store/types.ts
@@ -469,6 +469,7 @@ export function pollCadenceMs(s: SiteStore, now: number): number {
 1. `diag.firstLoadStartedAt = performance.now()`. `GET LIVE_URL`. On failure (network error, non-2xx, unparsable JSON) retry after 1 s, 2 s, 3 s, then every 5 s forever. The loading screen renders until the first success.
 2. Apply the object (5.3). When `snapshotUrlChanged`, fetch the snapshot (6.5); the snapshot carries the flight history, so nothing else is fetched.
 3. Dynamically import the hub module and start the connection (6.3). Arm the poll timer (6.4). Register the `visibilitychange`, `online`, and `offline` listeners (6.6).
+4. After the first live object applies, once per page load: when `useAuth()` is `signedIn` and the subscription flag's `account` (7.7) is the signed-in email, `SubscriptionProvider` calls `GET /me/subscriptions` once and rewrites the flag from the newest row that is not unsubscribed (verified: `active`; unverified: `pending`), clearing it when there is none. `SignInRequired` or any failure leaves the flag as it was. No flag, or signed out: no call. Route changes and later live objects never call again. Signing in during the session to an account with a flag for it runs the same check once for that account. This is the only API call the site makes on its own.
 
 ### 6.2 CDN fetches
 
@@ -684,7 +685,7 @@ Content kinds read `data`, `items`, and the bundle only. Live kinds read the sto
 | `sponsor_grid` | `snapshot.sponsors`, `bundle.media` | Every sponsor in snapshot order (pinned first, then largest gift first; the site never re-sorts) as equal cards in one responsive grid: `repeat(auto-fill, minmax(280px, 1fr))` with a 16 px gap below 1100 px and `repeat(auto-fill, minmax(340px, 1fr))` from 1100 px, which gives three columns from 1024 px to 1099 px, two down to about 640 px, and one below, and from 1100 px three columns only where the grid is at least 1052 px wide (3 x 340 plus two 16 px gaps), else two; every card the same height in its row (`align-items: stretch`, the grid's implicit rows). A card is the sponsor's name as its heading at the top, the logo large and centred in a fixed 3:2 box (the 480 variant through `Media`, `object-fit: contain`, the name as large text when `logoMediaId` is null), then a bottom row with "Sponsor for N years" at the left when `showYears` and the link icons at the right (globe for `websiteUrl`, Facebook for `fbUrl`, Instagram for `igUrl`, each an `<a>` with its `aria-label` and `rel="noopener"`, only when non-null). The whole card is a link to `websiteUrl ?? fbUrl ?? igUrl` (new tab) when any is set, with the icons as separate links above it in the tab order; otherwise a plain card. The frost card recipe of 7.7, no tiers, no amounts, nothing that hints at a gift's size; `emptyText` when none |
 | `route_preview` | `snapshot.routeMap`, `snapshot.routeMapConfig`, `snapshot.routeView`, `snapshot.trackerThemes`, `content.settings.landmarks` | The heading, `data.disclaimer` above the map when set, and the route map of 8.9: the site route's `routeMap.path` (contracts 1.3, top-level keys present whether or not an event is current) drawn by the map host in route mode over `snapshot.routeView.map` (MapLibre) or over Google Maps when the renderer choice of 8.1 lands there, locked to `snapshot.routeView.bbox`, in a frame `--route-preview-max-h` (`min(70vh, 720px)`) tall at the section's width, with a fullscreen button and a terrain toggle on the map unless `routeMapConfig.controls.fullscreen` or `routeMapConfig.controls.terrain` is false (absent or null means true). It reads nothing from `snapshot.event`, so it renders the same way in the off season (`event` null), showing last season's route. When `routeMap` is null (the site settings name no route, or it cannot be read) or its path has fewer than two points, or the map fails after the fallbacks of 8.9, it renders the heading and `emptyText`, never a picture, and nothing when `emptyText` is empty. The section data is the heading, the disclaimer, and `emptyText`; a `style` key in an older published document is ignored |
 | `cookie_control` | auth, `live.eventStatusId`, `snapshot.cookieTypes` | Section 10; `closedCopy` outside status 3; `signedOutCopy` with a sign-in link when signed out |
-| `alerts_signup` | auth, `GET /me`, `GET /me/subscriptions` | Section 13; `signedOutCopy` with a sign-in link (`returnTo` the current path) when signed out |
+| `alerts_signup` | auth, the subscription flag (7.7), `snapshot.event.alerts`, `snapshot.subscriptionsOpen` | Section 13; no API call on mount; `signedOutCopy` with a sign-in link (`returnTo` the current path) when signed out |
 | `contact_form` | `settings.contactEmail` | Section 14 |
 
 Headings: every kind with a `heading` renders it as `<h2>` when non-null. Copy fields (`copy`, `caption`, `emptyText`, and the rest) are `Inline`.
@@ -742,7 +743,25 @@ Data row units: speed as mph from `speedMps`, heading as degrees plus cardinal f
 
 **No sideways scroll.** From 320 px up no page scrolls horizontally, without an `overflow-x` rule on `html` or `body`: the header's actions never shrink and the brand is the part that gives up width (the logo scales down in its box; the site name never wraps: the shell measures it on one line at every header resize and, when it would not fit, hides it (`data-fit="no"`) so the logo stands alone, the link keeping the site name as its accessible name); the page's `<main>` breaks a word longer than its line (`overflow-wrap: break-word`), and the flex rows of the rich text and links blocks (headings with an icon, icon list items, link buttons, list links) let a long word break inside the row (`min-width: 0`, `overflow-wrap: anywhere`) rather than run past the card. The e2e suite checks `scrollWidth` against the viewport at 320, 375, and 390 px on every ordinary page (22.2).
 
-**Alerts bell.** `AlertsProvider` (`src/alerts/AlertsProvider.tsx`, mounted by `App` inside `AuthProvider` around the shell) exposes `useAlerts()` with `{ alerts, subscribed, unreadCount, markSeen }`. While `useAuth()` is `signedIn` it fetches `GET /me/subscriptions` and `GET /me/alerts` in parallel: once per sign-in, again when the document becomes visible after at least five minutes hidden, and once 60 seconds after the store's `snapshotUrl` changes (a status change or a posted message is what produces alerts, and the outbox sends within a minute; a further change inside the wait restarts it). A live poll or any other store update never fetches. Nothing is fetched while signed out, and signing out clears both lists. A failure or `SignInRequired` never throws: the lists stay as they were, empty until a fetch succeeds. `subscribed` is true when a subscription has `verifiedAt` set and `unsubscribedAt` null. Unread alerts are those with an id greater than the number stored under `localStorage["wmsfo.alerts.seen"]` (read through `storageGet`; absent means every alert is unread), and `markSeen` stores the newest alert id there. The `alerts_signup` section (13.1) keeps its own fetches. `AlertsBell` sits in the header actions between the sign-in control and the `ThemePicker`, at every width, and renders only while signed in and when `subscribed` is true or `alerts` is not empty. It is a 44 px icon button on the `.themeToggle` recipe (`data-testid="alerts-bell"`, `aria-label` "Alerts", or "Alerts, 2 new" while there are unread alerts) drawing `BellGlyph` (`data-testid="alerts-bell-glyph"`), a classic notification bell outline (the dome with its lip and a small clapper below) in the house stroke (24 px grid, 1.75 px, round caps and joins, `currentColor`) at 20 px. While `unreadCount` is above zero a plain round count badge overlaps the bell's top right: 16 px at the least, filled `--err`, the count in white through the `--icon-snow` fill variable (defined in the token file), "9+" past nine. When `unreadCount` rises while the bell is on screen it swings once (the `bellSwing` keyframe, a 700 ms rotation about the glyph's top). The bell never opens on its own; pressing it opens `AlertsDialog` on the shared dialog recipe (`<dialog>` with `showModal`, closing on a backdrop press, Escape, the close X, and Close; 600 px wide on desktop, the full width less 16 px a side on a phone, and at most 80 percent of the viewport tall, with the head and the Close row staying put while only the rows scroll in the recipe's `.scroll` region): the title "Your alerts" with a close X at the head's end (`copy.alerts.close` as its `aria-label`, `data-testid="alerts-dialog-close-x"`, on the icon button recipe, closing as Close does), the alerts newest first, each with `sentAt` in the viewer's timezone, the event name, the subject line, the alert's `message` under it when non-null (the event message's body, or the message that came with a status alert, at full length in `--text-dim` with line breaks kept; nothing when null), the kind label of 13.1 (an `event_message` alert reads "update", an `event_status` alert "status", through the same `alertKindLabel`), and a "New" marker on each one unread when the dialog opened; "No alerts have been sent to you yet" when there are none; and a footer with Close alone (the dialog carries no link to the alerts form). Opening calls `markSeen`, so the badge clears at once, while the "New" markers stay until the dialog closes. At 320 px the actions row holds the header links, the bell, the theme toggle, and the menu button (the Sign in and Sign out buttons hide at 760 px and below); the brand gives way as above, so no page scrolls sideways. Email is unchanged: subscribers keep receiving status alerts and event messages by email, and the bell lists exactly the alerts `GET /me/alerts` reports as sent.
+**Alerts bell.** `AlertsProvider` (`src/alerts/AlertsProvider.tsx`, mounted by `App` inside `SubscriptionProvider` around the shell) exposes `useAlerts()` with `{ alerts, unreadCount, seenId, markSeen }`. It reads `snapshot.event.alerts` from the store (contracts 1.3: the current event's alerts, the same for every visitor, newest first, at most 50) and makes no API call, ever; a new snapshot brings new alerts. Unread alerts are those with an id greater than the number stored under `localStorage["wmsfo.alerts.seenId"]` (read through `storageGet`; absent means every alert is unread), and `markSeen` stores the newest alert id there. The ids are the snapshot alerts' `id`; the old key `wmsfo.alerts.seen` held ids of another id space and is removed on the first read. `AlertsBell` sits in the header actions between the sign-in control and the `ThemePicker`, at every width, and renders for every visitor, signed in or not, whenever the snapshot has an event; it is hidden while `event` is null. It is a 44 px icon button on the `.themeToggle` recipe (`data-testid="alerts-bell"`, `aria-label` "Alerts", or "Alerts, 2 new" while there are unread alerts) drawing `BellGlyph` (`data-testid="alerts-bell-glyph"`), a classic notification bell outline (the dome with its lip and a small clapper below) in the house stroke (24 px grid, 1.75 px, round caps and joins, `currentColor`) at 20 px. While `unreadCount` is above zero a plain round count badge overlaps the bell's top right: 16 px at the least, filled `--err`, the count in white through the `--icon-snow` fill variable (defined in the token file), "9+" past nine. When `unreadCount` rises while the bell is on screen it swings once (the `bellSwing` keyframe, a 700 ms rotation about the glyph's top). The bell never opens on its own; pressing it opens `AlertsDialog` on the shared dialog recipe (`<dialog>` with `showModal`, closing on a backdrop press, Escape, the close X, and Close; 600 px wide on desktop, the full width less 16 px a side on a phone, and at most 80 percent of the viewport tall, with the head and the Close row staying put while only the rows scroll in the recipe's `.scroll` region): the title "Your alerts" with a close X at the head's end (`copy.alerts.close` as its `aria-label`, `data-testid="alerts-dialog-close-x"`, on the icon button recipe, closing as Close does), the snapshot's alerts newest first (`sortAlerts`: `createdAt`, then id), each with `createdAt` in the viewer's timezone, the event name from `snapshot.event.name`, the `subject`, the alert's `message` under it when non-null (the event message's body, at full length in `--text-dim` with line breaks kept; nothing when null), the kind label of 13.1 (an `event_message` alert reads "update", an `event_status` alert "status", through the same `alertKindLabel`), and a "New" marker on each one unread when the dialog opened; "No alerts yet" when the list is empty; and a footer with Close alone (the dialog carries no link to the alerts form). Opening calls `markSeen`, so the badge clears at once, while the "New" markers stay until the dialog closes. At 320 px the actions row holds the header links, the bell, the theme toggle, and the menu button (the Sign in and Sign out buttons hide at 760 px and below); the brand gives way as above, so no page scrolls sideways. Email is unchanged: subscribers keep receiving status alerts and event messages by email; a subscription only decides who gets the email, and the bell lists the same alerts for everyone.
+
+**The subscription flag.** `src/alerts/subscriptionFlag.ts` keeps the one alerts subscription this browser knows of under `localStorage["wmsfo.alerts.subscription"]` as `{ account, id, address, state }` (`state` `"pending"` or `"active"`), through `storageGet` and `storageSet`, or nothing; a stored value of any other shape reads as no flag. `SubscriptionProvider` (`src/alerts/SubscriptionProvider.tsx`, mounted by `App` inside `AuthProvider`) holds it and exposes `useSubscription()` with `{ flag, setFlag, clearFlag }`. The site holds one address per account. Writes and clears:
+
+| Event | Flag |
+|---|---|
+| `201` from `POST /me/subscriptions` | Written for the signed-in account: `pending` when `verifiedAt` is null, `active` otherwise |
+| `200` from `POST /me/subscriptions` (the pending re-POST) | Written as for `201` |
+| `202` from resend | Rewritten with its state unchanged |
+| `409 already_verified` from resend | Rewritten as `active` (13.1) |
+| `200` on the verify page (13.2) with a pending flag | Becomes `active`; the token does not name its address, so the pending flag this browser holds is taken as the one confirmed |
+| `409 already_subscribed`, `409 address_taken`, `409 subscriptions_closed` | Not written |
+| `204` from `DELETE /me/subscriptions/{id}` | Cleared |
+| `204` on the unsubscribe page (13.3) | Cleared |
+| Sign-out (the auth state `signedOut`) | Cleared |
+| A signed-in account that is not the flag's `account` | Cleared |
+| The check of 6.1 step 4 | Rewritten from the newest row that is not unsubscribed, or cleared when there is none |
+
+The flag is never sent anywhere; it only decides what the alerts page (13.1) shows and whether the check of 6.1 step 4 runs.
 
 **Header actions.** The header actions compose the recipes of 7.3: the Sign in and Sign out buttons (`.signIn`) and the header links (`.headerLink`) compose `.btn`, the theme toggle, the alerts bell, and the menu button (`.themeToggle`, `.menuButton`) compose the icon button, the preview banner's exit button (`.bannerAction`) composes the pill recipe in the accent tone as a 44 px button (its tint mixed over the panel so it reads on the accent banner), the theme menu is a `--radius-md` popover whose options keep the accent wash on hover, and the sponsor dialog's Visit and Close compose `.btnFill` and `.btnQuiet`.
 
@@ -1149,7 +1168,7 @@ type AuthState =
   | { status: "signedIn"; email: string; expired: boolean };
 ```
 
-`AuthProvider` reads `session.current()` at mount (loading the chunk only when a session is stored), subscribes to `session` changes (sign-in, refresh, sign-out, refresh failure), and exposes `useAuth()` with the state plus `signIn(returnTo)` (navigates to `/auth/sign-in?returnTo=`) and `signOut()`. Every public page works in `signedOut`; nothing blocks on `unknown` except the alerts page content and the cookie control, which render their signed-out variants until `signedIn` arrives. Sign-out: `cognito.revoke()` best effort, `session.clear()`, state `signedOut`, stay on the current page.
+`AuthProvider` reads `session.current()` at mount (loading the chunk only when a session is stored), subscribes to `session` changes (sign-in, refresh, sign-out, refresh failure), and exposes `useAuth()` with the state plus `signIn(returnTo)` (navigates to `/auth/sign-in?returnTo=`) and `signOut()`. Every public page works in `signedOut`; nothing blocks on `unknown` except the alerts page content and the cookie control, which render their signed-out variants until `signedIn` arrives. The signed-in `email` is the id token's `email` claim; the alerts page shows it as the account and prefills its form with it, and the subscription flag (7.7) records it as the flag's `account`. Sign-out: `cognito.revoke()` best effort, `session.clear()`, state `signedOut` (which clears the subscription flag), stay on the current page.
 
 ### 11.4 Bearer for API calls
 
@@ -1203,9 +1222,7 @@ Endpoints the site calls, and nothing else:
 
 | Call | Auth | Used by |
 |---|---|---|
-| `GET /me` | bearer | Alerts page (email shown as the account) |
-| `GET /me/subscriptions` | bearer | Alerts page; the shell's alerts bell (7.7) |
-| `GET /me/alerts` | bearer | Alerts page; the shell's alerts bell (7.7) |
+| `GET /me/subscriptions` | bearer | `SubscriptionProvider`, once per app load with a matching flag (6.1 step 4) |
 | `POST /me/subscriptions` | bearer | Alerts page |
 | `POST /me/subscriptions/{id}/resend-verification` | bearer | Alerts page |
 | `DELETE /me/subscriptions/{id}` | bearer | Alerts page |
@@ -1215,7 +1232,7 @@ Endpoints the site calls, and nothing else:
 | `POST /subscriptions/unsubscribe` | none (JSON body form) | `/alerts/unsubscribe` |
 | `POST /contact` | none | Contact page |
 
-The site settings come from the content document in the snapshot, not from a call: among them `settings.headerLinks` (contracts 52, up to three `Link` values) feeds the header links of 7.7.
+There is no `GET /me` and no alerts fetch: the alerts are `snapshot.event.alerts` (7.7) and the account email is the id token's (11.3). `409 subscriptions_closed` maps to `copy.alerts.closed`. The site settings come from the content document in the snapshot, not from a call: among them `settings.headerLinks` (contracts 52, up to three `Link` values) feeds the header links of 7.7.
 
 ---
 
@@ -1223,23 +1240,25 @@ The site settings come from the content document in the snapshot, not from a cal
 
 ### 13.1 The `alerts_signup` section (signed in)
 
-On mount: `GET /me` and `GET /me/subscriptions` in parallel, once per sign-in; a live poll re-renders the page but never refetches these. Renders:
+The section makes no API call on mount; a live poll or a new snapshot re-renders it and never calls. Renders:
 
-- The account email from `person.email`.
-- A form: address (prefilled with the account email, editable), submit `POST /me/subscriptions { channel: "email", address }`. The site trims the address; the API lowercases it.
-- The form is shown when no subscription is active (none with `verifiedAt` set and `unsubscribedAt` null); otherwise it sits behind an "Add another address" link that reveals it, so a verified person is not offered "subscribe" again.
-- The list of `Subscription` rows: `address`, state (`verifiedAt` null: "Pending, check your email"; `unsubscribedAt` set: "Unsubscribed"; otherwise "Active"), `createdAt`.
-- **Alerts sent to you**: `GET /me/alerts` (fetched with the other two on mount), the `AlertItem` rows newest first as a list: `sentAt` in the viewer's timezone, the event name, the subject line, the alert's `message` under it when non-null (body text at full length in `--text-dim`, one step quieter than the subject, line breaks kept through `white-space: pre-line`; nothing when null), a small kind label (`alertKindLabel` in `src/alerts/alertKind.ts`: the contract's `kind` `"event_message"` reads "update", `"event_status"` and any other kind read "status") and the address it went to when the person has more than one; "No alerts have been sent to you yet" when empty. Nothing here is a form. Actions per row: **Resend confirmation** when `verifiedAt` is null and `unsubscribedAt` is null (`POST .../resend-verification`, `202`), **Unsubscribe** when `unsubscribedAt` is null (`DELETE`, `204`), **Re-subscribe** when `unsubscribedAt` is set (`POST /me/subscriptions` with the same address, which re-activates the row).
-- `data.copy` above the form (the editor's explanation of what alerts are sent).
+- `data.copy` (the editor's explanation of what alerts are sent), then the account line from `useAuth()`'s `email` (the id token's `email` claim, 11.3).
+- With a subscription flag for this account (7.7): the one subscription as a row: `address`, the state ("Pending, check your email" for `pending`, "Active" for `active`), **Resend confirmation** while pending (`POST /me/subscriptions/{id}/resend-verification`, `202`), and **Unsubscribe** (`DELETE /me/subscriptions/{id}`, `204`). There is no "Add another address": the site holds one address per account.
+- Without a flag: the subscribe form: address (prefilled with the account email, editable), submit `POST /me/subscriptions { channel: "email", address }`. The site trims the address; the API lowercases it.
+- **Closed.** While `snapshot.subscriptionsOpen` is false, or after a `409 subscriptions_closed` from the form or from Resend, `copy.alerts.closed` ("New alert sign-ups are closed for now", `data-testid="alerts-closed"`) stands in place of the form, and Resend is not offered; Unsubscribe stays on an existing flag.
+- **Recent alerts**: the snapshot's alerts (`snapshot.event.alerts`) as in the dialog of 7.7, newest first: `createdAt` in the viewer's timezone, the event name from `snapshot.event.name`, the `subject`, the alert's `message` under it when non-null (body text at full length in `--text-dim`, one step quieter than the subject, line breaks kept through `white-space: pre-line`; nothing when null), and a small kind label (`alertKindLabel` in `src/alerts/alertKind.ts`: the contract's `kind` `"event_message"` reads "update", `"event_status"` and any other kind read "status"); "No alerts yet" when the list is empty. Nothing here is a form.
 
 | Response | Handling |
 |---|---|
-| `201` with `verifiedAt` null | Row added as Pending; copy says a confirmation email is on its way |
-| `201` with `verifiedAt` set | Row added as Active (re-activation) |
-| `200` (pending re-POST) | Row unchanged; copy says the confirmation was already sent, offers Resend |
-| `409 address_taken` | Field error: that address is attached to a different account |
-| `409 already_subscribed` | Field error: already receiving alerts at that address |
-| `409 already_verified` (resend) | Refresh the list; the row is Active |
+| `201` with `verifiedAt` null | Flag written as `pending`; the row shows Pending; copy says a confirmation email is on its way |
+| `201` with `verifiedAt` set | Flag written as `active` (re-activation); the row shows Active |
+| `200` (pending re-POST) | Flag written as `pending`; the row offers Resend |
+| `202` (resend) | Flag rewritten with its state unchanged; copy says the confirmation was resent |
+| `204` (unsubscribe) | Flag cleared; the form returns |
+| `409 address_taken` | Field error: that address is attached to a different account; no flag |
+| `409 already_subscribed` | Field error: already receiving alerts at that address; no flag |
+| `409 already_verified` (resend) | Flag rewritten as `active`; the row is Active |
+| `409 subscriptions_closed` | `copy.alerts.closed` in place of the form; no flag written |
 | `400 validation_failed` | Field error from `details.fields.address` |
 | `429 rate_limited` | Disable the form for `retryAfterSeconds` |
 | `SignInRequired` | Render the signed-out variant |
@@ -1252,7 +1271,7 @@ On mount, read `token`; when absent or not matching `^wsv_[A-Za-z0-9_-]{43}$` re
 
 | Response | Renders |
 |---|---|
-| `200 { verifiedAt }` | "Your alerts are confirmed" (idempotent for an already verified row) |
+| `200 { verifiedAt }` | "Your alerts are confirmed" (idempotent for an already verified row); a pending subscription flag (7.7) becomes `active` |
 | `404 not_found` | "This link has expired or is not valid", with a link to `/` |
 | `400` or other | Same as `404` |
 | Network | "Could not reach the server" with a Retry button |
@@ -1263,7 +1282,7 @@ Same shape with `^wsu_[A-Za-z0-9_-]{43}$`; `POST /subscriptions/unsubscribe { to
 
 | Response | Renders |
 |---|---|
-| `204` | "You are unsubscribed" plus a link to `/` |
+| `204` | "You are unsubscribed" plus a link to `/`; the subscription flag (7.7) is cleared |
 | `404 not_found` | "This link is not valid" |
 | Network | Retry button |
 
@@ -1539,7 +1558,10 @@ Fixtures come from the vendored `contracts/fixtures/*.json`; schema validation o
 | `Countdown`, `EventTimes` | countdown format and hide at zero, nothing outside status 2; each field shown only when present; `airborneFor` ticks; formatting in the viewer's timezone |
 | `time`, `units` | `formatElapsed`, `formatCountdown`, `mpsToMph`, feet under a mile and miles over, heading to cardinal |
 | `CookieControl` | each response row in section 10 |
-| `AlertsSignup`, `VerifyPage`, `UnsubscribePage` | each response row in section 13; token regex gate; post on mount; the form hidden behind the link while a subscription is active; the sent-alerts list and its empty state |
+| `AlertsSignup`, `VerifyPage`, `UnsubscribePage` | each response row in section 13 with the flag written or cleared per row; token regex gate; post on mount; no API call on mount of the alerts section; the flag's row in place of the form, and no "Add another address"; the closed copy from `snapshot.subscriptionsOpen` and from `409 subscriptions_closed`, Unsubscribe kept; the snapshot's alerts and "No alerts yet" |
+| `AlertsBell` | shown for a signed-out visitor whenever the snapshot has an event, hidden with `event` null; the dialog from `snapshot.event.alerts` (newest first, the event name, the message, the kind label, the New markers); unread by the snapshot alert id under `wmsfo.alerts.seenId` and the removal of `wmsfo.alerts.seen`; no API call |
+| `SubscriptionProvider` | `GET /me/subscriptions` called once after the first live object with a flag of the signed-in account, never without a flag, never signed out, never on a route change; the rewrite from the newest row that is not unsubscribed and the clear with none; SignInRequired and failures leave the flag; the clears on sign-out and on another account; once on a sign-in during the session |
+| `api/subscriptions` | no `getMe` and no `listAlerts` |
 | `SponsorGrid` | equal cards in one grid, name heading, logo box or name text, the bottom row's years line and icon links, the whole-card link rule |
 | `OrnamentsLayer` | five ornaments with the setting on and the page not live, none otherwise; token classes; the ornaments sway under a matchMedia that reports reduced motion |
 | `renderer` | `pickRenderer` on each combination of map, enabled MapLibre theme, and probe answer; the probe caches its answer for the page; one `map_renderer` event per page with `surface`, `renderer`, and `reason` |
@@ -1559,7 +1581,7 @@ Fixtures come from the vendored `contracts/fixtures/*.json`; schema validation o
 
 ### 22.2 Playwright against the preview site
 
-Configuration: `baseURL = https://<preview-site-domain>`, Chromium desktop and Pixel 7 emulation, `E2E_API_BASE_URL` (the dev API), `E2E_CDN_BASE_URL`, and the secrets below from the `dev` GitHub environment. The harness refuses to run when `E2E_API_BASE_URL` does not contain `dev`, when `GET /me` for the admin token reports `isAdmin: false`, or when any event in `GET /admin/events` has `statusId` 3 at start. When `E2E_BASE_URL` is set and is not `localhost`, Playwright runs at `workers: 1` with `fullyParallel: false`: the status walk and the home state screenshots drive the same dev event and must not run at once, and the deployed site sits behind a bot checkpoint that answers `403` with a challenge page when one address opens many pages at once. The home state screenshots cover planned, scheduled, live, ended, cancelled, and postponed; the off-season home is not captured, because no admin call leaves dev without a current event.
+Configuration: `baseURL = https://<preview-site-domain>`, Chromium desktop and Pixel 7 emulation, `E2E_API_BASE_URL` (the dev API), `E2E_CDN_BASE_URL`, and the secrets below from the `dev` GitHub environment. The harness refuses to run when `E2E_API_BASE_URL` does not contain `dev`, when `GET /admin/events` answers `403` for the admin token, or when any event in it has `statusId` 3 at start. When `E2E_BASE_URL` is set and is not `localhost`, Playwright runs at `workers: 1` with `fullyParallel: false`: the status walk and the home state screenshots drive the same dev event and must not run at once, and the deployed site sits behind a bot checkpoint that answers `403` with a challenge page when one address opens many pages at once. The home state screenshots cover planned, scheduled, live, ended, cancelled, and postponed; the off-season home is not captured, because no admin call leaves dev without a current event.
 
 Global setup (`tests/e2e/globalSetup.ts`, wired through the config's `globalSetup`): when `E2E_ADMIN_ID_TOKEN` is unset and the required Cognito variables are present, mints one ID token through `getAdminIdToken()` and stores it in `process.env.E2E_ADMIN_ID_TOKEN` so every worker inherits the same token. TOTP codes are single use, so each worker minting its own token inside the same 30 second step gets `ExpiredCodeException` from Cognito. When the variables are absent (a `--list` run, a unit run) it does nothing.
 

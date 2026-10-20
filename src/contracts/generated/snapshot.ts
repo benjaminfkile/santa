@@ -28,6 +28,15 @@ export interface Snapshot {
       body?: string;
       createdAt?: string;
     } | null;
+    alerts: {
+      id: number;
+      kind: string;
+      statusId: number | null;
+      messageId: number | null;
+      subject: string;
+      message: string | null;
+      createdAt: string;
+    }[];
     trackerBbox: {
       west?: number;
       south?: number;
@@ -187,6 +196,9 @@ export interface Snapshot {
     defaultLightMode?: boolean;
     defaultDarkMode?: boolean;
   }[];
+  cookieLimitPerPerson: number;
+  signUpsOpen: boolean;
+  subscriptionsOpen: boolean;
 }
 export interface Bbox {
   west?: number;

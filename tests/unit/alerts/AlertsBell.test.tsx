@@ -1,11 +1,10 @@
-// docs/site.md section 7.7, Alerts bell. The header bell's visibility, the
-// badge against `wmsfo.alerts.seen`, the dialog (newest first, the New
-// markers, the empty text, the footer with Close, the close X in the head
-// outside the scroll region), the glyph, the
-// fetch cadence, and
-// the swing under reduced motion. The e2e suite has no spec that drives a
-// verified subscription (signUp.spec stops at the emailed code), so the
-// bell is covered here and the e2e suite carries no bell assertion.
+// docs/site.md section 7.7, Alerts bell. The header bell's visibility (for
+// every visitor while the snapshot has an event), the badge against
+// `wmsfo.alerts.seenId` and the removal of the old `wmsfo.alerts.seen`,
+// the dialog from `snapshot.event.alerts` (newest first, the New markers,
+// the empty text, the footer with Close, the close X in the head outside
+// the scroll region), the glyph, no API call ever, and the swing under
+// reduced motion.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
@@ -14,14 +13,12 @@ import { Shell } from "../../../src/app/Shell";
 import { AuthProvider, type AuthState } from "../../../src/auth/AuthProvider";
 import {
   AlertsProvider,
-  ALERTS_AFTER_SNAPSHOT_MS,
+  ALERTS_OLD_SEEN_KEY,
   ALERTS_SEEN_KEY,
 } from "../../../src/alerts/AlertsProvider";
 import { store } from "../../../src/store/useStore";
 import { initialStore } from "../../../src/store/types";
-import { SignInRequired } from "../../../src/auth/getIdToken";
-import type { ContentDocument } from "../../../src/contracts";
-import type { AlertItem, Subscription } from "../../../src/api/subscriptions";
+import type { ContentDocument, SnapshotAlert } from "../../../src/contracts";
 
 // The test run loads no CSS, so the module's class names are stood in by
 // their own keys.
@@ -59,24 +56,14 @@ vi.mock("../../../src/ui/Dialog.module.css", () => ({
 
 vi.mock("../../../src/api/subscriptions", () => ({
   listMySubscriptions: vi.fn(),
-  listAlerts: vi.fn(),
 }));
 
 import * as subsApi from "../../../src/api/subscriptions";
 
 const SIGNED_IN: AuthState = { status: "signedIn", email: "p@example.com", expired: false };
 
-const ACTIVE: Subscription = {
-  id: 1,
-  channel: "email",
-  address: "p@example.com",
-  verifiedAt: "2026-09-01T00:00:00Z",
-  unsubscribedAt: null,
-  createdAt: "2026-09-01T00:00:00Z",
-};
-
-function alert(id: number, sentAt: string, subject: string, kind = "event_status"): AlertItem {
-  return { id, subscriptionId: 1, address: "p@example.com", kind, eventId: 1, eventName: "Santa 2026", subject, sentAt };
+function alert(id: number, createdAt: string, subject: string, kind = "event_status"): SnapshotAlert {
+  return { id, kind, statusId: kind === "event_status" ? 2 : null, messageId: null, subject, message: null, createdAt };
 }
 
 function section(id: number, kind: string) {
@@ -131,11 +118,21 @@ function makeContent(): ContentDocument {
   } as unknown as ContentDocument;
 }
 
-function seed(content: ContentDocument, snapshotUrl = "https://cdn/snap-1.json") {
+function seed(
+  content: ContentDocument,
+  alerts: SnapshotAlert[] | null = [],
+  snapshotUrl = "https://cdn/snap-1.json",
+) {
   act(() => {
     store.setState({
       ...initialStore,
-      snapshot: { schemaVersion: 1, content: content as unknown, media: {}, icons: {}, event: { statusId: 1 } },
+      snapshot: {
+        schemaVersion: 1,
+        content: content as unknown,
+        media: {},
+        icons: {},
+        event: alerts === null ? null : { statusId: 1, name: "Santa 2026", alerts },
+      },
       snapshotUrl,
       live: {
         schemaVersion: 1,
@@ -159,9 +156,9 @@ function seed(content: ContentDocument, snapshotUrl = "https://cdn/snap-1.json")
   });
 }
 
-function mockLists(subscriptions: Subscription[], alerts: AlertItem[]) {
-  vi.mocked(subsApi.listMySubscriptions).mockResolvedValue({ items: subscriptions } as never);
-  vi.mocked(subsApi.listAlerts).mockResolvedValue({ items: alerts } as never);
+// Seeds the snapshot with the alerts; null seeds a snapshot with no event.
+function mockLists(alerts: SnapshotAlert[] | null) {
+  seed(makeContent(), alerts);
 }
 
 function renderShell(auth: AuthState) {
@@ -204,11 +201,11 @@ const ALERTS = [
 beforeEach(() => {
   window.localStorage.clear();
   vi.mocked(subsApi.listMySubscriptions).mockReset();
-  vi.mocked(subsApi.listAlerts).mockReset();
   seed(makeContent());
 });
 
 afterEach(() => {
+  expect(subsApi.listMySubscriptions).not.toHaveBeenCalled();
   cleanup();
   vi.useRealTimers();
   vi.unstubAllGlobals();
@@ -216,48 +213,44 @@ afterEach(() => {
 });
 
 describe("AlertsBell visibility", () => {
-  it("is absent signed out and fetches nothing", async () => {
-    mockLists([ACTIVE], ALERTS);
-    const { queryByTestId } = renderShell({ status: "signedOut" });
-    await act(async () => {});
-    expect(queryByTestId("alerts-bell")).toBeNull();
-    expect(subsApi.listAlerts).not.toHaveBeenCalled();
-    expect(subsApi.listMySubscriptions).not.toHaveBeenCalled();
+  it("shows for a signed-out visitor whenever the snapshot has an event", async () => {
+    mockLists(ALERTS);
+    const { findByTestId } = renderShell({ status: "signedOut" });
+    const bell = await findByTestId("alerts-bell");
+    expect(bell.getAttribute("aria-label")).toBe("Alerts, 3 new");
   });
 
-  it("is absent signed in with no active subscription and no alerts", async () => {
-    mockLists([{ ...ACTIVE, verifiedAt: null }, { ...ACTIVE, id: 2, unsubscribedAt: "2026-09-02T00:00:00Z" }], []);
+  it("shows with an event and no alerts, signed in or not", async () => {
+    mockLists([]);
+    const signedOut = renderShell({ status: "signedOut" });
+    expect(signedOut.getByTestId("alerts-bell").getAttribute("aria-label")).toBe("Alerts");
+    signedOut.unmount();
+    const signedIn = renderShell(SIGNED_IN);
+    expect(signedIn.getByTestId("alerts-bell")).not.toBeNull();
+  });
+
+  it("is hidden while the snapshot's event is null", async () => {
+    mockLists(null);
     const { queryByTestId } = renderShell(SIGNED_IN);
-    await waitFor(() => expect(subsApi.listAlerts).toHaveBeenCalledTimes(1));
     await act(async () => {});
     expect(queryByTestId("alerts-bell")).toBeNull();
   });
 
-  it("is present with an active subscription, between sign-in and the theme picker", async () => {
-    mockLists([ACTIVE], []);
+  it("sits between sign-in and the theme picker", async () => {
+    mockLists([]);
     const { findByTestId, getByTestId } = renderShell(SIGNED_IN);
     const bell = await findByTestId("alerts-bell");
-    expect(bell.getAttribute("aria-label")).toBe("Alerts");
     const actions = Array.from(bell.parentElement!.children);
     const signOut = getByTestId("menu-sign-out");
     const theme = getByTestId("theme-toggle").parentElement!;
     expect(actions.indexOf(signOut)).toBeLessThan(actions.indexOf(bell));
     expect(actions.indexOf(bell)).toBeLessThan(actions.indexOf(theme));
   });
-
-  it("leaves the empty state on SignInRequired without throwing", async () => {
-    vi.mocked(subsApi.listMySubscriptions).mockRejectedValue(new SignInRequired());
-    vi.mocked(subsApi.listAlerts).mockRejectedValue(new SignInRequired());
-    const { queryByTestId } = renderShell(SIGNED_IN);
-    await waitFor(() => expect(subsApi.listAlerts).toHaveBeenCalled());
-    await act(async () => {});
-    expect(queryByTestId("alerts-bell")).toBeNull();
-  });
 });
 
 describe("AlertsBell badge", () => {
   it("draws the notification bell glyph", async () => {
-    mockLists([ACTIVE], ALERTS);
+    mockLists(ALERTS);
     const { findByTestId } = renderShell(SIGNED_IN);
     const bell = await findByTestId("alerts-bell");
     const glyph = bell.querySelector('[data-testid="alerts-bell-glyph"]');
@@ -268,7 +261,7 @@ describe("AlertsBell badge", () => {
   });
 
   it("counts every alert when the storage key is absent", async () => {
-    mockLists([ACTIVE], ALERTS);
+    mockLists(ALERTS);
     const { findByTestId } = renderShell(SIGNED_IN);
     const bell = await findByTestId("alerts-bell");
     await waitFor(() => expect(bell.getAttribute("aria-label")).toBe("Alerts, 3 new"));
@@ -277,7 +270,7 @@ describe("AlertsBell badge", () => {
 
   it("counts the alerts above the stored id", async () => {
     window.localStorage.setItem(ALERTS_SEEN_KEY, "5");
-    mockLists([ACTIVE], ALERTS);
+    mockLists(ALERTS);
     const { findByTestId } = renderShell(SIGNED_IN);
     const bell = await findByTestId("alerts-bell");
     await waitFor(() => expect(bell.getAttribute("aria-label")).toBe("Alerts, 2 new"));
@@ -286,16 +279,26 @@ describe("AlertsBell badge", () => {
 
   it("shows no badge when every alert is seen", async () => {
     window.localStorage.setItem(ALERTS_SEEN_KEY, "7");
-    mockLists([ACTIVE], ALERTS);
+    mockLists(ALERTS);
     const { findByTestId } = renderShell(SIGNED_IN);
     const bell = await findByTestId("alerts-bell");
     expect(bell.getAttribute("aria-label")).toBe("Alerts");
     expect(bell.querySelector('[data-testid="alerts-badge"]')).toBeNull();
   });
 
+  it("removes the old seen key on the first read and ignores its number", async () => {
+    window.localStorage.setItem(ALERTS_OLD_SEEN_KEY, "999");
+    mockLists(ALERTS);
+    const { findByTestId } = renderShell({ status: "signedOut" });
+    const bell = await findByTestId("alerts-bell");
+    expect(bell.getAttribute("aria-label")).toBe("Alerts, 3 new");
+    expect(window.localStorage.getItem(ALERTS_OLD_SEEN_KEY)).toBeNull();
+    expect(ALERTS_SEEN_KEY).toBe("wmsfo.alerts.seenId");
+  });
+
   it("reads 9+ past nine", async () => {
     const many = Array.from({ length: 12 }, (_, i) => alert(i + 1, `2026-10-01T0${i % 10}:00:00Z`, `s${i}`));
-    mockLists([ACTIVE], many);
+    mockLists(many);
     const { findByTestId } = renderShell(SIGNED_IN);
     const badge = await findByTestId("alerts-badge");
     expect(badge.textContent).toBe("9+");
@@ -304,7 +307,7 @@ describe("AlertsBell badge", () => {
 
 describe("AlertsDialog", () => {
   it("never opens on its own", async () => {
-    mockLists([ACTIVE], ALERTS);
+    mockLists(ALERTS);
     const { findByTestId, queryByTestId } = renderShell(SIGNED_IN);
     await findByTestId("alerts-badge");
     expect(queryByTestId("alerts-dialog")).toBeNull();
@@ -312,7 +315,7 @@ describe("AlertsDialog", () => {
 
   it("opening stores the newest id, clears the badge, and keeps the New markers until it closes", async () => {
     window.localStorage.setItem(ALERTS_SEEN_KEY, "5");
-    mockLists([ACTIVE], ALERTS);
+    mockLists(ALERTS);
     const { findByTestId, getByTestId, queryByTestId } = renderShell(SIGNED_IN);
     const bell = await findByTestId("alerts-bell");
     await findByTestId("alerts-badge");
@@ -346,7 +349,7 @@ describe("AlertsDialog", () => {
   });
 
   it("shows each alert's message under its subject, and no body element when the message is null", async () => {
-    mockLists([ACTIVE], [
+    mockLists([
       { ...alert(5, "2026-10-01T10:00:00Z", "Santa is delayed"), message: "Fog over the bay.\nWe will fly at nine." },
       { ...alert(6, "2026-10-01T11:00:00Z", "A message from the elves", "event_message"), message: "Cocoa at the north gate." },
       { ...alert(7, "2026-10-01T12:00:00Z", "Santa is in the air"), message: null },
@@ -367,25 +370,25 @@ describe("AlertsDialog", () => {
   });
 
   it("closes on a backdrop press", async () => {
-    mockLists([ACTIVE], ALERTS);
+    mockLists(ALERTS);
     const { findByTestId, getByTestId, queryByTestId } = renderShell(SIGNED_IN);
     fireEvent.click(await findByTestId("alerts-bell"));
     fireEvent.click(getByTestId("alerts-dialog"));
     expect(queryByTestId("alerts-dialog")).toBeNull();
   });
 
-  it("shows the empty text when no alert has been sent", async () => {
-    mockLists([ACTIVE], []);
+  it("shows the empty text when the snapshot has no alerts", async () => {
+    mockLists([]);
     const { findByTestId, getByTestId } = renderShell(SIGNED_IN);
     fireEvent.click(await findByTestId("alerts-bell"));
-    expect(getByTestId("alerts-dialog-empty").textContent).toBe("No alerts have been sent to you yet");
+    expect(getByTestId("alerts-dialog-empty").textContent).toBe("No alerts yet");
   });
 
   it("keeps the close X and the bottom Close outside the scroll region with thirty alerts", async () => {
     const many = Array.from({ length: 30 }, (_, i) =>
       alert(i + 1, `2026-10-01T${String(i % 24).padStart(2, "0")}:${String(i).padStart(2, "0")}:00Z`, `Alert ${i + 1}`),
     );
-    mockLists([ACTIVE], many);
+    mockLists(many);
     const { findByTestId, getByTestId } = renderShell(SIGNED_IN);
     fireEvent.click(await findByTestId("alerts-bell"));
     const dialog = getByTestId("alerts-dialog");
@@ -404,7 +407,7 @@ describe("AlertsDialog", () => {
   });
 
   it("closes from the close X in the head", async () => {
-    mockLists([ACTIVE], ALERTS);
+    mockLists(ALERTS);
     const { findByTestId, getByTestId, queryByTestId } = renderShell(SIGNED_IN);
     fireEvent.click(await findByTestId("alerts-bell"));
     fireEvent.click(getByTestId("alerts-dialog-close-x"));
@@ -412,7 +415,7 @@ describe("AlertsDialog", () => {
   });
 
   it("has Close in the footer and no Manage alerts link, even with an alerts_signup page", async () => {
-    mockLists([ACTIVE], ALERTS);
+    mockLists(ALERTS);
     const { findByTestId, getByTestId, queryByTestId } = renderShell(SIGNED_IN);
     fireEvent.click(await findByTestId("alerts-bell"));
     expect(getByTestId("alerts-dialog-close").textContent).toBe("Close");
@@ -421,54 +424,14 @@ describe("AlertsDialog", () => {
   });
 });
 
-describe("AlertsProvider cadence", () => {
-  it("fetches once per sign-in and not on a store update", async () => {
-    mockLists([ACTIVE], ALERTS);
-    const { findByTestId } = renderShell(SIGNED_IN);
-    await findByTestId("alerts-bell");
-    expect(subsApi.listAlerts).toHaveBeenCalledTimes(1);
-    expect(subsApi.listMySubscriptions).toHaveBeenCalledTimes(1);
-    act(() => {
-      store.setState({ diag: { ...store.getState().diag, consecutivePollFailures: 0 } } as never);
-    });
-    seed(makeContent());
-    await act(async () => {});
-    expect(subsApi.listAlerts).toHaveBeenCalledTimes(1);
-    expect(subsApi.listMySubscriptions).toHaveBeenCalledTimes(1);
-  });
-
-  it("fetches once 60 seconds after the snapshot url changes", async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    mockLists([ACTIVE], ALERTS);
-    renderShell(SIGNED_IN);
-    await act(async () => {});
-    expect(subsApi.listAlerts).toHaveBeenCalledTimes(1);
-    seed(makeContent(), "https://cdn/snap-2.json");
-    await act(async () => {
-      vi.advanceTimersByTime(ALERTS_AFTER_SNAPSHOT_MS - 1000);
-    });
-    expect(subsApi.listAlerts).toHaveBeenCalledTimes(1);
-    await act(async () => {
-      vi.advanceTimersByTime(1000);
-    });
-    expect(subsApi.listAlerts).toHaveBeenCalledTimes(2);
-    expect(subsApi.listMySubscriptions).toHaveBeenCalledTimes(2);
-  });
-});
-
 describe("AlertsBell swing", () => {
   async function riseCount() {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    mockLists([ACTIVE], ALERTS.slice(0, 1));
-    const view = renderShell(SIGNED_IN);
+    mockLists(ALERTS.slice(0, 1));
+    const view = renderShell({ status: "signedOut" });
     await act(async () => {});
     const body = view.getByTestId("alerts-bell-body");
     expect(body.className).not.toContain("swing");
-    mockLists([ACTIVE], ALERTS);
-    seed(makeContent(), "https://cdn/snap-2.json");
-    await act(async () => {
-      vi.advanceTimersByTime(ALERTS_AFTER_SNAPSHOT_MS);
-    });
+    seed(makeContent(), ALERTS, "https://cdn/snap-2.json");
     await act(async () => {});
     expect(view.getByTestId("alerts-bell").getAttribute("aria-label")).toBe("Alerts, 3 new");
     return view.getByTestId("alerts-bell-body");

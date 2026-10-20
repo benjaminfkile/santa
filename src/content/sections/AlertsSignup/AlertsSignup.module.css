@@ -117,19 +117,9 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.alertsSignupRowMeta {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  color: var(--text-dim);
-}
 .alertsSignupRowAction { composes: btnQuiet btnSm from "../../../ui/Button.module.css"; }
 .alertsSignup [role="alert"] { color: var(--err); margin: 0; font-size: 0.8125rem; }
 .alertsSignupPending { min-height: 60px; }
-.alertsSignupAddAnother {
-  composes: btn from "../../../ui/Button.module.css";
-  align-self: flex-start;
-}
 .alertsSignupSent {
   display: flex;
   flex-direction: column;
@@ -208,10 +198,4 @@
   font-size: 0.875rem;
   white-space: pre-line;
   overflow-wrap: anywhere;
-}
-.alertsSignupSentAddress {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
-  color: var(--text-dim);
 }
