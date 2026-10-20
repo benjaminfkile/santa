@@ -74,6 +74,15 @@ function setState(tally: LiveObject["cookieTally"], eventStatusId = 3) {
   );
 }
 
+function setCookieLimit(limit: number) {
+  act(() =>
+    store.setState((s) => ({
+      ...s,
+      snapshot: { ...(s.snapshot as Snapshot), cookieLimitPerPerson: limit },
+    })),
+  );
+}
+
 function names(container: HTMLElement): string[] {
   return Array.from(container.querySelectorAll('[data-testid="cookie-tally-row"]')).map(
     (r) => r.getAttribute("title") ?? "",
@@ -257,6 +266,32 @@ describe("the tally and the leave glyph on the live screen", () => {
     expect(cookiesApi.getMyCookies).toHaveBeenCalledTimes(1);
     expect(utils.getAllByTestId("cookie-row").length).toBe(3);
     expect(utils.queryByTestId("cookie-dialog-signed-out")).toBeNull();
+  });
+
+  it("at a per-person limit of 0 the glyph is hidden, the tally stays, and nothing is fetched", async () => {
+    setState({ "1": 2 });
+    setCookieLimit(0);
+    const utils = await renderMap({ leaderboardPanel: true, cookieControl: true }, signedIn);
+    expect(utils.getByTestId("cookie-tally")).toBeInTheDocument();
+    expect(utils.queryByTestId("cookie-tally-leave")).toBeNull();
+    expect(utils.queryByTestId("cookie-sheet")).toBeNull();
+    expect(cookiesApi.getMyCookies).not.toHaveBeenCalled();
+  });
+
+  it("a dialog already open when the limit turns 0 shows the closed line", async () => {
+    setState({ "1": 2 });
+    setCookieLimit(5);
+    vi.mocked(cookiesApi.getMyCookies).mockResolvedValueOnce({ limit: 5, used: 1, remaining: 4, items: [] } as never);
+    const utils = await renderMap({ leaderboardPanel: true, cookieControl: true }, signedIn);
+    fireEvent.click(utils.getByTestId("cookie-tally-leave"));
+    await waitFor(() => expect(utils.getByTestId("cookie-remaining")).toBeInTheDocument());
+    setCookieLimit(0);
+    expect(utils.getByTestId("cookie-sheet")).toBeInTheDocument();
+    expect(utils.getByTestId("cookie-dialog-closed").textContent).toBe("Cookies are closed for now");
+    expect(utils.queryByTestId("cookie-submit")).toBeNull();
+    expect(utils.queryByTestId("cookie-tally-leave")).toBeNull();
+    fireEvent.click(utils.getByText("Close"));
+    expect(utils.queryByTestId("cookie-sheet")).toBeNull();
   });
 });
 

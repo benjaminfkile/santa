@@ -1,15 +1,18 @@
 // docs/site.md section 11.2. Sign-up: email, password, confirm password.
 // Client checks: valid address shape, 12 character minimum, both passwords
-// equal. On success navigates to /auth/confirm?email=&returnTo=.
+// equal. On success navigates to /auth/confirm?email=&returnTo=. While
+// `snapshot.signUpsOpen` is false the card shows the closed line and a
+// Sign in link in place of the form.
 
 import { useState, type FormEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthCard } from "./AuthCard";
 import { readReturnTo, withReturnTo } from "./returnTo";
 import { cognito } from "../../auth/cognito";
 import { signUpMessage } from "../../auth/errors";
 import { setPendingSignUp } from "./pendingSignUp";
 import { copy } from "../../copy/copy";
+import { useStore } from "../../store/useStore";
 import * as field from "../../ui/Field.module.css";
 import * as btn from "../../ui/Button.module.css";
 import * as styles from "./AuthCard.module.css";
@@ -26,6 +29,7 @@ export function SignUpPage() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const signUpsOpen = useStore((s) => s.snapshot?.signUpsOpen !== false);
   const t = copy.auth.signUp;
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -57,6 +61,24 @@ export function SignUpPage() {
       setError(signUpMessage(err));
       setSubmitting(false);
     }
+  }
+
+  if (!signUpsOpen) {
+    return (
+      <AuthCard
+        title={t.title}
+        links={[{ to: "/", label: t.links.home }]}
+      >
+        <p className={styles.notice} data-testid="auth-sign-ups-closed">{copy.auth.closed}</p>
+        <Link
+          to={withReturnTo("/auth/sign-in", returnTo)}
+          className={`${btn.btnFill} ${styles.submit}`}
+          data-testid="auth-sign-ups-closed-sign-in"
+        >
+          {t.links.signIn}
+        </Link>
+      </AuthCard>
+    );
   }
 
   return (

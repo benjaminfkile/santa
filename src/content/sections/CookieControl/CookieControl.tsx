@@ -6,11 +6,14 @@
 // the shared recipe, with a close X in its head and its picker in the
 // recipe's scroll region. The dialog is exported for the live
 // screen, which opens it from its own glyph; signed out it offers Sign in.
+// While `snapshot.cookieLimitPerPerson` is 0 cookies are closed: the
+// section shows the closed line in place of its button and the dialog
+// shows the same line and calls nothing.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import type { SectionComponent } from "../../registry";
-import type { ContentBundle } from "../../../store/types";
+import type { ContentBundle, SiteStore } from "../../../store/types";
 import type { CookieType } from "../../../contracts";
 import type { ReactNode } from "react";
 import { useStore } from "../../../store/useStore";
@@ -46,6 +49,11 @@ function readData(data: unknown): CookieControlData {
   };
 }
 
+// Cookies are closed while the snapshot's per-person limit is 0.
+export function selectCookiesClosed(s: SiteStore): boolean {
+  return s.snapshot?.cookieLimitPerPerson === 0;
+}
+
 export type CookieControlProps = {
   data: unknown;
   items: { id: number; data: unknown }[];
@@ -64,6 +72,7 @@ function useSignInHere(): () => void {
 export const CookieControl: SectionComponent = ({ data, bundle }: CookieControlProps) => {
   const d = readData(data);
   const eventStatusId = useStore((s) => s.live?.eventStatusId ?? null);
+  const cookiesClosed = useStore(selectCookiesClosed);
   const { state: auth } = useAuth();
   const onSignIn = useSignInHere();
   const [open, setOpen] = useState(false);
@@ -73,6 +82,16 @@ export const CookieControl: SectionComponent = ({ data, bundle }: CookieControlP
       <div className={`${styles.cookieControl} ${styles.cookieControlClosed}`}>
         {d.heading ? <h2>{d.heading}</h2> : null}
         <p><Inline text={d.closedCopy ?? ""} bundle={bundle} /></p>
+      </div>
+    );
+  }
+
+  if (cookiesClosed) {
+    return (
+      <div className={`${styles.cookieControl} ${styles.cookieControlClosed}`}>
+        {d.heading ? <h2>{d.heading}</h2> : null}
+        {d.copy ? <p><Inline text={d.copy} bundle={bundle} /></p> : null}
+        <p data-testid="cookie-control-closed">{copy.cookies.closed}</p>
       </div>
     );
   }
@@ -128,7 +147,8 @@ type Ready = Extract<DialogState, { kind: "ready" }>;
 
 // The cookie dialog. Signed in it loads `GET /me/cookies` and shows the
 // picker; signed out it shows the sign-in copy with Sign in and Close and
-// calls nothing; while auth is unknown it shows its loading state.
+// calls nothing; while auth is unknown it shows its loading state. While
+// cookies are closed it shows the closed line with Close and calls nothing.
 // The cookie list: one row per type, the icon, the name with the running
 // tally under it, and whatever the caller puts at the end of the row. The
 // signed-in dialog passes its stepper; the signed-out one passes nothing,
@@ -180,6 +200,7 @@ export function CookieDialog({
   // The live tally, so each row says how many of that cookie Santa has
   // been left so far, beside the visitor's own picks.
   const tally = useStore((s) => s.live?.cookieTally ?? null);
+  const cookiesClosed = useStore(selectCookiesClosed);
   const { state: auth } = useAuth();
   const signedIn = auth.status === "signedIn";
   const onSignInRequired = useSignInHere();
@@ -234,8 +255,8 @@ export function CookieDialog({
   }, []);
 
   useEffect(() => {
-    if (signedIn) void load();
-  }, [load, signedIn]);
+    if (signedIn && !cookiesClosed) void load();
+  }, [load, signedIn, cookiesClosed]);
 
   useEffect(() => {
     if (state.kind !== "ready" || state.cooldownUntil === null) return;
@@ -350,6 +371,18 @@ export function CookieDialog({
   };
 
   const body = (() => {
+    if (cookiesClosed) {
+      return (
+        <>
+          <div className={dlg.scroll}>
+            <p className={dlg.copy} data-testid="cookie-dialog-closed">{copy.cookies.closed}</p>
+          </div>
+          <div className={dlg.actions}>
+            <button type="button" className={btn.btnQuiet} onClick={close}>{copy.cookies.close}</button>
+          </div>
+        </>
+      );
+    }
     if (auth.status !== "unknown" && !signedIn) {
       // The same list as the signed-in dialog, so a visitor who is not
       // signed in still sees the cookies and how many of each Santa has;
@@ -495,7 +528,7 @@ export function CookieDialog({
       <div className={dlg.body}>
         <div className={dlg.head}>
           <h2 id="cookie-dialog-title" className={dlg.title}>{copy.cookies.title}</h2>
-          {signedIn && state.kind === "ready" ? (
+          {signedIn && !cookiesClosed && state.kind === "ready" ? (
             <span className={dlg.meta} data-testid="cookie-remaining">
               {copy.cookies.left(state.limit - state.remaining, state.limit)}
             </span>

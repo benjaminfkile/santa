@@ -10,6 +10,7 @@ import { cognito } from "../../auth/cognito";
 import { session } from "../../auth/session";
 import { isUserNotConfirmed, signInMessage } from "../../auth/errors";
 import { copy } from "../../copy/copy";
+import { useStore } from "../../store/useStore";
 import * as field from "../../ui/Field.module.css";
 import * as btn from "../../ui/Button.module.css";
 import * as styles from "./AuthCard.module.css";
@@ -22,6 +23,7 @@ export function SignInPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const signUpsOpen = useStore((s) => s.snapshot?.signUpsOpen !== false);
   const t = copy.auth.signIn;
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -51,7 +53,7 @@ export function SignInPage() {
     <AuthCard
       title={t.title}
       links={[
-        { to: withReturnTo("/auth/sign-up", returnTo), label: t.links.signUp },
+        ...(signUpsOpen ? [{ to: withReturnTo("/auth/sign-up", returnTo), label: t.links.signUp }] : []),
         { to: "/auth/forgot", label: t.links.forgot },
         { to: "/", label: t.links.home },
       ]}

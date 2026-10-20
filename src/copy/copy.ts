@@ -130,6 +130,7 @@ export const copy = {
     onlyLeft: (n: number) => (n === 1 ? "You only have 1 cookie left. Please pick again." : `You only have ${n} cookies left. Please pick again.`),
     thanks: (n: number) => (n === 1 ? "Thanks for the cookie." : `Thanks for the ${n} cookies.`),
     limitReached: "You have left all your cookies for this year",
+    closed: "Cookies are closed for now",
     typeGone: "That cookie type is no longer active. Please pick another.",
     tooMany: (secs: number) => `Too many requests. Try again in ${secs}s.`,
     wait: (secs: number) => `Wait ${secs}s`,
@@ -162,6 +163,7 @@ export const copy = {
     close: "Close",
   },
   auth: {
+    closed: "Sign-ups are closed for now",
     signIn: {
       title: "Sign in",
       email: "Email",

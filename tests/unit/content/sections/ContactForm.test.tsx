@@ -85,8 +85,8 @@ describe("ContactForm submit", () => {
     expect(getByTestId("contact-submit")).toBeEnabled();
   });
 
-  it("201 clears the form and renders successText", async () => {
-    vi.mocked(contactApi.submitContact).mockResolvedValueOnce({ id: 1, createdAt: "" } as never);
+  it("202 clears the form and renders successText", async () => {
+    vi.mocked(contactApi.submitContact).mockResolvedValueOnce({ receivedAt: "2026-12-24T00:00:00Z" });
     const { getByLabelText, getByTestId, findByTestId } = renderForm();
     await userEvent.type(getByLabelText("Name"), "Bob");
     await userEvent.type(getByLabelText("Email"), "b@x.co");

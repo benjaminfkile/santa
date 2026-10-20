@@ -31,6 +31,9 @@ import { cognito } from "../../../src/auth/cognito";
 import { session, _resetSessionForTests } from "../../../src/auth/session";
 import { clearPendingSignUp, setPendingSignUp } from "../../../src/pages/Auth/pendingSignUp";
 import { copy } from "../../../src/copy/copy";
+import { store } from "../../../src/store/useStore";
+import { initialStore } from "../../../src/store/types";
+import type { Snapshot } from "../../../src/contracts";
 
 function LocationProbe() {
   const l = useLocation();
@@ -56,7 +59,16 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   _resetSessionForTests();
+  act(() => store.setState({ ...initialStore }));
 });
+
+function setSignUpsOpen(open: boolean) {
+  act(() => store.setState({ snapshot: { schemaVersion: 1, signUpsOpen: open } as Snapshot }));
+}
+
+function linkHrefs(): string[] {
+  return Array.from(screen.getByTestId("auth-links").querySelectorAll("a")).map((a) => a.getAttribute("href") ?? "");
+}
 
 describe("SignInPage", () => {
   it("stores tokens and navigates to returnTo on success", async () => {
@@ -280,5 +292,46 @@ describe("ResetPasswordPage", () => {
       expect(screen.getByRole("alert").textContent).toContain(copy.auth.signUp.passwordsDoNotMatch),
     );
     expect(cognito.reset).not.toHaveBeenCalled();
+  });
+});
+
+describe("sign-ups closed (snapshot.signUpsOpen false)", () => {
+  it("the sign-up route shows the closed line and a sign-in link in place of the form", () => {
+    setSignUpsOpen(false);
+    renderAt("/auth/sign-up?returnTo=%2Falerts", <SignUpPage />);
+    expect(screen.getByTestId("auth-card")).toBeTruthy();
+    expect(screen.getByTestId("auth-sign-ups-closed").textContent).toBe("Sign-ups are closed for now");
+    const signIn = screen.getByTestId("auth-sign-ups-closed-sign-in");
+    expect(signIn.getAttribute("href")).toBe("/auth/sign-in?returnTo=%2Falerts");
+    expect(screen.queryByTestId("auth-submit")).toBeNull();
+    expect(document.querySelector("form")).toBeNull();
+    expect(screen.queryByLabelText(copy.auth.signUp.password)).toBeNull();
+  });
+
+  it("the sign-up form renders while signUpsOpen is true", () => {
+    setSignUpsOpen(true);
+    renderAt("/auth/sign-up", <SignUpPage />);
+    expect(screen.queryByTestId("auth-sign-ups-closed")).toBeNull();
+    expect(screen.getByTestId("auth-submit")).toBeTruthy();
+  });
+
+  it("sign-in and forgot-password render no sign-up link", () => {
+    setSignUpsOpen(false);
+    renderAt("/auth/sign-in", <SignInPage />);
+    expect(linkHrefs().some((h) => h.startsWith("/auth/sign-up"))).toBe(false);
+    expect(screen.getByTestId("auth-submit")).toBeTruthy();
+    cleanup();
+    renderAt("/auth/forgot", <ForgotPasswordPage />);
+    expect(linkHrefs().some((h) => h.startsWith("/auth/sign-up"))).toBe(false);
+    expect(screen.getByTestId("auth-submit")).toBeTruthy();
+  });
+
+  it("sign-in and forgot-password keep the sign-up link while sign-ups are open", () => {
+    setSignUpsOpen(true);
+    renderAt("/auth/sign-in", <SignInPage />);
+    expect(linkHrefs().some((h) => h.startsWith("/auth/sign-up"))).toBe(true);
+    cleanup();
+    renderAt("/auth/forgot", <ForgotPasswordPage />);
+    expect(linkHrefs().some((h) => h.startsWith("/auth/sign-up"))).toBe(true);
   });
 });
