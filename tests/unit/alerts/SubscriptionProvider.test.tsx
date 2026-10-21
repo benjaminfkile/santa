@@ -1,7 +1,7 @@
 // docs/site.md sections 6.1 step 4, 7.7, and 22.1. The one read,
-// `GET /me/notifications`: once on a sign-in during the page load and not
-// on a restored session, once per load after the first live object with a
-// flag of the signed-in account, never without a flag, never on a route
+// `GET /me/notifications`: once on a sign-in during the page load, once
+// per signed-in page load after the first live object (a restored session
+// included, with or without a flag), never signed out, never on a route
 // change or a store update; the flag written or cleared from
 // `subscription`, the read marker raised from `seenUpToId` and never
 // lowered, both left as they were on SignInRequired or a failure, and the
@@ -193,11 +193,16 @@ describe("the one read per app load for a subscriber", () => {
     expect(seenMarker.read()).toBe(12);
   });
 
-  it("makes no call without a flag", async () => {
+  it("reads once without a flag when signed in, and writes the flag from the answer", async () => {
+    vi.mocked(subsApi.getMyNotifications).mockResolvedValue(answer(row(5, "2026-09-01", "2026-09-02")));
     applyLive();
-    renderApp(SIGNED_IN);
+    const view = renderApp(SIGNED_IN);
     await act(async () => {});
-    expect(subsApi.getMyNotifications).not.toHaveBeenCalled();
+    expect(subsApi.getMyNotifications).toHaveBeenCalledTimes(1);
+    expect(shownFlag(view)?.state).toBe("active");
+    applyLive(2);
+    await act(async () => {});
+    expect(subsApi.getMyNotifications).toHaveBeenCalledTimes(1);
   });
 
   it("makes no call signed out, and clears the flag", async () => {
@@ -219,12 +224,13 @@ describe("the one read per app load for a subscriber", () => {
     expect(shownFlag(view)).toEqual(FLAG);
   });
 
-  it("clears the flag of another account and makes no call", async () => {
+  it("clears the flag of another account and reads once for the signed-in account", async () => {
     storeFlag({ ...FLAG, account: "other@e.com" });
+    vi.mocked(subsApi.getMyNotifications).mockResolvedValue(answer(null));
     applyLive();
     const view = renderApp(SIGNED_IN);
     await act(async () => {});
-    expect(subsApi.getMyNotifications).not.toHaveBeenCalled();
+    expect(subsApi.getMyNotifications).toHaveBeenCalledTimes(1);
     expect(shownFlag(view)).toBeNull();
   });
 
@@ -248,10 +254,12 @@ describe("the one read per app load for a subscriber", () => {
         </AuthProvider>
       </MemoryRouter>,
     );
-    applyLive();
-    await act(async () => {});
-    expect(subsApi.getMyNotifications).not.toHaveBeenCalled();
+    // The row is written before the first live object applies (a sign-up
+    // on a page that loaded before the live object), so the load read of
+    // step 4 (b) has nothing left to learn and does not run.
     fireEvent.click(view.getByText("write"));
+    await act(async () => {});
+    applyLive();
     await act(async () => {});
     applyLive(2);
     await act(async () => {});
@@ -324,7 +332,7 @@ describe("the one read on sign-in", () => {
     expect(subsApi.getMyNotifications).not.toHaveBeenCalled();
   });
 
-  it("a session restored at boot without a flag makes no call", async () => {
+  it("a session restored at boot without a flag reads once after the first live object", async () => {
     vi.mocked(subsApi.getMyNotifications).mockResolvedValue(answer(null));
     window.localStorage.setItem("wmsfo.auth.session", JSON.stringify(TOKENS));
     const restored = vi.fn();
@@ -342,7 +350,7 @@ describe("the one read on sign-in", () => {
     await act(async () => {});
     off();
     expect(restored).toHaveBeenCalledWith("restore");
-    expect(subsApi.getMyNotifications).not.toHaveBeenCalled();
+    expect(subsApi.getMyNotifications).toHaveBeenCalledTimes(1);
   });
 
   it("a session restored at boot with a matching flag reads once after the first live object", async () => {

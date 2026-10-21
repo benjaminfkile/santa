@@ -7,18 +7,17 @@
 //
 // The one read, `GET /me/notifications`, at most once per page load per
 // account, in two cases: (a) the visitor signs in during this page load
-// (a `session` change with the reason "signIn"; a session restored at
-// boot is not a sign-in), and (b) once the first live object has applied,
-// while the visitor is signed in and the flag's `account` is the
-// signed-in email. On the answer a non-null `subscription` rewrites the
-// flag for the account (verified: active; unverified: pending), a null
-// one clears any flag for the account, and a non-null `seenUpToId` raises
-// the read marker of `seenMarker.ts` (never lowers it). `SignInRequired`
-// or any failure leaves both as they were. A stored session without a
-// flag makes no call on load; route changes and store updates never call
-// again. A flag written through `setFlag` (a row the API just returned)
-// marks its account checked, so a sign-up or an adopted row never
-// triggers a second read.
+// (a `session` change with the reason "signIn"), and (b) once the first
+// live object has applied, while the visitor is signed in (a restored
+// session included, with or without a flag). On the answer a non-null
+// `subscription` rewrites the flag for the account (verified: active;
+// unverified: pending), a null one clears any flag for the account, and a
+// non-null `seenUpToId` raises the read marker of `seenMarker.ts` (never
+// lowers it). `SignInRequired` or any failure leaves both as they were.
+// Signed out: no call; route changes and store updates never call again.
+// A flag written through `setFlag` (a row the API just returned) marks
+// its account checked, so a sign-up or an adopted row never triggers a
+// second read.
 
 import {
   createContext,
@@ -119,11 +118,14 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     [readOnce],
   );
 
-  // (b) The subscriber's check after the first live object.
+  // (b) Every signed-in page load, after the first live object: a restored
+  // session reads once whether or not this browser holds a flag, so a
+  // browser that never signed in through the form (a stored session) still
+  // learns the subscription and the server's read marker.
   useEffect(() => {
-    if (!liveApplied || account === null || flag === null || flag.account !== account) return;
+    if (!liveApplied || account === null) return;
     readOnce(account);
-  }, [liveApplied, account, flag, readOnce]);
+  }, [liveApplied, account, readOnce]);
 
   const value = useMemo<SubscriptionValue>(
     () => ({ flag, setFlag, clearFlag }),
