@@ -16,6 +16,7 @@ export type AuthErrorName =
   | "TooManyRequestsException"
   | "PasswordResetRequiredException"
   | "InvalidParameterException"
+  | "UserLambdaValidationException"
   | "Unknown";
 
 export function errorName(err: unknown): AuthErrorName {
@@ -44,6 +45,8 @@ export function signUpMessage(err: unknown): string {
   const n = errorName(err);
   if (n === "UsernameExistsException") return copy.auth.signUp.alreadyExists;
   if (n === "InvalidPasswordException") return copy.auth.signUp.invalidPassword;
+  // A Pre sign-up trigger refused the address (the dev gate).
+  if (n === "UserLambdaValidationException") return copy.auth.signUp.byInvitation;
   if (n === "LimitExceededException" || n === "TooManyRequestsException") {
     return copy.auth.errors.tooMany;
   }

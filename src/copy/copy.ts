@@ -193,6 +193,7 @@ export const copy = {
       passwordTooShort: "Password must be at least 12 characters",
       passwordsDoNotMatch: "Passwords do not match",
       invalidPassword: "Password must be at least 12 characters",
+      byInvitation: "Sign-up on this site is by invitation. Ask the operator to add your address.",
     },
     confirm: {
       title: "Confirm your account",
