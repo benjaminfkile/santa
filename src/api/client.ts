@@ -26,7 +26,7 @@ export class ApiRequestError extends Error {
   }
 }
 
-export type ApiMethod = "GET" | "POST" | "DELETE";
+export type ApiMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 export type ApiOpts = {
   method: ApiMethod;

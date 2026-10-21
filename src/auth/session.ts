@@ -1,7 +1,9 @@
 // docs/site.md sections 11.1 and 11.3. Session store: holds the Tokens
 // returned by cognito.signIn / cognito.refresh in localStorage, exposes a
 // synchronous read for the boot check, notifies subscribers on every
-// change (sign-in, refresh, clear).
+// change with its reason: "signIn" (the sign-in and confirm pages store
+// tokens through `set`), "refresh" (a token refresh), "restore" (the
+// stored session read back at boot by `restore`), or "clear".
 //
 // The cognito wrapper is imported dynamically so that AuthProvider and the
 // API client can read the session, subscribe, and call getIdToken without
@@ -21,7 +23,9 @@ export type Tokens = {
   idExpiresAt: number;
 };
 
-export type SessionListener = () => void;
+export type SessionChangeReason = "signIn" | "refresh" | "restore" | "clear";
+
+export type SessionListener = (reason: SessionChangeReason) => void;
 
 let cached: Tokens | null | undefined;
 const listeners = new Set<SessionListener>();
@@ -47,8 +51,8 @@ function readFromStorage(): Tokens | null {
   }
 }
 
-function fire(): void {
-  for (const l of listeners) l();
+function fire(reason: SessionChangeReason): void {
+  for (const l of listeners) l(reason);
 }
 
 export const session = {
@@ -56,15 +60,23 @@ export const session = {
     if (cached === undefined) cached = readFromStorage();
     return cached;
   },
-  set(tokens: Tokens): void {
+  // A sign-in unless the caller names a refresh.
+  set(tokens: Tokens, reason: "signIn" | "refresh" = "signIn"): void {
     cached = tokens;
     storageSet(STORAGE_KEY, JSON.stringify(tokens));
-    fire();
+    fire(reason);
+  },
+  // Reads the stored session back and tells the listeners when there is
+  // one. A restored session is not a sign-in.
+  restore(): Tokens | null {
+    cached = readFromStorage();
+    if (cached !== null) fire("restore");
+    return cached;
   },
   clear(): void {
     cached = null;
     storageRemove(STORAGE_KEY);
-    fire();
+    fire("clear");
   },
   subscribe(l: SessionListener): () => void {
     listeners.add(l);
@@ -94,7 +106,7 @@ export async function getIdToken(): Promise<string> {
     try {
       const { cognito } = await import("./cognito");
       const next = await cognito.refresh(s.email, s.refreshToken);
-      session.set(next);
+      session.set(next, "refresh");
     } catch {
       session.clear();
       throw new SignInRequired();
@@ -112,7 +124,7 @@ export async function refreshNow(): Promise<string> {
   try {
     const { cognito } = await import("./cognito");
     const next = await cognito.refresh(s.email, s.refreshToken);
-    session.set(next);
+    session.set(next, "refresh");
     return next.idToken;
   } catch {
     session.clear();

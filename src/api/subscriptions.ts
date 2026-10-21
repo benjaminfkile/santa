@@ -1,15 +1,24 @@
 // docs/site.md sections 13 and 12. Alerts subscription API wrappers. The
 // alerts themselves ride in the snapshot (`snapshot.event.alerts`), so
-// nothing here reads them.
+// nothing here reads them; `getMyNotifications` reads the person's open
+// subscription and how far they have read, and `putSeenUpTo` records it.
 
 import { api } from "./client";
 import type { components } from "../contracts";
 
 export type Subscription = components["schemas"]["SubscriptionDto"];
-export type Subscriptions = components["schemas"]["ItemsResponseOfSubscriptionDto"];
+export type MeNotifications = components["schemas"]["MeNotificationsResponse"];
 
-export function listMySubscriptions(): Promise<Subscriptions> {
-  return api<Subscriptions>("/me/subscriptions", { method: "GET", auth: true });
+export function getMyNotifications(): Promise<MeNotifications> {
+  return api<MeNotifications>("/me/notifications", { method: "GET", auth: true });
+}
+
+export function putSeenUpTo(id: number): Promise<void> {
+  return api<void>("/me/notifications/seen", {
+    method: "PUT",
+    auth: true,
+    body: { seenUpToId: id },
+  });
 }
 
 export function createSubscription(address: string): Promise<Subscription> {

@@ -8,14 +8,16 @@ import { resolve } from "node:path";
 import * as subsApi from "../../../src/api/subscriptions";
 
 describe("api/subscriptions", () => {
-  it("exports no getMe and no listAlerts", () => {
+  it("exports no getMe, no listAlerts, and no listMySubscriptions", () => {
     const names = Object.keys(subsApi);
     expect(names).not.toContain("getMe");
     expect(names).not.toContain("listAlerts");
+    expect(names).not.toContain("listMySubscriptions");
     expect(names.sort()).toEqual([
       "createSubscription",
       "deleteSubscription",
-      "listMySubscriptions",
+      "getMyNotifications",
+      "putSeenUpTo",
       "resendVerification",
       "unsubscribe",
       "verifySubscription",

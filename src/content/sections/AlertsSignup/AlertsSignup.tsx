@@ -5,7 +5,7 @@
 // form when there is no flag (prefilled with the account email), and the
 // alerts list from the snapshot. A `409 already_subscribed` on the form
 // (a cleared browser or another device) adopts the existing row through
-// one `GET /me/subscriptions` and shows it in place of the form. The
+// one `GET /me/notifications` (its `subscription`) and shows it in place of the form. The
 // alerts list comes from the snapshot (`snapshot.event.alerts`, newest first,
 // each with its message under the subject when it carries one). While
 // `snapshot.subscriptionsOpen` is false, or after a `409
@@ -23,7 +23,7 @@ import { Inline } from "../../inline/Inline";
 import {
   createSubscription,
   deleteSubscription,
-  listMySubscriptions,
+  getMyNotifications,
   resendVerification,
 } from "../../../api/subscriptions";
 import { ApiRequestError, surfaceFor } from "../../../api/errors";
@@ -33,7 +33,7 @@ import { formatEventTime } from "../../../lib/time";
 import { useStore } from "../../../store/useStore";
 import { selectAlerts } from "../../../alerts/AlertsProvider";
 import { useSubscription } from "../../../alerts/SubscriptionProvider";
-import { flagFromRow, newestOpenRow, type SubscriptionFlag } from "../../../alerts/subscriptionFlag";
+import { flagFromRow, type SubscriptionFlag } from "../../../alerts/subscriptionFlag";
 import { alertKindLabel } from "../../../alerts/alertKind";
 import { sortAlerts } from "../../../alerts/sortAlerts";
 import { copy } from "../../../copy/copy";
@@ -141,14 +141,14 @@ function SignedIn({
     return false;
   }, []);
 
-  // One `GET /me/subscriptions` after a `409 already_subscribed`: writes
-  // the flag from the newest row that is not unsubscribed and shows it.
-  // True when a row was adopted; false (no row, or a failure) leaves the
-  // caller to show the field error.
+  // One `GET /me/notifications` after a `409 already_subscribed`: writes
+  // the flag from its `subscription` and shows it. True when a row was
+  // adopted; false (no row, or a failure) leaves the caller to show the
+  // field error.
   const adoptExisting = useCallback(async (): Promise<boolean> => {
     try {
-      const res = await listMySubscriptions();
-      const row = newestOpenRow(res.items ?? []);
+      const res = await getMyNotifications();
+      const row = res.subscription ?? null;
       if (row === null) return false;
       setFlag(flagFromRow(email, row));
       setNotice("You are already subscribed.");
