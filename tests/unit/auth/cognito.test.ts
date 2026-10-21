@@ -187,6 +187,11 @@ describe("auth error map (docs 11.1)", () => {
     expect(signUpMessage({ name: "InvalidPasswordException" })).toBe(copy.auth.signUp.invalidPassword);
   });
 
+  it("UserLambdaValidationException reads the invitation line on sign-up only", () => {
+    expect(signUpMessage({ name: "UserLambdaValidationException" })).toBe(copy.auth.signUp.byInvitation);
+    expect(signInMessage({ name: "UserLambdaValidationException" })).toBe(copy.auth.errors.generic);
+  });
+
   it("LimitExceeded / TooManyRequests read 'Too many attempts, wait a minute'", () => {
     expect(signInMessage({ name: "LimitExceededException" })).toBe(copy.auth.errors.tooMany);
     expect(signInMessage({ name: "TooManyRequestsException" })).toBe(copy.auth.errors.tooMany);
