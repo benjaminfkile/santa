@@ -69,20 +69,3 @@ export function flagFromRow(account: string, row: Subscription): SubscriptionFla
     state: verified ? "active" : "pending",
   };
 }
-
-// The newest row that is not unsubscribed (by `createdAt`, then id), or
-// null when every row is unsubscribed or there is none.
-export function newestOpenRow(rows: Subscription[]): Subscription | null {
-  let best: Subscription | null = null;
-  for (const row of rows) {
-    if (row.unsubscribedAt !== null && row.unsubscribedAt !== undefined) continue;
-    if (best === null) {
-      best = row;
-      continue;
-    }
-    const a = row.createdAt ?? "";
-    const b = best.createdAt ?? "";
-    if (a > b || (a === b && subscriptionId(row) > subscriptionId(best))) best = row;
-  }
-  return best;
-}

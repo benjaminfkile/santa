@@ -3,8 +3,9 @@
 // `wmsfo.alerts.seenId` and the removal of the old `wmsfo.alerts.seen`,
 // the dialog from `snapshot.event.alerts` (newest first, the New markers,
 // the empty text, the footer with Close, the close X in the head outside
-// the scroll region), the glyph, no API call ever, and the swing under
-// reduced motion.
+// the scroll region), the glyph, the swing under reduced motion, and the
+// one write: opening sends `PUT /me/notifications/seen` once for a
+// signed-in subscriber when the marker advances, and nothing otherwise.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
@@ -16,6 +17,9 @@ import {
   ALERTS_OLD_SEEN_KEY,
   ALERTS_SEEN_KEY,
 } from "../../../src/alerts/AlertsProvider";
+import { SubscriptionProvider } from "../../../src/alerts/SubscriptionProvider";
+import { SUBSCRIPTION_FLAG_KEY } from "../../../src/alerts/subscriptionFlag";
+import { seenMarker } from "../../../src/alerts/seenMarker";
 import { store } from "../../../src/store/useStore";
 import { initialStore } from "../../../src/store/types";
 import type { ContentDocument, SnapshotAlert } from "../../../src/contracts";
@@ -55,7 +59,8 @@ vi.mock("../../../src/ui/Dialog.module.css", () => ({
 }));
 
 vi.mock("../../../src/api/subscriptions", () => ({
-  listMySubscriptions: vi.fn(),
+  getMyNotifications: vi.fn(),
+  putSeenUpTo: vi.fn(),
 }));
 
 import * as subsApi from "../../../src/api/subscriptions";
@@ -200,12 +205,14 @@ const ALERTS = [
 
 beforeEach(() => {
   window.localStorage.clear();
-  vi.mocked(subsApi.listMySubscriptions).mockReset();
+  vi.mocked(subsApi.getMyNotifications).mockReset();
+  vi.mocked(subsApi.getMyNotifications).mockResolvedValue({ subscription: null, seenUpToId: null });
+  vi.mocked(subsApi.putSeenUpTo).mockReset();
+  vi.mocked(subsApi.putSeenUpTo).mockResolvedValue(undefined);
   seed(makeContent());
 });
 
 afterEach(() => {
-  expect(subsApi.listMySubscriptions).not.toHaveBeenCalled();
   cleanup();
   vi.useRealTimers();
   vi.unstubAllGlobals();
@@ -447,5 +454,109 @@ describe("AlertsBell swing", () => {
     stubReducedMotion(true);
     const body = await riseCount();
     expect(body.className).toContain("swing");
+  });
+});
+
+const EMAIL = "p@example.com";
+
+// Stores a flag for the account; the provider's one read answers with
+// the same row, so the flag stays.
+function storeFlag(account = EMAIL) {
+  window.localStorage.setItem(
+    SUBSCRIPTION_FLAG_KEY,
+    JSON.stringify({ account, id: 3, address: account, state: "active" }),
+  );
+  vi.mocked(subsApi.getMyNotifications).mockResolvedValue({
+    subscription: { id: 3, channel: "email", address: account, verifiedAt: "2026-10-01T00:00:00Z", unsubscribedAt: null, createdAt: "2026-10-01T00:00:00Z" },
+    seenUpToId: null,
+  });
+}
+
+function renderWithFlag(auth: AuthState) {
+  return render(
+    <MemoryRouter>
+      <AuthProvider initialState={auth}>
+        <SubscriptionProvider>
+          <AlertsProvider>
+            <Shell>
+              <div>body</div>
+            </Shell>
+          </AlertsProvider>
+        </SubscriptionProvider>
+      </AuthProvider>
+    </MemoryRouter>,
+  );
+}
+
+describe("Opening the bell records seen up to", () => {
+  it("sends PUT /me/notifications/seen once for a signed-in subscriber when the marker advances", async () => {
+    storeFlag();
+    window.localStorage.setItem(ALERTS_SEEN_KEY, "5");
+    mockLists(ALERTS);
+    const { findByTestId, getByTestId } = renderWithFlag(SIGNED_IN);
+    const bell = await findByTestId("alerts-bell");
+    fireEvent.click(bell);
+    expect(window.localStorage.getItem(ALERTS_SEEN_KEY)).toBe("7");
+    expect(subsApi.putSeenUpTo).toHaveBeenCalledTimes(1);
+    expect(subsApi.putSeenUpTo).toHaveBeenCalledWith(7);
+
+    fireEvent.click(getByTestId("alerts-dialog-close"));
+    fireEvent.click(bell);
+    expect(subsApi.putSeenUpTo).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends nothing when there is nothing new", async () => {
+    storeFlag();
+    window.localStorage.setItem(ALERTS_SEEN_KEY, "7");
+    mockLists(ALERTS);
+    const { findByTestId } = renderWithFlag(SIGNED_IN);
+    fireEvent.click(await findByTestId("alerts-bell"));
+    expect(window.localStorage.getItem(ALERTS_SEEN_KEY)).toBe("7");
+    expect(subsApi.putSeenUpTo).not.toHaveBeenCalled();
+  });
+
+  it("sends nothing signed in without a flag, and the marker still rises", async () => {
+    mockLists(ALERTS);
+    const { findByTestId } = renderWithFlag(SIGNED_IN);
+    fireEvent.click(await findByTestId("alerts-bell"));
+    expect(window.localStorage.getItem(ALERTS_SEEN_KEY)).toBe("7");
+    expect(subsApi.putSeenUpTo).not.toHaveBeenCalled();
+  });
+
+  it("sends nothing signed out, and the marker still rises", async () => {
+    storeFlag();
+    mockLists(ALERTS);
+    const { findByTestId } = renderWithFlag({ status: "signedOut" });
+    fireEvent.click(await findByTestId("alerts-bell"));
+    expect(window.localStorage.getItem(ALERTS_SEEN_KEY)).toBe("7");
+    expect(subsApi.putSeenUpTo).not.toHaveBeenCalled();
+  });
+
+  it("ignores a failed write, and the next advance sends again", async () => {
+    storeFlag();
+    vi.mocked(subsApi.putSeenUpTo).mockRejectedValueOnce(new Error("network"));
+    mockLists(ALERTS);
+    const { findByTestId, getByTestId } = renderWithFlag(SIGNED_IN);
+    const bell = await findByTestId("alerts-bell");
+    fireEvent.click(bell);
+    await act(async () => {});
+    expect(subsApi.putSeenUpTo).toHaveBeenCalledWith(7);
+    expect(window.localStorage.getItem(ALERTS_SEEN_KEY)).toBe("7");
+    fireEvent.click(getByTestId("alerts-dialog-close"));
+
+    mockLists([...ALERTS, alert(9, "2026-10-01T13:00:00Z", "Santa is near")]);
+    fireEvent.click(bell);
+    expect(subsApi.putSeenUpTo).toHaveBeenCalledTimes(2);
+    expect(subsApi.putSeenUpTo).toHaveBeenLastCalledWith(9);
+  });
+
+  it("the badge follows a raise of the marker from elsewhere in the page load", async () => {
+    mockLists(ALERTS);
+    const { findByTestId, queryByTestId } = renderShell({ status: "signedOut" });
+    await findByTestId("alerts-badge");
+    act(() => {
+      seenMarker.raise(7);
+    });
+    expect(queryByTestId("alerts-badge")).toBeNull();
   });
 });

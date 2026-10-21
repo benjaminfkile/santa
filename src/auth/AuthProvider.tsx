@@ -1,6 +1,6 @@
-// docs/site.md section 11.3. AuthProvider reads session.current() at mount,
-// subscribes to session changes (sign-in, refresh, sign-out, refresh
-// failure), and exposes useAuth() with the state plus signIn(returnTo)
+// docs/site.md section 11.3. AuthProvider subscribes to session changes
+// (sign-in, refresh, restore, sign-out, refresh failure), reads the stored
+// session back through session.restore() at mount, and exposes useAuth() with the state plus signIn(returnTo)
 // (navigates to /auth/sign-in?returnTo=...) and signOut() (best-effort
 // revoke, session.clear(), stay on the current page).
 
@@ -53,8 +53,11 @@ export function AuthProvider({ children, initialState }: AuthProviderProps) {
     // When a caller passes initialState (unit tests, storybook), respect it
     // and only reconcile with the session on subsequent changes. Without
     // an initialState the mount hydrates from storage.
-    if (initialState === undefined) setState(readState());
     const off = session.subscribe(() => setState(readState()));
+    if (initialState === undefined) {
+      session.restore();
+      setState(readState());
+    }
     return off;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

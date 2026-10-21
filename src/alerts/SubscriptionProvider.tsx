@@ -5,17 +5,20 @@
 // flag is cleared on sign-out (the auth state `signedOut`) and whenever
 // the signed-in account is not the flag's `account`.
 //
-// The one check per app load: once the first live object has applied,
-// while the visitor is signed in and the flag's `account` is the signed-in
-// email, the provider calls `GET /me/subscriptions` once for that account
-// and rewrites the flag from the newest row that is not unsubscribed
-// (verified: active; unverified: pending), clearing it when there is none.
-// `SignInRequired` or any failure leaves the flag as it was. No flag, or
-// signed out: no call. Route changes and store updates never call again;
-// signing in to an account later in the session with a flag for it runs
-// the same check once for that account. A flag written through `setFlag`
-// (a row the API just returned) marks its account checked, so a sign-up
-// or an adopted row never triggers a second read.
+// The one read, `GET /me/notifications`, at most once per page load per
+// account, in two cases: (a) the visitor signs in during this page load
+// (a `session` change with the reason "signIn"; a session restored at
+// boot is not a sign-in), and (b) once the first live object has applied,
+// while the visitor is signed in and the flag's `account` is the
+// signed-in email. On the answer a non-null `subscription` rewrites the
+// flag for the account (verified: active; unverified: pending), a null
+// one clears any flag for the account, and a non-null `seenUpToId` raises
+// the read marker of `seenMarker.ts` (never lowers it). `SignInRequired`
+// or any failure leaves both as they were. A stored session without a
+// flag makes no call on load; route changes and store updates never call
+// again. A flag written through `setFlag` (a row the API just returned)
+// marks its account checked, so a sign-up or an adopted row never
+// triggers a second read.
 
 import {
   createContext,
@@ -28,11 +31,12 @@ import {
   type ReactNode,
 } from "react";
 import { useAuth } from "../auth/AuthProvider";
-import { listMySubscriptions } from "../api/subscriptions";
+import { getMyNotifications } from "../api/subscriptions";
+import { session } from "../auth/session";
 import { useStore } from "../store/useStore";
+import { seenMarker } from "./seenMarker";
 import {
   flagFromRow,
-  newestOpenRow,
   readFlag,
   removeFlag,
   writeFlag,
@@ -53,9 +57,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const signedOut = auth.status === "signedOut";
   const liveApplied = useStore((s) => s.live !== null);
   const [flag, setFlagState] = useState<SubscriptionFlag | null>(() => readFlag());
-  // The accounts already checked during this page load.
+  // The accounts already read during this page load.
   const checkedRef = useRef(new Set<string>());
-  // The signed-in account; a check that lands after it changed is dropped.
+  // The signed-in account; an answer that lands after it changed is dropped.
   const accountRef = useRef<string | null>(account);
 
   // A flag written during the session comes from a row the API just
@@ -81,23 +85,45 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     if (signedOut || (account !== null && flag.account !== account)) clearFlag();
   }, [flag, account, signedOut, clearFlag]);
 
+  // The one read for an account; an answer that lands after the
+  // signed-in account changed is dropped.
+  const readOnce = useCallback(
+    (forAccount: string) => {
+      if (checkedRef.current.has(forAccount)) return;
+      checkedRef.current.add(forAccount);
+      void (async () => {
+        try {
+          const res = await getMyNotifications();
+          if (accountRef.current !== forAccount) return;
+          const row = res.subscription ?? null;
+          if (row !== null) setFlag(flagFromRow(forAccount, row));
+          else if (readFlag()?.account === forAccount) clearFlag();
+          const seenUpTo = toId(res.seenUpToId);
+          if (seenUpTo !== null) seenMarker.raise(seenUpTo);
+        } catch {
+          // SignInRequired or a failure leaves the flag and the marker as they were.
+        }
+      })();
+    },
+    [setFlag, clearFlag],
+  );
+
+  // (a) A sign-in during this page load.
+  useEffect(
+    () =>
+      session.subscribe((reason) => {
+        if (reason !== "signIn") return;
+        const email = session.current()?.email;
+        if (email !== undefined) readOnce(email);
+      }),
+    [readOnce],
+  );
+
+  // (b) The subscriber's check after the first live object.
   useEffect(() => {
     if (!liveApplied || account === null || flag === null || flag.account !== account) return;
-    if (checkedRef.current.has(account)) return;
-    checkedRef.current.add(account);
-    const forAccount = account;
-    void (async () => {
-      try {
-        const res = await listMySubscriptions();
-        if (accountRef.current !== forAccount) return;
-        const row = newestOpenRow(res.items ?? []);
-        if (row === null) clearFlag();
-        else setFlag(flagFromRow(forAccount, row));
-      } catch {
-        // SignInRequired or a failure leaves the flag as it was.
-      }
-    })();
-  }, [liveApplied, account, flag, setFlag, clearFlag]);
+    readOnce(account);
+  }, [liveApplied, account, flag, readOnce]);
 
   const value = useMemo<SubscriptionValue>(
     () => ({ flag, setFlag, clearFlag }),
@@ -105,6 +131,13 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   );
 
   return <SubscriptionContext.Provider value={value}>{children}</SubscriptionContext.Provider>;
+}
+
+// An int64 id sent as a number or a string, or null.
+function toId(v: number | string | null | undefined): number | null {
+  if (v === null || v === undefined) return null;
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(n) ? n : null;
 }
 
 // Outside a provider the hook reads and writes storage directly.
