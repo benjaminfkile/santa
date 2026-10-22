@@ -10,6 +10,7 @@ export const cookieTallyPlaceholder: string;
 export const cookieTallyRow: string;
 export const cookieTallyToggle: string;
 export const cookieTallyToggleClosed: string;
+export const cookieTallyTotal: string;
 export const cookieTallyWrap: string;
 export const ctrl: string;
 export const distancePill: string;

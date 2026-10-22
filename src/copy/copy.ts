@@ -82,6 +82,8 @@ export const copy = {
     cookieTally: {
       hide: "Hide the cookie counts",
       show: "Show the cookie counts",
+      // The total row's hidden label and title, read after the count.
+      total: "cookies in all",
     },
     airborne: {
       // The pill shows only the elapsed time; this is its accessible prefix.
