@@ -3,7 +3,9 @@
 // the one subscription from the subscription flag as a row (address,
 // state, Resend confirmation while pending, Unsubscribe), or the subscribe
 // form when there is no flag (prefilled with the account email), and the
-// alerts list from the snapshot. A `409 already_subscribed` on the form
+// alerts list from the snapshot. While the form field equals the account
+// email, the own-address hint stands above the field (the API verifies
+// that address at once, so the `201` carries `verifiedAt`). A `409 already_subscribed` on the form
 // (a cleared browser or another device) adopts the existing row through
 // one `GET /me/notifications` (its `subscription`) and shows it in place of the form. The
 // alerts list comes from the snapshot (`snapshot.event.alerts`, newest first,
@@ -255,6 +257,11 @@ function SignedIn({
             void submitCreate();
           }}
         >
+          {formAddress.trim().toLowerCase() === email ? (
+            <p className={field.help} data-testid="alerts-own-address-hint">
+              {copy.alerts.ownAddressHint}
+            </p>
+          ) : null}
           <label className={field.field}>
             <span className={field.label}>Email address</span>
             <input

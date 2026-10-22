@@ -4,7 +4,9 @@
 // `{ account, id, address, state }` through `storageGet` and `storageSet`,
 // or nothing. `account` is the signed-in email the flag belongs to;
 // `state` is "pending" until the address is confirmed, then "active". A
-// stored value of any other shape reads as no flag.
+// stored value of any other shape reads as no flag. `onFlagChange`
+// listeners hear every `writeFlag` and `removeFlag`, so a flag written
+// outside the provider (the sign-up alerts intent) reaches its state.
 
 import { storageGet, storageRemove, storageSet } from "../lib/storage";
 import type { Subscription } from "../api/subscriptions";
@@ -19,6 +21,20 @@ export type SubscriptionFlag = {
   address: string;
   state: SubscriptionState;
 };
+
+type FlagListener = () => void;
+const listeners = new Set<FlagListener>();
+
+export function onFlagChange(listener: FlagListener): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+function notify(): void {
+  for (const l of listeners) l();
+}
 
 export function readFlag(): SubscriptionFlag | null {
   const raw = storageGet(SUBSCRIPTION_FLAG_KEY);
@@ -40,10 +56,12 @@ export function writeFlag(flag: SubscriptionFlag): void {
     SUBSCRIPTION_FLAG_KEY,
     JSON.stringify({ account: flag.account, id: flag.id, address: flag.address, state: flag.state }),
   );
+  notify();
 }
 
 export function removeFlag(): void {
   storageRemove(SUBSCRIPTION_FLAG_KEY);
+  notify();
 }
 
 // A subscription row's id as a number; the API sends int64 ids as a

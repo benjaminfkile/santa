@@ -1,5 +1,6 @@
 // docs/site.md section 11.2. The site's own sign-in page: email, password,
-// submit; on success stores tokens through session.set and navigates to
+// submit; on success stores tokens through session.set, completes the
+// sign-up alerts intent (`completePendingSubscribe`), and navigates to
 // returnTo. UserNotConfirmedException routes to /auth/confirm.
 
 import { useState, type FormEvent } from "react";
@@ -9,6 +10,7 @@ import { readReturnTo, withReturnTo } from "./returnTo";
 import { cognito } from "../../auth/cognito";
 import { session } from "../../auth/session";
 import { isUserNotConfirmed, signInMessage } from "../../auth/errors";
+import { completePendingSubscribe } from "../../alerts/pendingSubscribe";
 import { copy } from "../../copy/copy";
 import { useStore } from "../../store/useStore";
 import * as field from "../../ui/Field.module.css";
@@ -35,6 +37,7 @@ export function SignInPage() {
     try {
       const tokens = await cognito.signIn(clean, password);
       session.set(tokens);
+      await completePendingSubscribe(tokens.email);
       navigate(returnTo, { replace: true });
     } catch (err) {
       if (isUserNotConfirmed(err)) {

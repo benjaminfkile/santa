@@ -21,6 +21,7 @@ import { ALERTS_SEEN_KEY, seenMarker } from "../../../src/alerts/seenMarker";
 import {
   SUBSCRIPTION_FLAG_KEY,
   readFlag,
+  writeFlag,
   type SubscriptionFlag,
 } from "../../../src/alerts/subscriptionFlag";
 import { store } from "../../../src/store/useStore";
@@ -322,6 +323,21 @@ describe("the one read on sign-in", () => {
     expect(subsApi.getMyNotifications).toHaveBeenCalledTimes(1);
     expect(shownFlag(view)).toBeNull();
     expect(seenMarker.read()).toBeNull();
+  });
+
+  it("a flag written outside the provider while the sign-in read is in flight survives a null answer", async () => {
+    let resolveRead: (v: ReturnType<typeof answer>) => void = () => {};
+    vi.mocked(subsApi.getMyNotifications).mockReturnValueOnce(
+      new Promise((r) => { resolveRead = r; }),
+    );
+    const view = renderApp({ status: "signedOut" });
+    act(() => session.set(TOKENS));
+    const written: SubscriptionFlag = { account: EMAIL, id: 9, address: EMAIL, state: "active" };
+    act(() => writeFlag(written));
+    expect(shownFlag(view)).toEqual(written);
+    await act(async () => resolveRead(answer(null)));
+    expect(shownFlag(view)).toEqual(written);
+    expect(readFlag()).toEqual(written);
   });
 
   it("a refresh is not a sign-in", async () => {

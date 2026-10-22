@@ -1,8 +1,9 @@
 // docs/site.md section 11.2. /auth/confirm: the six-digit code and a
 // Resend link (disabled 30 s after each send). When the visitor arrived
 // straight from sign-up the page still holds the password in memory and
-// signs in directly, landing on returnTo. Otherwise the page shows
-// "Account confirmed" and a Sign in button that keeps returnTo.
+// signs in directly, completes the sign-up alerts intent
+// (`completePendingSubscribe`), and lands on returnTo. Otherwise the page
+// shows "Your account is ready" and a Sign in button that keeps returnTo.
 
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -12,6 +13,7 @@ import { cognito } from "../../auth/cognito";
 import { session } from "../../auth/session";
 import { confirmMessage } from "../../auth/errors";
 import { takePendingSignUp } from "./pendingSignUp";
+import { completePendingSubscribe } from "../../alerts/pendingSubscribe";
 import { copy } from "../../copy/copy";
 import * as field from "../../ui/Field.module.css";
 import * as btn from "../../ui/Button.module.css";
@@ -52,6 +54,7 @@ export function ConfirmPage() {
         try {
           const tokens = await cognito.signIn(email, pw);
           session.set(tokens);
+          await completePendingSubscribe(email);
           navigate(returnTo, { replace: true });
           return;
         } catch {

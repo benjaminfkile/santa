@@ -30,7 +30,7 @@ export function ResetPasswordPage() {
     e.preventDefault();
     if (submitting || email === "") return;
     setError(null);
-    if (password.length < 12) {
+    if (password.length < 8) {
       setError(s.passwordTooShort);
       return;
     }
@@ -98,7 +98,7 @@ export function ResetPasswordPage() {
             type="password"
             name="password"
             autoComplete="new-password"
-            minLength={12}
+            minLength={8}
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -111,7 +111,7 @@ export function ResetPasswordPage() {
             type="password"
             name="confirmPassword"
             autoComplete="new-password"
-            minLength={12}
+            minLength={8}
             required
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
