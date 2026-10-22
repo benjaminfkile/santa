@@ -17,8 +17,10 @@ import { AuthProvider, type AuthState } from "../../../../src/auth/AuthProvider"
 import { SubscriptionProvider } from "../../../../src/alerts/SubscriptionProvider";
 import {
   SUBSCRIPTION_FLAG_KEY,
+  writeFlag,
   type SubscriptionFlag,
 } from "../../../../src/alerts/subscriptionFlag";
+import { copy } from "../../../../src/copy/copy";
 import type { ContentBundle } from "../../../../src/store/types";
 import type { SnapshotAlert } from "../../../../src/contracts";
 import { ApiRequestError } from "../../../../src/api/client";
@@ -157,6 +159,42 @@ describe("AlertsSignup", () => {
     await userEvent.click(getByTestId("alerts-submit"));
     await waitFor(() => expect(getByTestId("subscription-state-label").textContent).toBe("Active"));
     expect(storedFlag()?.state).toBe("active");
+  });
+
+  it("shows the own-address hint above the field only while it holds the account email", async () => {
+    const { getByTestId, queryByTestId, container } = renderWith(SIGNED_IN);
+    await act(async () => {});
+    expect(copy.alerts.ownAddressHint).toBe("Your account address needs no confirmation email.");
+    const hint = getByTestId("alerts-own-address-hint");
+    expect(hint.textContent).toBe(copy.alerts.ownAddressHint);
+    const input = container.querySelector('input[type="email"]') as HTMLInputElement;
+    expect(hint.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    await userEvent.clear(input);
+    await userEvent.type(input, "other@e.com");
+    expect(queryByTestId("alerts-own-address-hint")).toBeNull();
+    await userEvent.clear(input);
+    await userEvent.type(input, " P@E.com ");
+    expect(getByTestId("alerts-own-address-hint")).toBeInTheDocument();
+  });
+
+  it("the account address verified at once (201 with verifiedAt) shows the Active row and 'You are subscribed.'", async () => {
+    vi.mocked(subsApi.createSubscription).mockResolvedValueOnce({
+      id: 9, channel: "email", address: EMAIL, verifiedAt: "2026-10-22T00:00:00Z", unsubscribedAt: null, createdAt: "",
+    } as never);
+    const { getByTestId } = renderWith(SIGNED_IN);
+    await userEvent.click(getByTestId("alerts-submit"));
+    await waitFor(() => expect(getByTestId("subscription-state-label").textContent).toBe("Active"));
+    expect(getByTestId("alerts-notice").textContent).toBe("You are subscribed.");
+    expect(storedFlag()).toEqual({ account: EMAIL, id: 9, address: EMAIL, state: "active" });
+  });
+
+  it("a flag written outside the provider (the sign-up alerts intent) shows the row", async () => {
+    const { getByTestId, queryByTestId } = renderWith(SIGNED_IN);
+    await act(async () => {});
+    expect(getByTestId("alerts-submit")).toBeInTheDocument();
+    act(() => writeFlag(ACTIVE));
+    expect(queryByTestId("alerts-submit")).toBeNull();
+    expect(getByTestId("subscription-state-label").textContent).toBe("Active");
   });
 
   it("200 (the pending re-POST) writes the pending flag", async () => {

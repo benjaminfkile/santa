@@ -1,6 +1,10 @@
 // docs/site.md section 11.2. Sign-up: email, password, confirm password.
-// Client checks: valid address shape, 12 character minimum, both passwords
-// equal. On success navigates to /auth/confirm?email=&returnTo=. While
+// Client checks: valid address shape, 8 character minimum, both passwords
+// equal. Under the confirm-password field an alerts box, checked by
+// default and hidden while `snapshot.subscriptionsOpen` is false; when
+// checked, a successful sign-up stores the alerts intent of
+// `pendingSubscribe.ts`. On success navigates to
+// /auth/confirm?email=&returnTo=. While
 // `snapshot.signUpsOpen` is false the card shows the closed line and a
 // Sign in link in place of the form.
 
@@ -11,6 +15,7 @@ import { readReturnTo, withReturnTo } from "./returnTo";
 import { cognito } from "../../auth/cognito";
 import { signUpMessage } from "../../auth/errors";
 import { setPendingSignUp } from "./pendingSignUp";
+import { clearPendingSubscribe, setPendingSubscribe } from "../../alerts/pendingSubscribe";
 import { copy } from "../../copy/copy";
 import { useStore } from "../../store/useStore";
 import * as field from "../../ui/Field.module.css";
@@ -27,9 +32,11 @@ export function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [alerts, setAlerts] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const signUpsOpen = useStore((s) => s.snapshot?.signUpsOpen !== false);
+  const subscriptionsOpen = useStore((s) => s.snapshot?.subscriptionsOpen !== false);
   const t = copy.auth.signUp;
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -41,7 +48,7 @@ export function SignUpPage() {
       setError(t.invalidEmail);
       return;
     }
-    if (password.length < 12) {
+    if (password.length < 8) {
       setError(t.passwordTooShort);
       return;
     }
@@ -53,6 +60,8 @@ export function SignUpPage() {
     try {
       await cognito.signUp(clean, password);
       setPendingSignUp(clean, password);
+      if (alerts && subscriptionsOpen) setPendingSubscribe(clean);
+      else clearPendingSubscribe();
       navigate(
         withReturnTo(`/auth/confirm?email=${encodeURIComponent(clean)}`, returnTo),
         { replace: true },
@@ -110,7 +119,7 @@ export function SignUpPage() {
             type="password"
             name="password"
             autoComplete="new-password"
-            minLength={12}
+            minLength={8}
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -123,12 +132,25 @@ export function SignUpPage() {
             type="password"
             name="confirmPassword"
             autoComplete="new-password"
-            minLength={12}
+            minLength={8}
             required
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
           />
         </label>
+        {subscriptionsOpen ? (
+          <label className={field.check}>
+            <input
+              className={field.checkInput}
+              type="checkbox"
+              name="alerts"
+              checked={alerts}
+              onChange={(e) => setAlerts(e.target.checked)}
+              data-testid="auth-sign-up-alerts"
+            />
+            <span>{t.alerts}</span>
+          </label>
+        ) : null}
         {error !== null ? (
           <p className={styles.error} aria-describedby="auth-title" role="alert">
             {error}

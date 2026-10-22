@@ -1,4 +1,6 @@
 export const __esModule: true;
+export const check: string;
+export const checkInput: string;
 export const counter: string;
 export const error: string;
 export const field: string;
