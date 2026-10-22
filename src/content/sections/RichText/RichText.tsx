@@ -1,6 +1,8 @@
 // docs/site.md section 7.4. Rich text section: renders each block through
 // registry.blocks; an unknown block kind renders nothing. textSize "large"
 // marks the root so paragraphs, list items, and quotes draw larger.
+// Section 7.5: a block with its own `align` marks its own root with
+// `data-align`, which RichText.module.css lets beat the section align.
 
 import type { SectionComponent } from "../../registry";
 import { registry } from "../../registry";

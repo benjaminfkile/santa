@@ -3,6 +3,7 @@
 import type { BlockComponent } from "../registry";
 import { Inline } from "../inline/Inline";
 import { useSnapshotEvent } from "./useSnapshotEvent";
+import { blockAlign } from "./blockAlign";
 import * as styles from "../sections/RichText/RichText.module.css";
 
 type QuoteData = { text?: string; attribution?: string | null };
@@ -11,7 +12,7 @@ export const QuoteBlock: BlockComponent = ({ data, bundle }) => {
   const d = (data ?? {}) as QuoteData;
   const event = useSnapshotEvent();
   return (
-    <blockquote className={styles.blockQuote}>
+    <blockquote className={styles.blockQuote} data-align={blockAlign(data)}>
       <p>
         <Inline text={d.text ?? ""} bundle={bundle} event={event} />
       </p>

@@ -38,6 +38,33 @@
 :global(section[data-align="center"]) .blockList { width: fit-content; margin-inline: auto; text-align: start; }
 :global(section[data-align="end"]) .blockList { width: fit-content; margin-inline-start: auto; text-align: start; }
 
+/* A block's own align beats the section's (section 7.5). The heading,
+   paragraph, list, quote, media, and links blocks carry `data-align` only
+   when they set one; these rules key on it under .richText, one class more
+   specific than the section-level rules above, and set the same
+   properties. "start" puts the block back as a start section draws it;
+   "center" draws it as a centre section does, with its text centred. */
+.richText .blockParagraph[data-align="start"] { text-align: start; }
+.richText .blockParagraph[data-align="center"] { text-align: center; }
+.richText .blockHeading[data-align="start"] { justify-content: flex-start; text-align: start; }
+.richText .blockHeading[data-align="center"] { justify-content: center; text-align: center; }
+.richText .blockHeading[data-align="start"] .blockHeadingText { flex-grow: 1; }
+.richText .blockHeading[data-align="center"] .blockHeadingText { flex-grow: 0; }
+.richText .blockList[data-align="start"] { width: auto; margin-inline: 0; text-align: start; }
+.richText .blockList[data-align="center"] { width: fit-content; margin-inline: auto; text-align: start; }
+.richText .blockQuote[data-align="start"] { width: auto; margin-inline: 0; text-align: start; }
+.richText .blockQuote[data-align="center"] { width: fit-content; margin-inline: auto; text-align: center; }
+.richText .blockMedia[data-align="start"] { align-items: normal; margin-inline: 0; }
+.richText .blockMedia[data-align="center"] { align-items: center; margin-inline: auto; }
+.richText .blockMedia[data-align="start"] .blockMediaCaption,
+.richText .blockMedia[data-align="start"] .blockMediaCredit { text-align: start; }
+.richText .blockMedia[data-align="center"] .blockMediaCaption,
+.richText .blockMedia[data-align="center"] .blockMediaCredit { text-align: center; }
+.richText .blockLinksButtons[data-align="start"] { justify-content: flex-start; text-align: start; }
+.richText .blockLinksButtons[data-align="center"] { justify-content: center; text-align: center; }
+.richText .blockLinksList[data-align="start"] { align-items: normal; text-align: start; }
+.richText .blockLinksList[data-align="center"] { align-items: center; text-align: center; }
+
 .blockHeading {
   font-family: var(--font-display);
   margin: 0;
