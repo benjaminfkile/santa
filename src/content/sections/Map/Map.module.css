@@ -223,6 +223,14 @@
   gap: 5px;
   min-height: 30px;
 }
+/* The total row sits outside the list, so it takes the list's right inset
+   to keep its icon in the same column as the ranked rows' icons, and a
+   margin that makes its gap to the first ranked row the list's 4 px. */
+.cookieTallyTotal {
+  padding-right: 11px;
+  margin-bottom: 2px;
+  user-select: none;
+}
 .cookieTallyCount {
   font-family: var(--font-mono);
   font-size: 0.8125rem;

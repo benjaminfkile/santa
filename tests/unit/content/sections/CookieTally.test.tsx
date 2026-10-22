@@ -200,6 +200,68 @@ describe("CookieTally", () => {
     expect(rule("cookieLeave")).toMatch(/width: 44px/);
   });
 
+  it("the total row sums every type, a type missing from the tally counting 0", () => {
+    setState({ "1": 3, "3": 1200 });
+    const { getByTestId } = render(<CookieTally bundle={bundle} />);
+    const total = getByTestId("cookie-tally-total");
+    expect(total.getAttribute("data-count")).toBe("1203");
+    expect(getByTestId("cookie-tally-total-count").textContent).toBe("1.2k cookies in all");
+  });
+
+  it("a null tally totals 0 and renders 0", () => {
+    setState(null as unknown as LiveObject["cookieTally"]);
+    const { getByTestId } = render(<CookieTally bundle={bundle} />);
+    expect(getByTestId("cookie-tally-total").getAttribute("data-count")).toBe("0");
+    expect(getByTestId("cookie-tally-total-count").firstChild?.textContent).toBe("0");
+  });
+
+  it("the total follows the live object", () => {
+    setState({ "1": 1 });
+    const { getByTestId } = render(<CookieTally bundle={bundle} />);
+    expect(getByTestId("cookie-tally-total").getAttribute("data-count")).toBe("1");
+    setState({ "1": 2, "2": 5, "3": 4 });
+    expect(getByTestId("cookie-tally-total").getAttribute("data-count")).toBe("11");
+  });
+
+  it("the total sits first under the chevron, outside the list, and stays while collapsed", () => {
+    setState({ "1": 9, "2": 4 });
+    const view = render(<CookieTally bundle={bundle} />);
+    const wrap = view.getByTestId("cookie-tally-wrap");
+    const order = () => Array.from(wrap.children).map((c) => c.getAttribute("data-testid"));
+    expect(order()).toEqual(["cookie-tally-toggle", "cookie-tally-total", "cookie-tally"]);
+    expect(view.getByTestId("cookie-tally").contains(view.getByTestId("cookie-tally-total"))).toBe(false);
+
+    fireEvent.click(view.getByTestId("cookie-tally-toggle"));
+    expect(order()).toEqual(["cookie-tally-toggle", "cookie-tally-total"]);
+    expect(view.queryAllByTestId("cookie-tally-row")).toHaveLength(0);
+    expect(view.getByTestId("cookie-tally-total").getAttribute("data-count")).toBe("13");
+  });
+
+  it("the total row is built like the ranked rows, with the plain cookie icon at 28 px", () => {
+    setState({ "1": 2 });
+    const view = render(<CookieTally bundle={bundle} />);
+    const total = view.getByTestId("cookie-tally-total");
+    const row = view.getAllByTestId("cookie-tally-row")[0];
+    expect(total.className.split(" ")).toContain(mapStyles.cookieTallyRow);
+    const [count, icon] = Array.from(total.children);
+    expect(count.className).toBe(row.children[0].className);
+    expect(count.className).toBe(mapStyles.cookieTallyCount);
+    expect(icon.className).toBe(mapStyles.cookieTallyIcon);
+    expect(icon.getAttribute("aria-hidden")).not.toBeNull();
+    const svg = icon.querySelector("svg");
+    expect(svg?.getAttribute("data-icon-id")).toBe("cookie");
+    expect(svg?.getAttribute("width")).toBe("28");
+  });
+
+  it("the total is labelled for screen readers and titled with the same text", () => {
+    setState({ "1": 2 });
+    const view = render(<CookieTally bundle={bundle} />);
+    const total = view.getByTestId("cookie-tally-total");
+    expect(total.getAttribute("title")).toBe("cookies in all");
+    const hidden = total.querySelector(`.${mapStyles.visuallyHidden}`);
+    expect(hidden?.textContent?.trim()).toBe("cookies in all");
+  });
+
   it("renders nothing without cookie types", () => {
     act(() => store.setState({ snapshot: { schemaVersion: 1, cookieTypes: [] } as Snapshot }));
     const { container } = render(<CookieTally bundle={bundle} />);
