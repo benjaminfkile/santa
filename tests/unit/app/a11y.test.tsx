@@ -6,7 +6,7 @@
 // theme file and are surveyed manually.
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { act, cleanup, render } from "@testing-library/react";
+import { act, cleanup, render, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import axe from "axe-core";
 import App from "../../../src/App";
@@ -68,8 +68,9 @@ describe("accessibility (axe)", () => {
 
   it("Loading page carries a polite status live region", async () => {
     const { container } = render(<Loading />);
+    await waitFor(() => expect(container.querySelector('[role="status"]')).not.toBeNull());
     const region = container.querySelector('[role="status"]');
-    expect(region).not.toBeNull();
+    expect(container.querySelectorAll("h1")).toHaveLength(1);
     expect(region?.getAttribute("aria-live")).toBe("polite");
     const results = await runAxe(container);
     expect(results.violations, reportViolations(results)).toHaveLength(0);
@@ -78,6 +79,8 @@ describe("accessibility (axe)", () => {
   it("ReloadPrompt carries a role=alert region", async () => {
     const { container } = render(<ReloadPrompt onReload={() => undefined} />);
     expect(container.querySelector('[role="alert"]')).not.toBeNull();
+    expect(container.querySelectorAll("h1")).toHaveLength(1);
+    expect(container.querySelector("main#main")).not.toBeNull();
     const results = await runAxe(container);
     expect(results.violations, reportViolations(results)).toHaveLength(0);
   });
@@ -88,7 +91,8 @@ describe("accessibility (axe)", () => {
         <NotFound />
       </MemoryRouter>,
     );
-    expect(container.querySelector("h1")).not.toBeNull();
+    expect(container.querySelectorAll("h1")).toHaveLength(1);
+    expect(container.querySelector("main#main")).not.toBeNull();
     const results = await runAxe(container);
     expect(results.violations, reportViolations(results)).toHaveLength(0);
   });

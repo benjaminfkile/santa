@@ -5,11 +5,14 @@
 // most one flag, so the pending flag is the address the link confirms.
 
 import { useCallback, useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { verifySubscription } from "../../api/subscriptions";
 import { ApiRequestError } from "../../api/errors";
 import { useSubscription } from "../../alerts/SubscriptionProvider";
-import * as btn from "../../ui/Button.module.css";
+import { BellIcon } from "../../content/icons/generated/bell";
+import { QuestionIcon } from "../../content/icons/generated/question";
+import { copy } from "../../copy/copy";
+import { StatusPage } from "../StatusPage";
 
 const TOKEN_RE = /^wsv_[A-Za-z0-9_-]{43}$/;
 
@@ -52,46 +55,27 @@ export function VerifyPage() {
     if (confirmed && flag !== null && flag.state === "pending") setFlag({ ...flag, state: "active" });
   }, [confirmed, flag, setFlag]);
 
+  const c = copy.alertsVerify;
+  const home = { to: "/", label: c.home };
   if (!validToken) {
-    return (
-      <main id="main">
-        <h1>Alerts</h1>
-        <p>This link is not valid.</p>
-        <p><Link to="/">Home</Link></p>
-      </main>
-    );
+    return <StatusPage icon={QuestionIcon} title={c.invalid} action={home} role="alert" testId="verify-invalid" />;
   }
   if (state.kind === "success") {
-    return (
-      <main id="main">
-        <h1>Alerts</h1>
-        <p>Your alerts are confirmed.</p>
-        <p><Link to="/">Home</Link></p>
-      </main>
-    );
+    return <StatusPage icon={BellIcon} title={c.success} line={c.successLine} action={home} testId="verify-success" />;
   }
   if (state.kind === "invalid") {
-    return (
-      <main id="main">
-        <h1>Alerts</h1>
-        <p>This link has expired or is not valid.</p>
-        <p><Link to="/">Home</Link></p>
-      </main>
-    );
+    return <StatusPage icon={QuestionIcon} title={c.expired} action={home} role="alert" testId="verify-expired" />;
   }
   if (state.kind === "network") {
     return (
-      <main id="main">
-        <h1>Alerts</h1>
-        <p>Could not reach the server.</p>
-        <button type="button" className={btn.btn} onClick={() => void run()}>Retry</button>
-      </main>
+      <StatusPage
+        icon={QuestionIcon}
+        title={c.network}
+        action={{ onClick: () => void run(), label: c.retry }}
+        role="alert"
+        testId="verify-network"
+      />
     );
   }
-  return (
-    <main id="main">
-      <h1>Alerts</h1>
-      <p>Confirming your subscription…</p>
-    </main>
-  );
+  return <StatusPage icon={BellIcon} title={c.confirming} role="status" testId="verify-pending" />;
 }

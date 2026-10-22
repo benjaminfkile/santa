@@ -3,7 +3,7 @@
 // without waiting for a new snapshot.
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { act, render, cleanup } from "@testing-library/react";
+import { act, render, cleanup, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { HomePage } from "../../../src/pages/HomePage";
 import { store } from "../../../src/store/useStore";
@@ -158,7 +158,7 @@ describe("HomePage status walk", () => {
     }
   });
 
-  it("renders Loading before the first live object", () => {
+  it("renders Loading before the first live object", async () => {
     setSnapshot(null);
     const { container } = render(
       <MemoryRouter>
@@ -166,7 +166,7 @@ describe("HomePage status walk", () => {
       </MemoryRouter>,
     );
     expect(container.querySelector('main[data-page-role]')).toBeNull();
-    expect(container.textContent).toContain("Loading");
+    await waitFor(() => expect(container.textContent).toContain("Loading"));
   });
 
   it("renders the reload prompt on schemaMismatch", () => {

@@ -1,0 +1,67 @@
+/* docs/site.md sections 4, 7.1, 13.2, 13.3, and 19. The status card: the
+   frost recipe from theme/Frost.module.css centred in the same wrap the
+   auth pages use, with the site name, a 72 px library icon, the title,
+   one line, and an optional action. The loading variant fades in and
+   turns its snowflake. */
+
+.wrap {
+  min-height: calc(100vh - 12rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) var(--space-4);
+}
+.card {
+  composes: frost from "../content/theme/Frost.module.css";
+  width: min(440px, 100%);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  box-sizing: border-box;
+  text-align: center;
+}
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--text-bright);
+  margin: 0;
+}
+.icon {
+  width: 72px;
+  height: 72px;
+  color: var(--accent);
+  flex: none;
+}
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: var(--text-bright);
+  margin: 0;
+}
+.line {
+  margin: 0;
+  color: var(--text);
+}
+.fadeIn {
+  animation: status-fade-in 200ms ease-out both;
+}
+.turn {
+  animation: status-turn 8s linear infinite;
+}
+@keyframes status-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes status-turn {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

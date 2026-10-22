@@ -3,13 +3,13 @@
 // body is the caller's fields; a line of cross-links sits below.
 //
 // docs/site.md 11.5: during the live takeover the same card renders inside
-// a centred dialog surface over the map; the outer wrap is fixed and holds
-// the dialog backdrop.
+// the shared centred dialog surface over the map (ui/TakeoverSurface).
 
 import { type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useStore } from "../../store/useStore";
 import { selectBundle, selectTakeover } from "../../content/selectPage";
+import { TakeoverSurface } from "../../ui/TakeoverSurface";
 import * as styles from "./AuthCard.module.css";
 
 export type AuthLink = { to: string; label: string };
@@ -48,9 +48,9 @@ export function AuthCard({ title, children, links }: AuthCardProps) {
   );
   if (takeover) {
     return (
-      <div className={styles.takeoverWrap} data-testid="auth-takeover">
+      <TakeoverSurface testId="auth-takeover">
         {inner}
-      </div>
+      </TakeoverSurface>
     );
   }
   return (

@@ -3,11 +3,14 @@
 // client-side. A `204` clears the subscription flag.
 
 import { useCallback, useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { unsubscribe } from "../../api/subscriptions";
 import { ApiRequestError } from "../../api/errors";
 import { useSubscription } from "../../alerts/SubscriptionProvider";
-import * as btn from "../../ui/Button.module.css";
+import { EnvelopeIcon } from "../../content/icons/generated/envelope";
+import { QuestionIcon } from "../../content/icons/generated/question";
+import { copy } from "../../copy/copy";
+import { StatusPage } from "../StatusPage";
 
 const TOKEN_RE = /^wsu_[A-Za-z0-9_-]{43}$/;
 
@@ -45,46 +48,27 @@ export function UnsubscribePage() {
     void run();
   }, [run]);
 
+  const c = copy.alertsUnsubscribe;
+  const home = { to: "/", label: c.home };
   if (!validToken) {
-    return (
-      <main id="main">
-        <h1>Alerts</h1>
-        <p>This link is not valid.</p>
-        <p><Link to="/">Home</Link></p>
-      </main>
-    );
+    return <StatusPage icon={QuestionIcon} title={c.invalid} action={home} role="alert" testId="unsubscribe-invalid" />;
   }
   if (state.kind === "success") {
-    return (
-      <main id="main">
-        <h1>Alerts</h1>
-        <p>You are unsubscribed.</p>
-        <p><Link to="/">Home</Link></p>
-      </main>
-    );
+    return <StatusPage icon={EnvelopeIcon} title={c.success} line={c.successLine} action={home} testId="unsubscribe-success" />;
   }
   if (state.kind === "invalid") {
-    return (
-      <main id="main">
-        <h1>Alerts</h1>
-        <p>This link is not valid.</p>
-        <p><Link to="/">Home</Link></p>
-      </main>
-    );
+    return <StatusPage icon={QuestionIcon} title={c.expired} action={home} role="alert" testId="unsubscribe-expired" />;
   }
   if (state.kind === "network") {
     return (
-      <main id="main">
-        <h1>Alerts</h1>
-        <p>Could not reach the server.</p>
-        <button type="button" className={btn.btn} onClick={() => void run()}>Retry</button>
-      </main>
+      <StatusPage
+        icon={QuestionIcon}
+        title={c.network}
+        action={{ onClick: () => void run(), label: c.retry }}
+        role="alert"
+        testId="unsubscribe-network"
+      />
     );
   }
-  return (
-    <main id="main">
-      <h1>Alerts</h1>
-      <p>Processing…</p>
-    </main>
-  );
+  return <StatusPage icon={EnvelopeIcon} title={c.processing} role="status" testId="unsubscribe-pending" />;
 }

@@ -8,7 +8,6 @@ export const links: string;
 export const notice: string;
 export const resend: string;
 export const submit: string;
-export const takeoverWrap: string;
 export const title: string;
 export const wrap: string;
 

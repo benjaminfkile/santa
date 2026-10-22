@@ -1,0 +1,13 @@
+/* docs/site.md section 11.5. The centred dialog surface a site-coded page
+   renders inside during the live takeover: fixed over the tracker, with
+   the dialog backdrop, so the map stays underneath. */
+
+.takeoverWrap {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+}

@@ -121,7 +121,7 @@ describe("QrPage", () => {
   it("renders NotFound and sends no beacon for a malformed tag", () => {
     setSnapshot({ "qr-001": { pageSlug: "sponsors", forwardUrl: null } });
     const { container } = renderAt("/q/not-a-tag");
-    expect(container.textContent).toMatch(/not found|404/i);
+    expect(container.textContent).toContain("This page flew off course");
     expect(qrApi.sendScanBeacon).not.toHaveBeenCalled();
   });
 });

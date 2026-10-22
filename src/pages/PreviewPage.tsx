@@ -5,6 +5,7 @@
 // otherwise (a role page included). From there every route renders from
 // the draft. An expired link lands on / with the expired banner. With no
 // draft yet after five failures it shows the error with a Retry button.
+// Both the expired and the unreachable states render on the status card.
 // The page itself always carries robots=noindex.
 
 import { useEffect, useState } from "react";
@@ -20,7 +21,8 @@ import {
   usePreviewSession,
 } from "./previewSession";
 import { copy } from "../copy/copy";
-import * as btn from "../ui/Button.module.css";
+import { QuestionIcon } from "../content/icons/generated/question";
+import { StatusPage } from "./StatusPage";
 
 export function PreviewPage() {
   const [params] = useSearchParams();
@@ -44,10 +46,13 @@ export function PreviewPage() {
 
   if (token === "") {
     return (
-      <main id="main">
-        <h1>{copy.banners.preview}</h1>
-        <p>{copy.banners.previewExpired}</p>
-      </main>
+      <StatusPage
+        icon={QuestionIcon}
+        title={copy.banners.preview}
+        line={copy.banners.previewExpired}
+        role="alert"
+        testId="preview-page-expired"
+      />
     );
   }
   if (session === null || session.token !== token) return <Loading />;
@@ -58,13 +63,14 @@ export function PreviewPage() {
   if (preview === null || preview.content === null) {
     if (reconnecting) {
       return (
-        <main id="main">
-          <h1>{copy.banners.preview}</h1>
-          <p>{copy.errors.unreachable}</p>
-          <button type="button" className={btn.btn} onClick={retryPreview}>
-            {copy.banners.previewRetry}
-          </button>
-        </main>
+        <StatusPage
+          icon={QuestionIcon}
+          title={copy.banners.preview}
+          line={copy.errors.unreachable}
+          action={{ onClick: retryPreview, label: copy.banners.previewRetry }}
+          role="alert"
+          testId="preview-page-unreachable"
+        />
       );
     }
     return <Loading />;

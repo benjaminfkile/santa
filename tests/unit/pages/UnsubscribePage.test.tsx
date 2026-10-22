@@ -61,12 +61,12 @@ describe("UnsubscribePage", () => {
     await waitFor(() => expect(container.textContent).toContain("You are unsubscribed"));
   });
 
-  it("404 renders 'This link is not valid'", async () => {
+  it("404 renders 'This link has expired or is not valid'", async () => {
     vi.mocked(subsApi.unsubscribe).mockRejectedValueOnce(
       new ApiRequestError(404, { code: "not_found", message: "x", details: null, requestId: "r" }, null),
     );
     const { container } = renderAt(`/alerts/unsubscribe?token=${validToken}`);
-    await waitFor(() => expect(container.textContent).toContain("This link is not valid"));
+    await waitFor(() => expect(container.textContent).toContain("This link has expired or is not valid"));
   });
 
   it("network error shows Retry", async () => {
@@ -92,7 +92,44 @@ describe("UnsubscribePage", () => {
       new ApiRequestError(404, { code: "not_found", message: "x", details: null, requestId: "r" }, null),
     );
     const { container } = renderAt(`/alerts/unsubscribe?token=${validToken}`);
-    await waitFor(() => expect(container.textContent).toContain("This link is not valid"));
+    await waitFor(() => expect(container.textContent).toContain("This link has expired or is not valid"));
     expect(readFlag()).toEqual(FLAG);
+  });
+});
+
+describe("UnsubscribePage titles on the status card", () => {
+  const title = (c: HTMLElement) => c.querySelector("h1")?.textContent;
+
+  it("bad link", () => {
+    const { container } = renderAt(`/alerts/unsubscribe?token=${invalidToken}`);
+    expect(title(container)).toBe("This link is not valid");
+    expect(container.querySelector('[role="alert"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/"]')?.textContent).toBe("Home");
+  });
+
+  it("processing, then unsubscribed", async () => {
+    let resolve: () => void = () => undefined;
+    vi.mocked(subsApi.unsubscribe).mockReturnValueOnce(new Promise<void>((r) => (resolve = r)));
+    const { container } = renderAt(`/alerts/unsubscribe?token=${validToken}`);
+    await waitFor(() => expect(title(container)).toBe("Processing"));
+    expect(container.querySelector('[role="status"]')?.getAttribute("aria-live")).toBe("polite");
+    resolve();
+    await waitFor(() => expect(title(container)).toBe("You are unsubscribed"));
+    expect(container.textContent).toContain("We will not email you again.");
+  });
+
+  it("expired", async () => {
+    vi.mocked(subsApi.unsubscribe).mockRejectedValueOnce(
+      new ApiRequestError(404, { code: "not_found", message: "x", details: null, requestId: "r" }, null),
+    );
+    const { container } = renderAt(`/alerts/unsubscribe?token=${validToken}`);
+    await waitFor(() => expect(title(container)).toBe("This link has expired or is not valid"));
+  });
+
+  it("network", async () => {
+    vi.mocked(subsApi.unsubscribe).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    const { container } = renderAt(`/alerts/unsubscribe?token=${validToken}`);
+    await waitFor(() => expect(title(container)).toBe("Could not reach the server"));
+    expect(container.querySelector("button")?.textContent).toBe("Retry");
   });
 });

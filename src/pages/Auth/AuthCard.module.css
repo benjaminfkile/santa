@@ -88,13 +88,3 @@
   cursor: pointer;
 }
 .resend:disabled { color: var(--text-dim); cursor: not-allowed; }
-
-.takeoverWrap {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.55);
-}

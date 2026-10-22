@@ -1,8 +1,10 @@
 // docs/site.md section 19. Covers the app when the site sees an unknown
-// schemaVersion; a Reload button calls location.reload().
+// schemaVersion: the status card with the sparkles and a Reload button
+// calling location.reload().
 
+import { SparklesIcon } from "../content/icons/generated/sparkles";
 import { copy } from "../copy/copy";
-import * as btn from "../ui/Button.module.css";
+import { StatusPage } from "./StatusPage";
 
 export type ReloadPromptProps = {
   onReload?: () => void;
@@ -14,13 +16,13 @@ export function ReloadPrompt({ onReload }: ReloadPromptProps) {
     else if (typeof window !== "undefined") window.location.reload();
   };
   return (
-    <main id="main">
-      <div role="alert">
-        <p>{copy.reload.body}</p>
-        <button type="button" className={btn.btnFill} onClick={handle}>
-          {copy.reload.button}
-        </button>
-      </div>
-    </main>
+    <StatusPage
+      icon={SparklesIcon}
+      title={copy.reload.title}
+      line={copy.reload.body}
+      action={{ onClick: handle, label: copy.reload.button }}
+      role="alert"
+      testId="reload-prompt"
+    />
   );
 }
