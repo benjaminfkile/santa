@@ -3,6 +3,7 @@
 import type { Link } from "../../contracts";
 import type { BlockComponent } from "../registry";
 import { ContentLink } from "../primitives/LinkView";
+import { blockAlign } from "./blockAlign";
 import * as styles from "../sections/RichText/RichText.module.css";
 
 type LinksBlockData = {
@@ -14,9 +15,10 @@ export const LinksBlock: BlockComponent = ({ data, bundle }) => {
   const d = (data ?? {}) as LinksBlockData;
   const style = d.style ?? "buttons";
   const links = Array.isArray(d.links) ? d.links : [];
+  const align = blockAlign(data);
   if (style === "list") {
     return (
-      <ul className={`${styles.blockLinks} ${styles.blockLinksList}`}>
+      <ul className={`${styles.blockLinks} ${styles.blockLinksList}`} data-align={align}>
         {links.map((link, i) => (
           <li key={i} className={styles.blockLinksItem}>
             <ContentLink link={link} bundle={bundle} />
@@ -26,7 +28,7 @@ export const LinksBlock: BlockComponent = ({ data, bundle }) => {
     );
   }
   return (
-    <div className={`${styles.blockLinks} ${styles.blockLinksButtons}`}>
+    <div className={`${styles.blockLinks} ${styles.blockLinksButtons}`} data-align={align}>
       {links.map((link, i) => (
         <ContentLink
           key={i}

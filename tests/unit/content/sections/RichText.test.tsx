@@ -172,7 +172,7 @@ describe("RichText section align", () => {
   it("a start section renders the start hook and no rule targets start", () => {
     const { container } = renderAligned("start");
     expect(container.querySelector("section")?.getAttribute("data-align")).toBe("start");
-    expect(css).not.toMatch(/data-align="start"/);
+    expect(css).not.toMatch(/section\[data-align="start"\]/);
     expect(css).toMatch(/\.blockHeading \{[^}]*display: flex;/);
     expect(css).not.toMatch(/^\.blockHeading \{[^}]*justify-content/m);
     expect(css).toMatch(/\.blockQuote \{[^}]*border-inline-start: 3px solid var\(--accent\);/);

@@ -8,6 +8,7 @@ import { Media } from "../primitives/Media";
 import { MediaCredit } from "../primitives/MediaCredit";
 import { Inline } from "../inline/Inline";
 import { useSnapshotEvent } from "./useSnapshotEvent";
+import { blockAlign } from "./blockAlign";
 import * as styles from "../sections/RichText/RichText.module.css";
 
 type MediaBlockData = {
@@ -34,7 +35,7 @@ export const MediaBlock: BlockComponent = ({ data, bundle, frame }) => {
       ? styles.blockMediaMedium
       : styles.blockMediaFull;
   return (
-    <figure className={`${styles.blockMedia} ${sizeClass}`}>
+    <figure className={`${styles.blockMedia} ${sizeClass}`} data-align={blockAlign(data)}>
       <Media
         media={d.media}
         bundle={bundle}

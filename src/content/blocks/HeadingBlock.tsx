@@ -5,6 +5,7 @@ import type { BlockComponent } from "../registry";
 import { Inline } from "../inline/Inline";
 import { Icon } from "../primitives/Icon";
 import { useSnapshotEvent } from "./useSnapshotEvent";
+import { blockAlign } from "./blockAlign";
 import * as styles from "../sections/RichText/RichText.module.css";
 
 type HeadingData = {
@@ -30,7 +31,7 @@ export const HeadingBlock: BlockComponent = ({ data, bundle }) => {
       ? styles.blockHeadingH3
       : styles.blockHeadingH2;
   return (
-    <Tag className={`${styles.blockHeading} ${levelClass}`}>
+    <Tag className={`${styles.blockHeading} ${levelClass}`} data-align={blockAlign(data)}>
       {d.icon ? (
         <span className={styles.blockHeadingIcon} aria-hidden>
           <Icon icon={d.icon} bundle={bundle} decorative inline />

@@ -5,6 +5,7 @@ import type { BlockComponent } from "../registry";
 import { Inline } from "../inline/Inline";
 import { Icon } from "../primitives/Icon";
 import { useSnapshotEvent } from "./useSnapshotEvent";
+import { blockAlign } from "./blockAlign";
 import * as styles from "../sections/RichText/RichText.module.css";
 
 type ListData = {
@@ -21,7 +22,7 @@ export const ListBlock: BlockComponent = ({ data, bundle }) => {
   const Tag: "ol" | "ul" = style === "number" ? "ol" : "ul";
   const styleClass = style === "icon" ? styles.blockListIcon : "";
   return (
-    <Tag className={`${styles.blockList} ${styleClass}`.trim()}>
+    <Tag className={`${styles.blockList} ${styleClass}`.trim()} data-align={blockAlign(data)}>
       {items.map((text, i) => (
         <li key={i} className={styles.blockListItem}>
           {style === "icon" && d.icon ? (
