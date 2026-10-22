@@ -1,5 +1,7 @@
 /* docs/site.md section 7.4. Media gallery with captions: single, grid, or
-   carousel. */
+   carousel. Under the frame's `data-align="center"` (section 7.2) every
+   figure centres its image or video, its credit, and its caption, so a
+   picture narrower than its card or grid cell sits in the middle. */
 
 .mediaGallery { display: block; }
 .mediaGallerySingle { max-width: 100%; }
@@ -51,3 +53,5 @@
 @media (max-width: 760px) {
   .mediaGalleryGrid { grid-template-columns: 1fr; }
 }
+
+:global(section[data-align="center"]) .mediaGalleryFigure { align-items: center; }

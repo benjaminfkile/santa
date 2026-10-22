@@ -1,5 +1,8 @@
 /* docs/site.md section 7.4. Event times: the flight-log key-value panel.
-   Labels in mono uppercase, values in mono tabular numbers. */
+   Labels in mono uppercase, values in mono tabular numbers. Under the
+   frame's `data-align="center"` (section 7.2) the label and value
+   columns shrink to their content and the pair sits in the middle, each
+   column's text at its start. */
 
 .eventTimes { display: flex; flex-direction: column; gap: var(--space-3); }
 .eventTimesHeading {
@@ -36,3 +39,9 @@
 }
 .eventTimesBlank { min-height: 100px; }
 .eventTimesEmpty { color: var(--text-dim); }
+
+:global(section[data-align="center"]) .eventTimesList {
+  grid-template-columns: auto auto;
+  justify-content: center;
+  text-align: start;
+}

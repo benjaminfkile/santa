@@ -1,4 +1,7 @@
-/* docs/site.md section 7.4. Latest message: card and ticker. */
+/* docs/site.md section 7.4. Latest message: card and ticker. Under the
+   frame's `data-align="center"` (section 7.2) the card's lines centre with
+   the text, and the ticker's line (the body and its time) centres in the
+   toggle instead of starting at its left edge. */
 
 .latestMessage { display: flex; flex-direction: column; gap: var(--space-2); }
 .latestMessageTicker { flex-direction: row; align-items: center; gap: var(--space-3); }
@@ -44,3 +47,6 @@
 }
 .latestMessageStale { color: var(--text-dim); font-size: 0.85rem; margin: 0; }
 .latestMessageExpanded { padding: var(--space-3) var(--space-4); }
+
+:global(section[data-align="center"]) .latestMessageToggle { justify-content: center; text-align: center; }
+:global(section[data-align="center"]) .latestMessageTickerBody { flex: 0 1 auto; }

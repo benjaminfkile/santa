@@ -1,4 +1,8 @@
-/* docs/site.md section 7.4. Links section: buttons, cards, or a list. */
+/* docs/site.md sections 7.2 and 7.4. Links section: buttons, cards, or a
+   list. Under the frame's `data-align="center"` every style centres: the
+   buttons row justifies to the centre, the list's items and each item's
+   link and description centre, and the cards' tracks justify to the
+   centre with the icon, label, and description centred in each card. */
 
 .links { display: flex; flex-direction: column; gap: var(--space-4); }
 .linksHeading {
@@ -48,3 +52,9 @@
 .linksListItem { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
 .linksButton > *,
 .linksListItem > * { min-width: 0; }
+
+:global(section[data-align="center"]) .linksButtons { justify-content: center; }
+:global(section[data-align="center"]) .linksList { align-items: center; }
+:global(section[data-align="center"]) .linksListItem { justify-content: center; flex-wrap: wrap; text-align: center; }
+:global(section[data-align="center"]) .linksCards { justify-content: center; }
+:global(section[data-align="center"]) .linksCard { align-items: center; text-align: center; }
