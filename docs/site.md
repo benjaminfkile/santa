@@ -112,10 +112,11 @@ santa/
       SlugPage.tsx                the none page for /:slug, or NotFound
       PreviewPage.tsx             /preview: fetches the bundle, renders the named page
       QrPage.tsx                  /q/:tag (section 4)
+      StatusPage.tsx              the status card (7.1) the pages below render on
       Loading.tsx  ReloadPrompt.tsx  NotFound.tsx
       Alerts/                     VerifyPage.tsx, UnsubscribePage.tsx (token landing pages)
       Auth/                       SignInPage, SignUpPage, ConfirmPage, ForgotPasswordPage, ResetPasswordPage (section 11), each a themed form in AuthCard on the site's own shell; returnTo.ts, pendingSignUp.ts
-    ui/                           the shared recipes as CSS modules: Button, IconButton, Field, Dialog
+    ui/                           the shared recipes as CSS modules: Button, IconButton, Field, Dialog; TakeoverSurface, the takeover's dialog surface (11.5)
 
     map/                          the renderer choice, the theme loader, and the Google tracker (section 8); imported through import() by sections/Map and, in route mode on Google, by sections/RoutePreview
       renderer.ts                 pickRenderer and canUseWebGl2: the renderer choice and the WebGL 2 probe (8.1)
@@ -224,11 +225,11 @@ Local development uses `.env.local` with the preview set and runs on `http://loc
 | `/auth/confirm` | `ConfirmPage` | auth | `email` and `returnTo` from the query string; the six-digit code from the email |
 | `/auth/forgot` | `ForgotPasswordPage` | auth | |
 | `/auth/reset` | `ResetPasswordPage` | auth | `email` from the query string; the code from the email plus the new password |
-| `/:slug` | `SlugPage` | main | The `none` page with that slug; a role page's slug redirects to `/` except inside a preview session, where it renders that role page whatever the event status; unknown renders `NotFound` |
+| `/:slug` | `SlugPage` | main | The `none` page with that slug; a role page's slug redirects to `/` except inside a preview session, where it renders that role page whatever the event status; unknown renders `NotFound` on the status card (7.1) |
 | `/q/:tag` | `QrPage` | main | A printed code (contracts 4.5a): sends the scan beacon, then opens what the snapshot says |
-| `*` | `NotFound` | main | Links back to `/` |
+| `*` | `NotFound` | main | The status card (7.1): the compass, "This page flew off course", "Santa checked the list twice and this page is not on it.", and a "Back to home" link to `/` |
 
-While `live.eventStatusId === 3` the router renders the `live` role page for every path; the table above applies in every other status. The only exceptions are the site-coded paths, which must keep working during the event: the five `/auth/*` pages (a visitor signs in to leave a cookie mid-flight), `/alerts/verify` and `/alerts/unsubscribe` because email links land there, and `/preview`, which starts a preview session for whatever page the panel asks for. During the takeover the auth pages render inside the takeover's dialog surface (section 11.5) so the tracker stays underneath.
+While `live.eventStatusId === 3` the router renders the `live` role page for every path; the table above applies in every other status. The only exceptions are the site-coded paths, which must keep working during the event: the five `/auth/*` pages (a visitor signs in to leave a cookie mid-flight), `/alerts/verify` and `/alerts/unsubscribe` because email links land there, and `/preview`, which starts a preview session for whatever page the panel asks for. During the takeover the auth pages and the status card render inside the takeover's dialog surface (section 11.5) so the tracker stays underneath.
 
 **`/q/:tag`** renders nothing of its own. On mount it reads `snapshot.qrCodes[tag]` (waiting for the first snapshot when the store has none yet), sends one scan beacon, a `fetch` of `${API}/qr-codes/${tag}/scans` with JSON `{ referrer: document.referrer }`, `keepalive: true`, and `credentials: "omit"` (a keepalive fetch survives the navigation like `sendBeacon` would, and without credentials its preflight passes the wildcard origin the edge answers with, which a credentialed `sendBeacon` cannot), then navigates with `replace`: to `/<pageSlug>` (`/` for the home page), to `forwardUrl` through `window.location.replace` (the one-second hop is accepted), or to `/` when the tag is absent. The beacon is sent before the navigation so a forward never cancels it. While live, the live page takes over like every other path after the beacon. A tag is `qr-` and digits; anything else is `NotFound` without a beacon.
 
@@ -591,7 +592,11 @@ All time formatting uses the device clock; times arrive as UTC and are shown in 
 
 ### 7.1 Loading and reload
 
-`Loading` shows until the first live object and the first snapshot are both held. Copy from `copy.ts`; after 15 s without success a second line says the site is still trying. `ReloadPrompt` covers the app when `schemaMismatch` is set (section 19).
+**The status card.** `pages/StatusPage.tsx` is the one card every site-coded status page renders on: `NotFound`, `Loading`, the alerts verify and unsubscribe states (13.2, 13.3), the preview expired and unreachable states (7.8), and `ReloadPrompt`. It is a `<main id="main">` centring a card in the frost recipe (7.7) at `min(440px, 100%)`, inside the same `min-height` wrap as the auth card (11.2) so the footer sits where the auth pages put it. Top to bottom: the site name in the display font when a bundle is held (nothing when none), a 72 px library icon in `--accent` (aria-hidden), the title (the page's one `h1`, display font, 1.5rem, `--text-bright`), one line of copy in `--text`, then an optional action, a router link or a button in the `btnFill` recipe. Waiting states carry `role="status"` with `aria-live="polite"` and failures `role="alert"` on the title and line. During the live takeover the card renders inside the shared takeover dialog surface (`ui/TakeoverSurface`, 11.5). Every string comes from `copy.ts`.
+
+**Loading.** `Loading` shows until the first live object and the first snapshot are both held, and is the route-level `Suspense` fallback for the lazy chunks. For the first 300 ms it renders an empty `<main id="main">` holding the card wrap's `min-height` and nothing inside, so the footer does not jump and a warm visit (content within 300 ms, the common case) paints nothing at all. After 300 ms the status card fades in over 200 ms (opacity, ease-out) with the snowflake icon turning one full turn every 8 s, linear, with no reduced-motion check (17), titled "Loading"; after 15 s without success the line "Still trying to reach the server" appears below the title. There is no exit animation: when the content arrives the page simply renders. Both timers are cleared on unmount.
+
+**Reload.** `ReloadPrompt` covers the app when `schemaMismatch` is set (section 19): the status card with the sparkles icon, "A fresh update is ready", the line "The site needs to reload to get the latest updates.", and a Reload button.
 
 ### 7.2 Page renderer
 
@@ -821,11 +826,11 @@ The flag is never sent anywhere; it decides what the alerts page (13.1) shows, w
 
 **A live event in a preview session.** The takeover applies in a preview session exactly as on the published site: the moment the event goes live the session switches to the fullscreen tracker built from the draft's live page (its `map` section alone, 100dvh, no header or footer), so preview is the real live experience over the draft content. The one addition is the Preview banner, which floats fixed over the top of the tracker (`.takeoverBanners`) so Exit preview stays reachable; the updates-paused banner never shows there. While live, other draft pages are not reachable inside the session, the same as the real site; they come back when the status leaves live.
 
-**Following the draft.** `PreviewSession`, mounted once above the routes in `App`, owns the poll and survives navigation. It calls `GET <api>/preview/document?token=` (the one CDN-free read on the site; `credentials: "omit"`, no bearer). While `document.visibilityState` is `visible` it fetches the document again every 2000 ms (the next fetch is scheduled when the previous one settles), stops while the tab is hidden, and fetches once at once when the tab becomes visible again. Each request sends `If-None-Match` with the last `ETag` the API returned (none when the last response carried no `ETag`); a `304` means no change. On a `200` the body text is compared with the last body and `store.preview` is replaced only when it differs, so an unchanged draft never re-renders; a replaced bundle updates the page in place, with no navigation, no reload, and the scroll position kept. A failed fetch (network error, timeout, any status other than `404`) keeps the last good draft and tries again on the next tick; after five failures in a row the Preview banner shows "Reconnecting", cleared by the next success (with no draft yet, `/preview` shows the error with a Retry button instead).
+**Following the draft.** `PreviewSession`, mounted once above the routes in `App`, owns the poll and survives navigation. It calls `GET <api>/preview/document?token=` (the one CDN-free read on the site; `credentials: "omit"`, no bearer). While `document.visibilityState` is `visible` it fetches the document again every 2000 ms (the next fetch is scheduled when the previous one settles), stops while the tab is hidden, and fetches once at once when the tab becomes visible again. Each request sends `If-None-Match` with the last `ETag` the API returned (none when the last response carried no `ETag`); a `304` means no change. On a `200` the body text is compared with the last body and `store.preview` is replaced only when it differs, so an unchanged draft never re-renders; a replaced bundle updates the page in place, with no navigation, no reload, and the scroll position kept. A failed fetch (network error, timeout, any status other than `404`) keeps the last good draft and tries again on the next tick; after five failures in a row the Preview banner shows "Reconnecting", cleared by the next success (with no draft yet, `/preview` shows the error on the status card with a Retry button instead).
 
 **The banner.** While a session is active the Preview banner shows on every page: "Preview", then "Live, last change hh:mm:ss" (the time the last changed bundle was applied, on a 24-hour clock in the viewer's timezone), "Reconnecting" when it applies, and an "Exit preview" button. Exit ends the session: it clears the `sessionStorage` key, `store.preview`, and the theme override, stops the poll, and stays on the current path, which now shows the published site.
 
-**Expiry.** A `404` ends the session: polling stops and does not retry, the `sessionStorage` key, `store.preview`, and the theme override are cleared, and the page falls back to the published site. The banner then reads "This preview link has expired" with the same Exit action, which dismisses it. A link that is already expired lands on `/` with that banner; `/preview` with no token renders "This preview link has expired" and starts nothing.
+**Expiry.** A `404` ends the session: polling stops and does not retry, the `sessionStorage` key, `store.preview`, and the theme override are cleared, and the page falls back to the published site. The banner then reads "This preview link has expired" with the same Exit action, which dismisses it. A link that is already expired lands on `/` with that banner; `/preview` with no token renders the status card (7.1) with the question icon, the title "Preview", and the line "This preview link has expired", and starts nothing. With no draft after five failures `/preview` renders the same card with the line "Could not reach the server." and a Retry button.
 
 **Theme and robots.** A `theme=light` or `theme=dark` parameter (the panel's light and dark toggle) applies that theme through `setTheme` without storing it for as long as the session is active, and the visitor's stored choice applies again when it ends; any other value is ignored. Search engines never see a preview: `<meta name="robots" content="noindex">` is present on `/preview` and on every page while a session is active. `/preview` is the one path the admin panel may frame: `vercel.json` sends `X-Frame-Options: DENY` on every other path and `Content-Security-Policy: frame-ancestors 'self' https://*.vercel.app` on `/preview`.
 
@@ -1193,7 +1198,7 @@ Re-read before every call; never cached by the API client. A `401` from the API 
 
 ### 11.5 Auth on the live screen
 
-While the takeover is on (7.6) the five auth routes render their form card inside a centred `<dialog>` over the tracker (the same dialog recipe as the cookie control), so the person who taps Sign in in the cookie dialog signs in without leaving the map and lands back on it with the leave-a-cookie glyph ready. The tracker menu's account button (7.6) is the second way in: signed out, it closes the menu and opens the same sign-in card with the tracker as `returnTo`, and the card's links reach create an account, confirm, and reset in the same dialog; signed in, it signs out in place. Off the takeover they are ordinary pages.
+While the takeover is on (7.6) the five auth routes render their form card inside a centred dialog surface over the tracker (`ui/TakeoverSurface`: fixed over the map with the dialog backdrop, shared by the auth card and the status card of 7.1, which renders there for `/alerts/verify`, `/alerts/unsubscribe`, and `/preview` while live), so the person who taps Sign in in the cookie dialog signs in without leaving the map and lands back on it with the leave-a-cookie glyph ready. The tracker menu's account button (7.6) is the second way in: signed out, it closes the menu and opens the same sign-in card with the tracker as `returnTo`, and the card's links reach create an account, confirm, and reset in the same dialog; signed in, it signs out in place. Off the takeover they are ordinary pages.
 
 ---
 
@@ -1276,24 +1281,24 @@ Signed out: `data.signedOutCopy` and a sign-in link with `returnTo` the current 
 
 ### 13.2 `/alerts/verify?token=wsv_...`
 
-On mount, read `token`; when absent or not matching `^wsv_[A-Za-z0-9_-]{43}$` render "This link is not valid". Otherwise `POST /subscriptions/verify { token }` immediately.
+Every state renders on the status card (7.1). On mount, read `token`; when absent or not matching `^wsv_[A-Za-z0-9_-]{43}$` render "This link is not valid" (question icon, a Home link to `/`, `role="alert"`). Otherwise `POST /subscriptions/verify { token }` immediately; while it runs the card shows the bell and "Confirming your alerts" (`role="status"`).
 
 | Response | Renders |
 |---|---|
-| `200 { verifiedAt }` | "Your alerts are confirmed" (idempotent for an already verified row); a pending subscription flag (7.7) becomes `active` |
-| `404 not_found` | "This link has expired or is not valid", with a link to `/` |
+| `200 { verifiedAt }` | Bell, "Your alerts are on", "We will email you when Santa is scheduled and when he lifts off.", a Home link to `/` (idempotent for an already verified row); a pending subscription flag (7.7) becomes `active` |
+| `404 not_found` | Question icon, "This link has expired or is not valid", a Home link to `/`, `role="alert"` |
 | `400` or other | Same as `404` |
-| Network | "Could not reach the server" with a Retry button |
+| Network | Question icon, "Could not reach the server", a Retry button, `role="alert"` |
 
 ### 13.3 `/alerts/unsubscribe?token=wsu_...`
 
-Same shape with `^wsu_[A-Za-z0-9_-]{43}$`; `POST /subscriptions/unsubscribe { token }` (JSON body) on mount.
+Same shape with `^wsu_[A-Za-z0-9_-]{43}$` and the envelope icon; `POST /subscriptions/unsubscribe { token }` (JSON body) on mount. A malformed or absent token renders "This link is not valid" with a Home link; while the request runs the card shows "Processing" (`role="status"`).
 
 | Response | Renders |
 |---|---|
-| `204` | "You are unsubscribed" plus a link to `/`; the subscription flag (7.7) is cleared |
-| `404 not_found` | "This link is not valid" |
-| Network | Retry button |
+| `204` | Envelope, "You are unsubscribed", "We will not email you again.", a Home link to `/`; the subscription flag (7.7) is cleared |
+| `404 not_found` or other | Question icon, "This link has expired or is not valid", a Home link to `/`, `role="alert"` |
+| Network | Question icon, "Could not reach the server", a Retry button, `role="alert"` |
 
 Both landing pages post on load: one click from the email is the whole action.
 
@@ -1423,11 +1428,11 @@ Other rules:
 
 | Situation | Behaviour |
 |---|---|
-| Live object or first snapshot never arrives | Loading page with retries forever; nothing else can render because the pages are in the snapshot |
+| Live object or first snapshot never arrives | Loading page with retries forever (nothing for 300 ms, then the status card with the turning snowflake, then "Still trying to reach the server" after 15 s, 7.1); nothing else can render because the pages are in the snapshot |
 | Unknown section or block kind in the document | Renders nothing, logged once per kind; the rest of the page renders |
 | Media or icon id not in the bundle | Renders nothing (an empty box with alt text for media), logged once per id |
-| Preview token rejected | "This preview link has expired"; the panel mints a new one |
-| `schemaVersion !== 1` on any object | `ReloadPrompt` covers the app: one line of copy and a Reload button calling `location.reload()`; the loop stops applying objects |
+| Preview token rejected | "This preview link has expired" (on the status card at `/preview` with no token, 7.8); the panel mints a new one |
+| `schemaVersion !== 1` on any object | `ReloadPrompt` covers the app on the status card (7.1): the sparkles icon, "A fresh update is ready", one line of copy, and a Reload button calling `location.reload()`; the loop stops applying objects |
 | Poll failures | Store unchanged; after three consecutive failures the `updatesPaused` banner shows "Updates paused, retrying"; it clears on the next success |
 | `navigator.onLine === false` | Same banner immediately |
 | Hub never connects or keeps dropping | Live indicator shows "Polling" (and "Offline" once polls stop landing too); polling tightens while live; no banner |
@@ -1436,7 +1441,7 @@ Other rules:
 | Geolocation error | Prompt reopens on the instructions section; distance chip hidden |
 | API call fails | Inline copy per code (sections 10, 13, 14); never the server's `message` |
 | Render error | Root `ErrorBoundary` renders a plain page with a Reload button; the data loop keeps running underneath |
-| Unknown slug | `NotFound` |
+| Unknown slug | `NotFound` on the status card (4, 7.1) |
 | Site misconfigured (missing `VITE_` value) | Plain configuration error page naming the variable, before anything else runs |
 
 Nothing retries less often than every 5 s and nothing ever gives up, matching the loop's backoff. The device clock drives every displayed duration; the site does not correct for clock skew.

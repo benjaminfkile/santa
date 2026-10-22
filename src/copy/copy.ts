@@ -7,6 +7,7 @@ export const copy = {
     slow: "Still trying to reach the server",
   },
   reload: {
+    title: "A fresh update is ready",
     body: "The site needs to reload to get the latest updates.",
     button: "Reload",
   },
@@ -21,8 +22,29 @@ export const copy = {
     previewRetry: "Retry",
   },
   notFound: {
-    heading: "Page not found",
+    heading: "This page flew off course",
+    line: "Santa checked the list twice and this page is not on it.",
     home: "Back to home",
+  },
+  alertsVerify: {
+    confirming: "Confirming your alerts",
+    success: "Your alerts are on",
+    successLine: "We will email you when Santa is scheduled and when he lifts off.",
+    invalid: "This link is not valid",
+    expired: "This link has expired or is not valid",
+    network: "Could not reach the server",
+    retry: "Retry",
+    home: "Home",
+  },
+  alertsUnsubscribe: {
+    processing: "Processing",
+    success: "You are unsubscribed",
+    successLine: "We will not email you again.",
+    invalid: "This link is not valid",
+    expired: "This link has expired or is not valid",
+    network: "Could not reach the server",
+    retry: "Retry",
+    home: "Home",
   },
   signIn: {
     hint: "Sign in to continue",
