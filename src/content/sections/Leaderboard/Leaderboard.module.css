@@ -2,7 +2,9 @@
    one text cell holding the name and the count in parentheses. The icon
    column is 40 px, 32 px at 640 px and below. The full variant adds a bar
    to the leader under the text cell; the panel variant collapses to the
-   top five. */
+   top five. Under the frame's `data-align="center"` (section 7.2) the
+   list shrinks to its widest row and sits in the middle with each row's
+   text at the start, and the Expand or Collapse button centres. */
 
 .leaderboard { display: flex; flex-direction: column; gap: var(--space-3); }
 .leaderboardHeading {
@@ -77,3 +79,11 @@
   .leaderboardRow { grid-template-columns: 32px minmax(0, 1fr); }
   .leaderboardIconPlaceholder { width: 32px; height: 32px; }
 }
+
+:global(section[data-align="center"]) .leaderboardList {
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  text-align: start;
+}
+:global(section[data-align="center"]) .leaderboardToggle { align-self: center; }

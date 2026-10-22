@@ -1,5 +1,10 @@
 /* docs/site.md section 14. Contact form: labels in mono uppercase, the
-   error state in --err, and the character counter. */
+   error state in --err, and the character counter. Under the frame's
+   `data-align="center"` (docs/site.md section 7.2) the 560 px box sits in
+   the middle of its card or content box and the submit button centres;
+   the labels stay above their fields, the fields keep the box's full
+   width with their typed text at the start, the counter stays at the end
+   of its field, and the error and success lines centre with the text. */
 
 .contactForm { display: flex; flex-direction: column; gap: var(--space-4); max-width: 560px; }
 .contactForm h2 {
@@ -64,3 +69,8 @@
 .contactForm [role="alert"] { color: var(--err); margin: 0; font-size: 0.8125rem; }
 .contactForm > p > a { color: var(--link); font-family: var(--font-mono); }
 .contactForm > p > a:hover { color: var(--accent); }
+
+:global(section[data-align="center"]) .contactForm { margin-inline: auto; }
+:global(section[data-align="center"]) .contactFormSubmit { align-self: center; }
+:global(section[data-align="center"]) .contactForm input,
+:global(section[data-align="center"]) .contactForm textarea { text-align: start; }

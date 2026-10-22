@@ -1,7 +1,9 @@
 /* docs/site.md section 7.4 and the studio's liftoff card. Countdown renders
    as the liftoff card beside the hero copy: a panel wrapped in the frost
    recipe (S15) with four tabular mono counters and the scheduled time line
-   below. */
+   below. Under the frame's `data-align="center"` (section 7.2) each
+   counter centres its number and label in its column; the paired
+   countdown beside the hero has no align and keeps them at the start. */
 
 .countdown {
   composes: frost from "../../theme/Frost.module.css";
@@ -59,3 +61,5 @@
 @media (max-width: 760px) {
   .countdownValue { font-size: 1.6rem; }
 }
+
+:global(section[data-align="center"]) .countdownCell { align-items: center; }

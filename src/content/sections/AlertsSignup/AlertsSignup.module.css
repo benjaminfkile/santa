@@ -1,5 +1,9 @@
 /* docs/site.md section 13. Alerts signup: the field with the fill button
-   and the signed-in subscription rows with the Verified/Pending pills. */
+   and the signed-in subscription rows with the Verified/Pending pills.
+   Under the frame's `data-align="center"` (section 7.2) the 560 px box
+   sits in the middle, the field keeps the box's full width with the
+   Subscribe button centred under it, and each sent alert's head row
+   justifies to the centre. */
 
 .alertsSignup { display: flex; flex-direction: column; gap: var(--space-4); max-width: 560px; }
 .alertsSignup h2 {
@@ -199,3 +203,8 @@
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
+
+:global(section[data-align="center"]) .alertsSignup { margin-inline: auto; }
+:global(section[data-align="center"]) .alertsSignupForm { align-items: center; }
+:global(section[data-align="center"]) .alertsSignupForm input { text-align: start; }
+:global(section[data-align="center"]) .alertsSignupSentHead { justify-content: center; }

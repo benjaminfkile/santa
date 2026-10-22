@@ -1,7 +1,9 @@
 /* docs/site.md section 10. The `cookie_control` section: the closed and
    signed-out copy as a quiet panel; and the cookie dialog, centred in the
    viewport, with one row per cookie type carrying a stepper, the note, and
-   the two actions. */
+   the two actions. Under the frame's `data-align="center"` (section 7.2)
+   the section's button (Leave cookies or Sign in) centres with the copy;
+   the dialog is not affected. */
 
 .cookieControl {
   display: flex;
@@ -163,3 +165,5 @@
   color: var(--text-bright);
 }
 .countOn { color: var(--accent); }
+
+:global(section[data-align="center"]) .cookieControlOpen { align-self: center; }

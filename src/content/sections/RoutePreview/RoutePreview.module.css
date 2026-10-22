@@ -1,7 +1,9 @@
 /* docs/site.md sections 7.4, 8.6, 8.9. Route preview: the heading, the
    disclaimer, and the route map, or the heading and the empty text. Also
    holds the shared `<dialog>` recipes for the route disclaimer and
-   location prompt on the live screen. */
+   location prompt on the live screen. Under the frame's
+   `data-align="center"` (section 7.2) the disclaimer's icon and text
+   centre in its box; the map fills the section at every align. */
 
 .routePreview { display: flex; flex-direction: column; gap: var(--space-3); }
 .routePreviewHeading { margin: 0; font-family: var(--font-display); font-size: var(--font-size-h2); color: var(--text-bright); }
@@ -133,3 +135,5 @@
   border: 1px solid var(--line);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
 }
+
+:global(section[data-align="center"]) .routePreview .disclaimerRecipe { justify-content: center; }
