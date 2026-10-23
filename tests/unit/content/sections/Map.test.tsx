@@ -6,13 +6,14 @@
 // The map styles come from the snapshot's `trackerThemes` (the event's
 // enabled Google themes), never from the section data's `themes` or
 // `defaultTheme`, and mounting reports the renderer choice as the `live`
-// surface.
+// surface. The tracker menu's toggles follow the tracker store, so a
+// replace after mount (the account sync) shows at once.
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { describe, it, expect, vi } from "vitest";
-import { render, cleanup, fireEvent } from "@testing-library/react";
+import { render, cleanup, fireEvent, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -142,6 +143,66 @@ describe("Map section class coverage", () => {
     expect(window.localStorage.getItem(SNOW_KEY)).toBeNull();
     cleanup();
     clearSnowOverride();
+  });
+
+  it("the tracker menu's toggles follow a replace of the tracker store after mount", async () => {
+    const { Map } = await import("../../../../src/content/sections/Map/Map");
+    const { replaceTrackerSettings, resetTrackerTogglesForTests } = await import(
+      "../../../../src/content/sections/Map/trackerToggles"
+    );
+    const { store } = await import("../../../../src/store/useStore");
+    const { initialStore } = await import("../../../../src/store/types");
+    resetTrackerTogglesForTests();
+    act(() =>
+      store.setState({
+        ...initialStore,
+        snapshot: { event: { flightHistory: { points: [{ lat: 1, lng: 2, recordedAt: null }] } } } as never,
+      }),
+    );
+    const bundle = {
+      content: null as unknown,
+      media: {},
+      icons: {},
+    } as import("../../../../src/store/types").ContentBundle;
+    const utils = render(
+      <MemoryRouter>
+        <Map
+          data={{ controls: { terrain: true, snow: true, flightHistory: true, timeLabels: true }, overlays: { flightDock: true } }}
+          items={[]}
+          bundle={bundle}
+        />
+      </MemoryRouter>,
+    );
+    fireEvent.click(utils.container.querySelector('button[aria-label="Tracker menu"]')!);
+    const pressed = (id: string) => utils.getByTestId(id).getAttribute("aria-pressed");
+    const road = () => utils.getByRole("radio", { name: /Road/ });
+    expect(road().getAttribute("aria-checked")).toBe("false");
+    expect(pressed("tracker-menu-flight-dock")).toBe("true");
+    expect(pressed("tracker-menu-flight-history")).toBe("false");
+    expect(pressed("tracker-menu-snow")).toBe("false");
+
+    act(() =>
+      replaceTrackerSettings({
+        mapType: "roadmap",
+        flightDock: false,
+        flightHistory: true,
+        timeLabels: false,
+        snow: true,
+      }),
+    );
+    expect(road().getAttribute("aria-checked")).toBe("true");
+    expect(pressed("tracker-menu-flight-dock")).toBe("false");
+    expect(pressed("tracker-menu-flight-history")).toBe("true");
+    expect(pressed("tracker-menu-time-labels")).toBe("false");
+    expect(pressed("tracker-menu-snow")).toBe("true");
+
+    act(() => replaceTrackerSettings({}));
+    expect(road().getAttribute("aria-checked")).toBe("false");
+    expect(pressed("tracker-menu-flight-dock")).toBe("true");
+    expect(pressed("tracker-menu-flight-history")).toBe("false");
+    cleanup();
+    resetTrackerTogglesForTests();
+    act(() => store.setState({ ...initialStore }));
   });
 
   it("map and tracker-menu modules carry the recipes the section uses", () => {

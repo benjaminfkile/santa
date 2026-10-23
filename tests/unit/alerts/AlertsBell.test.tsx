@@ -4,7 +4,7 @@
 // the dialog from `snapshot.event.alerts` (newest first, the New markers,
 // the empty text, the footer with Close, the close X in the head outside
 // the scroll region), the glyph, the swing under reduced motion, and the
-// one write: opening sends `PUT /me/notifications/seen` once for a
+// one write: opening sends `PUT /me/seen` once for a
 // signed-in subscriber when the marker advances, and nothing otherwise.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -59,7 +59,7 @@ vi.mock("../../../src/ui/Dialog.module.css", () => ({
 }));
 
 vi.mock("../../../src/api/subscriptions", () => ({
-  getMyNotifications: vi.fn(),
+  getMe: vi.fn(),
   putSeenUpTo: vi.fn(),
 }));
 
@@ -205,8 +205,8 @@ const ALERTS = [
 
 beforeEach(() => {
   window.localStorage.clear();
-  vi.mocked(subsApi.getMyNotifications).mockReset();
-  vi.mocked(subsApi.getMyNotifications).mockResolvedValue({ subscription: null, seenUpToId: null });
+  vi.mocked(subsApi.getMe).mockReset();
+  vi.mocked(subsApi.getMe).mockResolvedValue({ subscription: null, seenUpToId: null });
   vi.mocked(subsApi.putSeenUpTo).mockReset();
   vi.mocked(subsApi.putSeenUpTo).mockResolvedValue(undefined);
   seed(makeContent());
@@ -466,7 +466,7 @@ function storeFlag(account = EMAIL) {
     SUBSCRIPTION_FLAG_KEY,
     JSON.stringify({ account, id: 3, address: account, state: "active" }),
   );
-  vi.mocked(subsApi.getMyNotifications).mockResolvedValue({
+  vi.mocked(subsApi.getMe).mockResolvedValue({
     subscription: { id: 3, channel: "email", address: account, verifiedAt: "2026-10-01T00:00:00Z", unsubscribedAt: null, createdAt: "2026-10-01T00:00:00Z" },
     seenUpToId: null,
   });
@@ -489,7 +489,7 @@ function renderWithFlag(auth: AuthState) {
 }
 
 describe("Opening the bell records seen up to", () => {
-  it("sends PUT /me/notifications/seen once for a signed-in subscriber when the marker advances", async () => {
+  it("sends PUT /me/seen once for a signed-in subscriber when the marker advances", async () => {
     storeFlag();
     window.localStorage.setItem(ALERTS_SEEN_KEY, "5");
     mockLists(ALERTS);

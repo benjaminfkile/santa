@@ -15,7 +15,10 @@ import type { LiveObject, Snapshot } from "../../../../src/contracts";
 import { AuthProvider } from "../../../../src/auth/AuthProvider";
 import type { AuthState } from "../../../../src/auth/AuthProvider";
 import { CookieTally } from "../../../../src/content/sections/Map/CookieTally";
-import { resetTrackerTogglesForTests } from "../../../../src/content/sections/Map/trackerToggles";
+import {
+  replaceTrackerSettings,
+  resetTrackerTogglesForTests,
+} from "../../../../src/content/sections/Map/trackerToggles";
 import { CookieDialog } from "../../../../src/content/sections/CookieControl/CookieControl";
 import * as mapStyles from "../../../../src/content/sections/Map/Map.module.css";
 
@@ -182,6 +185,17 @@ describe("CookieTally", () => {
     fireEvent.click(again.getByTestId("cookie-tally-toggle"));
     expect(again.queryByTestId("cookie-tally")).not.toBeNull();
     expect(again.getByTestId("cookie-tally-toggle").getAttribute("aria-label")).toBe("Hide the cookie counts");
+  });
+
+  it("follows the store when it is replaced after mount", () => {
+    setState({ "1": 1 });
+    const view = render(<CookieTally bundle={bundle} />);
+    expect(view.getByTestId("cookie-tally-toggle").getAttribute("aria-expanded")).toBe("true");
+    act(() => replaceTrackerSettings({ cookieTally: false }));
+    expect(view.getByTestId("cookie-tally-toggle").getAttribute("aria-expanded")).toBe("false");
+    expect(view.queryByTestId("cookie-tally")).toBeNull();
+    act(() => replaceTrackerSettings({}));
+    expect(view.queryByTestId("cookie-tally")).not.toBeNull();
   });
 
   it("the column's rules draw no box and carry the shadows and tabular digits", () => {

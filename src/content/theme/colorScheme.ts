@@ -5,7 +5,9 @@
 // <html> that non-CSS consumers (the map's overlay palette, canvas snow)
 // subscribe to. A non-persisted setTheme (the preview session) holds a
 // temporary override that the media-query listener leaves alone until
-// releaseTheme drops it.
+// releaseTheme drops it. subscribeChoice tells its listeners when the
+// stored choice is written (a persisted setTheme, clearTheme), which the
+// account sync (src/account/preferences.ts) follows.
 
 import { useSyncExternalStore, useCallback } from "react";
 import { storageGet, storageSet, storageRemove } from "../../lib/storage";
@@ -16,6 +18,7 @@ export type ResolvedTheme = "light" | "dark";
 export const THEME_KEY = "wmsfo.theme";
 
 const listeners = new Set<() => void>();
+const choiceListeners = new Set<() => void>();
 let mediaQuery: MediaQueryList | null = null;
 let mediaListener: ((e: MediaQueryListEvent) => void) | null = null;
 
@@ -49,6 +52,19 @@ function notify(): void {
   listeners.forEach((l) => l());
 }
 
+function notifyChoice(): void {
+  [...choiceListeners].forEach((l) => l());
+}
+
+// Called after every write of the stored choice: a persisted setTheme and
+// clearTheme. Not after a non-persisted override, nor after releaseTheme.
+export function subscribeChoice(listener: () => void): () => void {
+  choiceListeners.add(listener);
+  return () => {
+    choiceListeners.delete(listener);
+  };
+}
+
 export function setTheme(
   theme: ResolvedTheme,
   opts: { persist?: boolean } = {},
@@ -61,6 +77,7 @@ export function setTheme(
   }
   apply(theme);
   notify();
+  if (opts.persist !== false) notifyChoice();
 }
 
 // Drops a non-persisted theme and applies the visitor's stored choice.
@@ -76,6 +93,12 @@ export function clearTheme(): void {
   storageRemove(THEME_KEY);
   apply(resolveTheme("system"));
   notify();
+  notifyChoice();
+}
+
+// The non-persisted theme held by the preview session, or null.
+export function getOverride(): ResolvedTheme | null {
+  return override;
 }
 
 export function getChoice(): ThemeChoice {

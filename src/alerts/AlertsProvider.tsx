@@ -2,12 +2,12 @@
 // event's alerts from the store (`snapshot.event.alerts`, the same list
 // for every visitor) and follows the read marker of `seenMarker.ts`
 // through `subscribe`, so a raise from anywhere in this page load (the
-// bell, the read of `GET /me/notifications`) re-renders it. Unread alerts
+// bell, the read of `GET /me`) re-renders it. Unread alerts
 // are those with an id greater than the marker (absent means every alert
 // is unread), for every visitor, signed in or not. `markSeen` raises the
 // marker to the newest alert id; when it advanced, the visitor is signed
 // in, and the subscription flag's `account` is the signed-in email, it
-// also sends `PUT /me/notifications/seen` once, ignoring a failure.
+// also sends `PUT /me/seen` once, ignoring a failure.
 
 import {
   createContext,

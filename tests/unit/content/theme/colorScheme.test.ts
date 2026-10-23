@@ -7,7 +7,9 @@ import {
   clearTheme,
   getChoice,
   getResolved,
+  releaseTheme,
   resolveTheme,
+  subscribeChoice,
   startSystemListener,
   stopSystemListener,
   THEME_KEY,
@@ -104,5 +106,23 @@ describe("colorScheme", () => {
     expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
     listener();
     expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("subscribeChoice fires on a persisted setTheme and on clearTheme, not on the override or its release", () => {
+    stubMatchMedia(false);
+    const listener = vi.fn();
+    const off = subscribeChoice(listener);
+    setTheme("dark");
+    expect(listener).toHaveBeenCalledTimes(1);
+    clearTheme();
+    expect(listener).toHaveBeenCalledTimes(2);
+    setTheme("light", { persist: false });
+    expect(listener).toHaveBeenCalledTimes(2);
+    releaseTheme();
+    expect(listener).toHaveBeenCalledTimes(2);
+    off();
+    setTheme("light");
+    expect(listener).toHaveBeenCalledTimes(2);
+    clearTheme();
   });
 });

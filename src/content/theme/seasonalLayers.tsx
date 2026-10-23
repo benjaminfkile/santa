@@ -20,6 +20,7 @@ import {
   hasTrackerToggle,
   readTrackerToggle,
   removeTrackerToggle,
+  subscribeTrackerSettings,
   writeTrackerToggle,
 } from "../sections/Map/trackerToggles";
 import { subscribeScheme } from "./colorScheme";
@@ -51,10 +52,20 @@ export function subscribeOverrides(l: () => void): () => void {
 }
 
 // The tracker's Snow button: stores the viewer's choice with the tracker's
-// other choices.
+// other choices. The store's own listeners (subscribeTrackerSettings) hear
+// it, as they hear a replace from the account sync.
 export function setSnowOverride(next: boolean): void {
   writeTrackerToggle("snow", next);
   notifyOverrides();
+}
+
+function subscribeSnow(l: () => void): () => void {
+  const offOverrides = subscribeOverrides(l);
+  const offSettings = subscribeTrackerSettings(l);
+  return () => {
+    offOverrides();
+    offSettings();
+  };
 }
 
 // Forgets the viewer's choice, so the live screen starts from off again.
@@ -70,9 +81,9 @@ function getSnowSnapshot(): boolean | null {
 }
 
 // The live screen's snow state: the viewer's stored choice, else
-// `defaultOn`.
+// `defaultOn`, re-read on every write of the tracker's choices.
 export function useSnowEnabled(defaultOn: boolean): boolean {
-  const chosen = useSyncExternalStore(subscribeOverrides, getSnowSnapshot, () => null);
+  const chosen = useSyncExternalStore(subscribeSnow, getSnowSnapshot, () => null);
   return chosen ?? defaultOn;
 }
 

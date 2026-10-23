@@ -68,8 +68,8 @@ import { TrackerMenu } from "./TrackerMenu";
 import { LocationPrompt } from "./LocationPrompt";
 import { MapUnavailable } from "./MapUnavailable";
 import {
-  readTrackerMapType,
-  readTrackerToggle,
+  useTrackerMapType,
+  useTrackerToggle,
   writeTrackerMapType,
   writeTrackerToggle,
 } from "./trackerToggles";
@@ -213,42 +213,29 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   themeRef.current = theme;
   // Every choice below is stored, so a refresh and a remount keep it; the
   // content default applies until the viewer has chosen (trackerToggles.ts).
-  const [mapType, setMapTypeState] = useState<"terrain" | "roadmap">(() =>
-    readTrackerMapType("terrain"),
-  );
+  // Each one follows the store, so a replace from the account sync shows at
+  // once.
+  const mapType = useTrackerMapType("terrain");
   const setMapType = useCallback((t: "terrain" | "roadmap") => {
     writeTrackerMapType(t);
-    setMapTypeState(t);
   }, []);
   const snow = useSnowEnabled(false);
-  const [flightHistoryOn, setFlightHistoryOnState] = useState<boolean>(() =>
-    readTrackerToggle("flightHistory", flightHistoryDefault),
-  );
-  const [timeLabels, setTimeLabelsState] = useState<boolean>(() =>
-    readTrackerToggle("timeLabels", true),
-  );
-  const [viewpointsOn, setViewpointsOnState] = useState<boolean>(() =>
-    readTrackerToggle("landmarks", true),
-  );
+  const flightHistoryOn = useTrackerToggle("flightHistory", flightHistoryDefault);
+  const timeLabels = useTrackerToggle("timeLabels", true);
+  const viewpointsOn = useTrackerToggle("landmarks", true);
   const setViewpointsOn = useCallback((v: boolean) => {
     writeTrackerToggle("landmarks", v);
-    setViewpointsOnState(v);
   }, []);
   const setFlightHistoryOn = useCallback((v: boolean) => {
     writeTrackerToggle("flightHistory", v);
-    setFlightHistoryOnState(v);
   }, []);
   const setTimeLabels = useCallback((v: boolean) => {
     writeTrackerToggle("timeLabels", v);
-    setTimeLabelsState(v);
   }, []);
-  const [flightDockOn, setFlightDockOnState] = useState<boolean>(() =>
-    readTrackerToggle("flightDock", true),
-  );
   // Open by default above 760 px, collapsed to the handle pill below.
+  const flightDockOn = useTrackerToggle("flightDock", true);
   const setFlightDockOn = useCallback((v: boolean) => {
     writeTrackerToggle("flightDock", v);
-    setFlightDockOnState(v);
   }, []);
   const [following, setFollowing] = useState<boolean>(true);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
