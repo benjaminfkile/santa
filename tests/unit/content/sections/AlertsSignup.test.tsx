@@ -4,7 +4,7 @@
 // response row of 13.1, renders the closed copy from
 // `snapshot.subscriptionsOpen` and from `409 subscriptions_closed`, and
 // lists the snapshot's alerts with their empty state. A `409
-// already_subscribed` adopts the row through `GET /me/notifications`.
+// already_subscribed` adopts the row through `GET /me`.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, cleanup, render, waitFor } from "@testing-library/react";
@@ -27,7 +27,7 @@ import { ApiRequestError } from "../../../../src/api/client";
 import { SignInRequired } from "../../../../src/auth/getIdToken";
 
 vi.mock("../../../../src/api/subscriptions", () => ({
-  getMyNotifications: vi.fn(),
+  getMe: vi.fn(),
   createSubscription: vi.fn(),
   resendVerification: vi.fn(),
   deleteSubscription: vi.fn(),
@@ -215,16 +215,16 @@ describe("AlertsSignup", () => {
     expect(storedFlag()).toBeNull();
   });
 
-  it("409 already_subscribed adopts the existing row through one GET /me/notifications and shows it", async () => {
+  it("409 already_subscribed adopts the existing row through one GET /me and shows it", async () => {
     vi.mocked(subsApi.createSubscription).mockRejectedValueOnce(apiError(409, "already_subscribed"));
-    vi.mocked(subsApi.getMyNotifications).mockResolvedValueOnce({
+    vi.mocked(subsApi.getMe).mockResolvedValueOnce({
       subscription: { id: 7, channel: "email", address: EMAIL, verifiedAt: "2024-12-24T00:00:00Z", unsubscribedAt: null, createdAt: "2024-12-01T00:00:00Z" },
       seenUpToId: null,
     });
     const { getByTestId, queryByTestId } = renderWith(SIGNED_IN);
     await userEvent.click(getByTestId("alerts-submit"));
     await waitFor(() => expect(getByTestId("subscription-state-label").textContent).toBe("Active"));
-    expect(subsApi.getMyNotifications).toHaveBeenCalledTimes(1);
+    expect(subsApi.getMe).toHaveBeenCalledTimes(1);
     expect(storedFlag()).toEqual({ account: EMAIL, id: 7, address: EMAIL, state: "active" });
     expect(getByTestId("alerts-notice").textContent).toMatch(/already subscribed/);
     expect(queryByTestId("alerts-submit")).toBeNull();
@@ -233,7 +233,7 @@ describe("AlertsSignup", () => {
 
   it("409 already_subscribed with a null subscription falls back to the field error and writes no flag", async () => {
     vi.mocked(subsApi.createSubscription).mockRejectedValueOnce(apiError(409, "already_subscribed"));
-    vi.mocked(subsApi.getMyNotifications).mockResolvedValueOnce({ subscription: null, seenUpToId: null });
+    vi.mocked(subsApi.getMe).mockResolvedValueOnce({ subscription: null, seenUpToId: null });
     const { getByTestId } = renderWith(SIGNED_IN);
     await userEvent.click(getByTestId("alerts-submit"));
     await waitFor(() => expect(getByTestId("alerts-field-error").textContent).toMatch(/already receiving/));
@@ -242,7 +242,7 @@ describe("AlertsSignup", () => {
 
   it("409 already_subscribed with a failed GET falls back to the field error", async () => {
     vi.mocked(subsApi.createSubscription).mockRejectedValueOnce(apiError(409, "already_subscribed"));
-    vi.mocked(subsApi.getMyNotifications).mockRejectedValueOnce(apiError(500, "internal"));
+    vi.mocked(subsApi.getMe).mockRejectedValueOnce(apiError(500, "internal"));
     const { getByTestId } = renderWith(SIGNED_IN);
     await userEvent.click(getByTestId("alerts-submit"));
     await waitFor(() => expect(getByTestId("alerts-field-error").textContent).toMatch(/already receiving/));
@@ -294,7 +294,7 @@ describe("AlertsSignup", () => {
     await userEvent.click(getByTestId("subscription-resend"));
     await waitFor(() => expect(getByTestId("subscription-state-label").textContent).toBe("Active"));
     expect(storedFlag()?.state).toBe("active");
-    expect(subsApi.getMyNotifications).not.toHaveBeenCalled();
+    expect(subsApi.getMe).not.toHaveBeenCalled();
   });
 
   it("204 from unsubscribe clears the flag and brings the form back", async () => {
@@ -383,7 +383,7 @@ describe("AlertsSignup alerts list", () => {
     expect(getAllByTestId("alert-event").map((n) => n.textContent)).toEqual(["Walk", "Walk"]);
     expect(getAllByTestId("alert-subject").map((n) => n.textContent)).toEqual(["Latest update", "We are live"]);
     expect(getAllByTestId("alert-sent-at")[0].textContent).not.toBe("");
-    expect(subsApi.getMyNotifications).not.toHaveBeenCalled();
+    expect(subsApi.getMe).not.toHaveBeenCalled();
   });
 
   it("shows each alert's message under its subject, and no body element when the message is null", async () => {

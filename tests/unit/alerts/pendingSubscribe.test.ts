@@ -16,7 +16,7 @@ import {
 
 vi.mock("../../../src/api/subscriptions", () => ({
   createSubscription: vi.fn(),
-  getMyNotifications: vi.fn(),
+  getMe: vi.fn(),
 }));
 
 import * as subsApi from "../../../src/api/subscriptions";
@@ -34,7 +34,7 @@ function apiError(status: number, code: string) {
 beforeEach(() => {
   window.localStorage.clear();
   vi.mocked(subsApi.createSubscription).mockReset();
-  vi.mocked(subsApi.getMyNotifications).mockReset();
+  vi.mocked(subsApi.getMe).mockReset();
 });
 
 describe("the stored intent", () => {
@@ -88,12 +88,12 @@ describe("completePendingSubscribe", () => {
   it("409 already_subscribed adopts the account's row through one GET and clears the intent", async () => {
     setPendingSubscribe(EMAIL);
     vi.mocked(subsApi.createSubscription).mockRejectedValueOnce(apiError(409, "already_subscribed"));
-    vi.mocked(subsApi.getMyNotifications).mockResolvedValueOnce({
+    vi.mocked(subsApi.getMe).mockResolvedValueOnce({
       subscription: row(8, "2026-10-01T00:00:00Z"),
       seenUpToId: null,
     } as never);
     await completePendingSubscribe(EMAIL);
-    expect(subsApi.getMyNotifications).toHaveBeenCalledTimes(1);
+    expect(subsApi.getMe).toHaveBeenCalledTimes(1);
     expect(readFlag()).toEqual({ account: EMAIL, id: 8, address: EMAIL, state: "active" });
     expect(readPendingSubscribe()).toBeNull();
   });
@@ -101,7 +101,7 @@ describe("completePendingSubscribe", () => {
   it("409 already_subscribed with a failing GET writes no flag, clears the intent, and does not throw", async () => {
     setPendingSubscribe(EMAIL);
     vi.mocked(subsApi.createSubscription).mockRejectedValueOnce(apiError(409, "already_subscribed"));
-    vi.mocked(subsApi.getMyNotifications).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    vi.mocked(subsApi.getMe).mockRejectedValueOnce(new TypeError("Failed to fetch"));
     await expect(completePendingSubscribe(EMAIL)).resolves.toBeUndefined();
     expect(window.localStorage.getItem(SUBSCRIPTION_FLAG_KEY)).toBeNull();
     expect(readPendingSubscribe()).toBeNull();
@@ -116,7 +116,7 @@ describe("completePendingSubscribe", () => {
       setPendingSubscribe(EMAIL);
       vi.mocked(subsApi.createSubscription).mockRejectedValueOnce(apiError(status, code));
       await expect(completePendingSubscribe(EMAIL)).resolves.toBeUndefined();
-      expect(subsApi.getMyNotifications).not.toHaveBeenCalled();
+      expect(subsApi.getMe).not.toHaveBeenCalled();
       expect(window.localStorage.getItem(SUBSCRIPTION_FLAG_KEY)).toBeNull();
       expect(readPendingSubscribe()).toBeNull();
     });

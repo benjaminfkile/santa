@@ -9,16 +9,16 @@
 // type with the plain cookie icon; it never reorders. The chevron collapses
 // only the ranked rows for a viewer who would rather not look at them;
 // collapsed, the chevron and the total are left, and the choice is stored
-// in trackerToggles like the tracker's other choices.
+// in trackerToggles like the tracker's other choices and followed from
+// there, so a replace from the account sync shows at once.
 
-import { useState } from "react";
 import type { IconRef } from "../../../contracts";
 import type { ContentBundle } from "../../../store/types";
 import { useStore } from "../../../store/useStore";
 import { copy } from "../../../copy/copy";
 import { formatCount } from "../../../lib/number";
 import { ChevronGlyph, CookieGlyph } from "./glyphs";
-import { readTrackerToggle, writeTrackerToggle } from "./trackerToggles";
+import { useTrackerToggle, writeTrackerToggle } from "./trackerToggles";
 import { Icon, iconResolves } from "../../primitives/Icon";
 import { rankCookieTypes } from "../Leaderboard/Leaderboard";
 import * as styles from "./Map.module.css";
@@ -51,7 +51,7 @@ function readIcon(icon: unknown): IconRef | null {
 export function CookieTally({ bundle }: { bundle: ContentBundle }) {
   const cookieTypes = useStore((s) => s.snapshot?.cookieTypes ?? null);
   const tally = useStore((s) => s.live?.cookieTally ?? null);
-  const [open, setOpen] = useState<boolean>(() => readTrackerToggle("cookieTally", true));
+  const open = useTrackerToggle("cookieTally", true);
 
   if (cookieTypes === null || cookieTypes.length === 0) return null;
   const ranked = rankCookieTypes(cookieTypes, tally ?? {});
@@ -59,7 +59,6 @@ export function CookieTally({ bundle }: { bundle: ContentBundle }) {
 
   const toggle = () => {
     writeTrackerToggle("cookieTally", !open);
-    setOpen(!open);
   };
 
   return (

@@ -7,12 +7,12 @@
 // stored address equals the signed-in email it calls
 // `POST /me/subscriptions` and writes the subscription flag from the row.
 // A `409 already_subscribed` adopts the account's row through one
-// `GET /me/notifications`. `409 address_taken`, `409 subscriptions_closed`
+// `GET /me`. `409 address_taken`, `409 subscriptions_closed`
 // and any `400` clear the intent and stop; a network failure keeps it for
 // the next sign-in. It never throws.
 
 import { storageGet, storageRemove, storageSet } from "../lib/storage";
-import { createSubscription, getMyNotifications } from "../api/subscriptions";
+import { createSubscription, getMe } from "../api/subscriptions";
 import { ApiRequestError } from "../api/client";
 import { flagFromRow, writeFlag } from "./subscriptionFlag";
 
@@ -47,7 +47,7 @@ export async function completePendingSubscribe(email: string): Promise<void> {
     if (e.status === 409 && e.code === "already_subscribed") {
       clearPendingSubscribe();
       try {
-        const res = await getMyNotifications();
+        const res = await getMe();
         const existing = res.subscription ?? null;
         if (existing !== null) writeFlag(flagFromRow(email, existing));
       } catch {

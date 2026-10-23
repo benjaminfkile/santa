@@ -7,9 +7,14 @@
 // live flip, the unavailable panel's retry), and the next visit all keep
 // what the viewer picked. A choice is also held in memory, so a blocked
 // storage still keeps it for the page load. The content default applies
-// only until the viewer has chosen.
+// only until the viewer has chosen. Every write tells the
+// subscribeTrackerSettings listeners, so the live screen's toggles, the
+// cookie tally, and the snow layer follow a replace from the account sync
+// (src/account/preferences.ts) that lands after they mounted.
 
+import { useSyncExternalStore } from "react";
 import { storageGet, storageRemove, storageSet } from "../../../lib/storage";
+import type { TrackerPreferences } from "../../../api/preferences";
 
 export const TRACKER_SETTINGS_KEY = "wmsfo.tracker.settings";
 
@@ -25,7 +30,17 @@ export type TrackerMapType = "terrain" | "roadmap";
 
 type TrackerSettings = Partial<Record<TrackerToggleKey, boolean>> & { mapType?: TrackerMapType };
 
+const TOGGLE_KEYS: readonly TrackerToggleKey[] = [
+  "flightHistory",
+  "timeLabels",
+  "landmarks",
+  "flightDock",
+  "cookieTally",
+  "snow",
+];
+
 let memory: TrackerSettings = {};
+const listeners = new Set<() => void>();
 
 function stored(): TrackerSettings {
   const raw = storageGet(TRACKER_SETTINGS_KEY);
@@ -45,6 +60,39 @@ function settings(): TrackerSettings {
 function save(next: TrackerSettings): void {
   memory = next;
   storageSet(TRACKER_SETTINGS_KEY, JSON.stringify(next));
+  for (const l of [...listeners]) l();
+}
+
+// The known keys of an object with a valid value; anything else is dropped.
+function known(source: unknown): TrackerPreferences {
+  const out: TrackerPreferences = {};
+  if (source === null || typeof source !== "object") return out;
+  const values = source as Record<string, unknown>;
+  for (const key of TOGGLE_KEYS) {
+    const value = values[key];
+    if (typeof value === "boolean") out[key] = value;
+  }
+  if (values.mapType === "terrain" || values.mapType === "roadmap") out.mapType = values.mapType;
+  return out;
+}
+
+// The stored choices as one object, known keys only.
+export function readTrackerSettings(): TrackerPreferences {
+  return known(settings());
+}
+
+// Writes the whole object: a key absent from `next` is removed.
+export function replaceTrackerSettings(next: TrackerPreferences): void {
+  save(known(next));
+}
+
+// Called after every write: the per-key writers, the map type writer, the
+// remove, and the replace.
+export function subscribeTrackerSettings(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 export function readTrackerToggle(key: TrackerToggleKey, fallback: boolean): boolean {
@@ -74,6 +122,18 @@ export function readTrackerMapType(fallback: TrackerMapType): TrackerMapType {
 
 export function writeTrackerMapType(value: TrackerMapType): void {
   save({ ...settings(), mapType: value });
+}
+
+// The stored toggle, else `fallback`, re-read on every write.
+export function useTrackerToggle(key: TrackerToggleKey, fallback: boolean): boolean {
+  const read = () => readTrackerToggle(key, fallback);
+  return useSyncExternalStore(subscribeTrackerSettings, read, read);
+}
+
+// The stored map type, else `fallback`, re-read on every write.
+export function useTrackerMapType(fallback: TrackerMapType): TrackerMapType {
+  const read = () => readTrackerMapType(fallback);
+  return useSyncExternalStore(subscribeTrackerSettings, read, read);
 }
 
 export function resetTrackerTogglesForTests(): void {

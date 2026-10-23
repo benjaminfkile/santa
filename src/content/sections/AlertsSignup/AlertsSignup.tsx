@@ -7,7 +7,7 @@
 // email, the own-address hint stands above the field (the API verifies
 // that address at once, so the `201` carries `verifiedAt`). A `409 already_subscribed` on the form
 // (a cleared browser or another device) adopts the existing row through
-// one `GET /me/notifications` (its `subscription`) and shows it in place of the form. The
+// one `GET /me` (its `subscription`) and shows it in place of the form. The
 // alerts list comes from the snapshot (`snapshot.event.alerts`, newest first,
 // each with its message under the subject when it carries one). While
 // `snapshot.subscriptionsOpen` is false, or after a `409
@@ -25,7 +25,7 @@ import { Inline } from "../../inline/Inline";
 import {
   createSubscription,
   deleteSubscription,
-  getMyNotifications,
+  getMe,
   resendVerification,
 } from "../../../api/subscriptions";
 import { ApiRequestError, surfaceFor } from "../../../api/errors";
@@ -143,13 +143,13 @@ function SignedIn({
     return false;
   }, []);
 
-  // One `GET /me/notifications` after a `409 already_subscribed`: writes
+  // One `GET /me` after a `409 already_subscribed`: writes
   // the flag from its `subscription` and shows it. True when a row was
   // adopted; false (no row, or a failure) leaves the caller to show the
   // field error.
   const adoptExisting = useCallback(async (): Promise<boolean> => {
     try {
-      const res = await getMyNotifications();
+      const res = await getMe();
       const row = res.subscription ?? null;
       if (row === null) return false;
       setFlag(flagFromRow(email, row));

@@ -16,7 +16,10 @@ import {
   useSnowEnabled,
 } from "../../../../src/content/theme/seasonalLayers";
 import { store } from "../../../../src/store/useStore";
-import { TRACKER_SETTINGS_KEY } from "../../../../src/content/sections/Map/trackerToggles";
+import {
+  TRACKER_SETTINGS_KEY,
+  replaceTrackerSettings,
+} from "../../../../src/content/sections/Map/trackerToggles";
 import { initialStore } from "../../../../src/store/types";
 import type { ContentBundle } from "../../../../src/store/types";
 
@@ -151,6 +154,23 @@ describe("SnowLayer live-screen detection", () => {
       </MemoryRouter>,
     );
     expect(container.querySelector('[data-testid="snow-canvas"]')).not.toBeNull();
+  });
+});
+
+describe("the snow choice replaced after mount", () => {
+  it("shows and hides the live flakes as the tracker store is replaced", () => {
+    seedLive(3);
+    const bundle = bundleWithDefaults(false, false);
+    const { container } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <SnowLayer bundle={bundle} />
+      </MemoryRouter>,
+    );
+    expect(container.querySelector('[data-testid="snow-canvas"]')).toBeNull();
+    act(() => replaceTrackerSettings({ snow: true }));
+    expect(container.querySelector('[data-testid="snow-canvas"]')).not.toBeNull();
+    act(() => replaceTrackerSettings({}));
+    expect(container.querySelector('[data-testid="snow-canvas"]')).toBeNull();
   });
 });
 

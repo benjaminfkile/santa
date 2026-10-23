@@ -5,7 +5,7 @@
 // flag is cleared on sign-out (the auth state `signedOut`) and whenever
 // the signed-in account is not the flag's `account`.
 //
-// The one read, `GET /me/notifications`, at most once per page load per
+// The one read, `GET /me`, at most once per page load per
 // account, in two cases: (a) the visitor signs in during this page load
 // (a `session` change with the reason "signIn"), and (b) once the first
 // live object has applied, while the visitor is signed in (a restored
@@ -13,14 +13,19 @@
 // `subscription` rewrites the flag for the account (verified: active;
 // unverified: pending), a null one clears any flag for the account, and a
 // non-null `seenUpToId` raises the read marker of `seenMarker.ts` (never
-// lowers it). `SignInRequired` or any failure leaves both as they were.
+// lowers it). Non-null `preferences` are applied to the theme and the
+// tracker choices (src/account/preferences.ts); null ones with a local
+// choice seed the account with one `PUT /me/preferences`. `SignInRequired`
+// or any failure leaves the flag, the marker, and the choices as they were.
 // Signed out: no call; route changes and store updates never call again.
 // A flag written through `setFlag` (a row the API just returned) marks
 // its account checked, so a sign-up or an adopted row never triggers a
 // second read. A flag written outside the provider (`writeFlag` from the
 // sign-up alerts intent, `pendingSubscribe.ts`) reaches the state through
 // `onFlagChange`, and a read whose answer lands after a newer flag write
-// leaves the flag as it is.
+// leaves the flag as it is. The provider also runs the preferences sync
+// (`startPreferencesSync`) for as long as it is mounted, saving changes
+// while the visitor is signed in.
 
 import {
   createContext,
@@ -33,7 +38,15 @@ import {
   type ReactNode,
 } from "react";
 import { useAuth } from "../auth/AuthProvider";
-import { getMyNotifications } from "../api/subscriptions";
+import { getMe } from "../api/subscriptions";
+import {
+  applyServerPreferences,
+  hasChoice,
+  localPreferences,
+  pushPreferences,
+  serverPreferences,
+  startPreferencesSync,
+} from "../account/preferences";
 import { session } from "../auth/session";
 import { useStore } from "../store/useStore";
 import { seenMarker } from "./seenMarker";
@@ -93,6 +106,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     accountRef.current = account;
   }, [account]);
 
+  // Saves the theme and tracker choices while signed in.
+  useEffect(() => startPreferencesSync(() => accountRef.current !== null), []);
+
   // Sign-out, or another account signed in, clears the flag.
   useEffect(() => {
     if (flag === null) return;
@@ -108,8 +124,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       const writesAtStart = writesRef.current;
       void (async () => {
         try {
-          const res = await getMyNotifications();
+          const res = await getMe();
           if (accountRef.current !== forAccount) return;
+          const prefs = serverPreferences(res);
+          if (prefs !== null) applyServerPreferences(prefs);
+          else if (hasChoice(localPreferences())) pushPreferences();
           const row = res.subscription ?? null;
           if (writesRef.current !== writesAtStart) {
             // A newer flag was written while the read was in flight.
@@ -118,7 +137,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           const seenUpTo = toId(res.seenUpToId);
           if (seenUpTo !== null) seenMarker.raise(seenUpTo);
         } catch {
-          // SignInRequired or a failure leaves the flag and the marker as they were.
+          // SignInRequired or a failure leaves the flag, the marker, and the choices as they were.
         }
       })();
     },

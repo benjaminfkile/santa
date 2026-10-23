@@ -1,12 +1,18 @@
 // docs/site.md section 8.5: the tracker's choices are stored under one
 // localStorage key, the content default applies until the viewer has
 // chosen, and a blocked storage still keeps a choice for the page load.
+// The whole object is read and replaced for the account sync, and every
+// write tells the subscribeTrackerSettings listeners.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   TRACKER_SETTINGS_KEY,
   readTrackerMapType,
+  readTrackerSettings,
   readTrackerToggle,
+  removeTrackerToggle,
+  replaceTrackerSettings,
   resetTrackerTogglesForTests,
+  subscribeTrackerSettings,
   writeTrackerMapType,
   writeTrackerToggle,
 } from "../../../../src/content/sections/Map/trackerToggles";
@@ -63,5 +69,44 @@ describe("trackerToggles", () => {
     });
     writeTrackerToggle("landmarks", false);
     expect(readTrackerToggle("landmarks", true)).toBe(false);
+  });
+
+  it("readTrackerSettings returns the stored object, known keys only", () => {
+    expect(readTrackerSettings()).toEqual({});
+    window.localStorage.setItem(
+      TRACKER_SETTINGS_KEY,
+      JSON.stringify({ flightHistory: true, snow: "yes", mapType: "moon", extra: 1, cookieTally: false }),
+    );
+    expect(readTrackerSettings()).toEqual({ flightHistory: true, cookieTally: false });
+  });
+
+  it("replaceTrackerSettings writes the whole object, removing an absent key", () => {
+    writeTrackerToggle("snow", true);
+    writeTrackerToggle("landmarks", false);
+    replaceTrackerSettings({ flightHistory: true, mapType: "roadmap" });
+    expect(JSON.parse(window.localStorage.getItem(TRACKER_SETTINGS_KEY) ?? "{}")).toEqual({
+      flightHistory: true,
+      mapType: "roadmap",
+    });
+    expect(readTrackerToggle("snow", false)).toBe(false);
+    expect(readTrackerToggle("landmarks", true)).toBe(true);
+    expect(readTrackerSettings()).toEqual({ flightHistory: true, mapType: "roadmap" });
+  });
+
+  it("subscribeTrackerSettings fires on each writer and an unsubscribed listener is silent", () => {
+    const listener = vi.fn();
+    const off = subscribeTrackerSettings(listener);
+    writeTrackerToggle("flightHistory", true);
+    expect(listener).toHaveBeenCalledTimes(1);
+    writeTrackerMapType("roadmap");
+    expect(listener).toHaveBeenCalledTimes(2);
+    removeTrackerToggle("flightHistory");
+    expect(listener).toHaveBeenCalledTimes(3);
+    replaceTrackerSettings({ snow: true });
+    expect(listener).toHaveBeenCalledTimes(4);
+    off();
+    writeTrackerToggle("timeLabels", false);
+    replaceTrackerSettings({});
+    expect(listener).toHaveBeenCalledTimes(4);
   });
 });
