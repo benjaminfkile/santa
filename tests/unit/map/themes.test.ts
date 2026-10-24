@@ -3,7 +3,9 @@
 // style body once and keeps it, and a rejected fetch is retried on the
 // next call; `themesFor` filters by renderer; `resolveInitialTheme` picks
 // the stored key when it names an enabled theme of the renderer, then the
-// holder of the appearance's default flag, then the first in list order.
+// holder of the appearance's default flag, then the first in list order,
+// reading the key through the store (`readThemeKey`, `writeThemeKey`,
+// `subscribeThemeKey`), which keeps a memory copy for a blocked storage.
 // `GOOGLE_DEFAULT_THEME` is Google's own roadmap under the seeded
 // `standard` theme's palettes (contracts/fixtures/themes/seed.json).
 
@@ -13,9 +15,13 @@ import { resolve } from "node:path";
 import {
   GOOGLE_DEFAULT_THEME,
   loadThemes,
+  readThemeKey,
+  resetThemeKeyForTests,
   resolveInitialTheme,
+  subscribeThemeKey,
   themesFor,
   THEME_STORAGE_KEY,
+  writeThemeKey,
 } from "../../../src/map/themes";
 import type { Snapshot } from "../../../src/contracts";
 
@@ -62,8 +68,53 @@ function jsonResponse(body: unknown): Response {
 }
 
 afterEach(() => {
-  window.localStorage.removeItem(THEME_STORAGE_KEY);
+  resetThemeKeyForTests();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
+
+describe("the stored theme key", () => {
+  it("reads null when nothing is stored, then the stored key", () => {
+    expect(readThemeKey()).toBeNull();
+    window.localStorage.setItem(THEME_STORAGE_KEY, "expedition");
+    expect(readThemeKey()).toBe("expedition");
+  });
+
+  it("writes the key under wmsfo.tracker.theme, and null removes it", () => {
+    writeThemeKey("night");
+    expect(window.localStorage.getItem("wmsfo.tracker.theme")).toBe("night");
+    expect(readThemeKey()).toBe("night");
+    writeThemeKey(null);
+    expect(window.localStorage.getItem("wmsfo.tracker.theme")).toBeNull();
+    expect(readThemeKey()).toBeNull();
+  });
+
+  it("keeps the key in memory for the page load when storage is blocked", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    writeThemeKey("expedition");
+    expect(readThemeKey()).toBe("expedition");
+  });
+
+  it("tells every listener on each write, and an unsubscribed listener is silent", () => {
+    const kept = vi.fn();
+    const dropped = vi.fn();
+    const offKept = subscribeThemeKey(kept);
+    const off = subscribeThemeKey(dropped);
+    writeThemeKey("night");
+    expect(kept).toHaveBeenCalledTimes(1);
+    expect(dropped).toHaveBeenCalledTimes(1);
+    off();
+    writeThemeKey("night");
+    writeThemeKey(null);
+    expect(kept).toHaveBeenCalledTimes(3);
+    expect(dropped).toHaveBeenCalledTimes(1);
+    offKept();
+  });
 });
 
 describe("loadThemes", () => {
@@ -177,6 +228,13 @@ describe("resolveInitialTheme", () => {
     expect(resolveInitialTheme(themes, "google", "dark")?.key).toBe("night");
     expect(resolveInitialTheme(themes, "maplibre", "light")?.key).toBe("light");
     expect(resolveInitialTheme(themes, "maplibre", "dark")?.key).toBe("dark");
+  });
+
+  it("reads the key through the store", () => {
+    writeThemeKey("expedition");
+    expect(resolveInitialTheme(themes, "google", "light")?.key).toBe("expedition");
+    writeThemeKey(null);
+    expect(resolveInitialTheme(themes, "google", "light")?.key).toBe("standard");
   });
 
   it("ignores a stored key of the other renderer", () => {

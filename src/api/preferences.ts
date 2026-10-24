@@ -9,10 +9,10 @@ import type { components } from "../contracts";
 type TrackerPreferencesDto = components["schemas"]["TrackerPreferencesDto"];
 
 // The schema's tracker object (me-preferences.schema.json): every key
-// optional, booleans and the map type, never null.
+// optional, booleans, the map type, and the tracker theme's key, never null.
 export type TrackerPreferences = {
-  [K in Exclude<keyof TrackerPreferencesDto, "mapType">]?: boolean;
-} & { mapType?: "terrain" | "roadmap" };
+  [K in Exclude<keyof TrackerPreferencesDto, "mapType" | "theme">]?: boolean;
+} & { mapType?: "terrain" | "roadmap"; theme?: string };
 
 export type Preferences = {
   theme: "light" | "dark" | null;

@@ -7,7 +7,10 @@
 // enabled Google themes), never from the section data's `themes` or
 // `defaultTheme`, and mounting reports the renderer choice as the `live`
 // surface. The tracker menu's toggles follow the tracker store, so a
-// replace after mount (the account sync) shows at once.
+// replace after mount (the account sync) shows at once. A theme pick
+// writes the stored theme key, and a key written after mount that names
+// another offered theme switches the map; one that names none changes
+// nothing.
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -28,23 +31,37 @@ vi.mock("../../../../src/map/renderer", () => ({
   reportRenderer: vi.fn(() => "google"),
 }));
 
-vi.mock("../../../../src/map/MapView", () => ({
-  MapView: (props: {
-    className?: string;
-    children?: (state: { controller: unknown; error: unknown; retry: () => void }) => unknown;
-  }) => (
-    <div className={props.className ?? "map-view"}>
-      <div className="map-view__canvas" />
-      {typeof props.children === "function"
-        ? (props.children({
-            controller: null,
-            error: null,
-            retry: () => {},
-          }) as React.ReactNode)
-        : null}
-    </div>
-  ),
-}));
+// A test that sets `mocked.controller` gets it handed to the section on
+// mount; the rest run without one.
+const mocked = vi.hoisted(() => ({ controller: null as unknown }));
+
+vi.mock("../../../../src/map/MapView", async () => {
+  const { useEffect } = await import("react");
+  return {
+    MapView: (props: {
+      className?: string;
+      onController?: (c: unknown) => void;
+      children?: (state: { controller: unknown; error: unknown; retry: () => void }) => unknown;
+    }) => {
+      const { onController } = props;
+      useEffect(() => {
+        if (mocked.controller !== null) onController?.(mocked.controller);
+      }, [onController]);
+      return (
+        <div className={props.className ?? "map-view"}>
+          <div className="map-view__canvas" />
+          {typeof props.children === "function"
+            ? (props.children({
+                controller: null,
+                error: null,
+                retry: () => {},
+              }) as React.ReactNode)
+            : null}
+        </div>
+      );
+    },
+  };
+});
 
 describe("Map section class coverage", () => {
   it("renders the Map section without crashing", async () => {
@@ -333,6 +350,78 @@ describe("Map section themes", () => {
     expect(reportRenderer).toHaveBeenCalledTimes(1);
     expect(vi.mocked(reportRenderer).mock.calls[0][0]).toBe("live");
     cleanup();
+  });
+
+  function fakeController() {
+    const setTheme = vi.fn(() => Promise.resolve());
+    const controller = new Proxy({ setTheme } as Record<string | symbol, unknown>, {
+      get(target, prop) {
+        if (prop === "then") return undefined;
+        if (!(prop in target)) target[prop] = vi.fn();
+        return target[prop];
+      },
+    });
+    return { controller, setTheme };
+  }
+
+  it("a pick writes the stored theme key", async () => {
+    const { readThemeKey, resetThemeKeyForTests } = await import("../../../../src/map/themes");
+    resetThemeKeyForTests();
+    const fake = fakeController();
+    mocked.controller = fake.controller;
+    document.documentElement.setAttribute("data-theme", "light");
+    const utils = await renderWithThemes({ controls: { themePicker: true } });
+    fireEvent.click(utils.container.querySelector('button[aria-label="Tracker menu"]')!);
+    await act(async () => {
+      fireEvent.click(await utils.findByTestId("tracker-menu-theme-expedition"));
+    });
+    expect(fake.setTheme).toHaveBeenLastCalledWith(expect.objectContaining({ key: "expedition" }));
+    expect(readThemeKey()).toBe("expedition");
+    expect(window.localStorage.getItem("wmsfo.tracker.theme")).toBe("expedition");
+    expect(utils.getByTestId("map").getAttribute("data-theme-key")).toBe("expedition");
+    cleanup();
+    mocked.controller = null;
+    resetThemeKeyForTests();
+    document.documentElement.removeAttribute("data-theme");
+  });
+
+  it("a key written after mount that names an offered theme switches the map", async () => {
+    const { resetThemeKeyForTests, writeThemeKey } = await import("../../../../src/map/themes");
+    resetThemeKeyForTests();
+    const fake = fakeController();
+    mocked.controller = fake.controller;
+    document.documentElement.setAttribute("data-theme", "light");
+    const utils = await renderWithThemes({ controls: { themePicker: true } });
+    expect(utils.getByTestId("map").getAttribute("data-theme-key")).toBe("standard");
+    fake.setTheme.mockClear();
+    await act(async () => writeThemeKey("night"));
+    expect(fake.setTheme).toHaveBeenCalledTimes(1);
+    expect(fake.setTheme).toHaveBeenCalledWith(expect.objectContaining({ key: "night" }));
+    expect(utils.getByTestId("map").getAttribute("data-theme-key")).toBe("night");
+    cleanup();
+    mocked.controller = null;
+    resetThemeKeyForTests();
+    document.documentElement.removeAttribute("data-theme");
+  });
+
+  it("a key written after mount that names no offered theme changes nothing", async () => {
+    const { resetThemeKeyForTests, writeThemeKey } = await import("../../../../src/map/themes");
+    resetThemeKeyForTests();
+    const fake = fakeController();
+    mocked.controller = fake.controller;
+    document.documentElement.setAttribute("data-theme", "light");
+    const utils = await renderWithThemes({ controls: { themePicker: true } });
+    fake.setTheme.mockClear();
+    // `light` is a MapLibre theme and `nebula` is not enabled.
+    await act(async () => writeThemeKey("light"));
+    await act(async () => writeThemeKey("nebula"));
+    await act(async () => writeThemeKey(null));
+    expect(fake.setTheme).not.toHaveBeenCalled();
+    expect(utils.getByTestId("map").getAttribute("data-theme-key")).toBe("standard");
+    cleanup();
+    mocked.controller = null;
+    resetThemeKeyForTests();
+    document.documentElement.removeAttribute("data-theme");
   });
 
   it("reads neither themes nor defaultTheme from the section data", () => {
