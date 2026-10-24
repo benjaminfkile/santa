@@ -4,22 +4,31 @@
 // body is fetched from its `styleUrl` on the first `getStyle()` call and
 // kept for the page; a failed fetch rejects and the next call fetches again.
 // `resolveInitialTheme` picks the starting theme of a renderer: the stored
-// key when it names one of that renderer's themes, then the holder of the
-// appearance's default flag, then the first in list order.
+// key (`readThemeKey`) when it names one of that renderer's themes, then
+// the holder of the appearance's default flag, then the first in list
+// order.
 // `resolveDefaultTheme` is the same order without the stored key, the
 // route preview's choice (8.9): the stored tracker theme plays no part there.
 // `GOOGLE_DEFAULT_THEME` is what the route preview draws on Google when no
 // Google theme is enabled: Google's own roadmap (an empty style array) under
 // the overlay and chrome of the seeded `standard` theme, kept as data in
 // googleDefault.json.
+// The stored key itself is a store in themeKey.ts (`readThemeKey`,
+// `writeThemeKey`, `subscribeThemeKey`), re-exported here.
 
 import type { StyleSpecification } from "maplibre-gl";
 import type { Snapshot } from "../../contracts";
-import { storageGet } from "../../lib/storage";
+import { readThemeKey } from "./themeKey";
 import type { Renderer } from "../renderer";
 import googleDefault from "./googleDefault.json";
 
-export const THEME_STORAGE_KEY = "wmsfo.tracker.theme";
+export {
+  THEME_STORAGE_KEY,
+  readThemeKey,
+  resetThemeKeyForTests,
+  subscribeThemeKey,
+  writeThemeKey,
+} from "./themeKey";
 
 export type ThemeStyle = google.maps.MapTypeStyle[] | StyleSpecification;
 
@@ -129,7 +138,7 @@ export function resolveInitialTheme(
   appearance: "light" | "dark",
 ): MapTheme | null {
   const offered = themesFor(themes, renderer);
-  const stored = storageGet(THEME_STORAGE_KEY);
+  const stored = readThemeKey();
   if (stored !== null) {
     const found = offered.find((t) => t.key === stored);
     if (found !== undefined) return found;

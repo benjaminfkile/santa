@@ -20,6 +20,10 @@
 // viewer's stored theme key kept when a Google theme has it and the
 // default resolved otherwise, and the toggles, the overlays, the store
 // subscription, and the viewer's location applied to the new controller.
+// The chosen theme key is a store (map/themes/themeKey.ts): a pick writes
+// it, and a write from elsewhere (the account sync after `GET /me`) that
+// names another offered theme switches the mounted map; a key no offered
+// theme has leaves the map as it is until the next mount.
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
@@ -28,7 +32,6 @@ import { useAuth } from "../../../auth/AuthProvider";
 import { store, useStore } from "../../../store/useStore";
 import { selectLiveState } from "../../../store/liveState";
 import { selectTakeover } from "../../selectPage";
-import { storageSet } from "../../../lib/storage";
 import { describeError } from "../../../lib/analytics";
 import { setSnowOverride, useSnowEnabled } from "../../theme/seasonalLayers";
 import { SponsorCarousel } from "../SponsorCarousel/SponsorCarousel";
@@ -39,9 +42,11 @@ import type { UserLocationState } from "../../../map/userLocation";
 import type { MapTheme } from "../../../map/themes";
 import {
   loadThemes,
+  readThemeKey,
   resolveInitialTheme,
+  subscribeThemeKey,
   themesFor,
-  THEME_STORAGE_KEY,
+  writeThemeKey,
 } from "../../../map/themes";
 import { toBbox } from "../../../map/bounds";
 import {
@@ -411,7 +416,8 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   }, [controller]);
 
   // The switch waits for the controller to apply the new style, so the
-  // chrome changes with the map.
+  // chrome changes with the map. The theme is current before the store
+  // write, so the store follower below sees nothing to apply.
   const onThemeChange = useCallback(
     async (key: string) => {
       const next = offered.find((t) => t.key === key);
@@ -422,11 +428,38 @@ export const Map: SectionComponent = ({ data, bundle }) => {
         console.warn("map: the style did not load", error);
         return;
       }
-      storageSet(THEME_STORAGE_KEY, next.key);
+      themeRef.current = next;
       setTheme(next);
+      writeThemeKey(next.key);
     },
     [offered, controller],
   );
+
+  // A stored key written after mount that names another offered theme is
+  // applied as a pick is; a failed style load keeps the current theme.
+  useEffect(() => {
+    let active = true;
+    const off = subscribeThemeKey(() => {
+      const key = readThemeKey();
+      const next = offered.find((t) => t.key === key);
+      if (next === undefined || next.key === themeRef.current?.key) return;
+      void (async () => {
+        try {
+          await controller?.setTheme(next);
+        } catch (error) {
+          console.warn("map: the style did not load", error);
+          return;
+        }
+        if (!active) return;
+        themeRef.current = next;
+        setTheme(next);
+      })();
+    });
+    return () => {
+      active = false;
+      off();
+    };
+  }, [offered, controller]);
 
   const onEnableLocation = useCallback(() => {
     void controller?.enableUserLocation();

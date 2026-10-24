@@ -47,6 +47,7 @@ import {
   readTrackerSettings,
   resetTrackerTogglesForTests,
 } from "../../../src/content/sections/Map/trackerToggles";
+import { THEME_STORAGE_KEY, readThemeKey, resetThemeKeyForTests } from "../../../src/map/themes";
 
 const EMAIL = "p@e.com";
 const SIGNED_IN: AuthState = { status: "signedIn", email: EMAIL, expired: false };
@@ -115,6 +116,7 @@ function shownFlag(view: ReturnType<typeof renderApp>): SubscriptionFlag | null 
 beforeEach(() => {
   window.localStorage.clear();
   resetTrackerTogglesForTests();
+  resetThemeKeyForTests();
   vi.mocked(subsApi.getMe).mockReset();
   vi.mocked(prefsApi.putPreferences).mockReset();
   vi.mocked(prefsApi.putPreferences).mockResolvedValue(undefined);
@@ -125,6 +127,7 @@ afterEach(() => {
   cleanup();
   clearTheme();
   resetTrackerTogglesForTests();
+  resetThemeKeyForTests();
   act(() => session.clear());
   act(() => store.setState({ ...initialStore }));
 });
@@ -458,6 +461,27 @@ describe("the preferences on the GET /me answer", () => {
     expect(prefsApi.putPreferences).toHaveBeenCalledWith({ theme: "dark", tracker: { cookieTally: false } });
     expect(shownFlag(view)?.state).toBe("pending");
     expect(seenMarker.read()).toBe(12);
+  });
+
+  it("lands the answer's tracker theme in the stored theme key, outside the settings object", async () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, "standard");
+    vi.mocked(subsApi.getMe).mockResolvedValue(
+      answer(row(7, "2026-09-01", "2026-09-02"), 40, {
+        theme: null,
+        tracker: { snow: true, theme: "expedition" },
+      }),
+    );
+    applyLive();
+    renderApp(SIGNED_IN);
+    await act(async () => {});
+    expect(readThemeKey()).toBe("expedition");
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("expedition");
+    expect(readTrackerSettings()).toEqual({ snow: true });
+    expect(JSON.parse(window.localStorage.getItem(TRACKER_SETTINGS_KEY) ?? "{}")).toEqual({ snow: true });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 1100));
+    });
+    expect(prefsApi.putPreferences).not.toHaveBeenCalled();
   });
 
   it("sends nothing when both the server and the browser are empty", async () => {

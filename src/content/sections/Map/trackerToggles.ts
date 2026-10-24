@@ -63,7 +63,9 @@ function save(next: TrackerSettings): void {
   for (const l of [...listeners]) l();
 }
 
-// The known keys of an object with a valid value; anything else is dropped.
+// The known keys of an object with a valid value; anything else is dropped,
+// `theme` among them: the tracker theme key lives under its own storage key
+// (map/themes/themeKey.ts) and the account sync joins the two.
 function known(source: unknown): TrackerPreferences {
   const out: TrackerPreferences = {};
   if (source === null || typeof source !== "object") return out;
