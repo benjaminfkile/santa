@@ -1,11 +1,12 @@
 // docs/site.md section 12. Fetch wrapper: bearer, error shape, timeouts.
 // Callers switch on `body.code`; `body.message` is never rendered.
 // docs/site.md 11.4: a 401 from the API triggers one refresh and one retry,
-// then SignInRequired.
+// then SignInRequired. A `403 blocked` clears the session with no refresh
+// and throws SignInRequired("blocked") (site.md 11.4, 19).
 
 import { env } from "../config/env";
 import type { ApiError } from "../contracts";
-import { getIdToken, refreshNow, SignInRequired } from "../auth/session";
+import { getIdToken, refreshNow, session, SignInRequired } from "../auth/session";
 
 export type { ApiError };
 export { SignInRequired };
@@ -40,17 +41,33 @@ export async function api<T>(path: string, opts: ApiOpts): Promise<T> {
   try {
     return await doFetch<T>(path, opts, bearer);
   } catch (e) {
-    if (
-      opts.auth &&
-      e instanceof ApiRequestError &&
-      e.status === 401 &&
-      bearer !== null
-    ) {
-      const next = await refreshNow();
-      return await doFetch<T>(path, opts, next);
+    if (bearer === null || !(e instanceof ApiRequestError)) throw e;
+    if (isBlocked(e)) throw endBlocked();
+    if (e.status !== 401) throw e;
+  }
+  // One refresh and one retry; a second 401 (an `unknown_user` token the
+  // refresh did not mend) ends the session too.
+  const next = await refreshNow();
+  try {
+    return await doFetch<T>(path, opts, next);
+  } catch (e) {
+    if (!(e instanceof ApiRequestError)) throw e;
+    if (isBlocked(e)) throw endBlocked();
+    if (e.status === 401) {
+      session.clear();
+      throw new SignInRequired();
     }
     throw e;
   }
+}
+
+function isBlocked(e: ApiRequestError): boolean {
+  return e.status === 403 && e.body?.code === "blocked";
+}
+
+function endBlocked(): SignInRequired {
+  session.block();
+  return new SignInRequired("blocked");
 }
 
 async function doFetch<T>(path: string, opts: ApiOpts, bearer: string | null): Promise<T> {

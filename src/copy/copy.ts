@@ -190,6 +190,7 @@ export const copy = {
   },
   auth: {
     closed: "Sign-ups are closed for now",
+    blocked: "This account cannot use the site.",
     signIn: {
       title: "Sign in",
       email: "Email",
@@ -221,6 +222,7 @@ export const copy = {
       passwordsDoNotMatch: "Passwords do not match",
       invalidPassword: "Password must be at least 8 characters",
       byInvitation: "Sign-up on this site is by invitation. Ask the operator to add your address.",
+      blocked: "This address cannot create an account here.",
     },
     confirm: {
       title: "Confirm your account",

@@ -133,6 +133,36 @@ describe("SignInPage", () => {
     expect(completePendingSubscribe).not.toHaveBeenCalled();
   });
 
+  it("shows the blocked notice once after the API ended the session with 403 blocked", () => {
+    session.set({
+      idToken: "id", accessToken: "a", refreshToken: "r",
+      email: "person@example", sub: "s", idExpiresAt: Date.now() + 3600_000,
+    });
+    session.block();
+    renderAt("/auth/sign-in", <SignInPage />);
+    expect(screen.getByTestId("auth-blocked").textContent).toBe(copy.auth.blocked);
+    cleanup();
+    renderAt("/auth/sign-in", <SignInPage />);
+    expect(screen.queryByTestId("auth-blocked")).toBeNull();
+  });
+
+  it("stays on the page with the blocked notice when the API blocks the first request", async () => {
+    (cognito.signIn as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      idToken: "id", accessToken: "a", refreshToken: "r",
+      email: "person@example", sub: "s", idExpiresAt: Date.now() + 3600_000,
+    });
+    vi.mocked(completePendingSubscribe).mockImplementationOnce(async () => {
+      session.block();
+    });
+    renderAt("/auth/sign-in?returnTo=%2Falerts", <SignInPage />);
+    await userEvent.type(screen.getByLabelText(copy.auth.signIn.email), "person@example");
+    await userEvent.type(screen.getByLabelText(copy.auth.signIn.password), "hunter22hunter");
+    await userEvent.click(screen.getByTestId("auth-submit"));
+    await waitFor(() => expect(screen.getByTestId("auth-blocked").textContent).toBe(copy.auth.blocked));
+    expect(screen.getByTestId("here").textContent).toBe("/auth/sign-in?returnTo=%2Falerts");
+    expect(session.current()).toBeNull();
+  });
+
   it("shows 'wrong email or password' on either UserNotFound or NotAuthorized", async () => {
     (cognito.signIn as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
       Object.assign(new Error("x"), { name: "NotAuthorizedException" }),
