@@ -2,7 +2,8 @@
 // tracker: the map fills the viewport; pills top-left (live state with the
 // viewers, the airborne time, the distance from Santa, the fix status, and
 // the messages pill last); the tracker menu button,
-// the bare cookie tally, and the leave-a-cookie glyph top-right; the flight
+// the bare cookie tally, and the leave-a-cookie glyph with the cookie total
+// to its left top-right; the flight
 // data dock's handle pill (while collapsed) above the sponsor tile
 // bottom-left; zoom while following and recenter after a drag bottom-right;
 // the flight data dock across the bottom while open, lifting both bottom
@@ -64,6 +65,7 @@ import type { ContentBundle } from "../../../store/types";
 import { Icon, iconResolves } from "../../primitives/Icon";
 import { resolvePlaces, resolveViewpoints } from "../RoutePreview/routeMapConfig";
 import { copy } from "../../../copy/copy";
+import { formatCount } from "../../../lib/number";
 import { AirbornePill, DistancePill, FixStatus } from "./InfoOverlays";
 import { LiveIndicator } from "./LiveIndicator";
 import { MessagesPill } from "./MessagesPill";
@@ -79,7 +81,7 @@ import {
   writeTrackerMapType,
   writeTrackerToggle,
 } from "./trackerToggles";
-import { CookieTally } from "./CookieTally";
+import { CookieTally, cookieTotal } from "./CookieTally";
 import { CookiePlusGlyph, TrackerMenuGlyph } from "./glyphs";
 import * as styles from "./Map.module.css";
 import * as ibtn from "../../../ui/IconButton.module.css";
@@ -536,16 +538,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
                 </button>
                 {overlays.leaderboardPanel && !menuOpen ? <CookieTally bundle={bundle} /> : null}
                 {showLeave && !menuOpen ? (
-                  <button
-                    type="button"
-                    className={styles.cookieLeave}
-                    aria-label={leaveLabel}
-                    title={leaveLabel}
-                    data-testid="cookie-tally-leave"
-                    onClick={() => setCookieOpen(true)}
-                  >
-                    <CookiePlusGlyph size={26} />
-                  </button>
+                  <CookieLeave label={leaveLabel} onOpen={() => setCookieOpen(true)} />
                 ) : null}
               </div>
 
@@ -623,6 +616,39 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     </div>
   );
 };
+
+// Leave a cookie: the total over every type, read from the same store
+// fields as the tally and formatted like its counts, to the left of the
+// plus-cookie glyph button, as each tally count sits left of its icon. It
+// shows 0 before any cookie and, being outside the tally's list, stays
+// while the tally's rows are collapsed.
+function CookieLeave({ label, onOpen }: { label: string; onOpen: () => void }) {
+  const cookieTypes = useStore((s) => s.snapshot?.cookieTypes ?? null);
+  const tally = useStore((s) => s.live?.cookieTally ?? null);
+  const total = cookieTotal(cookieTypes ?? [], tally);
+  return (
+    <div className={styles.cookieLeaveRow} data-testid="cookie-tally-leave-row">
+      <span
+        className={styles.cookieTallyCount}
+        data-testid="cookie-tally-leave-total"
+        data-count={total}
+      >
+        {formatCount(total)}
+        <span className={styles.visuallyHidden}> {copy.map.cookieTally.total}</span>
+      </span>
+      <button
+        type="button"
+        className={styles.cookieLeave}
+        aria-label={label}
+        title={label}
+        data-testid="cookie-tally-leave"
+        onClick={onOpen}
+      >
+        <CookiePlusGlyph size={26} />
+      </button>
+    </div>
+  );
+}
 
 function MarkerSeqHost() {
   const seq = useStore((s) => s.live?.seq ?? null);

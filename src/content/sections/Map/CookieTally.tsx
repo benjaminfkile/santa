@@ -4,30 +4,28 @@
 // count then the type's icon, right-aligned so a longer count hangs
 // further left while the icons stay in one column. Legibility comes from
 // a shadow in the chrome's panel colour. Rows reorder in place as live
-// objects arrive, with no animation. Above the ranked rows, directly under
-// the chevron, a total row built like the others shows the sum over every
-// type with the plain cookie icon; it never reorders. The chevron collapses
-// only the ranked rows for a viewer who would rather not look at them;
-// collapsed, the chevron and the total are left, and the choice is stored
-// in trackerToggles like the tracker's other choices and followed from
-// there, so a replace from the account sync shows at once.
+// objects arrive, with no animation. The chevron above the rows collapses
+// them for a viewer who would rather not look at them; collapsed, the
+// chevron is left, and the choice is stored in trackerToggles like the
+// tracker's other choices and followed from there, so a replace from the
+// account sync shows at once. The total over every type is not shown here:
+// Map.tsx shows it beside the leave-a-cookie glyph, summed by `cookieTotal`.
 
 import type { IconRef } from "../../../contracts";
 import type { ContentBundle } from "../../../store/types";
 import { useStore } from "../../../store/useStore";
 import { copy } from "../../../copy/copy";
 import { formatCount } from "../../../lib/number";
-import { ChevronGlyph, CookieGlyph } from "./glyphs";
+import { ChevronGlyph } from "./glyphs";
 import { useTrackerToggle, writeTrackerToggle } from "./trackerToggles";
 import { Icon, iconResolves } from "../../primitives/Icon";
 import { rankCookieTypes } from "../Leaderboard/Leaderboard";
 import * as styles from "./Map.module.css";
 
 const ICON_SIZE = 28;
-const TOTAL_ICON: IconRef = { source: "library", id: "cookie" };
 
 // The sum of the tally over every type; a type missing from it counts 0.
-function cookieTotal(
+export function cookieTotal(
   cookieTypes: readonly { id?: number }[],
   tally: Record<string, number> | null | undefined,
 ): number {
@@ -55,7 +53,6 @@ export function CookieTally({ bundle }: { bundle: ContentBundle }) {
 
   if (cookieTypes === null || cookieTypes.length === 0) return null;
   const ranked = rankCookieTypes(cookieTypes, tally ?? {});
-  const total = cookieTotal(cookieTypes, tally);
 
   const toggle = () => {
     writeTrackerToggle("cookieTally", !open);
@@ -75,24 +72,6 @@ export function CookieTally({ bundle }: { bundle: ContentBundle }) {
       >
         <ChevronGlyph size={18} />
       </button>
-      <div
-        className={`${styles.cookieTallyRow} ${styles.cookieTallyTotal}`}
-        data-testid="cookie-tally-total"
-        data-count={total}
-        title={copy.map.cookieTally.total}
-      >
-        <span className={styles.cookieTallyCount} data-testid="cookie-tally-total-count">
-          {formatCount(total)}
-          <span className={styles.visuallyHidden}> {copy.map.cookieTally.total}</span>
-        </span>
-        <span className={styles.cookieTallyIcon} aria-hidden data-testid="cookie-tally-total-icon">
-          {iconResolves(TOTAL_ICON, bundle) ? (
-            <Icon icon={TOTAL_ICON} bundle={bundle} alt="" decorative size={ICON_SIZE} />
-          ) : (
-            <CookieGlyph size={ICON_SIZE} />
-          )}
-        </span>
-      </div>
       {open ? (
         <ol id="cookie-tally-list" className={styles.cookieTally} data-testid="cookie-tally">
       {ranked.map((row) => {

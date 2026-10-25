@@ -1,7 +1,8 @@
 /* docs/site.md sections 7.6 and 8. The live screen, laid out as the legacy
    tracker was: the map owns the viewport; small pills top-left (live state,
    the distance, the fix status, the messages); the tracker menu button,
-   the cookie tally, and the leave-a-cookie glyph top-right; the flight
+   the cookie tally, and the cookie total with the leave-a-cookie glyph
+   top-right; the flight
    gauge (FlightGauge.module.css) and the sponsor tile bottom-left; zoom or
    recenter bottom-right. Every overlay sits 8 px from its corner, and
    nothing spans the map: the tally column, the sponsor tile and the gauge
@@ -223,14 +224,6 @@
   gap: 5px;
   min-height: 30px;
 }
-/* The total row sits outside the list, so it takes the list's right inset
-   to keep its icon in the same column as the ranked rows' icons, and a
-   margin that makes its gap to the first ranked row the list's 4 px. */
-.cookieTallyTotal {
-  padding-right: 11px;
-  margin-bottom: 2px;
-  user-select: none;
-}
 .cookieTallyCount {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
@@ -261,8 +254,17 @@
   background: var(--panel-2);
 }
 
-/* Leave a cookie: the bare cookie-plus glyph, 22 px inside a 44 px hit
-   area, under the tally with the same shadow and no box. */
+/* Leave a cookie: the cookie total then the bare cookie-plus glyph, under
+   the tally. The total takes the tally's count class and sits left of the
+   glyph with the rows' 5 px gap, the glyph 26 px inside a 44 px hit area
+   with the same shadow and no box. */
+.cookieLeaveRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  user-select: none;
+}
 .cookieLeave {
   appearance: none;
   width: 44px;
