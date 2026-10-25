@@ -86,7 +86,7 @@ function seed(content: ContentDocument, mapFirst: boolean = false, media: Record
         content: content as unknown,
         media,
         icons: {},
-        event: { statusId: mapFirst ? 3 : 1, trackerBbox: {}, trackerMap: null, alerts: [] },
+        event: { statusId: mapFirst ? 3 : 1, trackerBbox: {}, trackerStartView: null, trackerMap: null, alerts: [] },
         routeMap: null,
         routeMapConfig: null,
         routeView: { bbox: {}, map: null },

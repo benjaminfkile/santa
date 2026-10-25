@@ -21,7 +21,6 @@ import { createMapController, type MapController, type MapControllerOptions } fr
 import type { MapsLibs } from "./loadMaps";
 import type { MapTheme } from "./themes";
 import type { FallbackReason, Renderer } from "./renderer";
-import type { LatLng } from "./bounds";
 import type { TrackerMap } from "../mapHost/themeStyle";
 
 export type MaplibreModule = typeof import("../mapHost/maplibreController");
@@ -35,8 +34,6 @@ export type MapViewOptions = Omit<MapControllerOptions, "theme" | "style"> & {
   maplibre?: {
     load: () => Promise<MaplibreModule>;
     trackerMap: TrackerMap;
-    // The fix in hand when the map is built.
-    fix: () => LatLng | null;
     // Called once when MapLibre fails; answers the Google theme to build.
     onFallback: (reason: FallbackReason) => MapTheme | null;
   };
@@ -131,7 +128,6 @@ export function MapView({ options, onController, onLibs, className, children }: 
             theme,
             style,
             trackerMap: load.trackerMap,
-            fix: load.fix(),
             onFail: (reason, error) => fallBack(reason, error),
           }),
         );

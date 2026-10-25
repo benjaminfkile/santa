@@ -164,10 +164,9 @@ describe("the live surface in MapView", () => {
     const options: MapViewOptions = {
       theme: mlTheme ?? themes.find((t) => t.key === "light")!,
       renderer: "maplibre",
-      maplibre: { load, trackerMap: TRACKER_MAP, fix: () => null, onFallback },
+      maplibre: { load, trackerMap: TRACKER_MAP, onFallback },
       bbox: BOX,
-      defaultCenter: { lat: 46.87, lng: -114 },
-      defaultZoom: 11,
+      startView: { center: { lat: 46.87, lng: -114 }, zoom: 11 },
       showSantaMarker: true,
       showUserLocation: false,
     };

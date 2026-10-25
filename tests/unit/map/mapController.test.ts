@@ -3,9 +3,10 @@
 // a no-op, a build that fails part way leaves nothing on the map, and the
 // user location never starts a watch or reports a change once destroyed.
 // The bounds lock (8.2): the map is built with a strict restriction to the
-// event box and the fitted minimum zoom, a fix outside the box pans to the
-// nearest in-box point with Santa on the edge, `recenter` clamps, and
-// `fitHistory` leaves out points outside the box. `setTheme` awaits the
+// event box and the fitted minimum zoom, opens on the start view (its
+// zoom raised to the minimum) or fits the whole box without one, a fix
+// outside the box pans to the nearest in-box point with Santa on the edge,
+// `recenter` clamps, and `fitHistory` leaves out points outside the box. `setTheme` awaits the
 // theme's style body before applying `poiStyles(style, pois)`.
 // The Santa motion (8.7): the first fix is placed at once, a second fix
 // within the delay is not yet at its target and glides there frame by
@@ -43,8 +44,7 @@ function options(over: Partial<MapControllerOptions> = {}): MapControllerOptions
     theme,
     style: seededStyle("standard"),
     bbox: null,
-    defaultCenter: { lat: 40, lng: -105 },
-    defaultZoom: 8,
+    startView: { center: { lat: 40, lng: -105 }, zoom: 8 },
     showSantaMarker: true,
     showUserLocation: true,
     ...over,
@@ -327,6 +327,39 @@ describe("createMapController bounds", () => {
     const opts = FakeMap.instances[0].createOptions;
     expect(opts.restriction).toBeUndefined();
     expect(opts.minZoom).toBe(5);
+  });
+
+  it("opens on the start view's centre and zoom", () => {
+    createMapController(
+      fakeLibs(),
+      sized(1280, 800),
+      options({ bbox: VALLEY, startView: { center: { lat: 46.9, lng: -114.0 }, zoom: 12 } }),
+    );
+    const map = FakeMap.instances[0];
+    expect(map.createOptions.center).toEqual({ lat: 46.9, lng: -114.0 });
+    expect(map.createOptions.zoom).toBe(12);
+    expect(map.fitBoundsCalls).toEqual([]);
+  });
+
+  it("without a start view fits the whole box with no padding", () => {
+    createMapController(fakeLibs(), sized(1280, 800), options({ bbox: VALLEY, startView: null }));
+    const map = FakeMap.instances[0];
+    expect(map.createOptions.center).toBeUndefined();
+    expect(map.fitBoundsCalls).toEqual([VALLEY]);
+    expect(map.fitBoundsPaddings).toEqual([0]);
+    expect(map.createOptions.restriction).toEqual({ latLngBounds: VALLEY, strictBounds: true });
+  });
+
+  it("raises a start zoom below the fitted minimum zoom to it", () => {
+    const least = fittedMinZoom(VALLEY, { width: 1280, height: 800 });
+    createMapController(
+      fakeLibs(),
+      sized(1280, 800),
+      options({ bbox: VALLEY, startView: { center: { lat: 46.9, lng: -114.0 }, zoom: least - 3 } }),
+    );
+    const map = FakeMap.instances[0];
+    expect(map.createOptions.zoom).toBe(least);
+    expect(map.createOptions.minZoom).toBe(least);
   });
 
   it("a fix outside the box pans to the nearest in-box point and Santa sits on the edge", async () => {

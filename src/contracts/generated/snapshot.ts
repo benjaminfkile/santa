@@ -43,6 +43,13 @@ export interface Snapshot {
       east?: number;
       north?: number;
     };
+    trackerStartView: {
+      center: {
+        lat: number;
+        lng: number;
+      };
+      zoom: number;
+    } | null;
     trackerMap: {
       id?: number;
       name?: string;

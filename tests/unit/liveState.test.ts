@@ -49,12 +49,12 @@ describe("selectLiveState", () => {
 
 describe("selectTimeReady", () => {
   it("is false when the snapshot event.statusId differs from live.eventStatusId", () => {
-    const s: SiteStore = { ...stateWithSeq(1, 0), snapshot: { event: { statusId: 2, trackerBbox: {}, trackerMap: null, alerts: [] }, routeMap: null, routeMapConfig: null, routeView: { bbox: {}, map: null }, trackerThemes: [], cookieLimitPerPerson: 10, signUpsOpen: true, subscriptionsOpen: true } };
+    const s: SiteStore = { ...stateWithSeq(1, 0), snapshot: { event: { statusId: 2, trackerBbox: {}, trackerStartView: null, trackerMap: null, alerts: [] }, routeMap: null, routeMapConfig: null, routeView: { bbox: {}, map: null }, trackerThemes: [], cookieLimitPerPerson: 10, signUpsOpen: true, subscriptionsOpen: true } };
     expect(selectTimeReady(s)).toBe(false);
   });
 
   it("is true when the snapshot event.statusId matches live.eventStatusId", () => {
-    const s: SiteStore = { ...stateWithSeq(1, 0), snapshot: { event: { statusId: 3, trackerBbox: {}, trackerMap: null, alerts: [] }, routeMap: null, routeMapConfig: null, routeView: { bbox: {}, map: null }, trackerThemes: [], cookieLimitPerPerson: 10, signUpsOpen: true, subscriptionsOpen: true } };
+    const s: SiteStore = { ...stateWithSeq(1, 0), snapshot: { event: { statusId: 3, trackerBbox: {}, trackerStartView: null, trackerMap: null, alerts: [] }, routeMap: null, routeMapConfig: null, routeView: { bbox: {}, map: null }, trackerThemes: [], cookieLimitPerPerson: 10, signUpsOpen: true, subscriptionsOpen: true } };
     expect(selectTimeReady(s)).toBe(true);
   });
 

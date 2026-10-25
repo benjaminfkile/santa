@@ -32,9 +32,10 @@
 // fits it (recomputed when the container resizes), and every pan the
 // controller makes clamped to it. A fix outside the box draws Santa on its
 // edge and follows there; a flight history point outside it is drawn but left
-// out of `fitHistory`. The first view fits the box when there is no fix,
-// centres on the fix at the default zoom when it is inside the box, and
-// takes the default centre and zoom when the fix lies outside it.
+// out of `fitHistory`. The first view is the event's start view, its zoom
+// raised to the least zoom when the box forces a larger one, and without
+// one the box fitted; a fix in hand at mount leaves it as it is, and the
+// follow camera moves to Santa at that zoom.
 // A style error before the first `idle`, or a lost WebGL context that is
 // not restored within 5 s, reports through `onFail` once. `destroy` removes
 // the map, its markers, and every timer; every method is a no-op after it.
@@ -60,7 +61,7 @@ import {
 } from "../map/viewpointsOverlay";
 import { createSantaPinImage } from "../map/santaPin";
 import { SANTA_MARKER_HEIGHT, SIGNAL_LOST_FILTER } from "../map/santaMarker";
-import { clampToBbox, inBox, type LatLng } from "../map/bounds";
+import { clampToBbox, inBox, MIN_ZOOM_FLOOR, type LatLng } from "../map/bounds";
 import { ensureProtocol, OSM_ATTRIBUTION, watchContext, type MapLibreFailure } from "./handle";
 import { applyPlaces, protomapsKinds } from "./places";
 import {
@@ -84,8 +85,6 @@ import { createMapLibreUserLocation, type MapLibreUserLocation } from "./userLoc
 
 export type MaplibreControllerOptions = MapControllerOptions & {
   trackerMap: TrackerMap;
-  // The fix in hand when the map is built, which picks the first view.
-  fix: LatLng | null;
   onFail: (reason: MapLibreFailure, error: unknown) => void;
 };
 
@@ -195,22 +194,24 @@ export function createMaplibreController(
     map.setStyle(buildStyle(zoom()), { diff: true });
   }
 
-  // The first view: the box fitted without a fix, the fix at the default
-  // zoom when the box holds it, the default centre otherwise.
+  // The first view: the start view at no less than the least zoom, the box
+  // fitted without one, the world at the least zoom without a box either.
+  const leastZoom = mapBounds(bbox, viewport(), trackerMap).minZoom ?? MIN_ZOOM_FLOOR;
+  const start = opts.startView;
+  const startZoom = start !== null ? Math.max(start.zoom, leastZoom) : leastZoom;
   function initialView(): { bounds: LngLatBoundsLike } | { center: [number, number]; zoom: number } {
-    const fix = opts.fix;
-    if (fix === null) {
-      if (bbox !== null) return { bounds: [[bbox.west, bbox.south], [bbox.east, bbox.north]] };
-      return { center: [opts.defaultCenter.lng, opts.defaultCenter.lat], zoom: opts.defaultZoom };
+    if (start !== null) {
+      const at = clamp(start.center);
+      return { center: [at.lng, at.lat], zoom: startZoom };
     }
-    const at = bbox === null || inBox(fix, bbox) ? fix : clamp(opts.defaultCenter);
-    return { center: [at.lng, at.lat], zoom: opts.defaultZoom };
+    if (bbox !== null) return { bounds: [[bbox.west, bbox.south], [bbox.east, bbox.north]] };
+    return { center: [0, 0], zoom: startZoom };
   }
 
   let userLoc: MapLibreUserLocation | null = null;
   const map = new MapLibreMap({
     container,
-    style: buildStyle(opts.defaultZoom),
+    style: buildStyle(startZoom),
     ...initialView(),
     ...mapBounds(bbox, viewport(), trackerMap),
     attributionControl: { compact: false, customAttribution: OSM_ATTRIBUTION },

@@ -76,10 +76,12 @@ export class FakeMap {
   setMapTypeId(t: string) {
     this.mapTypeId = t;
   }
-  // Every `fitBounds` argument, in order.
+  // Every `fitBounds` bounds and padding, in order.
   fitBoundsCalls: unknown[] = [];
-  fitBounds(bounds: unknown) {
+  fitBoundsPaddings: unknown[] = [];
+  fitBounds(bounds: unknown, padding?: unknown) {
     this.fitBoundsCalls.push(bounds);
+    this.fitBoundsPaddings.push(padding);
   }
 }
 

@@ -104,7 +104,7 @@ function setSnapshot(statusId: number | null) {
         content: makeContent() as unknown,
         media: {},
         icons: {},
-        event: statusId === null ? null : { statusId, trackerBbox: {}, trackerMap: null, alerts: [] },
+        event: statusId === null ? null : { statusId, trackerBbox: {}, trackerStartView: null, trackerMap: null, alerts: [] },
         routeMap: null,
         routeMapConfig: null,
         routeView: { bbox: {}, map: null },
