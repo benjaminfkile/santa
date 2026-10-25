@@ -32,7 +32,10 @@
 // on every `move`, and the names follow the zoom (`setNames`) from the
 // mount and on every zoom event. A list that draws the same badges keeps
 // them; a changed one replaces them. The map takes gestures
-// directly: the scroll wheel zooms and one finger pans. Below
+// directly: the scroll wheel zooms, one finger pans, and two fingers
+// pinch and twist; every `rotate` and `rotateend` reports the bearing
+// through `onBearingChange`, and `resetNorth` eases it back to 0 over
+// NORTH_UP_MS. Below
 // `labelMinZoom` the names count as hidden. The handle listens on the
 // viewpoint and time label dot layers by id, so the listeners outlive
 // every style diff: while the names are hidden, a pointer entering a dot
@@ -110,6 +113,9 @@ export type RouteMapOptions = RouteMapUpdate & {
   startElement?: HTMLElement;
   mountIcon?: MountIcon;
   onError: (error: unknown, reason: MapLibreFailure) => void;
+  // The map's bearing, degrees clockwise from north, on every `rotate` and
+  // `rotateend`.
+  onBearingChange?: (bearingDeg: number) => void;
 };
 
 // Why a MapLibre map gave up: its style (the body, glyphs, or tiles before
@@ -123,8 +129,12 @@ export const CONTEXT_RESTORE_MS = 5000;
 export type RouteMapHandle = {
   update: (next: RouteMapUpdate) => void;
   refit: () => void;
+  // Eases the map back to north-up over NORTH_UP_MS.
+  resetNorth: () => void;
   destroy: () => void;
 };
+
+export const NORTH_UP_MS = 300;
 
 const FIT_PADDING = 40;
 // The class of the dot tooltip popup (maplibre.css).
@@ -443,6 +453,9 @@ export function mountRouteMap(options: RouteMapOptions): RouteMapHandle {
   });
   map.on("move", () => badges?.position());
   stampNames();
+  const turned = () => options.onBearingChange?.(map.getBearing());
+  map.on("rotate", turned);
+  map.on("rotateend", turned);
 
   map.on("mouseenter", VIEWPOINT_DOTS_LAYER, (event) => {
     setCursor("pointer");
@@ -487,6 +500,9 @@ export function mountRouteMap(options: RouteMapOptions): RouteMapHandle {
       }
     },
     refit,
+    resetNorth() {
+      map.easeTo({ bearing: 0, duration: NORTH_UP_MS });
+    },
     destroy() {
       stopContextWatch();
       hideTip();

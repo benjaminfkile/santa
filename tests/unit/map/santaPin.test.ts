@@ -1,8 +1,9 @@
 // docs/site.md section 8.7. The Santa pin element: the upright pin image
 // with, under it, the heading indicator centred on the tip; the indicator
 // is hidden while the heading is null, turns the short way (350 then 10
-// passes through 0) by rotating its SVG, recolours on demand, and the
-// image never rotates.
+// passes through 0) by rotating its SVG, reads along a turned map
+// (heading 90 at bearing 30 turns 60, `data-heading` 90 and
+// `data-bearing` 30), recolours on demand, and the image never rotates.
 
 import { describe, it, expect } from "vitest";
 import { createSantaPinElement, santaHeadingColor, SANTA_PIN_URL } from "../../../src/map/santaPin";
@@ -54,6 +55,25 @@ describe("createSantaPinElement", () => {
     expect(svg.style.transform).toBe("rotate(-90deg)");
     expect(pin.image.style.transform).toBe("");
     expect(pin.element.style.transform).toBe("");
+  });
+
+  it("turns to the heading minus the bearing and keeps the true heading in its data", () => {
+    const pin = createSantaPinElement(52, "#ff0000");
+    const svg = heading(pin.element);
+    pin.setHeading(90, 30);
+    expect(svg.style.transform).toBe("rotate(60deg)");
+    expect(svg.getAttribute("data-heading")).toBe("90");
+    expect(svg.getAttribute("data-bearing")).toBe("30");
+    pin.setHeading(90, -60);
+    expect(svg.style.transform).toBe("rotate(150deg)");
+    expect(svg.getAttribute("data-bearing")).toBe("300");
+    pin.setHeading(90);
+    expect(svg.style.transform).toBe("rotate(90deg)");
+    expect(svg.getAttribute("data-bearing")).toBe("0");
+    expect(pin.image.style.transform).toBe("");
+    pin.setHeading(null, 30);
+    expect(svg.hasAttribute("data-heading")).toBe(false);
+    expect(svg.hasAttribute("data-bearing")).toBe(false);
   });
 
   it("recolours the indicator", () => {

@@ -5,7 +5,8 @@
 // pixels on every draw. Hidden while waiting for a fix; the signal-lost
 // variant is the same image desaturated and dimmed through a CSS filter on
 // the image only. `setHeading` turns the indicator the short way to the
-// heading and null hides it; the image never rotates. `setTheme` recolours
+// heading (at bearing 0: this map never turns) and null hides it; the
+// image never rotates. `setTheme` recolours
 // the indicator.
 
 import type { LiveState } from "../store/liveState";
@@ -94,7 +95,8 @@ export function createSantaMarker(
       apply();
     },
     setHeading(headingDeg) {
-      pin.setHeading(headingDeg);
+      // The Google map never turns: the bearing is always 0.
+      pin.setHeading(headingDeg, 0);
     },
     setTheme(t) {
       pin.setColor(santaHeadingColor(t));

@@ -13,7 +13,9 @@
 // one animated `panTo` to the displayed position and the rule applies
 // again once the map is idle. A drag past 4 px, a wheel, a second touch,
 // a double tap, or `dragstart` turns Follow off, so no pan is issued until
-// the Follow control is pressed; `zoomBy` keeps it. `destroy` removes the
+// the Follow control is pressed; `zoomBy` keeps it. The map never turns:
+// the indicator reads at bearing 0, `resetNorth` is a no-op, and
+// `onBearingChange` never fires. `destroy` removes the
 // map and container listeners and pending timers, and every
 // method is a no-op afterwards, so a late call or a late map event on a
 // disposed controller draws nothing and calls back into nothing.
@@ -72,6 +74,9 @@ export type MapControllerOptions = {
   showUserLocation: boolean;
   mountIcon?: MountIcon;
   onFollowChange?: (following: boolean) => void;
+  // The map's bearing, degrees clockwise from north, as it turns (MapLibre
+  // only; a Google map never turns, so it never fires there).
+  onBearingChange?: (bearingDeg: number) => void;
   onUserLocationChange?: (s: UserLocationState) => void;
 };
 
@@ -86,6 +91,8 @@ export type MapController = {
   follow(on: boolean): void;
   recenter(pos: google.maps.LatLngLiteral | null): void;
   zoomBy(delta: number): void;
+  // Turns the map back to north-up, keeping Follow (a no-op on Google).
+  resetNorth(): void;
   fitHistory(): void;
   enableUserLocation(): Promise<void>;
   disableUserLocation(): void;
@@ -383,6 +390,8 @@ export function createMapController(
       const z = map.getZoom() ?? startZoom;
       map.setZoom(z + delta);
     },
+    // A raster terrain map that never turns.
+    resetNorth() {},
     fitHistory() {
       if (disposed) return;
       const pts = (points ?? []).filter(

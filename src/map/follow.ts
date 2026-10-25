@@ -10,11 +10,19 @@
 // listeners on the map container call `onGesture` for a pointer that moves
 // more than GESTURE_SLOP_PX while down, a `wheel`, a `touchstart` with two
 // or more touches, and a `dblclick`; the returned function removes them.
+// With `mapDecidesMultiTouch` (the MapLibre controller, whose map may be
+// twisted) a second touch is not a gesture and no pointer movement counts
+// from the moment two or more pointers are down until every pointer is up:
+// the map's own drag and zoom events decide those (DRAG_SLOP_PX of centre
+// travel for a drag). `isRotated` tells a map turned more than
+// NORTH_UP_TOLERANCE_DEG either way from north.
 
 export const FOLLOW_MARGIN = 0.2;
 export const FOLLOW_PAN_MS = 300;
 export const FOLLOW_GAP_MS = 500;
 export const GESTURE_SLOP_PX = 4;
+export const DRAG_SLOP_PX = 12;
+export const NORTH_UP_TOLERANCE_DEG = 0.5;
 
 export type Pixel = { x: number; y: number };
 export type Size = { width: number; height: number };
@@ -43,14 +51,31 @@ export function followEasing(t: number): number {
   return 1 - (1 - t) ** 3;
 }
 
-export function watchGestures(container: HTMLElement, onGesture: () => void): () => void {
+// Whether a map at `bearingDeg` (degrees, any range) is off north-up.
+export function isRotated(bearingDeg: number): boolean {
+  const wrapped = ((((bearingDeg + 180) % 360) + 360) % 360) - 180;
+  return Math.abs(wrapped) > NORTH_UP_TOLERANCE_DEG;
+}
+
+export type WatchGesturesOptions = { mapDecidesMultiTouch?: boolean };
+
+export function watchGestures(
+  container: HTMLElement,
+  onGesture: () => void,
+  options: WatchGesturesOptions = {},
+): () => void {
+  const multiTouchIsMap = options.mapDecidesMultiTouch === true;
   // Where each pointer now down went down.
   const down = new Map<number, Pixel>();
+  // Two or more pointers have been down since the last time none was.
+  let multi = false;
 
   const onPointerDown = (e: PointerEvent) => {
     down.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (down.size >= 2) multi = true;
   };
   const onPointerMove = (e: PointerEvent) => {
+    if (multiTouchIsMap && multi) return;
     const at = down.get(e.pointerId);
     if (at === undefined) return;
     if (Math.hypot(e.clientX - at.x, e.clientY - at.y) <= GESTURE_SLOP_PX) return;
@@ -59,9 +84,10 @@ export function watchGestures(container: HTMLElement, onGesture: () => void): ()
   };
   const onPointerUp = (e: PointerEvent) => {
     down.delete(e.pointerId);
+    if (down.size === 0) multi = false;
   };
   const onTouchStart = (e: TouchEvent) => {
-    if (e.touches.length >= 2) onGesture();
+    if (!multiTouchIsMap && e.touches.length >= 2) onGesture();
   };
   const onOther = () => onGesture();
 
@@ -83,5 +109,6 @@ export function watchGestures(container: HTMLElement, onGesture: () => void): ()
     container.removeEventListener("touchstart", onTouchStart, capture);
     container.removeEventListener("dblclick", onOther, capture);
     down.clear();
+    multi = false;
   };
 }

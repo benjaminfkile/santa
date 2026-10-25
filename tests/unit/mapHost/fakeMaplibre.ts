@@ -1,7 +1,8 @@
 // A small stand-in for `maplibre-gl` for the live tracker's MapLibre
 // controller and the fallback tests: a `Map` that records its options,
 // every `setStyle`, the camera calls, and its handlers (`fire` runs them),
-// a projection a test can move, the style's sources with their `setData`,
+// a projection a test can move, a bearing a test can turn (`bearing`,
+// read by `getBearing`; the projection ignores it), the style's sources with their `setData`,
 // and a `Marker` that records where it stands, its offset, and its
 // rotation, and puts its element in the
 // map's container while it is on the map. Use it from a `vi.mock` factory:
@@ -79,6 +80,14 @@ export class FakeMlMap {
   }
   unproject([x, y]: [number, number]) {
     return { lng: this.view.west + x / this.view.scale, lat: this.view.north - y / this.view.scale };
+  }
+  // The container's centre through `unproject`.
+  getCenter() {
+    return this.unproject([this.container.clientWidth / 2, this.container.clientHeight / 2]);
+  }
+  bearing = 0;
+  getBearing() {
+    return this.bearing;
   }
   getContainer() {
     return this.container;
