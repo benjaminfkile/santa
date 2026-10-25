@@ -16,9 +16,9 @@
 // its tip on the displayed position, hidden while waiting for a fix and
 // filtered while the signal is lost (8.7). Every fix with a new seq goes
 // to the Santa motion (santaMotion.ts), whose frames place the marker
-// with `setLngLat` and turn it with `setRotation` (`rotationAlignment`
-// "map"); MapLibre rotates the element about its transform origin, so
-// the image's origin is its tip and the turn pivots there. While
+// with `setLngLat` and turn its heading indicator (santaPin.ts) the short
+// way; the marker keeps MapLibre's default rotation alignment and the
+// image never rotates. A theme change recolours the indicator. While
 // following, a frame checks the follow rule (src/map/follow.ts): when the
 // displayed position, through `project`, has left the central box of the
 // container and the last follow pan started at least 500 ms ago (so the
@@ -68,7 +68,7 @@ import {
   type TrackerViewpoint,
   type ViewpointBadges,
 } from "../map/viewpointsOverlay";
-import { createSantaPinImage } from "../map/santaPin";
+import { createSantaPinElement, santaHeadingColor } from "../map/santaPin";
 import { SANTA_MARKER_HEIGHT, SIGNAL_LOST_FILTER } from "../map/santaMarker";
 import { clampToBbox, inBox, MIN_ZOOM_FLOOR, type LatLng } from "../map/bounds";
 import { ensureProtocol, OSM_ATTRIBUTION, watchContext, type MapLibreFailure } from "./handle";
@@ -87,7 +87,6 @@ import {
   createSantaMotion,
   followPageVisibility,
   RECENTER_PAN_MS,
-  shortestDelta,
   type SantaFrame,
 } from "../map/santaMotion";
 import { FOLLOW_PAN_MS, followEasing, followPanDue, needsPan, watchGestures } from "../map/follow";
@@ -265,18 +264,13 @@ export function createMaplibreController(
     observer.observe(container);
   }
 
-  // The Santa pin, its tip (the image's bottom centre) on the fix.
-  const pin = createSantaPinImage(SANTA_MARKER_HEIGHT);
-  pin.setAttribute("data-testid", "santa-marker");
-  pin.style.transformOrigin = "50% 100%";
-  const santa = opts.showSantaMarker
-    ? new Marker({ element: pin, anchor: "bottom", rotationAlignment: "map" })
-    : null;
+  // The Santa pin, its tip (the wrapper's bottom centre) on the fix.
+  const pin = createSantaPinElement(SANTA_MARKER_HEIGHT, santaHeadingColor(theme));
+  pin.element.setAttribute("data-testid", "santa-marker");
+  const santa = opts.showSantaMarker ? new Marker({ element: pin.element, anchor: "bottom" }) : null;
   let santaShown = false;
   // Where the pin stands now, clamped to the box.
   let displayed: LatLng | null = null;
-  // The rotation applied, unwrapped, so every turn is the short way.
-  let rotation = 0;
   // While a recenter's pan runs, frames leave the camera alone.
   let recentering: ReturnType<typeof setTimeout> | null = null;
   // When the last follow pan started, on the frames' clock; null for none
@@ -289,11 +283,7 @@ export function createMaplibreController(
     displayed = clamp({ lat: frame.lat, lng: frame.lng });
     if (santa !== null) {
       santa.setLngLat([displayed.lng, displayed.lat]);
-      const next = rotation + shortestDelta(rotation, frame.headingDeg ?? 0);
-      if (next !== rotation) {
-        rotation = next;
-        santa.setRotation(rotation);
-      }
+      pin.setHeading(frame.headingDeg);
       if (!santaShown) santa.addTo(map);
       santaShown = true;
     }
@@ -435,6 +425,7 @@ export function createMaplibreController(
       theme = t;
       body = next;
       restyle();
+      pin.setColor(santaHeadingColor(t));
       userLoc?.setTheme(t);
     },
     setPois(filter) {
@@ -491,8 +482,8 @@ export function createMaplibreController(
         santaShown = false;
       } else {
         const variant = state === "signalLost" ? "signalLost" : "tracking";
-        pin.style.filter = variant === "signalLost" ? SIGNAL_LOST_FILTER : "";
-        pin.setAttribute("data-variant", variant);
+        pin.image.style.filter = variant === "signalLost" ? SIGNAL_LOST_FILTER : "";
+        pin.element.setAttribute("data-variant", variant);
       }
       if (state === "waitingForFix" || pos === null) {
         motion.rest();

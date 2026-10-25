@@ -10,7 +10,8 @@
 // theme's style body before applying `poiStyles(style, pois)`.
 // The Santa motion (8.7): the first fix is placed at once on whole pixels,
 // a second fix within the delay is not yet at its target and glides there
-// frame by frame, the pin turns about its tip to the heading, and the
+// frame by frame, the pin image stays upright while its heading indicator
+// turns the short way (`data-heading` following the frame), and the
 // camera never moves per frame (no `moveCamera`).
 // The follow rule (8.3): frames inside the central box make no camera
 // call, a frame outside makes one `panTo`, two within 500 ms make one; a
@@ -410,8 +411,12 @@ describe("createMapController bounds", () => {
 });
 
 describe("the Santa motion on Google", () => {
-  function pin(map: FakeMap): HTMLImageElement {
-    return map.panes.markerLayer.querySelector('[data-testid="santa-marker"]') as HTMLImageElement;
+  function pin(map: FakeMap): HTMLElement {
+    return map.panes.markerLayer.querySelector('[data-testid="santa-marker"]') as HTMLElement;
+  }
+
+  function heading(map: FakeMap): SVGSVGElement {
+    return map.panes.markerLayer.querySelector('[data-testid="santa-heading"]') as SVGSVGElement;
   }
 
   it("places the first fix at once on whole pixels and makes no camera call", async () => {
@@ -425,8 +430,10 @@ describe("the Santa motion on Google", () => {
     expect(pin(map).style.top).toBe("401px");
     expect(map.moveCameraCalls).toEqual([]);
     expect(map.panToCalls).toEqual([]);
-    expect(pin(map).style.transformOrigin).toBe("50% 100%");
-    expect(pin(map).style.transform).toBe("translate(-50%, -100%) rotate(90deg)");
+    expect(pin(map).style.transform).toBe("translate(-50%, -100%)");
+    expect(pin(map).querySelector("img")!.style.transform).toBe("");
+    expect(heading(map).getAttribute("data-heading")).toBe("90");
+    expect(heading(map).style.transform).toBe("rotate(90deg)");
   });
 
   it("a second fix within the delay is not yet at its target and glides there, the camera still", async () => {
@@ -451,21 +458,28 @@ describe("the Santa motion on Google", () => {
     expect(frames.pending()).toBe(0);
   });
 
-  it("turns the short way about the tip and back upright for no heading", async () => {
+  it("turns the indicator the short way, never the image, and hides it for no heading", async () => {
     const frames = fakeFrames().install();
     const c = createMapController(fakeLibs(), document.createElement("div"), options());
     const map = FakeMap.instances[0];
     c.setLiveFix("tracking", { lat: 40, lng: -105, seq: 1, headingDeg: 350 }, true);
     await Promise.resolve();
-    expect(pin(map).style.transform).toBe("translate(-50%, -100%) rotate(-10deg)");
+    expect(heading(map).style.transform).toBe("rotate(-10deg)");
+    expect(heading(map).getAttribute("data-heading")).toBe("350");
     frames.wait(1000);
     c.setLiveFix("tracking", { lat: 40, lng: -104.999, seq: 2, headingDeg: 10 }, true);
-    frames.step(3000);
-    expect(pin(map).style.transform).toBe("translate(-50%, -100%) rotate(10deg)");
+    const seen: number[] = [];
+    frames.step(3000, () => seen.push(parseFloat(heading(map).style.transform.slice("rotate(".length))));
+    expect(seen.every((r) => r >= -10 && r <= 10)).toBe(true);
+    expect(heading(map).style.transform).toBe("rotate(10deg)");
+    expect(heading(map).getAttribute("data-heading")).toBe("10");
+    expect(pin(map).style.transform).toBe("translate(-50%, -100%)");
+    expect(pin(map).querySelector("img")!.style.transform).toBe("");
     c.setLiveFix("waitingForFix", null, false);
     c.setLiveFix("tracking", { lat: 40, lng: -105, seq: 3, headingDeg: null }, true);
     await Promise.resolve();
-    expect(pin(map).style.transform).toBe("translate(-50%, -100%) rotate(0deg)");
+    expect(heading(map).style.opacity).toBe("0");
+    expect(heading(map).hasAttribute("data-heading")).toBe(false);
   });
 
   it("recenter makes one animated pan to the displayed position, then the follow rule applies once idle", async () => {

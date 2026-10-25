@@ -1,11 +1,14 @@
-// docs/site.md sections 7.6, 8.2, and 8.7. The Santa marker is the legacy
-// pin image in an OverlayView, its tip (bottom centre) on the fix; the
-// signal-lost variant is the same image under a CSS filter; nothing
-// renders while waiting for a fix.
+// docs/site.md sections 7.6, 8.2, and 8.7. The Santa marker is the pin
+// element (the upright legacy pin image and its heading indicator) in an
+// OverlayView, its tip (bottom centre) on the fix; the signal-lost variant
+// is the same image under a CSS filter; nothing renders while waiting for
+// a fix; the heading turns the indicator, never the image, and a theme
+// change recolours it.
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { createSantaMarker, SIGNAL_LOST_FILTER } from "../../../src/map/santaMarker";
 import { SANTA_PIN_URL } from "../../../src/map/santaPin";
+import { SEEDED } from "./themeFixtures";
 
 class FakeOverlayView {
   static instances: FakeOverlayView[] = [];
@@ -47,8 +50,16 @@ function overlay(): FakeOverlayView {
   return FakeOverlayView.instances[0];
 }
 
+function marker(): HTMLElement | null {
+  return overlay().panes.markerLayer.querySelector('[data-testid="santa-marker"]');
+}
+
 function pin(): HTMLImageElement | null {
   return overlay().panes.markerLayer.querySelector("img");
+}
+
+function headingRing(): SVGSVGElement | null {
+  return overlay().panes.markerLayer.querySelector('[data-testid="santa-heading"]');
 }
 
 beforeEach(() => {
@@ -57,40 +68,42 @@ beforeEach(() => {
 
 describe("createSantaMarker", () => {
   it("starts detached from the map (waiting for a fix)", () => {
-    const santa = createSantaMarker(libs, map);
+    const santa = createSantaMarker(libs, map, SEEDED.standard);
     santa.setState("waitingForFix", { lat: 40, lng: -105 });
     expect(overlay().map).toBe(null);
     expect(pin()).toBe(null);
   });
 
   it("renders the bundled pin image with its tip on the fix", () => {
-    const santa = createSantaMarker(libs, map);
+    const santa = createSantaMarker(libs, map, SEEDED.standard);
     santa.setState("tracking", { lat: 41, lng: -110 });
     expect(overlay().map).toBe(map);
     const img = pin()!;
     expect(img).not.toBeNull();
     expect(img.getAttribute("src")).toBe(SANTA_PIN_URL);
     expect(img.style.height).toBe("52px");
-    expect(img.style.position).toBe("absolute");
-    expect(img.style.transform).toBe("translate(-50%, -100%)");
-    expect(img.style.left).toBe("-1100px");
-    expect(img.style.top).toBe("410px");
+    const el = marker()!;
+    expect(el.contains(img)).toBe(true);
+    expect(el.style.position).toBe("absolute");
+    expect(el.style.transform).toBe("translate(-50%, -100%)");
+    expect(el.style.left).toBe("-1100px");
+    expect(el.style.top).toBe("410px");
     expect(img.style.filter).toBe("");
     expect(img.getAttribute("alt")).toBe("");
     expect(img.getAttribute("aria-hidden")).toBe("true");
   });
 
   it("moves the image when a new fix arrives", () => {
-    const santa = createSantaMarker(libs, map);
+    const santa = createSantaMarker(libs, map, SEEDED.standard);
     santa.setState("tracking", { lat: 41, lng: -110 });
     santa.setState("tracking", { lat: 42, lng: -111 });
-    expect(pin()!.style.left).toBe("-1110px");
-    expect(pin()!.style.top).toBe("420px");
+    expect(marker()!.style.left).toBe("-1110px");
+    expect(marker()!.style.top).toBe("420px");
     expect(santa.getPosition()).toEqual({ lat: 42, lng: -111 });
   });
 
   it("keeps the last position and desaturates the same image on signalLost", () => {
-    const santa = createSantaMarker(libs, map);
+    const santa = createSantaMarker(libs, map, SEEDED.standard);
     santa.setState("tracking", { lat: 41, lng: -110 });
     santa.setState("signalLost", null);
     expect(overlay().map).toBe(map);
@@ -99,12 +112,38 @@ describe("createSantaMarker", () => {
     expect(img.getAttribute("src")).toBe(SANTA_PIN_URL);
     expect(img.style.filter).toBe(SIGNAL_LOST_FILTER);
     expect(SIGNAL_LOST_FILTER).toContain("grayscale");
+    expect(marker()!.style.filter).toBe("");
+    expect(headingRing()!.style.filter).toBe("");
     santa.setState("tracking", { lat: 41, lng: -110 });
     expect(pin()!.style.filter).toBe("");
   });
 
+  it("turns the indicator, never the image, and hides it for no heading", () => {
+    const santa = createSantaMarker(libs, map, SEEDED.standard);
+    santa.setState("tracking", { lat: 41, lng: -110 });
+    expect(headingRing()!.style.opacity).toBe("0");
+    santa.setHeading(350);
+    santa.setHeading(10);
+    expect(headingRing()!.style.transform).toBe("rotate(10deg)");
+    expect(headingRing()!.style.opacity).toBe("1");
+    expect(headingRing()!.getAttribute("data-heading")).toBe("10");
+    expect(pin()!.style.transform).toBe("");
+    expect(marker()!.style.transform).toBe("translate(-50%, -100%)");
+    santa.setHeading(null);
+    expect(headingRing()!.style.opacity).toBe("0");
+  });
+
+  it("colours the indicator from the theme and recolours on a theme change", () => {
+    const santa = createSantaMarker(libs, map, SEEDED.standard);
+    santa.setState("tracking", { lat: 41, lng: -110 });
+    const strokes = () => Array.from(headingRing()!.querySelectorAll("[stroke]")).map((s) => s.getAttribute("stroke"));
+    expect(strokes()).toContain(SEEDED.standard.overlay.arrowColor);
+    santa.setTheme(SEEDED.expedition);
+    expect(strokes()).toContain(SEEDED.expedition.overlay.arrowColor);
+  });
+
   it("hides the marker again when waitingForFix returns", () => {
-    const santa = createSantaMarker(libs, map);
+    const santa = createSantaMarker(libs, map, SEEDED.standard);
     santa.setState("tracking", { lat: 41, lng: -110 });
     expect(overlay().map).toBe(map);
     santa.setState("waitingForFix", null);
@@ -114,7 +153,7 @@ describe("createSantaMarker", () => {
   });
 
   it("detaches on destroy", () => {
-    const santa = createSantaMarker(libs, map);
+    const santa = createSantaMarker(libs, map, SEEDED.standard);
     santa.setState("tracking", { lat: 41, lng: -110 });
     santa.destroy();
     expect(overlay().map).toBe(null);
