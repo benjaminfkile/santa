@@ -45,12 +45,26 @@ export function signUpMessage(err: unknown): string {
   const n = errorName(err);
   if (n === "UsernameExistsException") return copy.auth.signUp.alreadyExists;
   if (n === "InvalidPasswordException") return copy.auth.signUp.invalidPassword;
-  // A Pre sign-up trigger refused the address (the dev gate).
-  if (n === "UserLambdaValidationException") return copy.auth.signUp.byInvitation;
+  // A Pre sign-up trigger refused the address: the block list ("cannot
+  // sign up" in the gate's text) or the dev gate's invitation rule.
+  if (n === "UserLambdaValidationException") {
+    return lambdaMessage(err).includes("cannot sign up")
+      ? copy.auth.signUp.blocked
+      : copy.auth.signUp.byInvitation;
+  }
   if (n === "LimitExceededException" || n === "TooManyRequestsException") {
     return copy.auth.errors.tooMany;
   }
   return copy.auth.errors.generic;
+}
+
+// The trigger's text, only ever matched against, never rendered.
+function lambdaMessage(err: unknown): string {
+  if (err && typeof err === "object") {
+    const m = (err as { message?: unknown }).message;
+    if (typeof m === "string") return m.toLowerCase();
+  }
+  return "";
 }
 
 export function confirmMessage(err: unknown): string {

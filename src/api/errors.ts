@@ -2,6 +2,7 @@
 // site-coded copy; `body.message` is never rendered.
 
 import { ApiRequestError, SignInRequired } from "./client";
+import { copy } from "../copy/copy";
 
 export type ErrorSurface = {
   code: string;
@@ -51,7 +52,10 @@ export function fieldErrorsFrom(err: ApiRequestError): Record<string, string> {
 
 export function surfaceFor(err: unknown): ErrorSurface {
   if (err instanceof SignInRequired) {
-    return { code: "unauthenticated", message: COPY_BY_CODE.unauthenticated, retryAfterSeconds: null, fieldErrors: {} };
+    // Still "unauthenticated" so callers take the sign-in path; a blocked
+    // account reads the blocked notice (site.md 19).
+    const message = err.reason === "blocked" ? copy.auth.blocked : COPY_BY_CODE.unauthenticated;
+    return { code: "unauthenticated", message, retryAfterSeconds: null, fieldErrors: {} };
   }
   if (err instanceof ApiRequestError) {
     const code = err.code;

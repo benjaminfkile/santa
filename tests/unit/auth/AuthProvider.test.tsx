@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { act, cleanup, render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "../../../src/auth/AuthProvider";
 import { session, _resetSessionForTests } from "../../../src/auth/session";
 
@@ -16,6 +16,11 @@ function Probe() {
       {state.status === "signedIn" ? `:${state.email}` : ""}
     </output>
   );
+}
+
+function Where() {
+  const l = useLocation();
+  return <output data-testid="where">{l.pathname}{l.search}</output>;
 }
 
 describe("AuthProvider", () => {
@@ -89,5 +94,44 @@ describe("AuthProvider", () => {
     );
     await act(async () => {});
     expect(screen.getByTestId("status")).toHaveTextContent("signedIn:stored@example");
+  });
+
+  it("a session ended by 403 blocked goes to the sign-in card with returnTo (site.md 19)", async () => {
+    render(
+      <MemoryRouter initialEntries={["/live?x=1"]}>
+        <AuthProvider>
+          <Probe />
+          <Where />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+    await act(async () => {
+      session.set({
+        idToken: "id", accessToken: "a", refreshToken: "r",
+        email: "person@example", sub: "s", idExpiresAt: Date.now() + 3600_000,
+      });
+    });
+    await act(async () => {
+      session.block();
+    });
+    expect(screen.getByTestId("status")).toHaveTextContent("signedOut");
+    expect(screen.getByTestId("where")).toHaveTextContent(
+      `/auth/sign-in?returnTo=${encodeURIComponent("/live?x=1")}`,
+    );
+    expect(session.notice()).toBe("blocked");
+  });
+
+  it("a plain sign-out stays on the page", async () => {
+    render(
+      <MemoryRouter initialEntries={["/live"]}>
+        <AuthProvider>
+          <Where />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+    await act(async () => {
+      session.clear();
+    });
+    expect(screen.getByTestId("where")).toHaveTextContent("/live");
   });
 });

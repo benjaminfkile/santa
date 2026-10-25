@@ -189,7 +189,23 @@ describe("auth error map (docs 11.1)", () => {
 
   it("UserLambdaValidationException reads the invitation line on sign-up only", () => {
     expect(signUpMessage({ name: "UserLambdaValidationException" })).toBe(copy.auth.signUp.byInvitation);
+    expect(
+      signUpMessage({
+        name: "UserLambdaValidationException",
+        message: "PreSignUp failed with error Sign-up on this site is by invitation.",
+      }),
+    ).toBe(copy.auth.signUp.byInvitation);
     expect(signInMessage({ name: "UserLambdaValidationException" })).toBe(copy.auth.errors.generic);
+  });
+
+  it("UserLambdaValidationException naming a block reads the block line (site.md 11.1)", () => {
+    expect(
+      signUpMessage({
+        name: "UserLambdaValidationException",
+        message: "PreSignUp failed with error This address cannot sign up here.",
+      }),
+    ).toBe(copy.auth.signUp.blocked);
+    expect(copy.auth.signUp.blocked).toBe("This address cannot create an account here.");
   });
 
   it("LimitExceeded / TooManyRequests read 'Too many attempts, wait a minute'", () => {

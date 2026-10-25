@@ -27,7 +27,12 @@ export type SessionChangeReason = "signIn" | "refresh" | "restore" | "clear";
 
 export type SessionListener = (reason: SessionChangeReason) => void;
 
+// docs/site.md 11.4 and 19. Why the last session ended, kept for the
+// sign-in page to show once: "blocked" after a `403 blocked`.
+export type SignInNotice = "blocked";
+
 let cached: Tokens | null | undefined;
+let notice: SignInNotice | null = null;
 const listeners = new Set<SessionListener>();
 
 function readFromStorage(): Tokens | null {
@@ -63,6 +68,7 @@ export const session = {
   // A sign-in unless the caller names a refresh.
   set(tokens: Tokens, reason: "signIn" | "refresh" = "signIn"): void {
     cached = tokens;
+    if (reason === "signIn") notice = null;
     storageSet(STORAGE_KEY, JSON.stringify(tokens));
     fire(reason);
   },
@@ -78,6 +84,22 @@ export const session = {
     storageRemove(STORAGE_KEY);
     fire("clear");
   },
+  // Ends the session because the API refused the account (`403 blocked`).
+  // No refresh: the sign-in page shows the blocked notice once.
+  block(): void {
+    notice = "blocked";
+    session.clear();
+  },
+  // The pending notice, left in place.
+  notice(): SignInNotice | null {
+    return notice;
+  },
+  // The notice of the last session's end, read once.
+  takeNotice(): SignInNotice | null {
+    const n = notice;
+    notice = null;
+    return n;
+  },
   subscribe(l: SessionListener): () => void {
     listeners.add(l);
     return () => {
@@ -90,9 +112,13 @@ export const session = {
 };
 
 export class SignInRequired extends Error {
-  constructor() {
+  // "blocked" when the API refused the account (`403 blocked`); the
+  // session is already cleared either way.
+  reason: "signIn" | "blocked";
+  constructor(reason: "signIn" | "blocked" = "signIn") {
     super("sign_in_required");
     this.name = "SignInRequired";
+    this.reason = reason;
   }
 }
 
@@ -134,6 +160,7 @@ export async function refreshNow(): Promise<string> {
 
 export function _resetSessionForTests(): void {
   cached = undefined;
+  notice = null;
   listeners.clear();
   storageRemove(STORAGE_KEY);
 }

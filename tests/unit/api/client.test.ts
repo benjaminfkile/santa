@@ -12,21 +12,23 @@ vi.mock("../../../src/config/env", () => ({
 
 vi.mock("../../../src/auth/session", () => {
   const cls = class SignInRequired extends Error {
-    constructor() {
+    reason: string;
+    constructor(reason = "signIn") {
       super("sign_in_required");
       this.name = "SignInRequired";
+      this.reason = reason;
     }
   };
   return {
     SignInRequired: cls,
     getIdToken: vi.fn(),
     refreshNow: vi.fn(),
-    session: { current: () => null, set: () => {}, clear: () => {}, subscribe: () => () => {}, hasStored: () => false },
+    session: { current: () => null, set: () => {}, clear: vi.fn(), block: vi.fn(), subscribe: () => () => {}, hasStored: () => false },
   };
 });
 
 import { api, ApiRequestError } from "../../../src/api/client";
-import { getIdToken, SignInRequired, refreshNow } from "../../../src/auth/session";
+import { getIdToken, SignInRequired, refreshNow, session } from "../../../src/auth/session";
 
 const mockedGetIdToken = getIdToken as unknown as ReturnType<typeof vi.fn>;
 
@@ -154,5 +156,46 @@ describe("api client", () => {
     );
     await expect(api("/me", { method: "GET", auth: true })).rejects.toBeInstanceOf(SignInRequired);
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("a 403 blocked ends the session with no refresh (docs 11.4, 19)", async () => {
+    const refresh = refreshNow as unknown as ReturnType<typeof vi.fn>;
+    refresh.mockReset();
+    const block = session.block as unknown as ReturnType<typeof vi.fn>;
+    block.mockReset();
+    mockedGetIdToken.mockResolvedValueOnce("tok");
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ code: "blocked", message: "x", details: null, requestId: "r" }, { status: 403 }),
+    );
+    const err = await api("/me", { method: "GET", auth: true }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(SignInRequired);
+    expect((err as { reason: string }).reason).toBe("blocked");
+    expect(block).toHaveBeenCalledTimes(1);
+    expect(refresh).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("any other 403 stays an ApiRequestError and keeps the session", async () => {
+    const block = session.block as unknown as ReturnType<typeof vi.fn>;
+    block.mockReset();
+    mockedGetIdToken.mockResolvedValueOnce("tok");
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ code: "forbidden", message: "x", details: null, requestId: "r" }, { status: 403 }),
+    );
+    await expect(api("/me", { method: "GET", auth: true })).rejects.toBeInstanceOf(ApiRequestError);
+    expect(block).not.toHaveBeenCalled();
+  });
+
+  it("a second 401 after a refresh clears the session and throws SignInRequired", async () => {
+    const clear = session.clear as unknown as ReturnType<typeof vi.fn>;
+    clear.mockReset();
+    mockedGetIdToken.mockResolvedValueOnce("stale");
+    (refreshNow as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce("fresh");
+    const gone = { code: "unknown_user", message: "x", details: null, requestId: "r" };
+    fetchMock.mockResolvedValueOnce(jsonResponse(gone, { status: 401 }));
+    fetchMock.mockResolvedValueOnce(jsonResponse(gone, { status: 401 }));
+    await expect(api("/me", { method: "GET", auth: true })).rejects.toBeInstanceOf(SignInRequired);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(clear).toHaveBeenCalledTimes(1);
   });
 });

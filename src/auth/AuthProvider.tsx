@@ -2,17 +2,21 @@
 // (sign-in, refresh, restore, sign-out, refresh failure), reads the stored
 // session back through session.restore() at mount, and exposes useAuth() with the state plus signIn(returnTo)
 // (navigates to /auth/sign-in?returnTo=...) and signOut() (best-effort
-// revoke, session.clear(), stay on the current page).
+// revoke, session.clear(), stay on the current page). A session the API
+// ended with `403 blocked` sends the visitor to the sign-in card with
+// returnTo the current page, where the blocked notice shows (site.md 19).
 
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
+  useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { session } from "./session";
 
 export type AuthState =
@@ -48,12 +52,23 @@ export function AuthProvider({ children, initialState }: AuthProviderProps) {
     initialState ?? (session.hasStored() ? { status: "unknown" } : { status: "signedOut" }),
   );
   const navigate = useNavigate();
+  const location = useLocation();
+  const here = useRef(location.pathname + location.search);
+  useEffect(() => {
+    here.current = location.pathname + location.search;
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     // When a caller passes initialState (unit tests, storybook), respect it
     // and only reconcile with the session on subsequent changes. Without
     // an initialState the mount hydrates from storage.
-    const off = session.subscribe(() => setState(readState()));
+    const off = session.subscribe((reason) => {
+      setState(readState());
+      // The auth pages show the notice themselves.
+      if (reason === "clear" && session.notice() === "blocked" && !here.current.startsWith("/auth/")) {
+        navigate(`/auth/sign-in?returnTo=${encodeURIComponent(here.current)}`);
+      }
+    });
     if (initialState === undefined) {
       session.restore();
       setState(readState());
@@ -79,8 +94,10 @@ export function AuthProvider({ children, initialState }: AuthProviderProps) {
     session.clear();
   }, []);
 
+  const value = useMemo(() => ({ state, signIn, signOut }), [state, signIn, signOut]);
+
   return (
-    <AuthContext.Provider value={{ state, signIn, signOut }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
