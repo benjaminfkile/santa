@@ -32,6 +32,16 @@ export const MinusGlyph = (p: GlyphProps) => <Glyph {...p}><path d="M5 12h14" />
 export const TargetGlyph = (p: GlyphProps) => (
   <Glyph {...p}><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="2.5" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></Glyph>
 );
+// A compass needle on a ring, north up: the north half filled in the
+// error red, the south half in the current colour at half strength (the
+// north-up button; `CompassGlyph` below is the heading row's face).
+export const CompassNeedleGlyph = (p: GlyphProps) => (
+  <Glyph {...p}>
+    <circle cx="12" cy="12" r="9.25" />
+    <path d="M12 4.5L15 12H9z" style={{ fill: "var(--err)", stroke: "var(--err)" }} />
+    <path d="M12 19.5L9 12h6z" fill="currentColor" fillOpacity="0.45" />
+  </Glyph>
+);
 export const TerrainGlyph = (p: GlyphProps) => <Glyph {...p}><path d="M3 19l6-10 4 6 2-3 6 7H3z" /></Glyph>;
 export const RoadGlyph = (p: GlyphProps) => (
   <Glyph {...p}><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z M9 4v14M15 6v14" /></Glyph>

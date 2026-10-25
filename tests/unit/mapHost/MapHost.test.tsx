@@ -10,6 +10,10 @@
 //  - The path is fitted on mount and again on every resize of the frame.
 //  - The terrain toggle hides without a terrain URL and without a terrain
 //    layer in the theme; the remembered choice restores.
+//  - While the map is turned (a `rotate` past 0.5 degrees) a north-up
+//    button stands first in the control stack, with no switch set too,
+//    and eases the bearing to 0 over 300 ms; it leaves once the map is
+//    north-up again; the Google branch never shows it.
 //  - The MapLibre branch imports the handle module and never the Google
 //    loader; the Google branch imports the loader and never the handle.
 // And on the `google` renderer, over the fake Google libraries:
@@ -47,6 +51,9 @@ type FakeMapInstance = {
   resize: ReturnType<typeof vi.fn>;
   setMinZoom: ReturnType<typeof vi.fn>;
   remove: ReturnType<typeof vi.fn>;
+  easeTo: ReturnType<typeof vi.fn>;
+  bearing: number;
+  fire: (event: string) => void;
 };
 
 const mocks = vi.hoisted(() => ({
@@ -65,13 +72,23 @@ vi.mock("maplibre-gl", () => {
     resize = vi.fn();
     setMinZoom = vi.fn();
     remove = vi.fn();
+    easeTo = vi.fn();
+    bearing = 0;
     canvas = document.createElement("canvas");
+    handlers: Record<string, (() => void)[]> = {};
     constructor(options: Record<string, unknown>) {
       this.options = options;
       mocks.maps.push(this as unknown as FakeMapInstance);
     }
-    on() {
+    on(event: string, a: unknown) {
+      if (typeof a === "function") (this.handlers[event] ??= []).push(a as () => void);
       return this;
+    }
+    fire(event: string) {
+      for (const fn of this.handlers[event] ?? []) fn();
+    }
+    getBearing() {
+      return this.bearing;
     }
     once() {
       return this;
@@ -490,5 +507,45 @@ describe("modules each branch imports", () => {
     expect(mocks.imported).toContain("loadMaps");
     expect(mocks.imported).not.toContain("handle");
     expect(mocks.maps).toHaveLength(0);
+  });
+});
+
+describe("route mode north-up", () => {
+  async function turn(map: FakeMapInstance, bearing: number, event = "rotate"): Promise<void> {
+    await act(async () => {
+      map.bearing = bearing;
+      map.fire(event);
+    });
+  }
+
+  it("shows the north-up button first in the stack only while the map is turned", async () => {
+    const { container } = await renderHost(themeOf("light"));
+    const map = mocks.maps[0];
+    expect(q(container, "route-map-north-up")).toBeNull();
+    await turn(map, 0.4);
+    expect(q(container, "route-map-north-up")).toBeNull();
+    await turn(map, -25);
+    const button = q(container, "route-map-north-up");
+    expect(button).not.toBeNull();
+    expect(button?.getAttribute("aria-label")).toBe("Point north up");
+    expect(q(container, "route-map-controls")?.firstElementChild).toBe(button);
+    await act(async () => {
+      fireEvent.click(button!);
+    });
+    expect(map.easeTo).toHaveBeenLastCalledWith({ bearing: 0, duration: 300 });
+    await turn(map, 0, "rotateend");
+    expect(q(container, "route-map-north-up")).toBeNull();
+    expect(q(container, "route-map-fullscreen")).not.toBeNull();
+  });
+
+  it("offers it with no switch set, as on the route preview", async () => {
+    const { container } = await renderHost(themeOf("light"), {
+      terrainControl: false,
+      fullscreenControl: false,
+    });
+    expect(q(container, "route-map-controls")).toBeNull();
+    await turn(mocks.maps[0], 90);
+    expect(q(container, "route-map-north-up")).not.toBeNull();
+    expect(q(container, "route-map-controls")?.children).toHaveLength(1);
   });
 });

@@ -13,9 +13,16 @@
 //    moves per frame (no `jumpTo`).
 //  - The follow rule: frames inside the central box make no camera call,
 //    a frame outside makes one `easeTo` of 300 ms with no zoom, two within
-//    500 ms make one; a wheel, a two touch `touchstart`, `dragstart`, or a
+//    500 ms make one; a wheel, a one-pointer drag past 4 px, a gesture drag
+//    that moves the centre more than 12 px (8 px keeps it), or a
 //    `zoomstart` with an `originalEvent` turns Follow off, stops a running
-//    follow pan, and no pan follows; `zoomBy` keeps Follow on.
+//    follow pan, and no pan follows; a second touch, two-pointer movement,
+//    and a `rotatestart` with an `originalEvent` (a twist) keep it, as do
+//    `zoomBy` and `resetNorth` (one `easeTo` to bearing 0 of 300 ms).
+//  - The indicator turns to the heading minus the bearing (90 at 30 is
+//    60), `data-heading` the true heading and `data-bearing` the bearing;
+//    a `rotate` applies the last heading again at the new bearing and
+//    reports it through `onBearingChange`; the image never rotates.
 //  - A fix outside the box stands Santa on its edge and follows there;
 //    `recenter` and `fitHistory` clamp to the box.
 //  - `setMapType` takes exactly the theme's terrain layers out and puts
@@ -215,12 +222,43 @@ describe("the Santa pin and the camera", () => {
     expect(santaMarker()?.rotation).toBe(0);
   });
 
+  it("turns the indicator to the heading minus the bearing; the data keeps the true heading", () => {
+    fakeFrames().install();
+    const { c, map } = build();
+    map.bearing = 30;
+    c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: 90 }, true);
+    expect(santaHeading().style.transform).toBe("rotate(60deg)");
+    expect(santaHeading().getAttribute("data-heading")).toBe("90");
+    expect(santaHeading().getAttribute("data-bearing")).toBe("30");
+    expect(santaMarker()?.rotation).toBe(0);
+    expect(santaMarker()?.element.querySelector("img")?.style.transform).toBe("");
+  });
+
+  it("a rotate applies the last heading again at the new bearing and reports the bearing", () => {
+    fakeFrames().install();
+    const onBearingChange = vi.fn();
+    const { c, map } = build({ onBearingChange });
+    c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: 90 }, true);
+    expect(santaHeading().style.transform).toBe("rotate(90deg)");
+    map.bearing = -45;
+    map.fire("rotate", { originalEvent: new Event("touchmove") });
+    expect(santaHeading().style.transform).toBe("rotate(135deg)");
+    expect(santaHeading().getAttribute("data-heading")).toBe("90");
+    expect(santaHeading().getAttribute("data-bearing")).toBe("315");
+    expect(onBearingChange).toHaveBeenLastCalledWith(-45);
+    map.bearing = 0;
+    map.fire("rotateend", {});
+    expect(santaHeading().style.transform).toBe("rotate(90deg)");
+    expect(onBearingChange).toHaveBeenLastCalledWith(0);
+    expect(santaMarker()?.rotation).toBe(0);
+  });
+
   it("recenter makes one animated pan to the displayed position, then the follow rule applies on moveend", () => {
     const frames = fakeFrames().install();
     const { c, map } = build({}, { width: 400, height: 800 });
     // Santa 150 px right of the middle, outside the central box.
     map.view = { west: -114.25, north: 47.3, scale: 1000 };
-    map.fire("dragstart");
+    c.follow(false);
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: null }, true);
     frames.wait(1000);
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.899, seq: 2, headingDeg: null }, true);
@@ -273,8 +311,11 @@ describe("the Santa pin and the camera", () => {
 
   it("a drag stops following, so a new fix does not pan", () => {
     const onFollowChange = vi.fn();
-    const { c, map } = build({ onFollowChange });
-    map.fire("dragstart");
+    const { c, map } = build({ onFollowChange }, { width: 400, height: 800 });
+    map.view = { west: -114.1, north: 47.3, scale: 1000 };
+    map.fire("dragstart", { originalEvent: new Event("touchmove") });
+    map.view = { ...map.view, west: map.view.west + 0.02 };
+    map.fire("drag", { originalEvent: new Event("touchmove") });
     expect(onFollowChange).toHaveBeenCalledWith(false);
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.9 }, true);
     expect(map.panTo).not.toHaveBeenCalled();
@@ -330,6 +371,16 @@ describe("the follow rule", () => {
     map.view = { west: -114.25, north: 47.3, scale: 1000 };
   }
 
+  function pointer(type: string, pointerId: number, x: number, y: number): Event {
+    const event = new Event(type, { bubbles: true });
+    Object.defineProperties(event, {
+      pointerId: { value: pointerId },
+      clientX: { value: x },
+      clientY: { value: y },
+    });
+    return event;
+  }
+
   function touchStart(touches: number): Event {
     const event = new Event("touchstart", { bubbles: true });
     Object.defineProperty(event, "touches", { value: Array.from({ length: touches }, () => ({})) });
@@ -377,17 +428,65 @@ describe("the follow rule", () => {
     expect(map.easeTo).toHaveBeenCalledTimes(1);
   });
 
-  it("a second touch turns Follow off and no pan follows; one touch keeps it", () => {
+  it("a second touch and two-pointer movement keep Follow: the map's own events decide", () => {
     const { frames, c, map, container, onFollowChange } = setup();
     glide(c, frames);
     container.dispatchEvent(touchStart(1));
-    expect(onFollowChange).not.toHaveBeenCalled();
     container.dispatchEvent(touchStart(2));
-    expect(onFollowChange).toHaveBeenLastCalledWith(false);
-    expect(map.stop).not.toHaveBeenCalled();
+    container.dispatchEvent(pointer("pointerdown", 1, 100, 100));
+    container.dispatchEvent(pointer("pointerdown", 2, 200, 200));
+    container.dispatchEvent(pointer("pointermove", 1, 140, 60));
+    container.dispatchEvent(pointer("pointermove", 2, 160, 240));
+    expect(onFollowChange).not.toHaveBeenCalled();
     leaveBox(map);
-    frames.step(1000);
-    expect(map.easeTo).not.toHaveBeenCalled();
+    frames.step(16);
+    expect(map.easeTo).toHaveBeenCalledTimes(1);
+  });
+
+  it("a one-pointer drag past 4 px still turns Follow off at once", () => {
+    const { frames, c, container, onFollowChange } = setup();
+    glide(c, frames);
+    container.dispatchEvent(pointer("pointerdown", 1, 100, 100));
+    container.dispatchEvent(pointer("pointermove", 1, 103, 100));
+    expect(onFollowChange).not.toHaveBeenCalled();
+    container.dispatchEvent(pointer("pointermove", 1, 106, 100));
+    expect(onFollowChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it("a twist alone keeps Follow", () => {
+    const { frames, c, map, onFollowChange } = setup();
+    glide(c, frames);
+    map.fire("rotatestart", { originalEvent: new Event("touchmove") });
+    map.bearing = 40;
+    map.fire("rotate", { originalEvent: new Event("touchmove") });
+    map.fire("rotateend", { originalEvent: new Event("touchend") });
+    expect(onFollowChange).not.toHaveBeenCalled();
+    leaveBox(map);
+    frames.step(16);
+    expect(map.easeTo).toHaveBeenCalledTimes(1);
+    expect("bearing" in (map.easeTo.mock.calls[0][0] as object)).toBe(false);
+  });
+
+  it("a gesture drag keeps Follow within 12 px of centre travel and turns it off past it", () => {
+    const { frames, c, map, onFollowChange } = setup();
+    glide(c, frames);
+    const start = { ...map.view };
+    map.fire("dragstart", { originalEvent: new Event("touchmove") });
+    map.view = { ...start, west: start.west + 0.008 };
+    map.fire("drag", { originalEvent: new Event("touchmove") });
+    expect(onFollowChange).not.toHaveBeenCalled();
+    map.view = { ...start, west: start.west + 0.02 };
+    map.fire("drag", { originalEvent: new Event("touchmove") });
+    expect(onFollowChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it("a drag that starts with no originalEvent is not a gesture", () => {
+    const { frames, c, map, onFollowChange } = setup();
+    glide(c, frames);
+    map.fire("dragstart", {});
+    map.view = { ...map.view, west: map.view.west + 0.05 };
+    map.fire("drag", {});
+    expect(onFollowChange).not.toHaveBeenCalled();
   });
 
   it("a zoomstart from a gesture turns Follow off; one without an originalEvent keeps it", () => {
@@ -396,11 +495,23 @@ describe("the follow rule", () => {
     map.fire("zoomstart", {});
     map.fire("rotatestart", {});
     expect(onFollowChange).not.toHaveBeenCalled();
-    map.fire("zoomstart", { originalEvent: new Event("wheel") });
+    map.fire("zoomstart", { originalEvent: new Event("touchmove") });
     expect(onFollowChange).toHaveBeenLastCalledWith(false);
     c.follow(true);
+    onFollowChange.mockClear();
     map.fire("rotatestart", { originalEvent: new Event("touchmove") });
-    expect(onFollowChange).toHaveBeenLastCalledWith(false);
+    expect(onFollowChange).not.toHaveBeenCalled();
+  });
+
+  it("resetNorth eases the bearing to 0 over 300 ms and keeps Follow", () => {
+    const { frames, c, map, onFollowChange } = setup();
+    glide(c, frames);
+    map.bearing = 50;
+    c.resetNorth();
+    expect(map.easeTo).toHaveBeenLastCalledWith({ bearing: 0, duration: 300 });
+    map.fire("rotatestart", {});
+    map.fire("zoomstart", {});
+    expect(onFollowChange).not.toHaveBeenCalled();
   });
 
   it("zoomBy keeps Follow on and the rule still pans", () => {

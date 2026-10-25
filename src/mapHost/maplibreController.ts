@@ -17,17 +17,26 @@
 // filtered while the signal is lost (8.7). Every fix with a new seq goes
 // to the Santa motion (santaMotion.ts), whose frames place the marker
 // with `setLngLat` and turn its heading indicator (santaPin.ts) the short
-// way; the marker keeps MapLibre's default rotation alignment and the
-// image never rotates. A theme change recolours the indicator. While
+// way to the heading minus the map's bearing (`getBearing`), so the
+// chevron points along the map as it is turned; the last heading is
+// applied again at the new bearing on every `rotate` and `rotateend`,
+// which also report the bearing through `onBearingChange`. The marker
+// keeps MapLibre's default rotation alignment and the image never
+// rotates. A theme change recolours the indicator. While
 // following, a frame checks the follow rule (src/map/follow.ts): when the
 // displayed position, through `project`, has left the central box of the
 // container and the last follow pan started at least 500 ms ago (so the
 // one before it is over), it makes one `easeTo` there of FOLLOW_PAN_MS,
-// zoom untouched, and no other camera call. `recenter` makes one animated
-// `panTo` there and the rule applies again on `moveend`. A drag past 4 px,
-// a wheel, a second touch, a double tap, `dragstart`, or a `zoomstart` or
-// `rotatestart` with an `originalEvent` turns Follow off and stops a
-// running follow pan with `stop`; `zoomBy` keeps it. The markers keep
+// with the centre only, so zoom and bearing are untouched, and no other
+// camera call. `recenter` makes one animated `panTo` there and the rule
+// applies again on `moveend`. A two-finger twist keeps Follow. A
+// one-pointer drag past 4 px, a wheel, a double tap, a drag whose
+// `dragstart` carries an `originalEvent` once the centre has moved more
+// than DRAG_SLOP_PX (12 px, through `project`) from where it began, or a
+// `zoomstart` with an `originalEvent` (a pinch) turns Follow off and stops
+// a running follow pan with `stop`; `watchGestures` leaves two or more
+// pointers to those map events. `zoomBy` and `resetNorth` (one `easeTo`
+// to bearing 0 of 300 ms) keep it. The markers keep
 // MapLibre's whole pixel positioning.
 // The viewpoints are HTML markers holding the
 // same badges and popover (viewpointsOverlay.ts), rebuilt only when the
@@ -71,7 +80,7 @@ import {
 import { createSantaPinElement, santaHeadingColor } from "../map/santaPin";
 import { SANTA_MARKER_HEIGHT, SIGNAL_LOST_FILTER } from "../map/santaMarker";
 import { clampToBbox, inBox, MIN_ZOOM_FLOOR, type LatLng } from "../map/bounds";
-import { ensureProtocol, OSM_ATTRIBUTION, watchContext, type MapLibreFailure } from "./handle";
+import { ensureProtocol, NORTH_UP_MS, OSM_ATTRIBUTION, watchContext, type MapLibreFailure } from "./handle";
 import { applyPlaces, protomapsKinds } from "./places";
 import {
   flightHistoryLayers,
@@ -89,7 +98,14 @@ import {
   RECENTER_PAN_MS,
   type SantaFrame,
 } from "../map/santaMotion";
-import { FOLLOW_PAN_MS, followEasing, followPanDue, needsPan, watchGestures } from "../map/follow";
+import {
+  DRAG_SLOP_PX,
+  FOLLOW_PAN_MS,
+  followEasing,
+  followPanDue,
+  needsPan,
+  watchGestures,
+} from "../map/follow";
 import { createMapLibreUserLocation, type MapLibreUserLocation } from "./userLocation";
 
 export type MaplibreControllerOptions = MapControllerOptions & {
@@ -277,13 +293,16 @@ export function createMaplibreController(
   // since Follow last came on.
   let lastFollowPan: number | null = null;
   let localSeq = 0;
+  // The heading the indicator last showed, applied again as the map turns.
+  let shownHeading: number | null = null;
 
   function place(frame: SantaFrame): void {
     if (disposed) return;
     displayed = clamp({ lat: frame.lat, lng: frame.lng });
     if (santa !== null) {
       santa.setLngLat([displayed.lng, displayed.lat]);
-      pin.setHeading(frame.headingDeg);
+      shownHeading = frame.headingDeg;
+      pin.setHeading(frame.headingDeg, map.getBearing());
       if (!santaShown) santa.addTo(map);
       santaShown = true;
     }
@@ -386,15 +405,44 @@ export function createMaplibreController(
     opts.onFollowChange?.(false);
   }
 
-  // A gesture turns Follow off; a programmatic zoom or rotation (`zoomBy`,
-  // a pan of the controller's own) has no `originalEvent` and keeps it.
-  const stopGestures = watchGestures(container, stopFollowing);
-  map.on("dragstart", stopFollowing);
-  const byGesture = (event?: unknown) => {
-    if ((event as { originalEvent?: unknown } | undefined)?.originalEvent != null) stopFollowing();
+  // A gesture turns Follow off; a programmatic camera call (`zoomBy`,
+  // `resetNorth`, a pan of the controller's own) has no `originalEvent`
+  // and keeps it, and a twist alone keeps it too.
+  const stopGestures = watchGestures(container, stopFollowing, { mapDecidesMultiTouch: true });
+  const byGesture = (event?: unknown) =>
+    (event as { originalEvent?: unknown } | undefined)?.originalEvent != null;
+  // Where the centre stood when the gesture's drag began, and its pixel
+  // then; null while no gesture drags.
+  let dragFrom: { at: [number, number]; pixel: { x: number; y: number } } | null = null;
+  map.on("dragstart", (event?: unknown) => {
+    if (disposed || !byGesture(event)) return;
+    const centre = map.getCenter();
+    const at: [number, number] = [centre.lng, centre.lat];
+    const pixel = map.project(at);
+    dragFrom = { at, pixel: { x: pixel.x, y: pixel.y } };
+  });
+  map.on("drag", () => {
+    if (disposed || dragFrom === null) return;
+    const now = map.project(dragFrom.at);
+    if (Math.hypot(now.x - dragFrom.pixel.x, now.y - dragFrom.pixel.y) <= DRAG_SLOP_PX) return;
+    dragFrom = null;
+    stopFollowing();
+  });
+  map.on("dragend", () => {
+    dragFrom = null;
+  });
+  map.on("zoomstart", (event?: unknown) => {
+    if (byGesture(event)) stopFollowing();
+  });
+  // The indicator reads along the map while it turns.
+  const turned = () => {
+    if (disposed) return;
+    const b = map.getBearing();
+    pin.setHeading(shownHeading, b);
+    opts.onBearingChange?.(b);
   };
-  map.on("zoomstart", byGesture);
-  map.on("rotatestart", byGesture);
+  map.on("rotate", turned);
+  map.on("rotateend", turned);
   map.on("moveend", () => {
     if (!disposed) endRecenter();
   });
@@ -518,6 +566,10 @@ export function createMaplibreController(
     zoomBy(delta) {
       if (disposed) return;
       map.setZoom(zoom() + delta);
+    },
+    resetNorth() {
+      if (disposed) return;
+      map.easeTo({ bearing: 0, duration: NORTH_UP_MS });
     },
     fitHistory() {
       if (disposed) return;

@@ -42,6 +42,11 @@ export function shortestDelta(a: number, b: number): number {
   return ((((b - a) % 360) + 540) % 360) - 180;
 }
 
+// Degrees in whole numbers over [0, 360).
+function wholeDegrees(deg: number): number {
+  return Math.round(((deg % 360) + 360) % 360) % 360;
+}
+
 // The indicator's colour for a theme: the route arrows' colour, else the
 // chrome accent.
 export function santaHeadingColor(theme: Pick<MapTheme, "overlay" | "chrome">): string {
@@ -53,21 +58,24 @@ export type SantaPinElement = {
   element: HTMLDivElement;
   // The upright pin image, the only part the signal-lost filter touches.
   image: HTMLImageElement;
-  // Turns the chevron the short way to the heading; null hides the
-  // indicator where it stands.
-  setHeading(headingDeg: number | null): void;
+  // Turns the chevron the short way to the heading as seen on a map
+  // turned `bearingDeg` from north; null hides the indicator where it
+  // stands.
+  setHeading(headingDeg: number | null, bearingDeg?: number): void;
   setColor(color: string): void;
 };
 
 // A wrapper `div` holding the upright pin image and, under it, the heading
 // indicator: an SVG ring with a chevron on it, centred on the pin tip, a
 // dark halo under the theme coloured stroke. The chevron points at the
-// heading by turning the SVG about its centre (`transform: rotate()` with a
+// heading on the map as it is turned by turning the SVG about its centre
+// to the heading minus the map's bearing (`transform: rotate()` with a
 // 300 ms transition); the rotation is kept unwrapped and stepped by
-// `shortestDelta`, so every turn is the short way. The SVG carries
-// `data-testid="santa-heading"` and `data-heading`, the heading in whole
-// degrees (absent while the heading is null, when its opacity is 0).
-// Nothing in it is a pointer target.
+// `shortestDelta`, so every turn is the short way. The image never
+// rotates. The SVG carries `data-testid="santa-heading"`, `data-heading`,
+// the true heading in whole degrees, and `data-bearing`, the bearing in
+// whole degrees (both absent while the heading is null, when its opacity
+// is 0). Nothing in it is a pointer target.
 export function createSantaPinElement(height: number, color: string): SantaPinElement {
   const image = createSantaPinImage(height);
   image.style.position = "relative";
@@ -122,20 +130,23 @@ export function createSantaPinElement(height: number, color: string): SantaPinEl
   return {
     element,
     image,
-    setHeading(headingDeg) {
+    setHeading(headingDeg, bearingDeg = 0) {
       if (headingDeg === null) {
         if (!shown) return;
         shown = false;
         style.opacity = "0";
         svg.removeAttribute("data-heading");
+        svg.removeAttribute("data-bearing");
         return;
       }
       if (!shown) {
         shown = true;
         style.opacity = "1";
       }
-      svg.setAttribute("data-heading", String(Math.round(((headingDeg % 360) + 360) % 360) % 360));
-      const next = Math.round((rotation + shortestDelta(rotation, headingDeg)) * 100) / 100;
+      svg.setAttribute("data-heading", String(wholeDegrees(headingDeg)));
+      svg.setAttribute("data-bearing", String(wholeDegrees(bearingDeg)));
+      const turn = headingDeg - bearingDeg;
+      const next = Math.round((rotation + shortestDelta(rotation, turn)) * 100) / 100;
       if (next === rotation) return;
       rotation = next;
       style.transform = `rotate(${rotation}deg)`;
