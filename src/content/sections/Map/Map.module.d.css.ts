@@ -37,6 +37,7 @@ export const messagesDot: string;
 export const messagesEnvelope: string;
 export const messagesPill: string;
 export const messagesShake: string;
+export const northUp: string;
 export const pill: string;
 export const recenter: string;
 export const sponsorOverlay: string;

@@ -16,7 +16,8 @@
 // The follow rule (8.3): frames inside the central box make no camera
 // call, a frame outside makes one `panTo`, two within 500 ms make one; a
 // wheel, a two touch `touchstart`, a pointer drag past 4 px, a double tap,
-// or `dragstart` turns Follow off and no pan follows; `zoomBy` keeps it.
+// or `dragstart` turns Follow off and no pan follows; `zoomBy` keeps it;
+// `resetNorth` does nothing on a map that never turns.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createMapController, type MapControllerOptions } from "../../../src/map/mapController";
@@ -644,6 +645,15 @@ describe("the follow rule on Google", () => {
     leaveBox();
     frames.step(16);
     expect(map.panToCalls).toHaveLength(1);
+  });
+
+  it("resetNorth is a no-op on a map that never turns, and Follow stays on", async () => {
+    const { frames, onFollowChange, c, map } = setup();
+    await glide(c, frames);
+    const pans = map.panToCalls.length;
+    c.resetNorth();
+    expect(map.panToCalls).toHaveLength(pans);
+    expect(onFollowChange).not.toHaveBeenCalled();
   });
 
   it("destroy removes the container listeners", async () => {

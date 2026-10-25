@@ -282,8 +282,9 @@
 }
 .cookieLeave:hover { color: var(--cookie-bright); }
 
-/* Bottom-right: zoom in and out while following, recenter when not. The
-   zoom group is one round column that clips its two square halves. */
+/* Bottom-right: zoom in and out while following, recenter when not, and
+   above them the north-up button while the map is turned. The zoom group
+   is one round column that clips its two square halves. */
 .mapControls { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .zoomGroup {
   composes: glass;
@@ -310,6 +311,7 @@
 .ctrl:hover { color: var(--accent); background: var(--accent-soft); }
 .recenter { composes: glass; border-radius: var(--radius-control); }
 .recenter .ctrl { color: var(--accent); }
+.northUp { composes: glass; border-radius: var(--radius-control); }
 
 /* Bottom-left: the sponsor tile, under the dock handle pill. */
 .sponsorOverlay { display: flex; }

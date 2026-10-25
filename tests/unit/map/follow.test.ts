@@ -3,12 +3,17 @@
 // percent margin on every side), never in a container with no size; a
 // follow pan is due 500 ms after the last one started; the gesture watch
 // calls back for a wheel, a second touch, a double tap, and a pointer
-// drag past 4 px, and removes its listeners.
+// drag past 4 px, and removes its listeners; with `mapDecidesMultiTouch`
+// it ignores a second touch and pointer movement while two or more
+// pointers are down, and still calls back for a one-pointer drag past
+// 4 px, a wheel, and a double click; a map is rotated past 0.5 degrees
+// either way from north.
 
 import { describe, it, expect, vi } from "vitest";
 import {
   FOLLOW_GAP_MS,
   followEasing,
+  isRotated,
   followPanDue,
   needsPan,
   watchGestures,
@@ -108,5 +113,67 @@ describe("watchGestures", () => {
     pointer(el, "pointerdown", 0);
     pointer(el, "pointermove", 50);
     expect(onGesture).not.toHaveBeenCalled();
+  });
+});
+
+describe("watchGestures with mapDecidesMultiTouch", () => {
+  function pointer(el: HTMLElement, type: string, x: number, id = 1) {
+    const event = new MouseEvent(type, { bubbles: true, clientX: x, clientY: 0 });
+    Object.defineProperty(event, "pointerId", { value: id });
+    el.dispatchEvent(event);
+  }
+
+  function touchStart(el: HTMLElement, touches: number) {
+    const event = new Event("touchstart", { bubbles: true });
+    Object.defineProperty(event, "touches", { value: Array.from({ length: touches }, () => ({})) });
+    el.dispatchEvent(event);
+  }
+
+  function watch() {
+    const el = document.createElement("div");
+    const onGesture = vi.fn();
+    watchGestures(el, onGesture, { mapDecidesMultiTouch: true });
+    return { el, onGesture };
+  }
+
+  it("ignores a second touch and movement while two pointers are down", () => {
+    const { el, onGesture } = watch();
+    touchStart(el, 2);
+    pointer(el, "pointerdown", 0, 1);
+    pointer(el, "pointerdown", 100, 2);
+    pointer(el, "pointermove", 40, 1);
+    pointer(el, "pointermove", 60, 2);
+    // One finger lifts; the other keeps moving within the same gesture.
+    pointer(el, "pointerup", 60, 2);
+    pointer(el, "pointermove", 80, 1);
+    expect(onGesture).not.toHaveBeenCalled();
+  });
+
+  it("still calls back for a one-pointer drag past 4 px, a wheel, and a double click", () => {
+    const { el, onGesture } = watch();
+    pointer(el, "pointerdown", 0, 1);
+    pointer(el, "pointerdown", 100, 2);
+    pointer(el, "pointerup", 0, 1);
+    pointer(el, "pointerup", 100, 2);
+    pointer(el, "pointerdown", 0, 3);
+    pointer(el, "pointermove", 4, 3);
+    expect(onGesture).not.toHaveBeenCalled();
+    pointer(el, "pointermove", 5, 3);
+    expect(onGesture).toHaveBeenCalledTimes(1);
+    el.dispatchEvent(new Event("wheel", { bubbles: true }));
+    el.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+    expect(onGesture).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe("isRotated", () => {
+  it("is true past 0.5 degrees either way from north, at any range", () => {
+    expect(isRotated(0)).toBe(false);
+    expect(isRotated(0.5)).toBe(false);
+    expect(isRotated(-0.5)).toBe(false);
+    expect(isRotated(0.6)).toBe(true);
+    expect(isRotated(-0.6)).toBe(true);
+    expect(isRotated(359.8)).toBe(false);
+    expect(isRotated(180)).toBe(true);
   });
 });

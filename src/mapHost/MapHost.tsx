@@ -36,7 +36,10 @@
 // terrain URL, and the theme has a layer on the `terrain` source. The
 // terrain choice is kept in storage under TERRAIN_KEY ("on" or "off", on
 // when absent) and applied to every style the map builds, so a theme
-// switch keeps it.
+// switch keeps it. While the MapLibre map is turned off north (its
+// bearing more than 0.5 degrees from 0, reported by the handle's
+// `onBearingChange`) a north-up button stands first in the stack, at every
+// setting of the switches, and eases the map back through `resetNorth`.
 // `renderer` picks the branch: `maplibre` (the default) is the host above;
 // `google` draws the same options with Google primitives (site.md 8.9,
 // Route mode on Google) through the `map` chunk's loader and route
@@ -56,6 +59,7 @@ import type { MapsLibs } from "../map/loadMaps";
 import type { GoogleRouteHandle, GoogleRouteTheme } from "../map/routeMode";
 import type { MountIcon } from "../map/viewpointsOverlay";
 import { toBbox, type Bbox } from "../map/bounds";
+import { isRotated } from "../map/follow";
 import type {
   BadgeViewpoint,
   HostTheme,
@@ -157,6 +161,8 @@ function MapLibreRouteHost({
   const [drawn, setDrawn] = useState<HostTheme | null>(null);
   const [mounted, setMounted] = useState(false);
   const [terrainOn, setTerrainOn] = useState(() => storageGet(TERRAIN_KEY) !== "off");
+  // The map's bearing as the handle reports it.
+  const [bearing, setBearing] = useState(0);
   const terrainAvailable =
     lib !== null &&
     drawn !== null &&
@@ -257,6 +263,7 @@ function MapLibreRouteHost({
         startElement: start,
         mountIcon: mount,
         onError: fail,
+        onBearingChange: setBearing,
       });
       setMounted(true);
     } catch (error) {
@@ -339,38 +346,61 @@ function MapLibreRouteHost({
           showTerrain={showTerrain}
           fullscreen={fullscreen}
           terrainOn={terrainOn}
+          rotated={isRotated(bearing)}
+          bearing={bearing}
           controlClassName={controlClassName}
           onToggleFullscreen={onToggleFullscreen}
           onToggleTerrain={toggleTerrain}
+          onNorthUp={() => handleRef.current?.resetNorth()}
         />
       ) : null}
     </>
   );
 }
 
-type RouteControlsProps = {
+export type RouteControlsProps = {
   showFullscreen: boolean;
   showTerrain: boolean;
   fullscreen: boolean;
   terrainOn: boolean;
+  // The map is turned off north (MapLibre only), and by how much.
+  rotated?: boolean;
+  bearing?: number;
   controlClassName?: string;
   onToggleFullscreen?: () => void;
   onToggleTerrain: () => void;
+  onNorthUp?: () => void;
 };
 
-// The control stack at the top right of the frame, on both renderers.
-function RouteControls({
+// The control stack at the top right of the frame, on both renderers:
+// first, while the map is turned, the north-up button, its needle
+// pointing north on the map; then fullscreen and terrain.
+export function RouteControls({
   showFullscreen,
   showTerrain,
   fullscreen,
   terrainOn,
+  rotated = false,
+  bearing = 0,
   controlClassName,
   onToggleFullscreen,
   onToggleTerrain,
+  onNorthUp,
 }: RouteControlsProps) {
-  if (!showFullscreen && !showTerrain) return null;
+  if (!showFullscreen && !showTerrain && !rotated) return null;
   return (
     <div className={styles.routeMapControls} data-testid="route-map-controls">
+      {rotated ? (
+        <button
+          type="button"
+          className={controlClassName}
+          aria-label={copy.map.northUp}
+          onClick={onNorthUp}
+          data-testid="route-map-north-up"
+        >
+          <NorthUpIcon bearing={bearing} />
+        </button>
+      ) : null}
       {showFullscreen ? (
         <button
           type="button"
@@ -665,6 +695,25 @@ function ExitFullscreenIcon() {
       <path d="M15 4v5h5" />
       <path d="M9 20v-5H4" />
       <path d="M15 20v-5h5" />
+    </svg>
+  );
+}
+
+// A compass needle on a ring, the north half in the error red, turned by
+// the map's bearing so that it points north on the map.
+function NorthUpIcon({ bearing }: { bearing: number }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      {...strokeProps}
+      aria-hidden
+      style={{ transform: `rotate(${-bearing}deg)` }}
+    >
+      <circle cx="12" cy="12" r="9.25" />
+      <path d="M12 4.5L15 12H9z" style={{ fill: "var(--err)", stroke: "var(--err)" }} />
+      <path d="M12 19.5L9 12h6z" fill="currentColor" fillOpacity="0.45" />
     </svg>
   );
 }

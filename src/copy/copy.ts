@@ -108,6 +108,7 @@ export const copy = {
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
     centerOnSanta: "Center on Santa",
+    northUp: "Point north up",
     snow: "Snow",
     routeStart: "Starts here",
     routeMap: {

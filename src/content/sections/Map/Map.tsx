@@ -5,7 +5,8 @@
 // the bare cookie tally, and the leave-a-cookie glyph with the cookie total
 // to its left top-right; the flight
 // data dock's handle pill (while collapsed) above the sponsor tile
-// bottom-left; zoom while following and recenter after a drag bottom-right;
+// bottom-left; zoom while following and recenter after a drag bottom-right,
+// under a north-up button while the map is turned;
 // the flight data dock across the bottom while open, lifting both bottom
 // stacks above it.
 // While the event is live the section is fixed to the viewport and nothing
@@ -71,6 +72,7 @@ import { LiveIndicator } from "./LiveIndicator";
 import { MessagesPill } from "./MessagesPill";
 import { FlightGauge } from "./FlightGauge";
 import { MapControls } from "./MapControls";
+import { isRotated } from "../../../map/follow";
 import { RouteDisclaimer } from "./RouteDisclaimer";
 import { TrackerMenu } from "./TrackerMenu";
 import { LocationPrompt } from "./LocationPrompt";
@@ -249,6 +251,13 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const [cookieOpen, setCookieOpen] = useState<boolean>(false);
   const [locationOpen, setLocationOpen] = useState<boolean>(false);
   const [controller, setController] = useState<MapController | null>(null);
+  // The map's bearing as the controller reports it; a new controller
+  // starts north-up.
+  const [bearing, setBearing] = useState<number>(0);
+  const adoptController = useCallback((c: MapController | null) => {
+    setController(c);
+    setBearing(0);
+  }, []);
   const [userState, setUserState] = useState<UserLocationState>({
     enabled: false,
     position: null,
@@ -324,6 +333,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
       showUserLocation: controls.location,
       mountIcon,
       onFollowChange: (f: boolean) => setFollowing(f),
+      onBearingChange: (b: number) => setBearing(b),
       onUserLocationChange: (s: UserLocationState) => setUserState(s),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -510,7 +520,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
       <MarkerSeqHost />
       <MapView
         options={mapOptions}
-        onController={setController}
+        onController={adoptController}
       >
         {({ error }) =>
           error !== null ? (
@@ -558,6 +568,9 @@ export const Map: SectionComponent = ({ data, bundle }) => {
               <div className={bottomRightClass} data-testid="map-bottom-right">
                 <MapControls
                   following={following}
+                  rotated={isRotated(bearing)}
+                  bearing={bearing}
+                  onNorthUp={() => controller?.resetNorth()}
                   onRecenter={() => {
                     const live = store.getState().live;
                     const pos =
