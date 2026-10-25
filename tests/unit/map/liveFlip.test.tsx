@@ -221,7 +221,8 @@ describe("the live flip", () => {
     await flush();
     expect(errors).toEqual([]);
     expect(liveMaps()).toHaveLength(1);
-    expect(attachedOverlays()).toHaveLength(1);
+    // The Santa marker and the follow rule's projection probe.
+    expect(attachedOverlays()).toHaveLength(2);
     utils.unmount();
     await flush();
     expect(liveMaps()).toHaveLength(0);

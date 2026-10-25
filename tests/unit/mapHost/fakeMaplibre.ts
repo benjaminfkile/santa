@@ -36,6 +36,8 @@ export class FakeMlMap {
   setMinZoom = vi.fn();
   panTo = vi.fn();
   jumpTo = vi.fn();
+  easeTo = vi.fn();
+  stop = vi.fn();
   remove = vi.fn(() => {
     this.removed = true;
   });
@@ -62,8 +64,11 @@ export class FakeMlMap {
   getZoom() {
     return this.zoom;
   }
+  // Like the real one, a programmatic zoom starts with a `zoomstart` that
+  // carries no `originalEvent`.
   setZoom(z: number) {
     this.zoom = z;
+    this.fire("zoomstart", {});
     this.fire("zoom");
   }
   // The projection: container pixels `scale` per degree from the top left

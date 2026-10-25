@@ -10,7 +10,8 @@
 // host (the map view wrapper beside the corner stacks), not in Google's
 // pane, so it paints above the stacks and is not clipped by the map; it is
 // placed from the point's container pixel and moved on every draw, kept
-// POPOVER_EDGE px inside the host's width. One popover is open at a time;
+// POPOVER_EDGE px inside the host's width. The badges and the popover sit
+// on whole pixels (`Math.round` on every `left` and `top`). One popover is open at a time;
 // its close button, Escape, and a pointer press anywhere outside it and
 // the open badge close it. The overlays are on the map only while the
 // toggle is on and the zoom is at least VIEWPOINTS_MIN_ZOOM. Below
@@ -128,8 +129,8 @@ export function createViewpointBadges(
       const max = hostWidth - POPOVER_EDGE - half;
       x = min > max ? hostWidth / 2 : Math.min(Math.max(x, min), max);
     }
-    popover.style.left = `${x}px`;
-    popover.style.top = `${point.y - POPOVER_GAP}px`;
+    popover.style.left = `${Math.round(x)}px`;
+    popover.style.top = `${Math.round(point.y - POPOVER_GAP)}px`;
   }
 
   function openPopover(entry: Entry): void {
@@ -263,8 +264,8 @@ export function createViewpointsOverlay(
       draw() {
         const point = this.getProjection()?.fromLatLngToDivPixel({ lat: viewpoint.lat, lng: viewpoint.lng });
         if (!point) return;
-        element.style.left = `${point.x}px`;
-        element.style.top = `${point.y}px`;
+        element.style.left = `${Math.round(point.x)}px`;
+        element.style.top = `${Math.round(point.y)}px`;
         badges.position();
       }
       onRemove() {

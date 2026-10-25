@@ -8,10 +8,14 @@
 // outside the box pans to the nearest in-box point with Santa on the edge,
 // `recenter` clamps, and `fitHistory` leaves out points outside the box. `setTheme` awaits the
 // theme's style body before applying `poiStyles(style, pois)`.
-// The Santa motion (8.7): the first fix is placed at once, a second fix
-// within the delay is not yet at its target and glides there frame by
-// frame, the pin turns about its tip to the heading, and the camera
-// follows through `moveCamera`, never `panTo`, except on recenter.
+// The Santa motion (8.7): the first fix is placed at once on whole pixels,
+// a second fix within the delay is not yet at its target and glides there
+// frame by frame, the pin turns about its tip to the heading, and the
+// camera never moves per frame (no `moveCamera`).
+// The follow rule (8.3): frames inside the central box make no camera
+// call, a frame outside makes one `panTo`, two within 500 ms make one; a
+// wheel, a two touch `touchstart`, a pointer drag past 4 px, a double tap,
+// or `dragstart` turns Follow off and no pan follows; `zoomBy` keeps it.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createMapController, type MapControllerOptions } from "../../../src/map/mapController";
@@ -55,6 +59,13 @@ beforeEach(() => {
   installFakeGoogle();
   resetFakeGoogle();
 });
+
+function sized(width: number, height: number): HTMLElement {
+  const el = document.createElement("div");
+  Object.defineProperty(el, "clientWidth", { value: width });
+  Object.defineProperty(el, "clientHeight", { value: height });
+  return el;
+}
 
 afterEach(() => {
   vi.useRealTimers();
@@ -307,13 +318,6 @@ describe("createMapController theme", () => {
 });
 
 describe("createMapController bounds", () => {
-  function sized(width: number, height: number): HTMLElement {
-    const el = document.createElement("div");
-    Object.defineProperty(el, "clientWidth", { value: width });
-    Object.defineProperty(el, "clientHeight", { value: height });
-    return el;
-  }
-
   it("is built with the strict restriction to the box and the fitted minimum zoom", () => {
     createMapController(fakeLibs(), sized(1280, 800), options({ bbox: VALLEY }));
     const opts = FakeMap.instances[0].createOptions;
@@ -363,14 +367,21 @@ describe("createMapController bounds", () => {
   });
 
   it("a fix outside the box pans to the nearest in-box point and Santa sits on the edge", async () => {
+    const frames = fakeFrames().install();
     const c = createMapController(fakeLibs(), sized(400, 800), options({ bbox: VALLEY }));
     const map = FakeMap.instances[0];
     c.setLiveFix("tracking", { lat: 47.5, lng: -113.9 }, true);
+    await Promise.resolve();
     expect(map.center).toEqual({ lat: 47.05, lng: -113.9 });
+    frames.wait(600);
     c.setLiveFix("tracking", { lat: 46, lng: -115 }, true);
+    frames.step(16);
     expect(map.center).toEqual({ lat: 46.75, lng: -114.3 });
+    frames.wait(600);
     c.setLiveFix("tracking", { lat: 46.9, lng: -114 }, true);
+    frames.step(16);
     expect(map.center).toEqual({ lat: 46.9, lng: -114 });
+    expect(map.moveCameraCalls).toEqual([]);
   });
 
   it("recenter clamps its target to the box", () => {
@@ -403,23 +414,25 @@ describe("the Santa motion on Google", () => {
     return map.panes.markerLayer.querySelector('[data-testid="santa-marker"]') as HTMLImageElement;
   }
 
-  it("places the first fix at once and follows through moveCamera, never panTo", async () => {
+  it("places the first fix at once on whole pixels and makes no camera call", async () => {
     fakeFrames().install();
+    FakeOverlayView.shift = { x: 0.4, y: 0.6 };
     const c = createMapController(fakeLibs(), document.createElement("div"), options());
     const map = FakeMap.instances[0];
     c.setLiveFix("tracking", { lat: 40, lng: -105, seq: 1, headingDeg: 90 }, true);
     await Promise.resolve();
     expect(pin(map).style.left).toBe("-1050px");
-    expect(pin(map).style.top).toBe("400px");
-    expect(map.center).toEqual({ lat: 40, lng: -105 });
-    expect(map.moveCameraCalls).toEqual([{ center: { lat: 40, lng: -105 } }]);
+    expect(pin(map).style.top).toBe("401px");
+    expect(map.moveCameraCalls).toEqual([]);
     expect(map.panToCalls).toEqual([]);
     expect(pin(map).style.transformOrigin).toBe("50% 100%");
     expect(pin(map).style.transform).toBe("translate(-50%, -100%) rotate(90deg)");
   });
 
-  it("a second fix within the delay is not yet at its target and glides there, the camera with it", async () => {
+  it("a second fix within the delay is not yet at its target and glides there, the camera still", async () => {
     const frames = fakeFrames().install();
+    // 100 px per thousandth of a degree, so the glide shows in whole pixels.
+    FakeOverlayView.scale = 100_000;
     const c = createMapController(fakeLibs(), document.createElement("div"), options());
     const map = FakeMap.instances[0];
     c.setLiveFix("tracking", { lat: 40, lng: -105, seq: 1, headingDeg: null }, true);
@@ -427,13 +440,13 @@ describe("the Santa motion on Google", () => {
     frames.wait(1000);
     c.setLiveFix("tracking", { lat: 40, lng: -104.999, seq: 2, headingDeg: null }, true);
     frames.step(200);
-    const lng = map.center.lng;
-    expect(lng).toBeGreaterThan(-105);
-    expect(lng).toBeLessThan(-104.999);
-    expect(parseFloat(pin(map).style.left)).toBeCloseTo(lng * 10);
+    const left = parseFloat(pin(map).style.left);
+    expect(Number.isInteger(left)).toBe(true);
+    expect(left).toBeGreaterThan(-10_500_000);
+    expect(left).toBeLessThan(-10_499_900);
     frames.step(3000);
-    expect(map.center).toEqual({ lat: 40, lng: -104.999 });
-    expect(map.moveCameraCalls.length).toBeGreaterThan(10);
+    expect(pin(map).style.left).toBe("-10499900px");
+    expect(map.moveCameraCalls).toEqual([]);
     expect(map.panToCalls).toEqual([]);
     expect(frames.pending()).toBe(0);
   });
@@ -455,28 +468,32 @@ describe("the Santa motion on Google", () => {
     expect(pin(map).style.transform).toBe("translate(-50%, -100%) rotate(0deg)");
   });
 
-  it("recenter makes one animated pan to the displayed position, then follows per frame once idle", async () => {
+  it("recenter makes one animated pan to the displayed position, then the follow rule applies once idle", async () => {
     const frames = fakeFrames().install();
-    const c = createMapController(fakeLibs(), document.createElement("div"), options());
+    // Santa in the middle of the canvas.
+    FakeOverlayView.shift = { x: 1250, y: 0 };
+    const c = createMapController(fakeLibs(), sized(400, 800), options());
     const map = FakeMap.instances[0];
     c.setLiveFix("tracking", { lat: 40, lng: -105, seq: 1, headingDeg: null }, true);
+    await Promise.resolve();
     map.trigger("dragstart");
+    // The drag leaves him 150 px right of the middle, outside the central box.
+    FakeOverlayView.shift = { x: 1400, y: 0 };
     frames.wait(1000);
     c.setLiveFix("tracking", { lat: 40, lng: -104.999, seq: 2, headingDeg: null }, true);
     frames.step(200);
-    const moves = map.moveCameraCalls.length;
-    expect(moves).toBe(1);
+    // Santa stands outside the central box, but Follow is off.
+    expect(map.panToCalls).toHaveLength(0);
     c.recenter({ lat: 40, lng: -104.999 });
     expect(map.panToCalls).toHaveLength(1);
     expect(map.panToCalls[0].lng).toBeGreaterThan(-105);
     expect(map.panToCalls[0].lng).toBeLessThan(-104.999);
     frames.step(100);
-    expect(map.moveCameraCalls.length).toBe(moves);
-    map.trigger("idle");
-    frames.step(3000);
-    expect(map.moveCameraCalls.length).toBeGreaterThan(moves);
-    expect(map.center).toEqual({ lat: 40, lng: -104.999 });
     expect(map.panToCalls).toHaveLength(1);
+    map.trigger("idle");
+    frames.step(16);
+    expect(map.panToCalls).toHaveLength(2);
+    expect(map.moveCameraCalls).toEqual([]);
   });
 
   it("stops the frames on destroy", () => {
@@ -488,5 +505,138 @@ describe("the Santa motion on Google", () => {
     expect(frames.pending()).toBe(1);
     c.destroy();
     expect(frames.pending()).toBe(0);
+  });
+});
+
+describe("the follow rule on Google", () => {
+  // Santa's first fix, (40, -105), in the middle of a 400 by 800 canvas
+  // whose central box runs from 80 to 320 across and 160 to 640 down.
+  function setup(over: Partial<MapControllerOptions> = {}) {
+    const frames = fakeFrames().install();
+    FakeOverlayView.shift = { x: 1250, y: 0 };
+    const container = sized(400, 800);
+    const onFollowChange = vi.fn();
+    const c = createMapController(fakeLibs(), container, options({ onFollowChange, ...over }));
+    const map = FakeMap.instances[0];
+    return { frames, container, onFollowChange, c, map };
+  }
+
+  // A fix, then a second one gliding a few metres east, the frames left
+  // to run.
+  async function glide(c: ReturnType<typeof setup>["c"], frames: ReturnType<typeof setup>["frames"]) {
+    c.setLiveFix("tracking", { lat: 40, lng: -105, seq: 1, headingDeg: null }, true);
+    await Promise.resolve();
+    frames.wait(1000);
+    c.setLiveFix("tracking", { lat: 40, lng: -104.999, seq: 2, headingDeg: null }, true);
+  }
+
+  // The canvas moves so that Santa stands 150 px right of the middle,
+  // outside the central box.
+  function leaveBox(): void {
+    FakeOverlayView.shift = { x: 1400, y: 0 };
+  }
+
+  function touchStart(touches: number): Event {
+    const event = new Event("touchstart", { bubbles: true });
+    Object.defineProperty(event, "touches", { value: Array.from({ length: touches }, () => ({})) });
+    return event;
+  }
+
+  it("ten frames inside the central box make no camera call", async () => {
+    const { frames, c, map } = setup();
+    await glide(c, frames);
+    frames.step(160);
+    expect(map.panToCalls).toEqual([]);
+    expect(map.moveCameraCalls).toEqual([]);
+  });
+
+  it("a frame outside the box makes one pan to the displayed position, and two within 500 ms make one", async () => {
+    const { frames, c, map } = setup();
+    await glide(c, frames);
+    leaveBox();
+    frames.step(16);
+    expect(map.panToCalls).toHaveLength(1);
+    expect(map.panToCalls[0].lat).toBe(40);
+    expect(map.panToCalls[0].lng).toBeGreaterThanOrEqual(-105);
+    frames.step(400);
+    expect(map.panToCalls).toHaveLength(1);
+    frames.step(160);
+    expect(map.panToCalls).toHaveLength(2);
+    expect(map.zoom).toBe(8);
+    expect(map.moveCameraCalls).toEqual([]);
+  });
+
+  it("a wheel on the container turns Follow off and no pan follows", async () => {
+    const { frames, container, onFollowChange, c, map } = setup();
+    await glide(c, frames);
+    container.dispatchEvent(new Event("wheel", { bubbles: true }));
+    expect(onFollowChange).toHaveBeenLastCalledWith(false);
+    leaveBox();
+    frames.step(1000);
+    expect(map.panToCalls).toEqual([]);
+  });
+
+  it("a second touch turns Follow off and no pan follows; one touch keeps it", async () => {
+    const { frames, container, onFollowChange, c, map } = setup();
+    await glide(c, frames);
+    container.dispatchEvent(touchStart(1));
+    expect(onFollowChange).not.toHaveBeenCalled();
+    container.dispatchEvent(touchStart(2));
+    expect(onFollowChange).toHaveBeenLastCalledWith(false);
+    leaveBox();
+    frames.step(1000);
+    expect(map.panToCalls).toEqual([]);
+  });
+
+  it("a pointer drag past 4 px and a double tap turn Follow off; a press that moves 4 px does not", async () => {
+    const { frames, container, onFollowChange, c } = setup();
+    await glide(c, frames);
+    const pointer = (type: string, x: number) => {
+      const event = new MouseEvent(type, { bubbles: true, clientX: x, clientY: 0 });
+      Object.defineProperty(event, "pointerId", { value: 1 });
+      container.dispatchEvent(event);
+    };
+    pointer("pointerdown", 0);
+    pointer("pointermove", 4);
+    pointer("pointerup", 4);
+    expect(onFollowChange).not.toHaveBeenCalled();
+    pointer("pointerdown", 0);
+    pointer("pointermove", 5);
+    expect(onFollowChange).toHaveBeenLastCalledWith(false);
+    c.follow(true);
+    container.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+    expect(onFollowChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it("a gesture during a follow pan drops its hold, and Follow stays off until it is pressed", async () => {
+    const { frames, container, c, map } = setup();
+    await glide(c, frames);
+    leaveBox();
+    frames.step(16);
+    expect(map.panToCalls).toHaveLength(1);
+    container.dispatchEvent(new Event("wheel", { bubbles: true }));
+    frames.step(2000);
+    expect(map.panToCalls).toHaveLength(1);
+    c.recenter(null);
+    expect(map.panToCalls).toHaveLength(2);
+  });
+
+  it("zoomBy keeps Follow on and the rule still pans", async () => {
+    const { frames, onFollowChange, c, map } = setup();
+    await glide(c, frames);
+    c.zoomBy(1);
+    c.zoomBy(-1);
+    expect(onFollowChange).not.toHaveBeenCalled();
+    leaveBox();
+    frames.step(16);
+    expect(map.panToCalls).toHaveLength(1);
+  });
+
+  it("destroy removes the container listeners", async () => {
+    const { frames, container, onFollowChange, c } = setup();
+    await glide(c, frames);
+    c.destroy();
+    container.dispatchEvent(new Event("wheel", { bubbles: true }));
+    expect(onFollowChange).not.toHaveBeenCalled();
   });
 });
