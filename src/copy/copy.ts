@@ -178,6 +178,7 @@ export const copy = {
     title: "Your alerts",
     empty: "No alerts yet",
     listHeading: "Recent alerts",
+    subscribedHeading: "Alerts",
     closed: "New alert sign-ups are closed for now",
     pending: "Pending, check your email",
     active: "Active",

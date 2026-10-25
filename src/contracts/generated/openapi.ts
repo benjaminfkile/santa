@@ -6743,6 +6743,7 @@ export interface components {
             altitudeM?: null | number | string;
             /** Format: double */
             headingDeg?: null | number | string;
+            headingSource?: null | string;
             /** Format: double */
             accuracyM?: null | number | string;
         };
