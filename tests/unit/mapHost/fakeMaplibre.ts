@@ -2,7 +2,8 @@
 // controller and the fallback tests: a `Map` that records its options,
 // every `setStyle`, the camera calls, and its handlers (`fire` runs them),
 // a projection a test can move, the style's sources with their `setData`,
-// and a `Marker` that records where it stands and its offset, and puts its element in the
+// and a `Marker` that records where it stands, its offset, and its
+// rotation, and puts its element in the
 // map's container while it is on the map. Use it from a `vi.mock` factory:
 // `vi.mock("maplibre-gl", async () => (await import("./fakeMaplibre")).fakeMaplibreModule)`.
 
@@ -34,6 +35,7 @@ export class FakeMlMap {
   resize = vi.fn();
   setMinZoom = vi.fn();
   panTo = vi.fn();
+  jumpTo = vi.fn();
   remove = vi.fn(() => {
     this.removed = true;
   });
@@ -111,16 +113,25 @@ export class FakeMarker {
   static live = new Set<FakeMarker>();
   element: HTMLElement;
   anchor: string | undefined;
+  rotationAlignment: string | undefined;
+  rotation = 0;
   offset: [number, number] = [0, 0];
   lngLat: [number, number] | null = null;
   map: FakeMlMap | null = null;
-  constructor(opts: { element?: HTMLElement; anchor?: string; offset?: [number, number] } = {}) {
+  constructor(
+    opts: { element?: HTMLElement; anchor?: string; offset?: [number, number]; rotationAlignment?: string } = {},
+  ) {
     this.element = opts.element ?? document.createElement("div");
     this.anchor = opts.anchor;
+    this.rotationAlignment = opts.rotationAlignment;
     if (opts.offset !== undefined) this.offset = opts.offset;
   }
   setOffset(offset: [number, number]) {
     this.offset = offset;
+    return this;
+  }
+  setRotation(rotation: number) {
+    this.rotation = rotation;
     return this;
   }
   setLngLat(lngLat: [number, number]) {

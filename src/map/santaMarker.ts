@@ -3,10 +3,13 @@
 // tall, its bottom centre (the pin tip) on the fix. Hidden while waiting
 // for a fix; the signal-lost variant is the same image desaturated and
 // dimmed through a CSS filter. The image is theme neutral, so a colour
-// scheme change does not touch it.
+// scheme change does not touch it. `setHeading` turns the image about its
+// tip to the heading, the short way from where it stands; null turns it
+// back upright.
 
 import type { LiveState } from "../store/liveState";
 import { createSantaPinImage } from "./santaPin";
+import { shortestDelta } from "./santaMotion";
 
 export type MarkerVariant = "tracking" | "signalLost";
 
@@ -17,6 +20,7 @@ export type SantaMarker = {
   setPosition(pos: google.maps.LatLngLiteral | null): void;
   setVariant(v: MarkerVariant): void;
   setState(state: LiveState, pos: google.maps.LatLngLiteral | null): void;
+  setHeading(headingDeg: number | null): void;
   getPosition(): google.maps.LatLngLiteral | null;
   destroy(): void;
 };
@@ -27,12 +31,15 @@ export function createSantaMarker(
 ): SantaMarker {
   let variant: MarkerVariant = "tracking";
   let position: google.maps.LatLngLiteral | null = null;
+  // The rotation applied, unwrapped, so every turn is the short way.
+  let rotation = 0;
 
   const img = createSantaPinImage(SANTA_MARKER_HEIGHT);
   img.setAttribute("data-testid", "santa-marker");
   img.style.position = "absolute";
   // The pin tip, the image's bottom centre, sits on the overlay point.
   img.style.transform = "translate(-50%, -100%)";
+  img.style.transformOrigin = "50% 100%";
 
   class SantaOverlay extends libs.maps.OverlayView {
     onAdd() {
@@ -84,6 +91,12 @@ export function createSantaMarker(
       variant = state === "signalLost" ? "signalLost" : "tracking";
       if (pos !== null) position = pos;
       apply();
+    },
+    setHeading(headingDeg) {
+      const next = rotation + shortestDelta(rotation, headingDeg ?? 0);
+      if (next === rotation) return;
+      rotation = next;
+      img.style.transform = `translate(-50%, -100%) rotate(${Math.round(rotation * 100) / 100}deg)`;
     },
     getPosition() {
       return position;

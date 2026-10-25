@@ -405,7 +405,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
       const liveState = selectLiveState(s, performance.now());
       const pos =
         s.live !== null && s.live.lat !== null && s.live.lng !== null
-          ? { lat: s.live.lat, lng: s.live.lng }
+          ? { lat: s.live.lat, lng: s.live.lng, seq: s.live.seq, headingDeg: s.live.headingDeg }
           : null;
       const seqChanged = s.live !== null && s.live.seq !== prevSeqRef.current;
       controller?.setLiveFix(liveState, pos, seqChanged);

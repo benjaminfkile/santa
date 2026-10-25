@@ -7,6 +7,10 @@
 // nearest in-box point with Santa on the edge, `recenter` clamps, and
 // `fitHistory` leaves out points outside the box. `setTheme` awaits the
 // theme's style body before applying `poiStyles(style, pois)`.
+// The Santa motion (8.7): the first fix is placed at once, a second fix
+// within the delay is not yet at its target and glides there frame by
+// frame, the pin turns about its tip to the heading, and the camera
+// follows through `moveCamera`, never `panTo`, except on recenter.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createMapController, type MapControllerOptions } from "../../../src/map/mapController";
@@ -23,6 +27,7 @@ import {
   installFakeGoogle,
   resetFakeGoogle,
 } from "./fakeGoogle";
+import { fakeFrames } from "./fakeFrames";
 
 const theme = SEEDED.standard;
 const VALLEY = { west: -114.3, south: 46.75, east: -113.8, north: 47.05 };
@@ -54,6 +59,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe("createMapController lifecycle", () => {
@@ -356,5 +362,98 @@ describe("createMapController bounds", () => {
       { lat: 46.8, lng: -114.1 },
       { lat: 47, lng: -113.9 },
     ]);
+  });
+});
+
+describe("the Santa motion on Google", () => {
+  function pin(map: FakeMap): HTMLImageElement {
+    return map.panes.markerLayer.querySelector('[data-testid="santa-marker"]') as HTMLImageElement;
+  }
+
+  it("places the first fix at once and follows through moveCamera, never panTo", async () => {
+    fakeFrames().install();
+    const c = createMapController(fakeLibs(), document.createElement("div"), options());
+    const map = FakeMap.instances[0];
+    c.setLiveFix("tracking", { lat: 40, lng: -105, seq: 1, headingDeg: 90 }, true);
+    await Promise.resolve();
+    expect(pin(map).style.left).toBe("-1050px");
+    expect(pin(map).style.top).toBe("400px");
+    expect(map.center).toEqual({ lat: 40, lng: -105 });
+    expect(map.moveCameraCalls).toEqual([{ center: { lat: 40, lng: -105 } }]);
+    expect(map.panToCalls).toEqual([]);
+    expect(pin(map).style.transformOrigin).toBe("50% 100%");
+    expect(pin(map).style.transform).toBe("translate(-50%, -100%) rotate(90deg)");
+  });
+
+  it("a second fix within the delay is not yet at its target and glides there, the camera with it", async () => {
+    const frames = fakeFrames().install();
+    const c = createMapController(fakeLibs(), document.createElement("div"), options());
+    const map = FakeMap.instances[0];
+    c.setLiveFix("tracking", { lat: 40, lng: -105, seq: 1, headingDeg: null }, true);
+    await Promise.resolve();
+    frames.wait(1000);
+    c.setLiveFix("tracking", { lat: 40, lng: -104.999, seq: 2, headingDeg: null }, true);
+    frames.step(200);
+    const lng = map.center.lng;
+    expect(lng).toBeGreaterThan(-105);
+    expect(lng).toBeLessThan(-104.999);
+    expect(parseFloat(pin(map).style.left)).toBeCloseTo(lng * 10);
+    frames.step(3000);
+    expect(map.center).toEqual({ lat: 40, lng: -104.999 });
+    expect(map.moveCameraCalls.length).toBeGreaterThan(10);
+    expect(map.panToCalls).toEqual([]);
+    expect(frames.pending()).toBe(0);
+  });
+
+  it("turns the short way about the tip and back upright for no heading", async () => {
+    const frames = fakeFrames().install();
+    const c = createMapController(fakeLibs(), document.createElement("div"), options());
+    const map = FakeMap.instances[0];
+    c.setLiveFix("tracking", { lat: 40, lng: -105, seq: 1, headingDeg: 350 }, true);
+    await Promise.resolve();
+    expect(pin(map).style.transform).toBe("translate(-50%, -100%) rotate(-10deg)");
+    frames.wait(1000);
+    c.setLiveFix("tracking", { lat: 40, lng: -104.999, seq: 2, headingDeg: 10 }, true);
+    frames.step(3000);
+    expect(pin(map).style.transform).toBe("translate(-50%, -100%) rotate(10deg)");
+    c.setLiveFix("waitingForFix", null, false);
+    c.setLiveFix("tracking", { lat: 40, lng: -105, seq: 3, headingDeg: null }, true);
+    await Promise.resolve();
+    expect(pin(map).style.transform).toBe("translate(-50%, -100%) rotate(0deg)");
+  });
+
+  it("recenter makes one animated pan to the displayed position, then follows per frame once idle", async () => {
+    const frames = fakeFrames().install();
+    const c = createMapController(fakeLibs(), document.createElement("div"), options());
+    const map = FakeMap.instances[0];
+    c.setLiveFix("tracking", { lat: 40, lng: -105, seq: 1, headingDeg: null }, true);
+    map.trigger("dragstart");
+    frames.wait(1000);
+    c.setLiveFix("tracking", { lat: 40, lng: -104.999, seq: 2, headingDeg: null }, true);
+    frames.step(200);
+    const moves = map.moveCameraCalls.length;
+    expect(moves).toBe(1);
+    c.recenter({ lat: 40, lng: -104.999 });
+    expect(map.panToCalls).toHaveLength(1);
+    expect(map.panToCalls[0].lng).toBeGreaterThan(-105);
+    expect(map.panToCalls[0].lng).toBeLessThan(-104.999);
+    frames.step(100);
+    expect(map.moveCameraCalls.length).toBe(moves);
+    map.trigger("idle");
+    frames.step(3000);
+    expect(map.moveCameraCalls.length).toBeGreaterThan(moves);
+    expect(map.center).toEqual({ lat: 40, lng: -104.999 });
+    expect(map.panToCalls).toHaveLength(1);
+  });
+
+  it("stops the frames on destroy", () => {
+    const frames = fakeFrames().install();
+    const c = createMapController(fakeLibs(), document.createElement("div"), options());
+    c.setLiveFix("tracking", { lat: 40, lng: -105, seq: 1, headingDeg: null }, true);
+    frames.wait(1000);
+    c.setLiveFix("tracking", { lat: 40, lng: -104.999, seq: 2, headingDeg: null }, true);
+    expect(frames.pending()).toBe(1);
+    c.destroy();
+    expect(frames.pending()).toBe(0);
   });
 });
