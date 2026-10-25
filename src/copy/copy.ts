@@ -82,7 +82,7 @@ export const copy = {
     cookieTally: {
       hide: "Hide the cookie counts",
       show: "Show the cookie counts",
-      // The total row's hidden label and title, read after the count.
+      // The hidden label read after the total beside the leave-a-cookie glyph.
       total: "cookies in all",
     },
     airborne: {

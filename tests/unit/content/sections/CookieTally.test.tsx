@@ -1,7 +1,7 @@
 // docs/site.md sections 7.6, 9, and 10. The live screen's cookie tally: a
 // bare right-aligned column of count-then-icon rows ranked by count, the
-// leave-a-cookie glyph under it, and the cookie dialog it opens, signed
-// out and signed in.
+// leave-a-cookie glyph under it with the cookie total to its left, and the
+// cookie dialog it opens, signed out and signed in.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
@@ -14,7 +14,7 @@ import type { ContentBundle } from "../../../../src/store/types";
 import type { LiveObject, Snapshot } from "../../../../src/contracts";
 import { AuthProvider } from "../../../../src/auth/AuthProvider";
 import type { AuthState } from "../../../../src/auth/AuthProvider";
-import { CookieTally } from "../../../../src/content/sections/Map/CookieTally";
+import { CookieTally, cookieTotal } from "../../../../src/content/sections/Map/CookieTally";
 import {
   replaceTrackerSettings,
   resetTrackerTogglesForTests,
@@ -214,66 +214,21 @@ describe("CookieTally", () => {
     expect(rule("cookieLeave")).toMatch(/width: 44px/);
   });
 
-  it("the total row sums every type, a type missing from the tally counting 0", () => {
-    setState({ "1": 3, "3": 1200 });
-    const { getByTestId } = render(<CookieTally bundle={bundle} />);
-    const total = getByTestId("cookie-tally-total");
-    expect(total.getAttribute("data-count")).toBe("1203");
-    expect(getByTestId("cookie-tally-total-count").textContent).toBe("1.2k cookies in all");
-  });
-
-  it("a null tally totals 0 and renders 0", () => {
-    setState(null as unknown as LiveObject["cookieTally"]);
-    const { getByTestId } = render(<CookieTally bundle={bundle} />);
-    expect(getByTestId("cookie-tally-total").getAttribute("data-count")).toBe("0");
-    expect(getByTestId("cookie-tally-total-count").firstChild?.textContent).toBe("0");
-  });
-
-  it("the total follows the live object", () => {
-    setState({ "1": 1 });
-    const { getByTestId } = render(<CookieTally bundle={bundle} />);
-    expect(getByTestId("cookie-tally-total").getAttribute("data-count")).toBe("1");
-    setState({ "1": 2, "2": 5, "3": 4 });
-    expect(getByTestId("cookie-tally-total").getAttribute("data-count")).toBe("11");
-  });
-
-  it("the total sits first under the chevron, outside the list, and stays while collapsed", () => {
+  it("has no total row: the chevron then the list, and only the chevron while collapsed", () => {
     setState({ "1": 9, "2": 4 });
     const view = render(<CookieTally bundle={bundle} />);
     const wrap = view.getByTestId("cookie-tally-wrap");
     const order = () => Array.from(wrap.children).map((c) => c.getAttribute("data-testid"));
-    expect(order()).toEqual(["cookie-tally-toggle", "cookie-tally-total", "cookie-tally"]);
-    expect(view.getByTestId("cookie-tally").contains(view.getByTestId("cookie-tally-total"))).toBe(false);
-
+    expect(order()).toEqual(["cookie-tally-toggle", "cookie-tally"]);
+    expect(view.queryByTestId("cookie-tally-total")).toBeNull();
+    expect(wrap.textContent).not.toContain("cookies in all");
     fireEvent.click(view.getByTestId("cookie-tally-toggle"));
-    expect(order()).toEqual(["cookie-tally-toggle", "cookie-tally-total"]);
-    expect(view.queryAllByTestId("cookie-tally-row")).toHaveLength(0);
-    expect(view.getByTestId("cookie-tally-total").getAttribute("data-count")).toBe("13");
+    expect(order()).toEqual(["cookie-tally-toggle"]);
   });
 
-  it("the total row is built like the ranked rows, with the plain cookie icon at 28 px", () => {
-    setState({ "1": 2 });
-    const view = render(<CookieTally bundle={bundle} />);
-    const total = view.getByTestId("cookie-tally-total");
-    const row = view.getAllByTestId("cookie-tally-row")[0];
-    expect(total.className.split(" ")).toContain(mapStyles.cookieTallyRow);
-    const [count, icon] = Array.from(total.children);
-    expect(count.className).toBe(row.children[0].className);
-    expect(count.className).toBe(mapStyles.cookieTallyCount);
-    expect(icon.className).toBe(mapStyles.cookieTallyIcon);
-    expect(icon.getAttribute("aria-hidden")).not.toBeNull();
-    const svg = icon.querySelector("svg");
-    expect(svg?.getAttribute("data-icon-id")).toBe("cookie");
-    expect(svg?.getAttribute("width")).toBe("28");
-  });
-
-  it("the total is labelled for screen readers and titled with the same text", () => {
-    setState({ "1": 2 });
-    const view = render(<CookieTally bundle={bundle} />);
-    const total = view.getByTestId("cookie-tally-total");
-    expect(total.getAttribute("title")).toBe("cookies in all");
-    const hidden = total.querySelector(`.${mapStyles.visuallyHidden}`);
-    expect(hidden?.textContent?.trim()).toBe("cookies in all");
+  it("cookieTotal sums every type, a type missing from the tally counting 0", () => {
+    expect(cookieTotal(TYPES, { "1": 3, "3": 1200 })).toBe(1203);
+    expect(cookieTotal(TYPES, null)).toBe(0);
   });
 
   it("renders nothing without cookie types", () => {
@@ -295,6 +250,66 @@ describe("the tally and the leave glyph on the live screen", () => {
     expect(utils.queryByTestId("cookie-control-sign-in")).toBeNull();
     expect(utils.queryByTestId("cookie-control-open")).toBeNull();
     expect(utils.queryByText("Sign in to leave cookies")).toBeNull();
+  });
+
+  it("the total sits left of the leave glyph, in the tally's count style, with a hidden label", async () => {
+    setState({ "1": 3, "3": 1200 });
+    const utils = await renderMap({ leaderboardPanel: true, cookieControl: true });
+    const row = utils.getByTestId("cookie-tally-leave-row");
+    const [count, glyph] = Array.from(row.children);
+    expect(count.getAttribute("data-testid")).toBe("cookie-tally-leave-total");
+    expect(glyph.getAttribute("data-testid")).toBe("cookie-tally-leave");
+    expect(count.className).toBe(mapStyles.cookieTallyCount);
+    expect(count.className).toBe(utils.getAllByTestId("leaderboard-count")[0].className);
+    expect(count.getAttribute("data-count")).toBe("1203");
+    expect(count.firstChild?.textContent).toBe("1.2k");
+    expect(count.querySelector(`.${mapStyles.visuallyHidden}`)?.textContent?.trim()).toBe("cookies in all");
+    expect(utils.getByTestId("cookie-tally").contains(count)).toBe(false);
+  });
+
+  it("the total shows 0 before any cookie and follows the live object", async () => {
+    setState(null as unknown as LiveObject["cookieTally"]);
+    const utils = await renderMap({ leaderboardPanel: true, cookieControl: true });
+    const total = () => utils.getByTestId("cookie-tally-leave-total");
+    expect(total().getAttribute("data-count")).toBe("0");
+    expect(total().firstChild?.textContent).toBe("0");
+    setState({ "1": 2, "2": 5, "3": 4 });
+    expect(total().getAttribute("data-count")).toBe("11");
+  });
+
+  it("the total stays while the tally's rows are collapsed", async () => {
+    setState({ "1": 9, "2": 4 });
+    const utils = await renderMap({ leaderboardPanel: true, cookieControl: true });
+    fireEvent.click(utils.getByTestId("cookie-tally-toggle"));
+    expect(utils.queryAllByTestId("cookie-tally-row")).toHaveLength(0);
+    expect(utils.getByTestId("cookie-tally-leave-total").getAttribute("data-count")).toBe("13");
+  });
+
+  it("the total shows with the glyph and the tally panel off", async () => {
+    setState({ "1": 2 });
+    const utils = await renderMap({ leaderboardPanel: false, cookieControl: true });
+    expect(utils.queryByTestId("cookie-tally")).toBeNull();
+    expect(utils.getByTestId("cookie-tally-leave-total").getAttribute("data-count")).toBe("2");
+  });
+
+  it("no glyph, no total: outside status 3, at a limit of 0, and while the menu is open", async () => {
+    setState({ "1": 2 }, 2);
+    const off = await renderMap({ leaderboardPanel: true, cookieControl: true });
+    expect(off.queryByTestId("cookie-tally-leave")).toBeNull();
+    expect(off.queryByTestId("cookie-tally-leave-total")).toBeNull();
+    off.unmount();
+
+    setState({ "1": 2 });
+    setCookieLimit(0);
+    const closed = await renderMap({ leaderboardPanel: true, cookieControl: true });
+    expect(closed.queryByTestId("cookie-tally-leave-total")).toBeNull();
+    closed.unmount();
+
+    setCookieLimit(5);
+    const menu = await renderMap({ leaderboardPanel: true, cookieControl: true });
+    expect(menu.getByTestId("cookie-tally-leave-total")).toBeInTheDocument();
+    fireEvent.click(menu.container.querySelector('button[aria-label="Tracker menu"]')!);
+    expect(menu.queryByTestId("cookie-tally-leave-total")).toBeNull();
   });
 
   it("the flags off remove the column and the glyph", async () => {
