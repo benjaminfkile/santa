@@ -7,8 +7,13 @@
 //    map takes `maxBounds` and the fitted least zoom.
 //  - The first fix is placed at once; a second fix within the playback
 //    delay is not yet at its target and glides there frame by frame; the
-//    pin turns through `setRotation` about its tip; the camera follows
-//    through `jumpTo`, never `panTo`, except for recenter's one pan.
+//    pin turns through `setRotation` about its tip; the camera never moves
+//    per frame (no `jumpTo`).
+//  - The follow rule: frames inside the central box make no camera call,
+//    a frame outside makes one `easeTo` of 300 ms with no zoom, two within
+//    500 ms make one; a wheel, a two touch `touchstart`, `dragstart`, or a
+//    `zoomstart` with an `originalEvent` turns Follow off, stops a running
+//    follow pan, and no pan follows; `zoomBy` keeps Follow on.
 //  - A fix outside the box stands Santa on its edge and follows there;
 //    `recenter` and `fitHistory` clamp to the box.
 //  - `setMapType` takes exactly the theme's terrain layers out and puts
@@ -150,7 +155,7 @@ describe("the first view", () => {
 });
 
 describe("the Santa pin and the camera", () => {
-  it("places the first fix at once and follows through jumpTo, never panTo", () => {
+  it("places the first fix at once and makes no camera call", () => {
     fakeFrames().install();
     const { c, map } = build();
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: 90 }, true);
@@ -159,11 +164,12 @@ describe("the Santa pin and the camera", () => {
     expect(santaMarker()?.rotationAlignment).toBe("map");
     expect(santaMarker()?.rotation).toBe(90);
     expect(santaMarker()?.element.style.transformOrigin).toBe("50% 100%");
-    expect(map.jumpTo).toHaveBeenLastCalledWith({ center: [-113.9, 46.9] });
+    expect(map.jumpTo).not.toHaveBeenCalled();
+    expect(map.easeTo).not.toHaveBeenCalled();
     expect(map.panTo).not.toHaveBeenCalled();
   });
 
-  it("a second fix within the delay is not yet at its target and glides there, the camera with it", () => {
+  it("a second fix within the delay is not yet at its target and glides there, the camera still", () => {
     const frames = fakeFrames().install();
     const { c, map } = build();
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: null }, true);
@@ -173,11 +179,10 @@ describe("the Santa pin and the camera", () => {
     const lng = santaMarker()!.lngLat![0];
     expect(lng).toBeGreaterThan(-113.9);
     expect(lng).toBeLessThan(-113.899);
-    expect(map.jumpTo).toHaveBeenLastCalledWith({ center: [lng, 46.9] });
     frames.step(3000);
     expect(santaMarker()?.lngLat).toEqual([-113.899, 46.9]);
-    expect(map.jumpTo).toHaveBeenLastCalledWith({ center: [-113.899, 46.9] });
-    expect(map.jumpTo.mock.calls.length).toBeGreaterThan(10);
+    expect(map.jumpTo).not.toHaveBeenCalled();
+    expect(map.easeTo).not.toHaveBeenCalled();
     expect(map.panTo).not.toHaveBeenCalled();
     expect(frames.pending()).toBe(0);
   });
@@ -195,31 +200,37 @@ describe("the Santa pin and the camera", () => {
     expect(seen[seen.length - 1]).toBe(10);
   });
 
-  it("recenter makes one animated pan to the displayed position, then follows per frame on moveend", () => {
+  it("recenter makes one animated pan to the displayed position, then the follow rule applies on moveend", () => {
     const frames = fakeFrames().install();
-    const { c, map } = build();
-    c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: null }, true);
+    const { c, map } = build({}, { width: 400, height: 800 });
+    // Santa 150 px right of the middle, outside the central box.
+    map.view = { west: -114.25, north: 47.3, scale: 1000 };
     map.fire("dragstart");
+    c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: null }, true);
     frames.wait(1000);
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.899, seq: 2, headingDeg: null }, true);
     frames.step(200);
-    expect(map.jumpTo).toHaveBeenCalledTimes(1);
+    expect(map.easeTo).not.toHaveBeenCalled();
     c.recenter({ lat: 46.9, lng: -113.899 });
     expect(map.panTo).toHaveBeenCalledTimes(1);
     expect(map.panTo).toHaveBeenLastCalledWith(santaMarker()?.lngLat, { animate: true });
     frames.step(100);
-    expect(map.jumpTo).toHaveBeenCalledTimes(1);
+    expect(map.easeTo).not.toHaveBeenCalled();
     map.fire("moveend");
-    frames.step(3000);
-    expect(map.jumpTo).toHaveBeenLastCalledWith({ center: [-113.899, 46.9] });
+    frames.step(16);
+    expect(map.easeTo).toHaveBeenCalledTimes(1);
     expect(map.panTo).toHaveBeenCalledTimes(1);
+    expect(map.jumpTo).not.toHaveBeenCalled();
   });
 
-  it("puts a fix outside the box on the box edge and follows to the nearest in-box point", () => {
-    const { c, map } = build();
+  it("puts a fix outside the box on the box edge and pans to the nearest in-box point", () => {
+    fakeFrames().install();
+    const { c, map } = build({}, { width: 400, height: 800 });
     c.setLiveFix("tracking", { lat: 48, lng: -112 }, true);
     expect(santaMarker()?.lngLat).toEqual([BOX.east, BOX.north]);
-    expect(map.jumpTo).toHaveBeenLastCalledWith({ center: [BOX.east, BOX.north] });
+    expect(map.easeTo).toHaveBeenCalledTimes(1);
+    expect(map.easeTo.mock.calls[0][0]).toMatchObject({ center: [BOX.east, BOX.north], duration: 300 });
+    expect(map.jumpTo).not.toHaveBeenCalled();
   });
 
   it("hides the pin while waiting for a fix and dims it while the signal is lost", () => {
@@ -240,6 +251,7 @@ describe("the Santa pin and the camera", () => {
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.9 }, true);
     expect(map.panTo).not.toHaveBeenCalled();
     expect(map.jumpTo).not.toHaveBeenCalled();
+    expect(map.easeTo).not.toHaveBeenCalled();
   });
 
   it("recenter clamps its target to the box and follows again", () => {
@@ -264,6 +276,121 @@ describe("the Santa pin and the camera", () => {
     c.fitHistory();
     expect(map.fitBounds).toHaveBeenCalledTimes(1);
     expect(map.fitBounds.mock.calls[0][0]).toEqual([[-114.1, 46.8], [-113.9, 47.0]]);
+  });
+});
+
+describe("the follow rule", () => {
+  // Santa's first fix, (46.9, -113.9), in the middle of a 400 by 800
+  // container whose central box runs from 80 to 320 across and 160 to
+  // 640 down; a thousandth of a degree is one pixel.
+  function setup() {
+    const frames = fakeFrames().install();
+    const onFollowChange = vi.fn();
+    const built = build({ onFollowChange }, { width: 400, height: 800 });
+    built.map.view = { west: -114.1, north: 47.3, scale: 1000 };
+    return { frames, onFollowChange, ...built };
+  }
+
+  function glide(c: ReturnType<typeof setup>["c"], frames: ReturnType<typeof setup>["frames"]) {
+    c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: null }, true);
+    frames.wait(1000);
+    c.setLiveFix("tracking", { lat: 46.9, lng: -113.899, seq: 2, headingDeg: null }, true);
+  }
+
+  // The view moves so that Santa stands 150 px right of the middle.
+  function leaveBox(map: FakeMlMap): void {
+    map.view = { west: -114.25, north: 47.3, scale: 1000 };
+  }
+
+  function touchStart(touches: number): Event {
+    const event = new Event("touchstart", { bubbles: true });
+    Object.defineProperty(event, "touches", { value: Array.from({ length: touches }, () => ({})) });
+    return event;
+  }
+
+  it("ten frames inside the central box make no camera call", () => {
+    const { frames, c, map } = setup();
+    glide(c, frames);
+    frames.step(160);
+    expect(map.easeTo).not.toHaveBeenCalled();
+    expect(map.jumpTo).not.toHaveBeenCalled();
+    expect(map.panTo).not.toHaveBeenCalled();
+  });
+
+  it("a frame outside the box makes one 300 ms eased pan with the zoom untouched, and two within 500 ms make one", () => {
+    const { frames, c, map } = setup();
+    glide(c, frames);
+    leaveBox(map);
+    frames.step(16);
+    expect(map.easeTo).toHaveBeenCalledTimes(1);
+    const call = map.easeTo.mock.calls[0][0] as { center: [number, number]; duration: number; easing: (t: number) => number; zoom?: number };
+    expect(call.center).toEqual(santaMarker()?.lngLat);
+    expect(call.duration).toBe(300);
+    expect(call.easing(0)).toBe(0);
+    expect(call.easing(1)).toBe(1);
+    expect("zoom" in call).toBe(false);
+    frames.step(400);
+    expect(map.easeTo).toHaveBeenCalledTimes(1);
+    frames.step(160);
+    expect(map.easeTo).toHaveBeenCalledTimes(2);
+    expect(map.jumpTo).not.toHaveBeenCalled();
+  });
+
+  it("a wheel on the container turns Follow off, stops the running pan, and no pan follows", () => {
+    const { frames, c, map, container, onFollowChange } = setup();
+    glide(c, frames);
+    leaveBox(map);
+    frames.step(16);
+    expect(map.easeTo).toHaveBeenCalledTimes(1);
+    container.dispatchEvent(new Event("wheel", { bubbles: true }));
+    expect(onFollowChange).toHaveBeenLastCalledWith(false);
+    expect(map.stop).toHaveBeenCalledTimes(1);
+    frames.step(2000);
+    expect(map.easeTo).toHaveBeenCalledTimes(1);
+  });
+
+  it("a second touch turns Follow off and no pan follows; one touch keeps it", () => {
+    const { frames, c, map, container, onFollowChange } = setup();
+    glide(c, frames);
+    container.dispatchEvent(touchStart(1));
+    expect(onFollowChange).not.toHaveBeenCalled();
+    container.dispatchEvent(touchStart(2));
+    expect(onFollowChange).toHaveBeenLastCalledWith(false);
+    expect(map.stop).not.toHaveBeenCalled();
+    leaveBox(map);
+    frames.step(1000);
+    expect(map.easeTo).not.toHaveBeenCalled();
+  });
+
+  it("a zoomstart from a gesture turns Follow off; one without an originalEvent keeps it", () => {
+    const { frames, c, map, onFollowChange } = setup();
+    glide(c, frames);
+    map.fire("zoomstart", {});
+    map.fire("rotatestart", {});
+    expect(onFollowChange).not.toHaveBeenCalled();
+    map.fire("zoomstart", { originalEvent: new Event("wheel") });
+    expect(onFollowChange).toHaveBeenLastCalledWith(false);
+    c.follow(true);
+    map.fire("rotatestart", { originalEvent: new Event("touchmove") });
+    expect(onFollowChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it("zoomBy keeps Follow on and the rule still pans", () => {
+    const { frames, c, map, onFollowChange } = setup();
+    glide(c, frames);
+    c.zoomBy(1);
+    c.zoomBy(-1);
+    expect(onFollowChange).not.toHaveBeenCalled();
+    leaveBox(map);
+    frames.step(16);
+    expect(map.easeTo).toHaveBeenCalledTimes(1);
+  });
+
+  it("destroy removes the container listeners", () => {
+    const { c, container, onFollowChange } = setup();
+    c.destroy();
+    container.dispatchEvent(new Event("wheel", { bubbles: true }));
+    expect(onFollowChange).not.toHaveBeenCalled();
   });
 });
 
@@ -544,6 +671,7 @@ describe("failures and destroy", () => {
     const styles = map.setStyle.mock.calls.length;
     const pans = map.panTo.mock.calls.length;
     const jumps = map.jumpTo.mock.calls.length;
+    const eases = map.easeTo.mock.calls.length;
     onFollowChange.mockClear();
     await c.setTheme(themes().dark);
     c.setPois({ kinds: ["park"] });
@@ -565,6 +693,7 @@ describe("failures and destroy", () => {
     expect(map.setStyle.mock.calls.length).toBe(styles);
     expect(map.panTo.mock.calls.length).toBe(pans);
     expect(map.jumpTo.mock.calls.length).toBe(jumps);
+    expect(map.easeTo.mock.calls.length).toBe(eases);
     expect(map.fitBounds).not.toHaveBeenCalled();
     expect(FakeMarker.live.size).toBe(0);
     expect(onFollowChange).not.toHaveBeenCalled();

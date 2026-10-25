@@ -19,9 +19,16 @@
 // with `setLngLat` and turn it with `setRotation` (`rotationAlignment`
 // "map"); MapLibre rotates the element about its transform origin, so
 // the image's origin is its tip and the turn pivots there. While
-// following, every frame moves the camera centre to the displayed
-// position with `jumpTo` (no animation, zoom untouched); `recenter` makes
-// one animated `panTo` there and follows per frame again on `moveend`.
+// following, a frame checks the follow rule (src/map/follow.ts): when the
+// displayed position, through `project`, has left the central box of the
+// container and the last follow pan started at least 500 ms ago (so the
+// one before it is over), it makes one `easeTo` there of FOLLOW_PAN_MS,
+// zoom untouched, and no other camera call. `recenter` makes one animated
+// `panTo` there and the rule applies again on `moveend`. A drag past 4 px,
+// a wheel, a second touch, a double tap, `dragstart`, or a `zoomstart` or
+// `rotatestart` with an `originalEvent` turns Follow off and stops a
+// running follow pan with `stop`; `zoomBy` keeps it. The markers keep
+// MapLibre's whole pixel positioning.
 // The viewpoints are HTML markers holding the
 // same badges and popover (viewpointsOverlay.ts), rebuilt only when the
 // list says something new; the viewer's location is an HTML marker and a
@@ -34,11 +41,13 @@
 // edge and follows there; a flight history point outside it is drawn but left
 // out of `fitHistory`. The first view is the event's start view, its zoom
 // raised to the least zoom when the box forces a larger one, and without
-// one the box fitted; a fix in hand at mount leaves it as it is, and the
-// follow camera moves to Santa at that zoom.
+// one the box fitted; a fix in hand at mount leaves it as it is, and a
+// follow pan moves to Santa at that zoom when he stands outside the
+// central box.
 // A style error before the first `idle`, or a lost WebGL context that is
 // not restored within 5 s, reports through `onFail` once. `destroy` removes
-// the map, its markers, and every timer; every method is a no-op after it.
+// the map, its markers, the container listeners, and every timer; every
+// method is a no-op after it.
 
 import { Map as MapLibreMap, Marker } from "maplibre-gl";
 import type { LngLatBoundsLike, StyleSpecification } from "maplibre-gl";
@@ -81,6 +90,7 @@ import {
   shortestDelta,
   type SantaFrame,
 } from "../map/santaMotion";
+import { FOLLOW_PAN_MS, followEasing, followPanDue, needsPan, watchGestures } from "../map/follow";
 import { createMapLibreUserLocation, type MapLibreUserLocation } from "./userLocation";
 
 export type MaplibreControllerOptions = MapControllerOptions & {
@@ -269,6 +279,9 @@ export function createMaplibreController(
   let rotation = 0;
   // While a recenter's pan runs, frames leave the camera alone.
   let recentering: ReturnType<typeof setTimeout> | null = null;
+  // When the last follow pan started, on the frames' clock; null for none
+  // since Follow last came on.
+  let lastFollowPan: number | null = null;
   let localSeq = 0;
 
   function place(frame: SantaFrame): void {
@@ -284,7 +297,29 @@ export function createMaplibreController(
       if (!santaShown) santa.addTo(map);
       santaShown = true;
     }
-    if (following && recentering === null) map.jumpTo({ center: [displayed.lng, displayed.lat] });
+    keepUp();
+  }
+
+  // The follow rule: one short eased pan to the displayed position once it
+  // leaves the central box, at most one every FOLLOW_GAP_MS.
+  function keepUp(): void {
+    if (disposed || !following || displayed === null) return;
+    if (recentering !== null) return;
+    const pixel = map.project([displayed.lng, displayed.lat]);
+    if (!needsPan({ x: pixel.x, y: pixel.y }, viewport())) return;
+    const now = performance.now();
+    if (!followPanDue(now, lastFollowPan)) return;
+    lastFollowPan = now;
+    map.easeTo({ center: [displayed.lng, displayed.lat], duration: FOLLOW_PAN_MS, easing: followEasing });
+  }
+
+  // Forgets the last follow pan, and with `halt` stops it where it is
+  // while it still runs.
+  function endFollowPan(halt: boolean): void {
+    if (lastFollowPan === null) return;
+    const running = performance.now() - lastFollowPan < FOLLOW_PAN_MS;
+    lastFollowPan = null;
+    if (halt && running) map.stop();
   }
 
   function endRecenter(): void {
@@ -353,11 +388,23 @@ export function createMaplibreController(
     throw err;
   }
 
-  map.on("dragstart", () => {
-    if (disposed || !following) return;
+  function stopFollowing(): void {
+    if (disposed) return;
+    endFollowPan(true);
+    if (!following) return;
     following = false;
     opts.onFollowChange?.(false);
-  });
+  }
+
+  // A gesture turns Follow off; a programmatic zoom or rotation (`zoomBy`,
+  // a pan of the controller's own) has no `originalEvent` and keeps it.
+  const stopGestures = watchGestures(container, stopFollowing);
+  map.on("dragstart", stopFollowing);
+  const byGesture = (event?: unknown) => {
+    if ((event as { originalEvent?: unknown } | undefined)?.originalEvent != null) stopFollowing();
+  };
+  map.on("zoomstart", byGesture);
+  map.on("rotatestart", byGesture);
   map.on("moveend", () => {
     if (!disposed) endRecenter();
   });
@@ -459,6 +506,7 @@ export function createMaplibreController(
     },
     follow(on) {
       if (disposed) return;
+      if (!on) endFollowPan(true);
       following = on;
       opts.onFollowChange?.(on);
     },
@@ -467,6 +515,7 @@ export function createMaplibreController(
       const target = displayed ?? (pos === null ? null : clamp(pos));
       if (target !== null) {
         endRecenter();
+        endFollowPan(false);
         recentering = setTimeout(() => {
           recentering = null;
         }, RECENTER_PAN_MS);
@@ -508,6 +557,7 @@ export function createMaplibreController(
       observer = null;
       clearViewpoints();
       endRecenter();
+      stopGestures();
       stopVisibility();
       motion.dispose();
       santa?.remove();

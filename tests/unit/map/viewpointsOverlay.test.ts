@@ -5,7 +5,8 @@
 // host, placed from the point's container pixel and moved on every draw;
 // Escape and a press elsewhere close it; the overlays leave the map below
 // zoom 10 and while the toggle is off; below zoom 12 every element carries
-// data-name="hidden" and the popover still opens on a click.
+// data-name="hidden" and the popover still opens on a click. Every badge
+// and the popover sit on whole pixels.
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
@@ -116,6 +117,24 @@ describe("createViewpointsOverlay", () => {
     for (const view of FakeOverlayView.instances) view.draw?.();
     expect(popover.style.left).toBe("150px");
     expect(popover.style.top).toBe(`${430 - POPOVER_GAP}px`);
+  });
+
+  it("places every badge and the popover on whole pixels", async () => {
+    FakeOverlayView.shift = { x: 0.37, y: 0.62 };
+    const { overlay, pane, host } = setup();
+    overlay.update({ visible: true, zoom: 12 });
+    await Promise.resolve();
+    pane.querySelector<HTMLButtonElement>('[data-testid="tracker-viewpoint-badge"]')!.click();
+    FakeOverlayView.shift = { x: 1200.5, y: 30.26 };
+    for (const view of FakeOverlayView.instances) view.draw?.();
+    const popover = host.querySelector<HTMLElement>('[data-testid="tracker-viewpoint-popover"]')!;
+    const elements = [...Array.from(pane.querySelectorAll<HTMLElement>('[data-testid="tracker-viewpoint"]')), popover];
+    for (const el of elements) {
+      expect(Number.isInteger(parseFloat(el.style.left))).toBe(true);
+      expect(Number.isInteger(parseFloat(el.style.top))).toBe(true);
+    }
+    expect(elements[0].style.left).toBe("151px");
+    expect(elements[0].style.top).toBe("430px");
   });
 
   it("closes the popover on Escape and on a press elsewhere", async () => {

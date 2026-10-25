@@ -1,5 +1,6 @@
 // A small stand-in for the Google Maps libraries: enough of `Map` (its
-// `panTo` and `moveCamera` recorded),
+// `panTo` and `moveCamera` recorded, a controller test asserting that the
+// follow rule never calls `moveCamera`),
 // `OverlayView`, `Polyline`, `Marker`, and the global `google.maps`
 // namespace for the real MapView, controller, Santa marker, flight history
 // overlay, viewpoints overlay, and user location to run under jsdom. Every object records
@@ -87,12 +88,14 @@ export class FakeMap {
 
 // Like the real API, `setMap` attaches later: `onAdd` and the first `draw`
 // run on a microtask, once the map's panes exist.
-// The projection maps a point to (lng * 10, lat * 10) plus `shift`, for
-// both div and container pixels, and `fromContainerPixelToLatLng` inverts
-// it; a test moves the map by changing `shift`.
+// The projection maps a point to (lng * scale, lat * scale) plus `shift`,
+// scale 10 unless a test changes it, for both div and container pixels,
+// and `fromContainerPixelToLatLng` inverts it; a test moves the map by
+// changing `shift` and zooms it by changing `scale`.
 export class FakeOverlayView {
   static instances: FakeOverlayView[] = [];
   static shift = { x: 0, y: 0 };
+  static scale = 10;
   static preventMapHitsAndGesturesFrom(): void {}
   private map: FakeMap | null = null;
   private added = false;
@@ -108,13 +111,13 @@ export class FakeOverlayView {
   getProjection() {
     if (!this.added) return undefined;
     const pixel = (p: google.maps.LatLngLiteral) => ({
-      x: p.lng * 10 + FakeOverlayView.shift.x,
-      y: p.lat * 10 + FakeOverlayView.shift.y,
+      x: p.lng * FakeOverlayView.scale + FakeOverlayView.shift.x,
+      y: p.lat * FakeOverlayView.scale + FakeOverlayView.shift.y,
     });
     const latLng = (p: { x: number; y: number }) => {
       const at = {
-        lat: (p.y - FakeOverlayView.shift.y) / 10,
-        lng: (p.x - FakeOverlayView.shift.x) / 10,
+        lat: (p.y - FakeOverlayView.shift.y) / FakeOverlayView.scale,
+        lng: (p.x - FakeOverlayView.shift.x) / FakeOverlayView.scale,
       };
       return { lat: () => at.lat, lng: () => at.lng, toJSON: () => at };
     };
@@ -251,6 +254,7 @@ export function resetFakeGoogle(): void {
   FakeMap.instances = [];
   FakeOverlayView.instances = [];
   FakeOverlayView.shift = { x: 0, y: 0 };
+  FakeOverlayView.scale = 10;
   FakeMapObject.live.clear();
 }
 

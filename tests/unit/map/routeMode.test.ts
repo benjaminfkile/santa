@@ -253,8 +253,8 @@ describe("route mode on Google: viewpoints", () => {
     expect(panel.parentElement).toBe(frame);
     expect(panel.querySelector("h3")?.textContent).toBe("Ridge & Pass");
     expect(panel.querySelector("p")).toBeNull();
-    expect(panel.style.left).toBe(`${RIDGE.lng * 10}px`);
-    expect(panel.style.top).toBe(`${RIDGE.lat * 10 - POPOVER_GAP}px`);
+    expect(panel.style.left).toBe(`${Math.round(RIDGE.lng * 10)}px`);
+    expect(panel.style.top).toBe(`${Math.round(RIDGE.lat * 10 - POPOVER_GAP)}px`);
 
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     expect(popover()).toBeNull();
@@ -281,12 +281,12 @@ describe("route mode on Google: viewpoints", () => {
     const panel = popover()!;
     expect(panel.textContent).toContain("Over the valley.");
     expect(badge.getAttribute("aria-expanded")).toBe("true");
-    expect(panel.style.top).toBe(`${LOOKOUT.lat * 10 - POPOVER_GAP}px`);
+    expect(panel.style.top).toBe(`${Math.round(LOOKOUT.lat * 10 - POPOVER_GAP)}px`);
 
     FakeOverlayView.shift = { x: 5, y: 7 };
     map().trigger("bounds_changed");
-    expect(panel.style.left).toBe(`${LOOKOUT.lng * 10 + 5}px`);
-    expect(panel.style.top).toBe(`${LOOKOUT.lat * 10 + 7 - POPOVER_GAP}px`);
+    expect(panel.style.left).toBe(`${Math.round(LOOKOUT.lng * 10 + 5)}px`);
+    expect(panel.style.top).toBe(`${Math.round(LOOKOUT.lat * 10 + 7 - POPOVER_GAP)}px`);
 
     document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
     expect(popover()).toBeNull();
@@ -318,8 +318,8 @@ describe("route mode on Google: the start and the end", () => {
     expect(map().panes.overlayMouseTarget.contains(startElement)).toBe(true);
     const holder = startElement.parentElement!;
     expect(holder.style.transform).toBe("translate(-50%, -100%)");
-    expect(holder.style.left).toBe(`${PATH[0].lng * 10}px`);
-    expect(holder.style.top).toBe(`${PATH[0].lat * 10}px`);
+    expect(holder.style.left).toBe(`${Math.round(PATH[0].lng * 10)}px`);
+    expect(holder.style.top).toBe(`${Math.round(PATH[0].lat * 10)}px`);
     const [end] = circles(theme.chrome.text);
     expect(end.opts.position).toEqual(PATH[2]);
     expect((end.opts.icon as Circle).strokeColor).toBe(theme.chrome.bg);
@@ -401,7 +401,7 @@ describe("route mode on Google: the fit", () => {
     handle.update({ theme: themeOf(), path: moved });
     expect(map().fitBoundsCalls).toHaveLength(2);
     expect(polylines()[0].opts.path).toEqual(moved);
-    expect(startElement.parentElement!.style.left).toBe(`${-114.1 * 10}px`);
+    expect(startElement.parentElement!.style.left).toBe(`${Math.round(-114.1 * 10)}px`);
   });
 });
 

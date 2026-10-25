@@ -1,6 +1,7 @@
 // docs/site.md sections 7.6, 8.2, and 8.7. Santa marker: the legacy Santa
 // pin image (santaPin.ts) in a Google Maps `OverlayView`, about 52 css px
-// tall, its bottom centre (the pin tip) on the fix. Hidden while waiting
+// tall, its bottom centre (the pin tip) on the fix, rounded to whole
+// pixels on every draw. Hidden while waiting
 // for a fix; the signal-lost variant is the same image desaturated and
 // dimmed through a CSS filter. The image is theme neutral, so a colour
 // scheme change does not touch it. `setHeading` turns the image about its
@@ -50,8 +51,8 @@ export function createSantaMarker(
       if (position === null || !projection) return;
       const point = projection.fromLatLngToDivPixel(position);
       if (point === null) return;
-      img.style.left = `${point.x}px`;
-      img.style.top = `${point.y}px`;
+      img.style.left = `${Math.round(point.x)}px`;
+      img.style.top = `${Math.round(point.y)}px`;
     }
     onRemove() {
       img.remove();

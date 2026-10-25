@@ -836,8 +836,8 @@ describe("route map viewpoints", () => {
     expect(panel.textContent).toContain("Where the reindeer rest.");
     expect(badge.getAttribute("aria-expanded")).toBe("true");
     expect(panel.parentElement).toBe(q(document, "route-map-frame"));
-    expect(panel.style.left).toBe(`${TOLD.lng * 10}px`);
-    expect(panel.style.top).toBe(`${TOLD.lat * 10 - POPOVER_GAP}px`);
+    expect(panel.style.left).toBe(`${Math.round(TOLD.lng * 10)}px`);
+    expect(panel.style.top).toBe(`${Math.round(TOLD.lat * 10 - POPOVER_GAP)}px`);
 
     const close = q(panel, "tracker-viewpoint-popover-close")!;
     expect(close.getAttribute("aria-label")).toBe("Close");
@@ -857,8 +857,8 @@ describe("route map viewpoints", () => {
     const map = mocks.maps[0] as unknown as { project: (p: [number, number]) => { x: number; y: number } };
     map.project = ([lng, lat]) => ({ x: lng * 10 + 5, y: lat * 10 + 7 });
     mocks.maps[0].fire("move");
-    expect(panel.style.left).toBe(`${TOLD.lng * 10 + 5}px`);
-    expect(panel.style.top).toBe(`${TOLD.lat * 10 + 7 - POPOVER_GAP}px`);
+    expect(panel.style.left).toBe(`${Math.round(TOLD.lng * 10 + 5)}px`);
+    expect(panel.style.top).toBe(`${Math.round(TOLD.lat * 10 + 7 - POPOVER_GAP)}px`);
   });
 
   it("closes the popover on Escape, keeping a fullscreen map fullscreen", async () => {
@@ -1052,7 +1052,7 @@ describe("route map dot layer events", () => {
     const panel = q(frame, "tracker-viewpoint-popover")!;
     expect(panel.parentElement).toBe(frame);
     expect(panel.querySelector("h3")?.textContent).toBe("Caras Park");
-    expect(panel.style.top).toBe(`${46.87 * 10 - POPOVER_GAP}px`);
+    expect(panel.style.top).toBe(`${Math.round(46.87 * 10 - POPOVER_GAP)}px`);
   });
 
   it("shows a time dot's popup for 2.5 s on a click", async () => {
@@ -1092,8 +1092,8 @@ describe("route map viewpoint dot clicks", () => {
     const panel = popover()!;
     expect(panel).not.toBeNull();
     expect(panel.parentElement).toBe(q(document, "route-map-frame"));
-    expect(panel.style.left).toBe(`${PLAIN.lng * 10}px`);
-    expect(panel.style.top).toBe(`${PLAIN.lat * 10 - POPOVER_GAP}px`);
+    expect(panel.style.left).toBe(`${Math.round(PLAIN.lng * 10)}px`);
+    expect(panel.style.top).toBe(`${Math.round(PLAIN.lat * 10 - POPOVER_GAP)}px`);
     expect(panel.querySelector("h3")?.textContent).toBe("Caras Park");
     expect(panel.querySelector("p")).toBeNull();
     const link = q(panel, "tracker-viewpoint-directions")!;

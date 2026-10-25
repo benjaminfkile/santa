@@ -23,7 +23,8 @@
 //    badge. A click on the dot or the name opens the popover of the
 //    `viewpointBadges` entry at that point.
 //  - `startElement` stands on the path's first point, anchored at its
-//    bottom centre, in an `OverlayView` on the overlay mouse target pane.
+//    bottom centre, in an `OverlayView` on the overlay mouse target pane;
+//    every such overlay sits on whole pixels.
 //  - `viewpointBadges` is the viewpoint list in the tracker's badges and
 //    popover (createViewpointBadges, site.md 8.5), built through
 //    `mountIcon` with the popover host the container's parent (the map
@@ -491,8 +492,8 @@ export function mountGoogleRoute(
       draw() {
         const pixel = this.getProjection()?.fromLatLngToDivPixel(at);
         if (!pixel) return;
-        holder.style.left = `${pixel.x}px`;
-        holder.style.top = `${pixel.y}px`;
+        holder.style.left = `${Math.round(pixel.x)}px`;
+        holder.style.top = `${Math.round(pixel.y)}px`;
       }
       onRemove() {
         holder.remove();

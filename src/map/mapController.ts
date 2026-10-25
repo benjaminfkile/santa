@@ -3,11 +3,17 @@
 // the map styles (the theme's with the section's place filter on top).
 // Subscribes to the store once and moves the marker imperatively; React
 // never re-renders on a fix. Every fix with a new seq goes to the Santa
-// motion (santaMotion.ts), whose frames place and turn the pin and, while
-// following, move the camera centre to the displayed position with
-// `moveCamera` (no animation, zoom untouched); `recenter` makes one
-// animated `panTo` to the displayed position and follows per frame again
-// once the map is idle. `destroy` removes the map listeners and pending timers, and every
+// motion (santaMotion.ts), whose frames place and turn the pin. While
+// following, a frame (and a redraw of the projection probe) checks the
+// follow rule (follow.ts): when the displayed position has left the
+// central box of the canvas and the last follow pan started at least
+// 500 ms ago (so the 300 ms pan before it is over), it makes one short
+// `panTo` there; no other camera call, zoom untouched. `recenter` makes
+// one animated `panTo` to the displayed position and the rule applies
+// again once the map is idle. A drag past 4 px, a wheel, a second touch,
+// a double tap, or `dragstart` turns Follow off, so no pan is issued until
+// the Follow control is pressed; `zoomBy` keeps it. `destroy` removes the
+// map and container listeners and pending timers, and every
 // method is a no-op afterwards, so a late call or a late map event on a
 // disposed controller draws nothing and calls back into nothing.
 // The map opens on the event's start view, its zoom never below the minimum
@@ -38,6 +44,7 @@ import type { MapsLibs } from "./loadMaps";
 import type { MapTheme, ThemeStyle } from "./themes";
 import { poiStyles, type PoiFilter } from "./poiStyles";
 import { clampToBbox, fittedMinZoom, inBox, MIN_ZOOM_FLOOR, type Bbox } from "./bounds";
+import { followPanDue, needsPan, watchGestures } from "./follow";
 import {
   createSantaMotion,
   followPageVisibility,
@@ -102,6 +109,9 @@ export function createMapController(
   let displayed: google.maps.LatLngLiteral | null = null;
   // While a recenter's pan runs, frames leave the camera alone.
   let recentering: ReturnType<typeof setTimeout> | null = null;
+  // When the last follow pan started, on the frames' clock; null for none
+  // since Follow last came on.
+  let lastFollowPan: number | null = null;
   let localSeq = 0;
   let userLoc: UserLocation | null = null;
   let zoomDebounce: number | null = null;
@@ -157,6 +167,18 @@ export function createMapController(
     resizeObserver.observe(container);
   }
 
+  // An empty overlay for the projection to container pixels the follow
+  // rule reads; a redraw (the camera moved) checks the rule again.
+  class Probe extends libs.maps.OverlayView {
+    onAdd() {}
+    draw() {
+      keepUp();
+    }
+    onRemove() {}
+  }
+  const probe = new Probe();
+  probe.setMap(map);
+
   let overlay: FlightHistoryOverlay = createFlightHistoryOverlay(libs, map, null);
   // The viewpoint popover lives in the map view wrapper, whose box is the
   // canvas's box, so the map's container pixels are its pixels.
@@ -195,6 +217,7 @@ export function createMapController(
     }
   } catch (err) {
     resizeObserver?.disconnect();
+    probe.setMap(null);
     overlay.destroy();
     stopVisibility?.();
     motion?.dispose();
@@ -208,8 +231,36 @@ export function createMapController(
     displayed = clamp({ lat: frame.lat, lng: frame.lng });
     santa?.setPosition(displayed);
     santa?.setHeading(frame.headingDeg);
-    if (following && recentering === null) map.moveCamera({ center: displayed });
+    keepUp();
   }
+
+  // The follow rule: one short pan to the displayed position once it
+  // leaves the central box, at most one every FOLLOW_GAP_MS.
+  function keepUp(): void {
+    if (disposed || !following || displayed === null) return;
+    if (recentering !== null) return;
+    const pixel = probe.getProjection()?.fromLatLngToContainerPixel(displayed) ?? null;
+    if (pixel === null) return;
+    if (!needsPan(pixel, { width: container.clientWidth, height: container.clientHeight })) return;
+    const now = performance.now();
+    if (!followPanDue(now, lastFollowPan)) return;
+    lastFollowPan = now;
+    map.panTo(displayed);
+  }
+
+  function endFollowPan(): void {
+    lastFollowPan = null;
+  }
+
+  function stopFollowing(): void {
+    if (disposed) return;
+    endFollowPan();
+    if (!following) return;
+    following = false;
+    opts.onFollowChange?.(false);
+  }
+
+  const stopGestures = watchGestures(container, stopFollowing);
 
   function endRecenter(): void {
     if (recentering === null) return;
@@ -223,13 +274,7 @@ export function createMapController(
     if (!disposed) endRecenter();
   }));
 
-  listeners.push(map.addListener("dragstart", () => {
-    if (disposed) return;
-    if (following) {
-      following = false;
-      opts.onFollowChange?.(false);
-    }
-  }));
+  listeners.push(map.addListener("dragstart", stopFollowing));
 
   listeners.push(map.addListener("zoom_changed", () => {
     if (disposed) return;
@@ -313,6 +358,7 @@ export function createMapController(
     },
     follow(on) {
       if (disposed) return;
+      if (!on) endFollowPan();
       following = on;
       opts.onFollowChange?.(on);
     },
@@ -321,6 +367,7 @@ export function createMapController(
       const target = displayed ?? (pos === null ? null : clamp(pos));
       if (target !== null) {
         endRecenter();
+        endFollowPan();
         recentering = setTimeout(() => {
           recentering = null;
         }, RECENTER_PAN_MS);
@@ -357,6 +404,8 @@ export function createMapController(
       resizeObserver = null;
       for (const l of listeners) l.remove();
       listeners.length = 0;
+      stopGestures();
+      probe.setMap(null);
       overlay.destroy();
       viewpoints.destroy();
       endRecenter();
