@@ -6,7 +6,8 @@
 // The map styles come from the snapshot's `trackerThemes` (the event's
 // enabled Google themes), never from the section data's `themes` or
 // `defaultTheme`, and mounting reports the renderer choice as the `live`
-// surface. The tracker menu's toggles follow the tracker store, so a
+// surface. The controllers get the event's `trackerStartView` and no
+// default centre or zoom. The tracker menu's toggles follow the tracker store, so a
 // replace after mount (the account sync) shows at once. A theme pick
 // writes the stored theme key, and a key written after mount that names
 // another offered theme switches the map; one that names none changes
@@ -33,17 +34,20 @@ vi.mock("../../../../src/map/renderer", () => ({
 
 // A test that sets `mocked.controller` gets it handed to the section on
 // mount; the rest run without one.
-const mocked = vi.hoisted(() => ({ controller: null as unknown }));
+// Every render records the options it was handed in `mocked.options`.
+const mocked = vi.hoisted(() => ({ controller: null as unknown, options: null as unknown }));
 
 vi.mock("../../../../src/map/MapView", async () => {
   const { useEffect } = await import("react");
   return {
     MapView: (props: {
+      options?: unknown;
       className?: string;
       onController?: (c: unknown) => void;
       children?: (state: { controller: unknown; error: unknown; retry: () => void }) => unknown;
     }) => {
       const { onController } = props;
+      mocked.options = props.options;
       useEffect(() => {
         if (mocked.controller !== null) onController?.(mocked.controller);
       }, [onController]);
@@ -286,7 +290,7 @@ describe("Map section themes", () => {
     };
   }
 
-  async function renderWithThemes(data: Record<string, unknown>) {
+  async function renderWithThemes(data: Record<string, unknown>, event: Record<string, unknown> = {}) {
     const { store } = await import("../../../../src/store/useStore");
     const { initialStore } = await import("../../../../src/store/types");
     store.setState({
@@ -295,7 +299,7 @@ describe("Map section themes", () => {
         schemaVersion: 1,
         media: {},
         icons: {},
-        event: { id: 1, trackerBbox: { west: -114.3, south: 46.75, east: -113.8, north: 47.05 }, trackerMap: null },
+        event: { id: 1, trackerBbox: { west: -114.3, south: 46.75, east: -113.8, north: 47.05 }, trackerMap: null, ...event },
         trackerThemes: [
           themeRow("expedition", "google"),
           themeRow("standard", "google", { light: true }),
@@ -341,6 +345,25 @@ describe("Map section themes", () => {
     expect(utils.getByTestId("map").getAttribute("data-theme-key")).toBe("night");
     cleanup();
     document.documentElement.removeAttribute("data-theme");
+  });
+
+  it("hands the controllers the event's start view and never the section's default centre or zoom", async () => {
+    const startView = { center: { lat: 46.87, lng: -113.99 }, zoom: 11 };
+    await renderWithThemes(
+      { defaultCenter: { lat: 39.7, lng: -104.9 }, defaultZoom: 4 },
+      { trackerStartView: startView },
+    );
+    const options = mocked.options as Record<string, unknown>;
+    expect(options.startView).toEqual(startView);
+    expect(options).not.toHaveProperty("defaultCenter");
+    expect(options).not.toHaveProperty("defaultZoom");
+    cleanup();
+  });
+
+  it("hands the controllers a null start view when the event has none", async () => {
+    await renderWithThemes({}, { trackerStartView: null });
+    expect((mocked.options as Record<string, unknown>).startView).toBeNull();
+    cleanup();
   });
 
   it("reports the renderer choice as the live surface on mount", async () => {

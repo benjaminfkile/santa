@@ -1,10 +1,10 @@
 // docs/site.md sections 8.2, 8.3, 8.6, 8.7, and 8.10 (Live mode). The
 // MapLibre tracker controller against a mocked `maplibre-gl`, over the
 // seeded `light` and `dark` bodies:
-//  - The first view fits the event box without a fix, centres on a fix in
-//    the box at the default zoom, and takes the default centre when the
-//    fix lies outside it; the map takes `maxBounds` and the fitted least
-//    zoom.
+//  - The first view is the start view's centre and zoom, its zoom raised
+//    to the fitted least zoom when it is below it; without a start view
+//    the event box is fitted; a fix in hand at mount changes neither; the
+//    map takes `maxBounds` and the fitted least zoom.
 //  - The first fix is placed at once; a second fix within the playback
 //    delay is not yet at its target and glides there frame by frame; the
 //    pin turns through `setRotation` about its tip; the camera follows
@@ -38,6 +38,7 @@ import { ROUTE_THEME_ROWS, routeStyle } from "./routeThemes";
 import { initialBearing } from "../../../src/map/outsideMarker";
 import { distanceMetres } from "../../../src/mapHost/userLocation";
 import { fakeFrames } from "../map/fakeFrames";
+import { fittedMinZoom } from "../../../src/map/bounds";
 
 vi.mock("maplibre-gl", async () => (await import("./fakeMaplibre")).fakeMaplibreModule);
 vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
@@ -74,9 +75,7 @@ function options(over: Partial<MaplibreControllerOptions> = {}): MaplibreControl
     style: routeStyle("light"),
     bbox: BOX,
     trackerMap: TRACKER_MAP,
-    fix: null,
-    defaultCenter: { lat: 46.87, lng: -114.0 },
-    defaultZoom: 11,
+    startView: null,
     showSantaMarker: true,
     showUserLocation: true,
     onFail: vi.fn(),
@@ -84,8 +83,12 @@ function options(over: Partial<MaplibreControllerOptions> = {}): MaplibreControl
   };
 }
 
-function build(over: Partial<MaplibreControllerOptions> = {}) {
+function build(over: Partial<MaplibreControllerOptions> = {}, size?: { width: number; height: number }) {
   const container = document.createElement("div");
+  if (size !== undefined) {
+    Object.defineProperty(container, "clientWidth", { value: size.width });
+    Object.defineProperty(container, "clientHeight", { value: size.height });
+  }
   document.body.appendChild(container);
   const c = createMaplibreController(container, options(over));
   const map = FakeMlMap.instances[FakeMlMap.instances.length - 1];
@@ -120,7 +123,7 @@ afterEach(() => {
 });
 
 describe("the first view", () => {
-  it("fits the event box when there is no fix, with the box as maxBounds", () => {
+  it("fits the event box without a start view, with the box as maxBounds", () => {
     const { map } = build();
     expect(map.options.bounds).toEqual([[BOX.west, BOX.south], [BOX.east, BOX.north]]);
     expect(map.options.center).toBeUndefined();
@@ -129,17 +132,20 @@ describe("the first view", () => {
     expect(map.options.maxZoom).toBe(15);
   });
 
-  it("centres on a fix inside the box at the default zoom", () => {
-    const { map } = build({ fix: { lat: 46.9, lng: -113.9 } });
+  it("opens on the start view's centre and zoom", () => {
+    const { map } = build({ startView: { center: { lat: 46.9, lng: -113.9 }, zoom: 11 } });
     expect(map.options.center).toEqual([-113.9, 46.9]);
     expect(map.options.zoom).toBe(11);
     expect(map.options.bounds).toBeUndefined();
   });
 
-  it("takes the default centre when the fix lies outside the box", () => {
-    const { map } = build({ fix: { lat: 50, lng: -100 } });
-    expect(map.options.center).toEqual([-114.0, 46.87]);
-    expect(map.options.zoom).toBe(11);
+  it("raises a start zoom below the fitted least zoom to it", () => {
+    const size = { width: 1280, height: 800 };
+    const least = fittedMinZoom(BOX, size);
+    expect(least).toBeGreaterThan(6);
+    const { map } = build({ startView: { center: { lat: 46.9, lng: -113.9 }, zoom: 6 } }, size);
+    expect(map.options.zoom).toBe(least);
+    expect(map.options.minZoom).toBe(least);
   });
 });
 
@@ -245,7 +251,7 @@ describe("the Santa pin and the camera", () => {
   });
 
   it("zoomBy steps the zoom", () => {
-    const { c, map } = build({ fix: { lat: 46.9, lng: -113.9 } });
+    const { c, map } = build({ startView: { center: { lat: 46.9, lng: -113.9 }, zoom: 11 } });
     c.zoomBy(1);
     expect(map.getZoom()).toBe(12);
     c.zoomBy(-2);
@@ -343,7 +349,7 @@ describe("the viewpoints", () => {
   ];
 
   it("stands one HTML marker per viewpoint from zoom 10 while the toggle is on", () => {
-    const { c, map, container } = build({ fix: { lat: 46.9, lng: -113.9 } });
+    const { c, map, container } = build({ startView: { center: { lat: 46.9, lng: -113.9 }, zoom: 11 } });
     c.setViewpoints(LIST);
     expect(container.querySelectorAll('[data-testid="tracker-viewpoint"]')).toHaveLength(2);
     c.setToggles({ landmarks: false });
@@ -354,7 +360,7 @@ describe("the viewpoints", () => {
   });
 
   it("leaves the markers alone when the list says the same thing", () => {
-    const { c, container } = build({ fix: { lat: 46.9, lng: -113.9 } });
+    const { c, container } = build({ startView: { center: { lat: 46.9, lng: -113.9 }, zoom: 11 } });
     c.setViewpoints(LIST);
     const first = container.querySelector('[data-testid="tracker-viewpoint"]');
     c.setViewpoints(LIST.map((l) => ({ ...l })));

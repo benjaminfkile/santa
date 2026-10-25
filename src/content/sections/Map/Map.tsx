@@ -15,7 +15,8 @@
 // both are the same interface, so nothing else here knows the renderer.
 // The map styles are the event's enabled themes of that renderer from the
 // snapshot's `trackerThemes` (8.4); the map is locked to
-// `event.trackerBbox` (8.2). When MapLibre fails at runtime the section
+// `event.trackerBbox` and opens on `event.trackerStartView`, or on the
+// whole box without one (8.2). When MapLibre fails at runtime the section
 // falls back to Google once (8.1): one `map_renderer_fallback` event, the
 // viewer's stored theme key kept when a Google theme has it and the
 // default resolved otherwise, and the toggles, the overlays, the store
@@ -84,8 +85,6 @@ import * as styles from "./Map.module.css";
 import * as ibtn from "../../../ui/IconButton.module.css";
 
 type MapSectionData = {
-  defaultCenter?: { lat: number; lng: number };
-  defaultZoom?: number;
   flightHistoryDefault?: boolean;
   controls?: {
     themePicker?: boolean;
@@ -168,6 +167,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
   const d = (data ?? {}) as MapSectionData;
   const trackerThemes = useStore((s) => s.snapshot?.trackerThemes ?? null);
   const trackerBbox = useStore((s) => s.snapshot?.event?.trackerBbox ?? null);
+  const trackerStartView = useStore((s) => s.snapshot?.event?.trackerStartView ?? null);
   const themes = useMemo(() => loadThemes({ trackerThemes: trackerThemes ?? [] }), [trackerThemes]);
   const themesRef = useRef(themes);
   themesRef.current = themes;
@@ -296,9 +296,6 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     return () => queueMicrotask(() => root.unmount());
   }, []);
 
-  const defaultCenter = d.defaultCenter ?? { lat: 39.7392, lng: -104.9903 };
-  const defaultZoom = d.defaultZoom ?? 8;
-
   // MapLibre failed: one event, then the Google theme the map falls back
   // to, the stored key first.
   const onFallback = useCallback((reason: FallbackReason): MapTheme | null => {
@@ -317,17 +314,10 @@ export const Map: SectionComponent = ({ data, bundle }) => {
       maplibre: {
         load: loadMaplibreController,
         trackerMap: trackerMapOf(store.getState().snapshot?.event?.trackerMap),
-        fix: () => {
-          const live = store.getState().live;
-          return live !== null && live.lat !== null && live.lng !== null
-            ? { lat: live.lat, lng: live.lng }
-            : null;
-        },
         onFallback,
       },
       bbox: toBbox(trackerBbox),
-      defaultCenter,
-      defaultZoom,
+      startView: trackerStartView,
       showSantaMarker: true,
       showUserLocation: controls.location,
       mountIcon,

@@ -35,8 +35,7 @@ const createMock = vi.mocked(createMapController);
 const OPTIONS = {
   theme: SEEDED.standard,
   bbox: null,
-  defaultCenter: { lat: 46.87, lng: -114 },
-  defaultZoom: 11,
+  startView: { center: { lat: 46.87, lng: -114 }, zoom: 11 },
   showSantaMarker: true,
   showUserLocation: false,
 } satisfies MapViewOptions;
@@ -232,7 +231,6 @@ describe("MapView", () => {
           maplibre: {
             load: load as never,
             trackerMap: { tilesUrl: "https://cdn.example/tiles.pmtiles", terrainUrl: null },
-            fix: () => ({ lat: 46.9, lng: -114 }),
             onFallback: vi.fn(() => null),
           },
         }}
@@ -251,7 +249,7 @@ describe("MapView", () => {
     expect(createMaplibreController).toHaveBeenCalledTimes(1);
     const opts = (createMaplibreController.mock.calls[0] as unknown[])[1] as Record<string, unknown>;
     expect(opts.style).toBe(body);
-    expect(opts.fix).toEqual({ lat: 46.9, lng: -114 });
+    expect(opts.startView).toEqual({ center: { lat: 46.87, lng: -114 }, zoom: 11 });
     expect(loadMapsMock).not.toHaveBeenCalled();
     expect(createMock).not.toHaveBeenCalled();
     expect(seen[seen.length - 1]).not.toBeNull();

@@ -10,6 +10,8 @@
 // once the map is idle. `destroy` removes the map listeners and pending timers, and every
 // method is a no-op afterwards, so a late call or a late map event on a
 // disposed controller draws nothing and calls back into nothing.
+// The map opens on the event's start view, its zoom never below the minimum
+// zoom, and without one on the whole box (`fitBounds` with no padding).
 // The map is locked to the event box (8.2): a strict restriction to it, a
 // minimum zoom that fits it in the canvas (recomputed when the canvas
 // resizes, which also moves an outside visitor's dot), and every camera move the controller makes clamped to it. A fix
@@ -48,13 +50,16 @@ import {
 // heading when the store has them.
 export type LiveFix = google.maps.LatLngLiteral & { seq?: number | null; headingDeg?: number | null };
 
+export type StartView = { center: google.maps.LatLngLiteral; zoom: number };
+
 export type MapControllerOptions = {
   theme: MapTheme;
   // The starting theme's style body, already fetched.
   style: ThemeStyle;
   bbox: Bbox | null;
-  defaultCenter: google.maps.LatLngLiteral;
-  defaultZoom: number;
+  // The event's start view (`event.trackerStartView`), or null for the
+  // whole box.
+  startView: StartView | null;
   showSantaMarker: boolean;
   showUserLocation: boolean;
   mountIcon?: MountIcon;
@@ -114,9 +119,17 @@ export function createMapController(
     return fittedMinZoom(bbox, { width: container.clientWidth, height: container.clientHeight });
   }
 
+  // The first view: the start view, its zoom raised to the minimum zoom
+  // when the box forces a larger one; without one the box fitted with no
+  // padding once the map is built, or the world at the floor without a box.
+  const start = opts.startView;
+  const startZoom = start !== null ? Math.max(start.zoom, minZoom()) : minZoom();
   const map = new libs.maps.Map(container, {
-    center: clamp(opts.defaultCenter),
-    zoom: opts.defaultZoom,
+    ...(start !== null
+      ? { center: clamp(start.center), zoom: startZoom }
+      : bbox === null
+        ? { center: { lat: 0, lng: 0 }, zoom: startZoom }
+        : {}),
     ...(bbox !== null
       ? { restriction: { latLngBounds: bbox, strictBounds: true } }
       : {}),
@@ -128,6 +141,7 @@ export function createMapController(
     keyboardShortcuts: true,
     styles,
   });
+  if (start === null && bbox !== null) map.fitBounds(bbox, 0);
 
   let resizeObserver: ResizeObserver | null = null;
   if (bbox !== null && typeof ResizeObserver !== "undefined") {
@@ -151,7 +165,7 @@ export function createMapController(
   let viewpointsKey = viewpointsSignature([]);
 
   function updateViewpoints(): void {
-    viewpoints.update({ visible: toggles.landmarks, zoom: map.getZoom() ?? opts.defaultZoom });
+    viewpoints.update({ visible: toggles.landmarks, zoom: map.getZoom() ?? startZoom });
   }
 
   // A build that fails part way detaches what it already put on the map
@@ -224,11 +238,11 @@ export function createMapController(
     zoomDebounce = window.setTimeout(() => {
       zoomDebounce = null;
       if (disposed) return;
-      overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
+      overlay.redraw(theme, map.getZoom() ?? startZoom, toggles);
     }, 150);
   }));
 
-  overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
+  overlay.redraw(theme, map.getZoom() ?? startZoom, toggles);
 
   return {
     async setTheme(t) {
@@ -239,7 +253,7 @@ export function createMapController(
       theme = t;
       styles = googleStyles(style);
       map.setOptions({ styles: poiStyles(styles, pois) });
-      overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
+      overlay.redraw(theme, map.getZoom() ?? startZoom, toggles);
       userLoc?.setTheme(theme);
     },
     setPois(filter) {
@@ -256,7 +270,7 @@ export function createMapController(
       points = p;
       overlay.destroy();
       overlay = createFlightHistoryOverlay(libs, map, points);
-      overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
+      overlay.redraw(theme, map.getZoom() ?? startZoom, toggles);
     },
     setViewpoints(list) {
       if (disposed) return;
@@ -276,7 +290,7 @@ export function createMapController(
         timeLabels: t.timeLabels ?? toggles.timeLabels,
         landmarks: t.landmarks ?? toggles.landmarks,
       };
-      overlay.redraw(theme, map.getZoom() ?? opts.defaultZoom, toggles);
+      overlay.redraw(theme, map.getZoom() ?? startZoom, toggles);
       updateViewpoints();
     },
     setLiveFix(state, pos, seqChanged) {
@@ -317,7 +331,7 @@ export function createMapController(
     },
     zoomBy(delta) {
       if (disposed) return;
-      const z = map.getZoom() ?? opts.defaultZoom;
+      const z = map.getZoom() ?? startZoom;
       map.setZoom(z + delta);
     },
     fitHistory() {
