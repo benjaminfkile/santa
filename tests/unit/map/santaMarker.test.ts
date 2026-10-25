@@ -133,13 +133,20 @@ describe("createSantaMarker", () => {
     expect(headingRing()!.style.opacity).toBe("0");
   });
 
-  it("colours the indicator from the theme and recolours on a theme change", () => {
+  it("colours the beam from the theme's heading colour, falling back to the arrow colour, and recolours on a theme change", () => {
     const santa = createSantaMarker(libs, map, SEEDED.standard);
     santa.setState("tracking", { lat: 41, lng: -110 });
     const strokes = () => Array.from(headingRing()!.querySelectorAll("[stroke]")).map((s) => s.getAttribute("stroke"));
-    expect(strokes()).toContain(SEEDED.standard.overlay.arrowColor);
-    santa.setTheme(SEEDED.expedition);
-    expect(strokes()).toContain(SEEDED.expedition.overlay.arrowColor);
+    const stops = () => Array.from(headingRing()!.querySelectorAll("stop")).map((s) => s.getAttribute("stop-color"));
+    expect(strokes()).toContain(SEEDED.standard.overlay.headingColor);
+    expect(strokes()).not.toContain(SEEDED.standard.overlay.arrowColor);
+    santa.setTheme(SEEDED.charcoal);
+    expect(strokes()).toContain(SEEDED.charcoal.overlay.headingColor);
+    expect(strokes()).not.toContain(SEEDED.standard.overlay.headingColor);
+    expect(stops()).toEqual([SEEDED.charcoal.overlay.headingColor, SEEDED.charcoal.overlay.headingColor]);
+    const old = SEEDED.expedition;
+    santa.setTheme({ ...old, overlay: { ...old.overlay, headingColor: "" } });
+    expect(strokes()).toContain(old.overlay.arrowColor);
   });
 
   it("hides the marker again when waitingForFix returns", () => {

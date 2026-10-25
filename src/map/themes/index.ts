@@ -49,6 +49,7 @@ export type MapTheme = {
     timeLabelFg: string;
     timeLabelOpacity: number;
     userColor: string;
+    headingColor: string;
   };
   // What the tracker's pills, panels, tiles, and buttons paint with while
   // this style is on: the map section rebinds the site's surface tokens to
@@ -87,7 +88,7 @@ function fetchStyle(url: string): Promise<ThemeStyle> {
 
 function toTheme(row: ThemeRow): MapTheme {
   const styleUrl = row.styleUrl ?? "";
-  const o = row.overlay ?? {};
+  const o: Partial<NonNullable<ThemeRow["overlay"]>> = row.overlay ?? {};
   const c = row.chrome ?? {};
   return {
     key: row.key ?? "",
@@ -106,6 +107,7 @@ function toTheme(row: ThemeRow): MapTheme {
       timeLabelFg: o.timeLabelFg ?? "",
       timeLabelOpacity: o.timeLabelOpacity ?? 1,
       userColor: o.userColor ?? "",
+      headingColor: o.headingColor ?? "",
     },
     chrome: {
       bg: c.bg ?? "",

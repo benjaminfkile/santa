@@ -199,6 +199,7 @@ export interface Snapshot {
       timeLabelFg?: string;
       timeLabelOpacity?: number;
       userColor?: string;
+      headingColor: string;
     };
     defaultLightMode?: boolean;
     defaultDarkMode?: boolean;

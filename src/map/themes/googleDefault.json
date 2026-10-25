@@ -6,7 +6,8 @@
     "timeLabelBg": "#1c1c1e",
     "timeLabelFg": "#ffffff",
     "timeLabelOpacity": 0.8,
-    "userColor": "#c62828"
+    "userColor": "#c62828",
+    "headingColor": "#ffb300"
   },
   "chrome": {
     "bg": "#ffffff",
