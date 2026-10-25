@@ -1,5 +1,7 @@
-// docs/site.md section 13.1. Signed-in: makes no API call on mount. Shows
-// `data.copy`, the account line from the id token's email (`useAuth()`),
+// docs/site.md section 13.1. Signed-in: makes no API call on mount. The
+// heading is `data.subscribedHeading` (or `copy.alerts.subscribedHeading`
+// when the content has none) while the viewer holds a flag, pending or
+// active, and `data.heading` otherwise. Shows `data.copy`, the account line from the id token's email (`useAuth()`),
 // the one subscription from the subscription flag as a row (address,
 // state, Resend confirmation while pending, Unsubscribe), or the subscribe
 // form when there is no flag (prefilled with the account email), and the
@@ -47,6 +49,7 @@ export type AlertsSignupData = {
   heading?: string | null;
   copy?: string | null;
   signedOutCopy?: string | null;
+  subscribedHeading?: string | null;
 };
 
 function readData(data: unknown): AlertsSignupData {
@@ -56,6 +59,7 @@ function readData(data: unknown): AlertsSignupData {
     heading: d.heading ?? null,
     copy: d.copy ?? null,
     signedOutCopy: d.signedOutCopy ?? null,
+    subscribedHeading: d.subscribedHeading ?? null,
   };
 }
 
@@ -238,12 +242,14 @@ function SignedIn({
     return <SignedOut data={data} bundle={bundle} onSignIn={onSignIn} />;
   }
 
+  const heading =
+    flag !== null ? data.subscribedHeading ?? copy.alerts.subscribedHeading : data.heading;
   const cooldownSecs =
     cooldownUntil !== null ? Math.max(0, Math.ceil((cooldownUntil - nowMs) / 1000)) : 0;
 
   return (
     <div className={styles.alertsSignup} data-testid="alerts-signed-in">
-      {data.heading ? <h2>{data.heading}</h2> : null}
+      {heading ? <h2>{heading}</h2> : null}
       {data.copy ? <p><Inline text={data.copy} bundle={bundle} /></p> : null}
       <p className={styles.alertsSignupAccount} data-testid="alerts-account">Account: {email}</p>
 

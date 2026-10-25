@@ -4,7 +4,8 @@
 // response row of 13.1, renders the closed copy from
 // `snapshot.subscriptionsOpen` and from `409 subscriptions_closed`, and
 // lists the snapshot's alerts with their empty state. A `409
-// already_subscribed` adopts the row through `GET /me`.
+// already_subscribed` adopts the row through `GET /me`. The heading is
+// `subscribedHeading` (or "Alerts") while a flag is held, `heading` otherwise.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, cleanup, render, waitFor } from "@testing-library/react";
@@ -70,13 +71,15 @@ function apiError(status: number, code: string, details: Record<string, unknown>
   return new ApiRequestError(status, { code, message: "server-only text", details, requestId: "r" }, retry);
 }
 
-function renderWith(authState: AuthState) {
+const DATA = { heading: "Get alerts", copy: "copy", signedOutCopy: "Sign in to sign up for alerts." };
+
+function renderWith(authState: AuthState, data: Record<string, unknown> = DATA) {
   return render(
     <MemoryRouter initialEntries={["/alerts"]}>
       <AuthProvider initialState={authState}>
         <SubscriptionProvider>
           <AlertsSignup
-            data={{ heading: "Get alerts", copy: "copy", signedOutCopy: "Sign in to sign up for alerts." }}
+            data={data}
             items={[]}
             bundle={bundle}
           />
@@ -315,6 +318,48 @@ describe("AlertsSignup", () => {
     expect(queryByTestId("subscription-5")).toBeNull();
     expect(getByTestId("alerts-submit")).toBeInTheDocument();
     expect(storedFlag()).toBeNull();
+  });
+});
+
+describe("AlertsSignup heading", () => {
+  const WITH_SUBSCRIBED = { ...DATA, subscribedHeading: "Your alerts" };
+
+  it("shows subscribedHeading with an active flag", async () => {
+    storeFlag(ACTIVE);
+    const { container } = renderWith(SIGNED_IN, WITH_SUBSCRIBED);
+    await act(async () => {});
+    expect(container.querySelector("h2")?.textContent).toBe("Your alerts");
+  });
+
+  it("shows subscribedHeading with a pending flag", async () => {
+    storeFlag(PENDING);
+    const { container } = renderWith(SIGNED_IN, WITH_SUBSCRIBED);
+    await act(async () => {});
+    expect(container.querySelector("h2")?.textContent).toBe("Your alerts");
+  });
+
+  it("shows heading when signed in with no flag", async () => {
+    const { container } = renderWith(SIGNED_IN, WITH_SUBSCRIBED);
+    await act(async () => {});
+    expect(container.querySelector("h2")?.textContent).toBe("Get alerts");
+  });
+
+  it("shows heading when signed out", () => {
+    storeFlag(ACTIVE);
+    const { container } = renderWith({ status: "signedOut" }, WITH_SUBSCRIBED);
+    expect(container.querySelector("h2")?.textContent).toBe("Get alerts");
+  });
+
+  it("shows Alerts with a flag when the content has no subscribedHeading, absent or null", async () => {
+    storeFlag(ACTIVE);
+    const { container } = renderWith(SIGNED_IN);
+    await act(async () => {});
+    expect(container.querySelector("h2")?.textContent).toBe(copy.alerts.subscribedHeading);
+    expect(copy.alerts.subscribedHeading).toBe("Alerts");
+    cleanup();
+    const again = renderWith(SIGNED_IN, { ...DATA, subscribedHeading: null });
+    await act(async () => {});
+    expect(again.container.querySelector("h2")?.textContent).toBe("Alerts");
   });
 });
 
