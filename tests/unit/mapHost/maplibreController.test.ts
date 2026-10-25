@@ -7,8 +7,10 @@
 //    map takes `maxBounds` and the fitted least zoom.
 //  - The first fix is placed at once; a second fix within the playback
 //    delay is not yet at its target and glides there frame by frame; the
-//    pin turns through `setRotation` about its tip; the camera never moves
-//    per frame (no `jumpTo`).
+//    pin image stays upright (no `setRotation`, the default rotation
+//    alignment) while its heading indicator's `data-heading` follows the
+//    frame the short way and is recoloured by `setTheme`; the camera never
+//    moves per frame (no `jumpTo`).
 //  - The follow rule: frames inside the central box make no camera call,
 //    a frame outside makes one `easeTo` of 300 ms with no zoom, two within
 //    500 ms make one; a wheel, a two touch `touchstart`, `dragstart`, or a
@@ -108,6 +110,10 @@ function santaMarker(): FakeMarker | undefined {
   return [...FakeMarker.live].find((m) => m.element.getAttribute("data-testid") === "santa-marker");
 }
 
+function santaHeading(): SVGSVGElement {
+  return santaMarker()!.element.querySelector('[data-testid="santa-heading"]') as SVGSVGElement;
+}
+
 const HISTORY = [
   { lat: 46.8, lng: -114.1, recordedAt: "2023-12-24T02:00:00Z" },
   { lat: 46.9, lng: -114.0, recordedAt: "2023-12-24T02:30:00Z" },
@@ -161,9 +167,11 @@ describe("the Santa pin and the camera", () => {
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: 90 }, true);
     expect(santaMarker()?.lngLat).toEqual([-113.9, 46.9]);
     expect(santaMarker()?.anchor).toBe("bottom");
-    expect(santaMarker()?.rotationAlignment).toBe("map");
-    expect(santaMarker()?.rotation).toBe(90);
-    expect(santaMarker()?.element.style.transformOrigin).toBe("50% 100%");
+    expect(santaMarker()?.rotationAlignment).toBeUndefined();
+    expect(santaMarker()?.rotation).toBe(0);
+    expect(santaMarker()?.element.querySelector("img")?.style.transform).toBe("");
+    expect(santaHeading().getAttribute("data-heading")).toBe("90");
+    expect(santaHeading().style.transform).toBe("rotate(90deg)");
     expect(map.jumpTo).not.toHaveBeenCalled();
     expect(map.easeTo).not.toHaveBeenCalled();
     expect(map.panTo).not.toHaveBeenCalled();
@@ -191,13 +199,20 @@ describe("the Santa pin and the camera", () => {
     const frames = fakeFrames().install();
     const { c } = build();
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: 350 }, true);
-    expect(santaMarker()?.rotation).toBe(-10);
+    expect(santaHeading().style.transform).toBe("rotate(-10deg)");
     frames.wait(1000);
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.899, seq: 2, headingDeg: 10 }, true);
     const seen: number[] = [];
-    frames.step(3000, () => seen.push(santaMarker()!.rotation));
+    const headings = new Set<string | null>();
+    frames.step(3000, () => {
+      seen.push(parseFloat(santaHeading().style.transform.slice("rotate(".length)));
+      headings.add(santaHeading().getAttribute("data-heading"));
+    });
     expect(seen.every((r) => r >= -10 && r <= 10)).toBe(true);
     expect(seen[seen.length - 1]).toBe(10);
+    expect(santaHeading().getAttribute("data-heading")).toBe("10");
+    expect(headings.has("0")).toBe(true);
+    expect(santaMarker()?.rotation).toBe(0);
   });
 
   it("recenter makes one animated pan to the displayed position, then the follow rule applies on moveend", () => {
@@ -233,11 +248,24 @@ describe("the Santa pin and the camera", () => {
     expect(map.jumpTo).not.toHaveBeenCalled();
   });
 
+  it("colours the heading indicator from the theme and recolours it on setTheme", async () => {
+    const { c } = build();
+    c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: 90 }, true);
+    const strokes = () => Array.from(santaHeading().querySelectorAll("[stroke]")).map((e) => e.getAttribute("stroke"));
+    expect(strokes()).toContain(themes().light.overlay.arrowColor);
+    await c.setTheme(themes().dark);
+    expect(strokes()).toContain(themes().dark.overlay.arrowColor);
+    expect(strokes()).not.toContain(themes().light.overlay.arrowColor);
+  });
+
   it("hides the pin while waiting for a fix and dims it while the signal is lost", () => {
     const { c } = build();
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.9 }, true);
     c.setLiveFix("signalLost", { lat: 46.9, lng: -113.9 }, false);
-    expect(santaMarker()?.element.style.filter).toBe(SIGNAL_LOST_FILTER);
+    expect(santaMarker()?.element.querySelector("img")?.style.filter).toBe(SIGNAL_LOST_FILTER);
+    expect(santaMarker()?.element.style.filter).toBe("");
+    expect(santaHeading().style.filter).toBe("");
+    expect(santaHeading().style.opacity).toBe("0");
     expect(santaMarker()?.element.getAttribute("data-variant")).toBe("signalLost");
     c.setLiveFix("waitingForFix", null, false);
     expect(santaMarker()).toBeUndefined();

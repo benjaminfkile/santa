@@ -27,6 +27,8 @@
 // snaps to the newest fix and resumes. `rest` clears the queue; `dispose`
 // cancels everything and every method is a no-op after it.
 
+import { shortestDelta } from "./santaPin";
+
 export type SantaFix = { seq: number; lat: number; lng: number; headingDeg: number | null };
 
 export type SantaFrame = { lat: number; lng: number; headingDeg: number | null; moving: boolean };
@@ -65,10 +67,9 @@ const CATCH_UP = 0.5;
 
 type Entry = { fix: SantaFix; at: number };
 
-// Degrees from `a` to `b` the short way around, in [-180, 180).
-export function shortestDelta(a: number, b: number): number {
-  return ((((b - a) % 360) + 540) % 360) - 180;
-}
+// Degrees from `a` to `b` the short way around, in [-180, 180), shared
+// with the heading indicator (santaPin.ts).
+export { shortestDelta };
 
 function normalize(deg: number): number {
   return ((deg % 360) + 360) % 360;

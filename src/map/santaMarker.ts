@@ -1,16 +1,16 @@
-// docs/site.md sections 7.6, 8.2, and 8.7. Santa marker: the legacy Santa
-// pin image (santaPin.ts) in a Google Maps `OverlayView`, about 52 css px
-// tall, its bottom centre (the pin tip) on the fix, rounded to whole
-// pixels on every draw. Hidden while waiting
-// for a fix; the signal-lost variant is the same image desaturated and
-// dimmed through a CSS filter. The image is theme neutral, so a colour
-// scheme change does not touch it. `setHeading` turns the image about its
-// tip to the heading, the short way from where it stands; null turns it
-// back upright.
+// docs/site.md sections 7.6, 8.2, and 8.7. Santa marker: the pin element
+// of santaPin.ts (the legacy pin image upright, about 52 css px tall, with
+// the heading indicator around its tip) in a Google Maps `OverlayView`,
+// the wrapper's bottom centre (the pin tip) on the fix, rounded to whole
+// pixels on every draw. Hidden while waiting for a fix; the signal-lost
+// variant is the same image desaturated and dimmed through a CSS filter on
+// the image only. `setHeading` turns the indicator the short way to the
+// heading and null hides it; the image never rotates. `setTheme` recolours
+// the indicator.
 
 import type { LiveState } from "../store/liveState";
-import { createSantaPinImage } from "./santaPin";
-import { shortestDelta } from "./santaMotion";
+import type { MapTheme } from "./themes";
+import { createSantaPinElement, santaHeadingColor } from "./santaPin";
 
 export type MarkerVariant = "tracking" | "signalLost";
 
@@ -22,6 +22,7 @@ export type SantaMarker = {
   setVariant(v: MarkerVariant): void;
   setState(state: LiveState, pos: google.maps.LatLngLiteral | null): void;
   setHeading(headingDeg: number | null): void;
+  setTheme(theme: MapTheme): void;
   getPosition(): google.maps.LatLngLiteral | null;
   destroy(): void;
 };
@@ -29,33 +30,32 @@ export type SantaMarker = {
 export function createSantaMarker(
   libs: { maps: google.maps.MapsLibrary },
   map: google.maps.Map,
+  theme: MapTheme,
 ): SantaMarker {
   let variant: MarkerVariant = "tracking";
   let position: google.maps.LatLngLiteral | null = null;
-  // The rotation applied, unwrapped, so every turn is the short way.
-  let rotation = 0;
 
-  const img = createSantaPinImage(SANTA_MARKER_HEIGHT);
-  img.setAttribute("data-testid", "santa-marker");
-  img.style.position = "absolute";
-  // The pin tip, the image's bottom centre, sits on the overlay point.
-  img.style.transform = "translate(-50%, -100%)";
-  img.style.transformOrigin = "50% 100%";
+  const pin = createSantaPinElement(SANTA_MARKER_HEIGHT, santaHeadingColor(theme));
+  const el = pin.element;
+  el.setAttribute("data-testid", "santa-marker");
+  el.style.position = "absolute";
+  // The pin tip, the wrapper's bottom centre, sits on the overlay point.
+  el.style.transform = "translate(-50%, -100%)";
 
   class SantaOverlay extends libs.maps.OverlayView {
     onAdd() {
-      this.getPanes()?.markerLayer.appendChild(img);
+      this.getPanes()?.markerLayer.appendChild(el);
     }
     draw() {
       const projection = this.getProjection();
       if (position === null || !projection) return;
       const point = projection.fromLatLngToDivPixel(position);
       if (point === null) return;
-      img.style.left = `${Math.round(point.x)}px`;
-      img.style.top = `${Math.round(point.y)}px`;
+      el.style.left = `${Math.round(point.x)}px`;
+      el.style.top = `${Math.round(point.y)}px`;
     }
     onRemove() {
-      img.remove();
+      el.remove();
     }
   }
 
@@ -66,8 +66,8 @@ export function createSantaMarker(
       if (overlay.getMap()) overlay.setMap(null);
       return;
     }
-    img.style.filter = variant === "signalLost" ? SIGNAL_LOST_FILTER : "";
-    img.setAttribute("data-variant", variant);
+    pin.image.style.filter = variant === "signalLost" ? SIGNAL_LOST_FILTER : "";
+    el.setAttribute("data-variant", variant);
     if (overlay.getMap()) overlay.draw();
     else overlay.setMap(map);
   }
@@ -94,10 +94,10 @@ export function createSantaMarker(
       apply();
     },
     setHeading(headingDeg) {
-      const next = rotation + shortestDelta(rotation, headingDeg ?? 0);
-      if (next === rotation) return;
-      rotation = next;
-      img.style.transform = `translate(-50%, -100%) rotate(${Math.round(rotation * 100) / 100}deg)`;
+      pin.setHeading(headingDeg);
+    },
+    setTheme(t) {
+      pin.setColor(santaHeadingColor(t));
     },
     getPosition() {
       return position;
