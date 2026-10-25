@@ -1,6 +1,6 @@
 // docs/site.md section 8.7. The Santa pin element: the upright pin image
-// with, under it, the heading indicator centred on the tip; the indicator
-// is hidden while the heading is null, turns the short way (350 then 10
+// with, under it, the heading beam from the tip (the wedge paths and its
+// gradient, a gradient id of its own per element); the beam is hidden while the heading is null, turns the short way (350 then 10
 // passes through 0) by rotating its SVG, reads along a turned map
 // (heading 90 at bearing 30 turns 60, `data-heading` 90 and
 // `data-bearing` 30), recolours on demand, and the image never rotates.
@@ -13,20 +13,48 @@ function heading(el: HTMLElement): SVGSVGElement {
 }
 
 describe("createSantaPinElement", () => {
-  it("holds the upright image and the indicator under it, centred on the tip", () => {
+  it("holds the upright image and the beam under it, centred on the tip", () => {
     const pin = createSantaPinElement(52, "#ff0000");
     const svg = heading(pin.element);
     expect(pin.element.tagName).toBe("DIV");
     expect(pin.image.getAttribute("src")).toBe(SANTA_PIN_URL);
     expect(pin.element.lastElementChild).toBe(pin.image);
     expect(pin.element.firstElementChild).toBe(svg);
-    expect(svg.getAttribute("width")).toBe("34");
-    expect(svg.style.top).toBe("35px");
-    expect(svg.style.left).toBe("calc(50% - 17px)");
+    expect(svg.getAttribute("width")).toBe("120");
+    expect(svg.getAttribute("viewBox")).toBe("-60 -60 120 120");
+    expect(svg.style.top).toBe("-8px");
+    expect(svg.style.left).toBe("calc(50% - 60px)");
+    expect(svg.style.overflow).toBe("visible");
     expect(svg.style.pointerEvents).toBe("none");
     expect(pin.element.style.pointerEvents).toBe("none");
     expect(svg.style.transition).toContain("300ms");
     expect(Array.from(svg.querySelectorAll("[stroke]")).map((s) => s.getAttribute("stroke"))).toContain("#ff0000");
+  });
+
+  it("draws a 64 degree, 56 px wedge filled with its gradient and stroked over a halo", () => {
+    const pin = createSantaPinElement(52, "#ff0000");
+    const svg = heading(pin.element);
+    const paths = Array.from(svg.querySelectorAll("path"));
+    expect(paths).toHaveLength(3);
+    for (const p of paths) expect(p.getAttribute("d")).toBe("M 0 0 L -29.68 -47.49 A 56 56 0 0 1 29.68 -47.49 Z");
+    const gradient = svg.querySelector("radialGradient")!;
+    const id = gradient.getAttribute("id")!;
+    expect(gradient.getAttribute("r")).toBe("56");
+    expect(paths[0].getAttribute("fill")).toBe(`url(#${id})`);
+    expect(paths[1].getAttribute("stroke")).toBe("rgba(0, 0, 0, 0.45)");
+    expect(paths[1].getAttribute("stroke-width")).toBe("3");
+    expect(paths[2].getAttribute("stroke")).toBe("#ff0000");
+    expect(paths[2].getAttribute("stroke-width")).toBe("1.5");
+    expect(svg.getAttribute("stroke-linejoin")).toBe("round");
+    const stops = Array.from(gradient.querySelectorAll("stop"));
+    expect(stops.map((s) => s.getAttribute("stop-opacity"))).toEqual(["0.55", "0.08"]);
+    expect(stops.map((s) => s.getAttribute("stop-color"))).toEqual(["#ff0000", "#ff0000"]);
+  });
+
+  it("gives each element its own gradient id", () => {
+    const a = heading(createSantaPinElement(52, "#ff0000").element).querySelector("radialGradient")!;
+    const b = heading(createSantaPinElement(52, "#ff0000").element).querySelector("radialGradient")!;
+    expect(a.getAttribute("id")).not.toBe(b.getAttribute("id"));
   });
 
   it("is hidden while the heading is null and shows the rounded heading", () => {
@@ -76,18 +104,23 @@ describe("createSantaPinElement", () => {
     expect(svg.hasAttribute("data-bearing")).toBe(false);
   });
 
-  it("recolours the indicator", () => {
+  it("recolours the beam's strokes and gradient stops", () => {
     const pin = createSantaPinElement(52, "#ff0000");
     pin.setColor("#00ff00");
-    const strokes = Array.from(heading(pin.element).querySelectorAll("[stroke]")).map((s) => s.getAttribute("stroke"));
+    const svg = heading(pin.element);
+    const strokes = Array.from(svg.querySelectorAll("[stroke]")).map((s) => s.getAttribute("stroke"));
     expect(strokes).toContain("#00ff00");
     expect(strokes).not.toContain("#ff0000");
+    const stops = Array.from(svg.querySelectorAll("stop")).map((s) => s.getAttribute("stop-color"));
+    expect(stops).toEqual(["#00ff00", "#00ff00"]);
   });
 });
 
 describe("santaHeadingColor", () => {
-  it("takes the arrow colour, else the chrome accent", () => {
-    expect(santaHeadingColor({ overlay: { arrowColor: "#111111" }, chrome: { accent: "#222222" } } as never)).toBe("#111111");
-    expect(santaHeadingColor({ overlay: { arrowColor: "" }, chrome: { accent: "#222222" } } as never)).toBe("#222222");
+  it("takes the heading colour, else the arrow colour, else the chrome accent", () => {
+    const chrome = { accent: "#222222" };
+    expect(santaHeadingColor({ overlay: { headingColor: "#333333", arrowColor: "#111111" }, chrome } as never)).toBe("#333333");
+    expect(santaHeadingColor({ overlay: { headingColor: "", arrowColor: "#111111" }, chrome } as never)).toBe("#111111");
+    expect(santaHeadingColor({ overlay: { headingColor: "", arrowColor: "" }, chrome } as never)).toBe("#222222");
   });
 });

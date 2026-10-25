@@ -96,6 +96,7 @@ function makeTheme(key: string, over: Partial<MapTheme> = {}): MapTheme {
       timeLabelFg: "hsl(0 0% 0%)",
       timeLabelOpacity: 1,
       userColor: "hsl(210 100% 40%)",
+      headingColor: "#ffb300",
     },
     chrome: {
       bg: "hsl(0 0% 100%)",
@@ -597,6 +598,7 @@ describe("TrackerMenu in the Map section", () => {
         timeLabelFg: "white",
         timeLabelOpacity: 1,
         userColor: "red",
+        headingColor: "#ffb300",
       },
       defaultLightMode: false,
       defaultDarkMode: false,

@@ -56,6 +56,7 @@ function row(over: Partial<Row> = {}): Row {
       timeLabelFg: "#ffffff",
       timeLabelOpacity: 0.8,
       userColor: "#c62828",
+      headingColor: "#ffb300",
     },
     defaultLightMode: false,
     defaultDarkMode: false,
@@ -151,6 +152,16 @@ describe("loadThemes", () => {
       defaultDarkMode: true,
     });
     expect(typeof first.getStyle).toBe("function");
+  });
+
+  it("reads the heading colour, and an empty one for a row without it", () => {
+    const withIt = row({ key: "a" });
+    const { headingColor: _drop, ...rest } = withIt.overlay as Record<string, unknown>;
+    const without = row({ key: "b", overlay: rest as never });
+    const [a, b] = loadThemes({ trackerThemes: [withIt, without] });
+    expect(a.overlay.headingColor).toBe("#ffb300");
+    expect(b.overlay.headingColor).toBe("");
+    expect(b.overlay.arrowColor).toBe("#ffffff");
   });
 
   it("gives an empty list for no snapshot or no themes", () => {

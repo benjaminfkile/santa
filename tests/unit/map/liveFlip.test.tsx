@@ -133,6 +133,7 @@ const snapshot = {
         timeLabelFg: "white",
         timeLabelOpacity: 0.8,
         userColor: "red",
+        headingColor: "#ffb300",
       },
       defaultLightMode: true,
       defaultDarkMode: false,

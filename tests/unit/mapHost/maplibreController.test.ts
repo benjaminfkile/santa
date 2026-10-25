@@ -286,14 +286,22 @@ describe("the Santa pin and the camera", () => {
     expect(map.jumpTo).not.toHaveBeenCalled();
   });
 
-  it("colours the heading indicator from the theme and recolours it on setTheme", async () => {
+  it("colours the heading beam from the theme's heading colour and recolours it on setTheme", async () => {
     const { c } = build();
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: 90 }, true);
     const strokes = () => Array.from(santaHeading().querySelectorAll("[stroke]")).map((e) => e.getAttribute("stroke"));
-    expect(strokes()).toContain(themes().light.overlay.arrowColor);
-    await c.setTheme(themes().dark);
-    expect(strokes()).toContain(themes().dark.overlay.arrowColor);
-    expect(strokes()).not.toContain(themes().light.overlay.arrowColor);
+    const stops = () => Array.from(santaHeading().querySelectorAll("stop")).map((e) => e.getAttribute("stop-color"));
+    const light = themes().light.overlay;
+    expect(strokes()).toContain(light.headingColor);
+    expect(strokes()).not.toContain(light.routeColor);
+    expect(stops()).toEqual([light.headingColor, light.headingColor]);
+    const dark = themes().dark;
+    await c.setTheme({ ...dark, overlay: { ...dark.overlay, headingColor: "#69f0ae" } });
+    expect(strokes()).toContain("#69f0ae");
+    expect(strokes()).not.toContain(light.headingColor);
+    expect(stops()).toEqual(["#69f0ae", "#69f0ae"]);
+    await c.setTheme({ ...dark, overlay: { ...dark.overlay, headingColor: "" } });
+    expect(strokes()).toContain(dark.overlay.arrowColor);
   });
 
   it("hides the pin while waiting for a fix and dims it while the signal is lost", () => {

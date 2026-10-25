@@ -284,6 +284,7 @@ describe("Map section themes", () => {
         timeLabelFg: "white",
         timeLabelOpacity: 1,
         userColor: "red",
+        headingColor: "#ffb300",
       },
       defaultLightMode: flags.light === true,
       defaultDarkMode: flags.dark === true,
