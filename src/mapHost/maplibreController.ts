@@ -13,8 +13,16 @@
 // of 8.5. `setTheme` awaits the theme's body; a later call wins over an
 // earlier one still waiting, and the colour scheme never changes it.
 // The Santa pin is an HTML marker holding the same image as on Google,
-// its tip on the fix, hidden while waiting for a fix and filtered while
-// the signal is lost (8.7); the viewpoints are HTML markers holding the
+// its tip on the displayed position, hidden while waiting for a fix and
+// filtered while the signal is lost (8.7). Every fix with a new seq goes
+// to the Santa motion (santaMotion.ts), whose frames place the marker
+// with `setLngLat` and turn it with `setRotation` (`rotationAlignment`
+// "map"); MapLibre rotates the element about its transform origin, so
+// the image's origin is its tip and the turn pivots there. While
+// following, every frame moves the camera centre to the displayed
+// position with `jumpTo` (no animation, zoom untouched); `recenter` makes
+// one animated `panTo` there and follows per frame again on `moveend`.
+// The viewpoints are HTML markers holding the
 // same badges and popover (viewpointsOverlay.ts), rebuilt only when the
 // list says something new; the viewer's location is an HTML marker and a
 // dotted line (userLocation.ts), the line fading toward the dot while the
@@ -23,7 +31,7 @@
 // The map is locked to the event box: `maxBounds` and the least zoom that
 // fits it (recomputed when the container resizes), and every pan the
 // controller makes clamped to it. A fix outside the box draws Santa on its
-// edge and pans there; a flight history point outside it is drawn but left
+// edge and follows there; a flight history point outside it is drawn but left
 // out of `fitHistory`. The first view fits the box when there is no fix,
 // centres on the fix at the default zoom when it is inside the box, and
 // takes the default centre and zoom when the fix lies outside it.
@@ -65,6 +73,13 @@ import {
   type RouteLayers,
 } from "./routeLayers";
 import { mapBounds, themeStyle, withoutTerrain, type TrackerMap } from "./themeStyle";
+import {
+  createSantaMotion,
+  followPageVisibility,
+  RECENTER_PAN_MS,
+  shortestDelta,
+  type SantaFrame,
+} from "../map/santaMotion";
 import { createMapLibreUserLocation, type MapLibreUserLocation } from "./userLocation";
 
 export type MaplibreControllerOptions = MapControllerOptions & {
@@ -242,9 +257,48 @@ export function createMaplibreController(
   // The Santa pin, its tip (the image's bottom centre) on the fix.
   const pin = createSantaPinImage(SANTA_MARKER_HEIGHT);
   pin.setAttribute("data-testid", "santa-marker");
-  const santa = opts.showSantaMarker ? new Marker({ element: pin, anchor: "bottom" }) : null;
+  pin.style.transformOrigin = "50% 100%";
+  const santa = opts.showSantaMarker
+    ? new Marker({ element: pin, anchor: "bottom", rotationAlignment: "map" })
+    : null;
   let santaShown = false;
-  let santaAt: LatLng | null = null;
+  // Where the pin stands now, clamped to the box.
+  let displayed: LatLng | null = null;
+  // The rotation applied, unwrapped, so every turn is the short way.
+  let rotation = 0;
+  // While a recenter's pan runs, frames leave the camera alone.
+  let recentering: ReturnType<typeof setTimeout> | null = null;
+  let localSeq = 0;
+
+  function place(frame: SantaFrame): void {
+    if (disposed) return;
+    displayed = clamp({ lat: frame.lat, lng: frame.lng });
+    if (santa !== null) {
+      santa.setLngLat([displayed.lng, displayed.lat]);
+      const next = rotation + shortestDelta(rotation, frame.headingDeg ?? 0);
+      if (next !== rotation) {
+        rotation = next;
+        santa.setRotation(rotation);
+      }
+      if (!santaShown) santa.addTo(map);
+      santaShown = true;
+    }
+    if (following && recentering === null) map.jumpTo({ center: [displayed.lng, displayed.lat] });
+  }
+
+  function endRecenter(): void {
+    if (recentering === null) return;
+    clearTimeout(recentering);
+    recentering = null;
+  }
+
+  const motion = createSantaMotion({
+    now: () => performance.now(),
+    raf: (cb) => requestAnimationFrame(cb),
+    caf: (id) => cancelAnimationFrame(id),
+    sink: place,
+  });
+  const stopVisibility = followPageVisibility(motion);
 
   // The viewpoint popover lives in the map view wrapper, whose box is the
   // canvas's box, so the map's container pixels are its pixels.
@@ -290,6 +344,8 @@ export function createMaplibreController(
       );
     }
   } catch (err) {
+    stopVisibility();
+    motion.dispose();
     stopContextWatch();
     observer?.disconnect();
     map.remove();
@@ -300,6 +356,9 @@ export function createMaplibreController(
     if (disposed || !following) return;
     following = false;
     opts.onFollowChange?.(false);
+  });
+  map.on("moveend", () => {
+    if (!disposed) endRecenter();
   });
   map.on("move", () => {
     if (!disposed) badges?.position();
@@ -378,26 +437,24 @@ export function createMaplibreController(
     },
     setLiveFix(state, pos, seqChanged) {
       if (disposed) return;
-      const shown = pos === null ? null : clamp(pos);
-      if (santa !== null) {
-        if (state === "waitingForFix") {
-          santaAt = null;
-          if (santaShown) santa.remove();
-          santaShown = false;
-        } else {
-          const variant = state === "signalLost" ? "signalLost" : "tracking";
-          pin.style.filter = variant === "signalLost" ? SIGNAL_LOST_FILTER : "";
-          pin.setAttribute("data-variant", variant);
-          if (shown !== null) santaAt = shown;
-          if (santaAt !== null) {
-            santa.setLngLat([santaAt.lng, santaAt.lat]);
-            if (!santaShown) santa.addTo(map);
-            santaShown = true;
-          }
-        }
+      if (state === "waitingForFix") {
+        displayed = null;
+        if (santaShown) santa?.remove();
+        santaShown = false;
+      } else {
+        const variant = state === "signalLost" ? "signalLost" : "tracking";
+        pin.style.filter = variant === "signalLost" ? SIGNAL_LOST_FILTER : "";
+        pin.setAttribute("data-variant", variant);
       }
-      userLoc?.setSanta(pos);
-      if (following && seqChanged && shown !== null) panTo(shown);
+      if (state === "waitingForFix" || pos === null) {
+        motion.rest();
+      } else if (seqChanged || !motion.hasFix()) {
+        motion.push(
+          { seq: pos.seq ?? --localSeq, lat: pos.lat, lng: pos.lng, headingDeg: pos.headingDeg ?? null },
+          performance.now(),
+        );
+      }
+      userLoc?.setSanta(pos === null ? null : { lat: pos.lat, lng: pos.lng });
     },
     follow(on) {
       if (disposed) return;
@@ -406,7 +463,14 @@ export function createMaplibreController(
     },
     recenter(pos) {
       if (disposed) return;
-      if (pos !== null) panTo(clamp(pos));
+      const target = displayed ?? (pos === null ? null : clamp(pos));
+      if (target !== null) {
+        endRecenter();
+        recentering = setTimeout(() => {
+          recentering = null;
+        }, RECENTER_PAN_MS);
+        panTo(target);
+      }
       following = true;
       opts.onFollowChange?.(true);
     },
@@ -442,6 +506,9 @@ export function createMaplibreController(
       observer?.disconnect();
       observer = null;
       clearViewpoints();
+      endRecenter();
+      stopVisibility();
+      motion.dispose();
       santa?.remove();
       userLoc?.destroy();
       userLoc = null;

@@ -1,4 +1,5 @@
-// A small stand-in for the Google Maps libraries: enough of `Map`,
+// A small stand-in for the Google Maps libraries: enough of `Map` (its
+// `panTo` and `moveCamera` recorded),
 // `OverlayView`, `Polyline`, `Marker`, and the global `google.maps`
 // namespace for the real MapView, controller, Santa marker, flight history
 // overlay, viewpoints overlay, and user location to run under jsdom. Every object records
@@ -59,8 +60,18 @@ export class FakeMap {
     this.zoom = z;
     this.trigger("zoom_changed");
   }
+  // Every `panTo` argument, in order.
+  panToCalls: google.maps.LatLngLiteral[] = [];
   panTo(p: google.maps.LatLngLiteral) {
+    this.panToCalls.push(p);
     this.center = p;
+  }
+  // Every `moveCamera` argument, in order.
+  moveCameraCalls: { center?: google.maps.LatLngLiteral; zoom?: number }[] = [];
+  moveCamera(opts: { center?: google.maps.LatLngLiteral; zoom?: number }) {
+    this.moveCameraCalls.push(opts);
+    if (opts.center !== undefined) this.center = opts.center;
+    if (opts.zoom !== undefined) this.zoom = opts.zoom;
   }
   setMapTypeId(t: string) {
     this.mapTypeId = t;

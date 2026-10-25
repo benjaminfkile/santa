@@ -2,13 +2,18 @@
 // the flight history overlay, the viewpoints overlay, the user location, and
 // the map styles (the theme's with the section's place filter on top).
 // Subscribes to the store once and moves the marker imperatively; React
-// never re-renders on a fix. `destroy` removes the map listeners and pending timers, and every
+// never re-renders on a fix. Every fix with a new seq goes to the Santa
+// motion (santaMotion.ts), whose frames place and turn the pin and, while
+// following, move the camera centre to the displayed position with
+// `moveCamera` (no animation, zoom untouched); `recenter` makes one
+// animated `panTo` to the displayed position and follows per frame again
+// once the map is idle. `destroy` removes the map listeners and pending timers, and every
 // method is a no-op afterwards, so a late call or a late map event on a
 // disposed controller draws nothing and calls back into nothing.
 // The map is locked to the event box (8.2): a strict restriction to it, a
 // minimum zoom that fits it in the canvas (recomputed when the canvas
-// resizes, which also moves an outside visitor's dot), and every pan the controller makes clamped to it. A fix
-// outside the box draws Santa on its edge and pans there; a flight history
+// resizes, which also moves an outside visitor's dot), and every camera move the controller makes clamped to it. A fix
+// outside the box draws Santa on its edge and follows there; a flight history
 // point outside it is drawn but left out of `fitHistory`. `setTheme`
 // awaits the theme's style body before applying it; a later call wins over
 // an earlier one still waiting.
@@ -31,6 +36,17 @@ import type { MapsLibs } from "./loadMaps";
 import type { MapTheme, ThemeStyle } from "./themes";
 import { poiStyles, type PoiFilter } from "./poiStyles";
 import { clampToBbox, fittedMinZoom, inBox, MIN_ZOOM_FLOOR, type Bbox } from "./bounds";
+import {
+  createSantaMotion,
+  followPageVisibility,
+  RECENTER_PAN_MS,
+  type SantaFrame,
+  type SantaMotion,
+} from "./santaMotion";
+
+// The store's fix as the map takes it: the position, with the seq and the
+// heading when the store has them.
+export type LiveFix = google.maps.LatLngLiteral & { seq?: number | null; headingDeg?: number | null };
 
 export type MapControllerOptions = {
   theme: MapTheme;
@@ -53,11 +69,7 @@ export type MapController = {
   setFlightHistory(points: HistoryPoint[] | null): void;
   setViewpoints(list: readonly TrackerViewpoint[]): void;
   setToggles(t: { flightHistory?: boolean; timeLabels?: boolean; landmarks?: boolean }): void;
-  setLiveFix(
-    state: LiveState,
-    pos: google.maps.LatLngLiteral | null,
-    seqChanged: boolean,
-  ): void;
+  setLiveFix(state: LiveState, pos: LiveFix | null, seqChanged: boolean): void;
   follow(on: boolean): void;
   recenter(pos: google.maps.LatLngLiteral | null): void;
   zoomBy(delta: number): void;
@@ -79,6 +91,13 @@ export function createMapController(
   let toggles = { flightHistory: false, timeLabels: true, landmarks: true };
   let following = true;
   let santa: SantaMarker | null = null;
+  let motion: SantaMotion | null = null;
+  let stopVisibility: (() => void) | null = null;
+  // Where the pin stands now, clamped to the box.
+  let displayed: google.maps.LatLngLiteral | null = null;
+  // While a recenter's pan runs, frames leave the camera alone.
+  let recentering: ReturnType<typeof setTimeout> | null = null;
+  let localSeq = 0;
   let userLoc: UserLocation | null = null;
   let zoomDebounce: number | null = null;
   let disposed = false;
@@ -141,6 +160,13 @@ export function createMapController(
     if (opts.showSantaMarker) {
       santa = createSantaMarker(libs, map);
     }
+    motion = createSantaMotion({
+      now: () => performance.now(),
+      raf: (cb) => requestAnimationFrame(cb),
+      caf: (id) => cancelAnimationFrame(id),
+      sink: place,
+    });
+    stopVisibility = followPageVisibility(motion);
 
     if (opts.showUserLocation) {
       userLoc = createUserLocation(
@@ -156,12 +182,32 @@ export function createMapController(
   } catch (err) {
     resizeObserver?.disconnect();
     overlay.destroy();
+    stopVisibility?.();
+    motion?.dispose();
     santa?.destroy();
     userLoc?.destroy();
     throw err;
   }
 
+  function place(frame: SantaFrame): void {
+    if (disposed) return;
+    displayed = clamp({ lat: frame.lat, lng: frame.lng });
+    santa?.setPosition(displayed);
+    santa?.setHeading(frame.headingDeg);
+    if (following && recentering === null) map.moveCamera({ center: displayed });
+  }
+
+  function endRecenter(): void {
+    if (recentering === null) return;
+    clearTimeout(recentering);
+    recentering = null;
+  }
+
   const listeners: google.maps.MapsEventListener[] = [];
+
+  listeners.push(map.addListener("idle", () => {
+    if (!disposed) endRecenter();
+  }));
 
   listeners.push(map.addListener("dragstart", () => {
     if (disposed) return;
@@ -235,10 +281,21 @@ export function createMapController(
     },
     setLiveFix(state, pos, seqChanged) {
       if (disposed) return;
-      const shown = pos === null ? null : clamp(pos);
-      santa?.setState(state, shown);
-      userLoc?.setSanta(pos);
-      if (following && seqChanged && shown !== null) map.panTo(shown);
+      if (state === "waitingForFix") {
+        displayed = null;
+        santa?.setState(state, null);
+      } else {
+        santa?.setVariant(state === "signalLost" ? "signalLost" : "tracking");
+      }
+      if (state === "waitingForFix" || pos === null) {
+        motion?.rest();
+      } else if (seqChanged || motion?.hasFix() !== true) {
+        motion?.push(
+          { seq: pos.seq ?? --localSeq, lat: pos.lat, lng: pos.lng, headingDeg: pos.headingDeg ?? null },
+          performance.now(),
+        );
+      }
+      userLoc?.setSanta(pos === null ? null : { lat: pos.lat, lng: pos.lng });
     },
     follow(on) {
       if (disposed) return;
@@ -247,7 +304,14 @@ export function createMapController(
     },
     recenter(pos) {
       if (disposed) return;
-      if (pos !== null) map.panTo(clamp(pos));
+      const target = displayed ?? (pos === null ? null : clamp(pos));
+      if (target !== null) {
+        endRecenter();
+        recentering = setTimeout(() => {
+          recentering = null;
+        }, RECENTER_PAN_MS);
+        map.panTo(target);
+      }
       following = true;
       opts.onFollowChange?.(true);
     },
@@ -281,6 +345,11 @@ export function createMapController(
       listeners.length = 0;
       overlay.destroy();
       viewpoints.destroy();
+      endRecenter();
+      stopVisibility?.();
+      stopVisibility = null;
+      motion?.dispose();
+      motion = null;
       santa?.destroy();
       santa = null;
       userLoc?.destroy();

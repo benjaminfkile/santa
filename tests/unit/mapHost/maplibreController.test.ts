@@ -5,7 +5,11 @@
 //    the box at the default zoom, and takes the default centre when the
 //    fix lies outside it; the map takes `maxBounds` and the fitted least
 //    zoom.
-//  - A fix outside the box stands Santa on its edge and pans there;
+//  - The first fix is placed at once; a second fix within the playback
+//    delay is not yet at its target and glides there frame by frame; the
+//    pin turns through `setRotation` about its tip; the camera follows
+//    through `jumpTo`, never `panTo`, except for recenter's one pan.
+//  - A fix outside the box stands Santa on its edge and follows there;
 //    `recenter` and `fitHistory` clamp to the box.
 //  - `setMapType` takes exactly the theme's terrain layers out and puts
 //    them back; `setPois` filters the marked places layers through
@@ -33,6 +37,7 @@ import { SIGNAL_LOST_FILTER } from "../../../src/map/santaMarker";
 import { ROUTE_THEME_ROWS, routeStyle } from "./routeThemes";
 import { initialBearing } from "../../../src/map/outsideMarker";
 import { distanceMetres } from "../../../src/mapHost/userLocation";
+import { fakeFrames } from "../map/fakeFrames";
 
 vi.mock("maplibre-gl", async () => (await import("./fakeMaplibre")).fakeMaplibreModule);
 vi.mock("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url", () => ({
@@ -111,6 +116,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe("the first view", () => {
@@ -138,19 +144,76 @@ describe("the first view", () => {
 });
 
 describe("the Santa pin and the camera", () => {
-  it("stands the pin on the fix and pans there while following", () => {
+  it("places the first fix at once and follows through jumpTo, never panTo", () => {
+    fakeFrames().install();
     const { c, map } = build();
-    c.setLiveFix("tracking", { lat: 46.9, lng: -113.9 }, true);
+    c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: 90 }, true);
     expect(santaMarker()?.lngLat).toEqual([-113.9, 46.9]);
     expect(santaMarker()?.anchor).toBe("bottom");
-    expect(map.panTo).toHaveBeenLastCalledWith([-113.9, 46.9], expect.anything());
+    expect(santaMarker()?.rotationAlignment).toBe("map");
+    expect(santaMarker()?.rotation).toBe(90);
+    expect(santaMarker()?.element.style.transformOrigin).toBe("50% 100%");
+    expect(map.jumpTo).toHaveBeenLastCalledWith({ center: [-113.9, 46.9] });
+    expect(map.panTo).not.toHaveBeenCalled();
   });
 
-  it("puts a fix outside the box on the box edge and pans to the nearest in-box point", () => {
+  it("a second fix within the delay is not yet at its target and glides there, the camera with it", () => {
+    const frames = fakeFrames().install();
+    const { c, map } = build();
+    c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: null }, true);
+    frames.wait(1000);
+    c.setLiveFix("tracking", { lat: 46.9, lng: -113.899, seq: 2, headingDeg: null }, true);
+    frames.step(200);
+    const lng = santaMarker()!.lngLat![0];
+    expect(lng).toBeGreaterThan(-113.9);
+    expect(lng).toBeLessThan(-113.899);
+    expect(map.jumpTo).toHaveBeenLastCalledWith({ center: [lng, 46.9] });
+    frames.step(3000);
+    expect(santaMarker()?.lngLat).toEqual([-113.899, 46.9]);
+    expect(map.jumpTo).toHaveBeenLastCalledWith({ center: [-113.899, 46.9] });
+    expect(map.jumpTo.mock.calls.length).toBeGreaterThan(10);
+    expect(map.panTo).not.toHaveBeenCalled();
+    expect(frames.pending()).toBe(0);
+  });
+
+  it("turns the short way: 350 then 10 passes through 0", () => {
+    const frames = fakeFrames().install();
+    const { c } = build();
+    c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: 350 }, true);
+    expect(santaMarker()?.rotation).toBe(-10);
+    frames.wait(1000);
+    c.setLiveFix("tracking", { lat: 46.9, lng: -113.899, seq: 2, headingDeg: 10 }, true);
+    const seen: number[] = [];
+    frames.step(3000, () => seen.push(santaMarker()!.rotation));
+    expect(seen.every((r) => r >= -10 && r <= 10)).toBe(true);
+    expect(seen[seen.length - 1]).toBe(10);
+  });
+
+  it("recenter makes one animated pan to the displayed position, then follows per frame on moveend", () => {
+    const frames = fakeFrames().install();
+    const { c, map } = build();
+    c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: null }, true);
+    map.fire("dragstart");
+    frames.wait(1000);
+    c.setLiveFix("tracking", { lat: 46.9, lng: -113.899, seq: 2, headingDeg: null }, true);
+    frames.step(200);
+    expect(map.jumpTo).toHaveBeenCalledTimes(1);
+    c.recenter({ lat: 46.9, lng: -113.899 });
+    expect(map.panTo).toHaveBeenCalledTimes(1);
+    expect(map.panTo).toHaveBeenLastCalledWith(santaMarker()?.lngLat, { animate: true });
+    frames.step(100);
+    expect(map.jumpTo).toHaveBeenCalledTimes(1);
+    map.fire("moveend");
+    frames.step(3000);
+    expect(map.jumpTo).toHaveBeenLastCalledWith({ center: [-113.899, 46.9] });
+    expect(map.panTo).toHaveBeenCalledTimes(1);
+  });
+
+  it("puts a fix outside the box on the box edge and follows to the nearest in-box point", () => {
     const { c, map } = build();
     c.setLiveFix("tracking", { lat: 48, lng: -112 }, true);
     expect(santaMarker()?.lngLat).toEqual([BOX.east, BOX.north]);
-    expect(map.panTo).toHaveBeenLastCalledWith([BOX.east, BOX.north], expect.anything());
+    expect(map.jumpTo).toHaveBeenLastCalledWith({ center: [BOX.east, BOX.north] });
   });
 
   it("hides the pin while waiting for a fix and dims it while the signal is lost", () => {
@@ -170,6 +233,7 @@ describe("the Santa pin and the camera", () => {
     expect(onFollowChange).toHaveBeenCalledWith(false);
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.9 }, true);
     expect(map.panTo).not.toHaveBeenCalled();
+    expect(map.jumpTo).not.toHaveBeenCalled();
   });
 
   it("recenter clamps its target to the box and follows again", () => {
@@ -473,6 +537,7 @@ describe("failures and destroy", () => {
     expect(FakeMarker.live.size).toBe(0);
     const styles = map.setStyle.mock.calls.length;
     const pans = map.panTo.mock.calls.length;
+    const jumps = map.jumpTo.mock.calls.length;
     onFollowChange.mockClear();
     await c.setTheme(themes().dark);
     c.setPois({ kinds: ["park"] });
@@ -493,6 +558,7 @@ describe("failures and destroy", () => {
     vi.advanceTimersByTime(CONTEXT_RESTORE_MS + 1000);
     expect(map.setStyle.mock.calls.length).toBe(styles);
     expect(map.panTo.mock.calls.length).toBe(pans);
+    expect(map.jumpTo.mock.calls.length).toBe(jumps);
     expect(map.fitBounds).not.toHaveBeenCalled();
     expect(FakeMarker.live.size).toBe(0);
     expect(onFollowChange).not.toHaveBeenCalled();
