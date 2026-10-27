@@ -1,48 +1,43 @@
-// docs/site.md sections 8.7 and 8.9. The legacy Santa pin, one bundled
-// asset (`santa-pin.png`, 100 x 192 with the transparent padding trimmed
-// and the pin tip at the bottom centre) shared by the tracker's Santa
-// marker and the route map's pin. The source is sharp to about 64 css px
-// tall, so both maps draw it smaller and it stays crisp at retina. The
-// tracker's Santa marker on both renderers is `createSantaPinElement`: the
-// image upright with a heading beam from its tip.
+// docs/site.md sections 8.7 and 8.10. The Santa marker shared by the
+// tracker's two renderers: a circle in the theme's chrome colours under a
+// red and white Santa hat drawn as inline SVG, with a heading arc on its
+// rim. `createSantaPinElement` builds it; the wrapper's centre is the fix.
 
-import santaPinUrl from "./santa-pin.png";
 import type { MapTheme } from "./themes";
 
-export const SANTA_PIN_URL: string = santaPinUrl;
-
-const SOURCE_WIDTH = 100;
-const SOURCE_HEIGHT = 192;
-
-// An `img` of the pin `height` css px tall at the source's aspect,
-// decorative (empty alt, `aria-hidden`), never a pointer target.
-export function createSantaPinImage(height: number): HTMLImageElement {
-  const img = document.createElement("img");
-  img.src = SANTA_PIN_URL;
-  img.alt = "";
-  img.setAttribute("aria-hidden", "true");
-  img.draggable = false;
-  img.decoding = "async";
-  img.style.display = "block";
-  img.style.height = `${height}px`;
-  img.style.width = `${Math.round((height * SOURCE_WIDTH * 100) / SOURCE_HEIGHT) / 100}px`;
-  img.style.pointerEvents = "none";
-  return img;
-}
-
-// The heading indicator's beam: a wedge from the pin tip BEAM_SPREAD
-// degrees wide (half each side of the heading) and BEAM_LENGTH css px
-// long, drawn in an SVG BEAM_BOX css px square centred on the tip.
-export const BEAM_SPREAD = 64;
-export const BEAM_LENGTH = 56;
-export const BEAM_BOX = 120;
+// The wrapper and the circle, css px square.
+export const SANTA_MARKER_SIZE = 36;
+// The heading arc: its radius (the circle's 18, half the ring's 3, and a
+// 3.5 px gap), its spread in degrees (half each side of the heading), its
+// stroke and its halo's, all in css px, drawn in an SVG HEADING_BOX css px
+// square centred on the circle.
+export const ARC_RADIUS = 23;
+export const ARC_SPREAD = 50;
+export const ARC_WIDTH = 3.5;
+export const ARC_HALO_WIDTH = 5.5;
+export const HEADING_BOX = 60;
 export const HEADING_TRANSITION_MS = 300;
+const RADIUS = SANTA_MARKER_SIZE / 2;
+const RING_WIDTH = 3;
 const HALO = "rgba(0, 0, 0, 0.45)";
 const SVG_NS = "http://www.w3.org/2000/svg";
 
-// Gives each beam's gradient its own id, so two pins on one page never
-// share one.
-let beamCount = 0;
+// The hat: a 91 x 63 drawing scaled to 41.4 css px wide, centred, its
+// bottom edge 7.2 px below the circle's top edge so the brim sits on the
+// circle. Its colours are fixed on every theme.
+const HAT_TRANSFORM = "translate(-20.7 -39.46) scale(0.4549)";
+const HAT_SHAPES: ReadonlyArray<[string, Record<string, string>]> = [
+  // The cone.
+  ["path", { d: "M 8 50 C 12 30, 24 12, 44 6 C 56 3, 68 6, 76 12 C 80 15, 82 18, 80 21 C 74 14, 64 12, 56 16 C 68 26, 76 38, 78 50 Z", fill: "#d8262b" }],
+  // Its highlight.
+  ["path", { d: "M 8 50 C 12 30, 24 12, 44 6 C 50 5, 56 5, 62 6 C 50 10, 36 22, 30 50 Z", fill: "#ffffff", "fill-opacity": "0.12" }],
+  // The brim.
+  ["rect", { x: "3", y: "46", width: "85", height: "16", rx: "8", fill: "#ffffff", stroke: "#d6d6d6", "stroke-width": "0.8" }],
+  // The pom.
+  ["circle", { cx: "80", cy: "17", r: "7.5", fill: "#ffffff", stroke: "#d6d6d6", "stroke-width": "0.8" }],
+];
+
+export type SantaMarkerColors = { fill: string; ring: string; heading: string };
 
 // Degrees from `a` to `b` the short way around, in [-180, 180).
 export function shortestDelta(a: number, b: number): number {
@@ -61,54 +56,93 @@ export function santaHeadingColor(theme: Pick<MapTheme, "overlay" | "chrome">): 
   return theme.overlay.headingColor || theme.overlay.arrowColor || theme.chrome.accent;
 }
 
+// The marker's colours for a theme: the circle filled in the chrome
+// background and ringed in the chrome accent, the arc in the heading
+// colour. The fallbacks serve a theme row with an empty chrome field.
+export function santaMarkerColors(theme: Pick<MapTheme, "overlay" | "chrome">): SantaMarkerColors {
+  const heading = santaHeadingColor(theme);
+  return { fill: theme.chrome.bg || "#ffffff", ring: theme.chrome.accent || heading, heading };
+}
+
+function svgElement<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string>): SVGElementTagNameMap[K] {
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  return el;
+}
+
 export type SantaPinElement = {
-  // The wrapper, the image's size, its bottom centre the pin tip.
+  // The wrapper, SANTA_MARKER_SIZE css px square, its centre the fix.
   element: HTMLDivElement;
-  // The upright pin image, the only part the signal-lost filter touches.
-  image: HTMLImageElement;
-  // Turns the beam the short way to the heading as seen on a map
-  // turned `bearingDeg` from north; null hides the indicator where it
-  // stands.
+  // The circle and the hat, the only part the signal-lost filter touches.
+  body: SVGSVGElement;
+  // Turns the arc the short way to the heading as seen on a map turned
+  // `bearingDeg` from north; null hides the indicator where it stands.
   setHeading(headingDeg: number | null, bearingDeg?: number): void;
-  setColor(color: string): void;
+  // Recolours the circle's fill and ring and the arc.
+  setColors(colors: SantaMarkerColors): void;
 };
 
-// A wrapper `div` holding the upright pin image and, under it, the heading
-// indicator: an SVG beam from the pin tip, a wedge filled with a radial
-// gradient of the colour (0.55 alpha at the tip to 0.08 at the arc), its
-// two edges and arc stroked in the colour over a dark halo. The SVG is
-// centred on the tip with the tip as its origin; the beam points at the
-// heading on the map as it is turned by turning the SVG about the tip to
-// the heading minus the map's bearing (`transform: rotate()` with a 300 ms
-// transition); the rotation is kept unwrapped and stepped by
-// `shortestDelta`, so every turn is the short way. The image never
-// rotates. The SVG carries `data-testid="santa-heading"`, `data-heading`,
-// the true heading in whole degrees, and `data-bearing`, the bearing in
-// whole degrees (both absent while the heading is null, when its opacity
-// is 0). Nothing in it is a pointer target.
-export function createSantaPinElement(height: number, color: string): SantaPinElement {
-  const image = createSantaPinImage(height);
-  image.style.position = "relative";
+// A wrapper `div` holding, first, the body: an SVG with a circle of radius
+// 18 at its centre in the fill colour, stroked 3 px in the ring colour,
+// under the Santa hat. Then the heading indicator: an SVG centred on the
+// circle holding one arc of ARC_RADIUS spanning ARC_SPREAD degrees centred
+// on north before the turn, stroked once as a dark halo and once in the
+// heading colour, above the body and the hat. The arc points at the
+// heading on the map as it is turned by turning its SVG about the centre
+// to the heading minus the map's bearing (`transform: rotate()` with a
+// 300 ms transition); the rotation is kept unwrapped and stepped by
+// `shortestDelta`, so every turn is the short way. The body never
+// rotates. The indicator carries `data-testid="santa-heading"`,
+// `data-heading`, the true heading in whole degrees, and `data-bearing`,
+// the bearing in whole degrees (both absent while the heading is null,
+// when its opacity is 0). Nothing in it is a pointer target.
+export function createSantaPinElement(colors: SantaMarkerColors): SantaPinElement {
   const element = document.createElement("div");
   element.style.position = "relative";
-  element.style.width = image.style.width;
-  element.style.height = `${height}px`;
+  element.style.width = `${SANTA_MARKER_SIZE}px`;
+  element.style.height = `${SANTA_MARKER_SIZE}px`;
   element.style.pointerEvents = "none";
 
-  const half = BEAM_BOX / 2;
-  const svg = document.createElementNS(SVG_NS, "svg");
-  svg.setAttribute("data-testid", "santa-heading");
-  svg.setAttribute("aria-hidden", "true");
-  svg.setAttribute("width", String(BEAM_BOX));
-  svg.setAttribute("height", String(BEAM_BOX));
-  svg.setAttribute("viewBox", `${-half} ${-half} ${BEAM_BOX} ${BEAM_BOX}`);
-  svg.setAttribute("fill", "none");
-  svg.setAttribute("stroke-linecap", "round");
-  svg.setAttribute("stroke-linejoin", "round");
+  // The body: the circle, then the hat over it.
+  const body = svgElement("svg", {
+    "data-testid": "santa-body",
+    "aria-hidden": "true",
+    width: String(SANTA_MARKER_SIZE),
+    height: String(SANTA_MARKER_SIZE),
+    viewBox: `${-RADIUS} ${-RADIUS} ${SANTA_MARKER_SIZE} ${SANTA_MARKER_SIZE}`,
+  });
+  body.style.display = "block";
+  body.style.overflow = "visible";
+  body.style.pointerEvents = "none";
+  const circle = svgElement("circle", {
+    cx: "0",
+    cy: "0",
+    r: String(RADIUS),
+    fill: colors.fill,
+    stroke: colors.ring,
+    "stroke-width": String(RING_WIDTH),
+  });
+  circle.style.filter = "drop-shadow(0 1.5px 2.5px rgba(0, 0, 0, 0.4))";
+  const hat = svgElement("g", { transform: HAT_TRANSFORM });
+  hat.style.filter = "drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.3))";
+  for (const [tag, attrs] of HAT_SHAPES) hat.appendChild(svgElement(tag as "path", attrs));
+  body.append(circle, hat);
+
+  // The heading indicator, centred on the circle.
+  const half = HEADING_BOX / 2;
+  const svg = svgElement("svg", {
+    "data-testid": "santa-heading",
+    "aria-hidden": "true",
+    width: String(HEADING_BOX),
+    height: String(HEADING_BOX),
+    viewBox: `${-half} ${-half} ${HEADING_BOX} ${HEADING_BOX}`,
+    fill: "none",
+    "stroke-linecap": "round",
+  });
   const style = svg.style;
   style.position = "absolute";
-  style.left = `calc(50% - ${half}px)`;
-  style.top = `${height - half}px`;
+  style.left = `${RADIUS - half}px`;
+  style.top = `${RADIUS - half}px`;
   style.overflow = "visible";
   style.pointerEvents = "none";
   style.opacity = "0";
@@ -116,56 +150,23 @@ export function createSantaPinElement(height: number, color: string): SantaPinEl
   style.transform = "rotate(0deg)";
   style.transition = `transform ${HEADING_TRANSITION_MS}ms ease-out, opacity ${HEADING_TRANSITION_MS}ms ease-out`;
 
-  // The gradient: the colour from the tip out to the arc.
-  beamCount += 1;
-  const gradientId = `santa-beam-${beamCount}`;
-  const defs = document.createElementNS(SVG_NS, "defs");
-  const gradient = document.createElementNS(SVG_NS, "radialGradient");
-  gradient.setAttribute("id", gradientId);
-  gradient.setAttribute("gradientUnits", "userSpaceOnUse");
-  gradient.setAttribute("cx", "0");
-  gradient.setAttribute("cy", "0");
-  gradient.setAttribute("r", String(BEAM_LENGTH));
-  const stops = [
-    ["0", "0.55"],
-    ["1", "0.08"],
-  ].map(([offset, opacity]) => {
-    const stop = document.createElementNS(SVG_NS, "stop");
-    stop.setAttribute("offset", offset);
-    stop.setAttribute("stop-color", color);
-    stop.setAttribute("stop-opacity", opacity);
-    gradient.appendChild(stop);
-    return stop;
-  });
-  defs.appendChild(gradient);
-  svg.appendChild(defs);
+  // The arc, north before the turn, from ARC_SPREAD / 2 degrees left of
+  // north to as many right: once as the halo, once in the colour.
+  const side = (ARC_SPREAD / 2) * (Math.PI / 180);
+  const x = Math.round(ARC_RADIUS * Math.sin(side) * 100) / 100;
+  const y = Math.round(ARC_RADIUS * Math.cos(side) * 100) / 100;
+  const d = `M ${-x} ${-y} A ${ARC_RADIUS} ${ARC_RADIUS} 0 0 1 ${x} ${-y}`;
+  const arc = svgElement("path", { d, stroke: colors.heading, "stroke-width": String(ARC_WIDTH) });
+  svg.append(svgElement("path", { d, stroke: HALO, "stroke-width": String(ARC_HALO_WIDTH) }), arc);
 
-  // The wedge, north before the turn: the tip, the left edge, the arc, the
-  // right edge. Once filled, once stroked as the halo, once stroked in the
-  // colour.
-  const side = (BEAM_SPREAD / 2) * (Math.PI / 180);
-  const x = Math.round(BEAM_LENGTH * Math.sin(side) * 100) / 100;
-  const y = Math.round(BEAM_LENGTH * Math.cos(side) * 100) / 100;
-  const d = `M 0 0 L ${-x} ${-y} A ${BEAM_LENGTH} ${BEAM_LENGTH} 0 0 1 ${x} ${-y} Z`;
-  const wedge = (attrs: Record<string, string>) => {
-    const path = document.createElementNS(SVG_NS, "path");
-    path.setAttribute("d", d);
-    for (const [k, v] of Object.entries(attrs)) path.setAttribute(k, v);
-    svg.appendChild(path);
-    return path;
-  };
-  wedge({ fill: `url(#${gradientId})` });
-  wedge({ stroke: HALO, "stroke-width": "3" });
-  const edge = wedge({ stroke: color, "stroke-width": "1.5" });
-
-  element.append(svg, image);
+  element.append(body, svg);
 
   let rotation = 0;
   let shown = false;
 
   return {
     element,
-    image,
+    body,
     setHeading(headingDeg, bearingDeg = 0) {
       if (headingDeg === null) {
         if (!shown) return;
@@ -187,9 +188,10 @@ export function createSantaPinElement(height: number, color: string): SantaPinEl
       rotation = next;
       style.transform = `rotate(${rotation}deg)`;
     },
-    setColor(next) {
-      for (const stop of stops) stop.setAttribute("stop-color", next);
-      edge.setAttribute("stroke", next);
+    setColors(next) {
+      circle.setAttribute("fill", next.fill);
+      circle.setAttribute("stroke", next.ring);
+      arc.setAttribute("stroke", next.heading);
     },
   };
 }

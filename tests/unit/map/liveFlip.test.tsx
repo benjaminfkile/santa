@@ -317,10 +317,10 @@ describe("the live flip", () => {
     load.resolve(fakeLibs());
     await flush();
     const map = FakeMap.instances[0];
-    await waitFor(() => expect(map.panes.markerLayer.querySelector("img")).not.toBeNull());
+    await waitFor(() => expect(map.panes.markerLayer.querySelector('[data-testid="santa-body"]')).not.toBeNull());
     setStatus(3, 6);
     await flush();
-    expect(map.panes.markerLayer.querySelectorAll("img")).toHaveLength(1);
+    expect(map.panes.markerLayer.querySelectorAll('[data-testid="santa-body"]')).toHaveLength(1);
     // Waiting for a fix detaches the pin; a fix before `onAdd` ran is fine.
     act(() => {
       store.setState({ live: live(3, null) });
@@ -328,7 +328,7 @@ describe("the live flip", () => {
     setStatus(3, 7);
     setStatus(2);
     await flush();
-    expect(map.panes.markerLayer.querySelectorAll("img")).toHaveLength(0);
+    expect(map.panes.markerLayer.querySelectorAll('[data-testid="santa-body"]')).toHaveLength(0);
     expect(errors).toEqual([]);
   });
 });

@@ -1,5 +1,5 @@
-// docs/site.md sections 8.7 and 17. The Santa pin's playback, renderer
-// free: both tracker controllers feed it every new fix and place the pin
+// docs/site.md sections 8.7 and 17. The Santa marker's playback, renderer
+// free: both tracker controllers feed it every new fix and place the marker
 // where its sink says. The fixes are kept in arrival order with their
 // arrival times (the caller's clock, never `recordedAt`, so device clock
 // skew cannot matter). On each animation frame the display time, a
@@ -13,7 +13,7 @@
 // clock runs at normal speed and closes a gap to that target at up to
 // half speed either way, so a delay change bends the pace instead of
 // jumping, and it never runs backwards. It never passes the newest fix's
-// arrival: there the pin holds (no extrapolation) and the frame loop
+// arrival: there the marker holds (no extrapolation) and the frame loop
 // idles with no frame scheduled until the next push. When the display
 // falls more than three delays behind the newest fix it jumps forward to
 // one delay behind.
@@ -39,7 +39,7 @@ export type SantaMotion = {
   visible(on: boolean): void;
   // The playback delay in ms now.
   delayMs(): number;
-  // Whether the display has a fix (a pin to place).
+  // Whether the display has a fix (a marker to place).
   hasFix(): boolean;
   dispose(): void;
 };

@@ -1,13 +1,13 @@
-// docs/site.md sections 7.6, 8.2, and 8.7. The Santa marker is the pin
-// element (the upright legacy pin image and its heading indicator) in an
-// OverlayView, its tip (bottom centre) on the fix; the signal-lost variant
-// is the same image under a CSS filter; nothing renders while waiting for
-// a fix; the heading turns the indicator, never the image, and a theme
-// change recolours it.
+// docs/site.md sections 7.6, 8.2, and 8.7. The Santa marker is the
+// element of santaPin.ts (a circle under the Santa hat and its heading
+// arc) in an OverlayView, its centre on the fix; the signal-lost variant
+// is the same body under a CSS filter; nothing renders while waiting for
+// a fix; the heading turns the arc, never the body, and a theme change
+// recolours the fill, the ring and the arc.
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { createSantaMarker, SIGNAL_LOST_FILTER } from "../../../src/map/santaMarker";
-import { SANTA_PIN_URL } from "../../../src/map/santaPin";
+import { santaMarkerColors } from "../../../src/map/santaPin";
 import { SEEDED } from "./themeFixtures";
 
 class FakeOverlayView {
@@ -54,8 +54,8 @@ function marker(): HTMLElement | null {
   return overlay().panes.markerLayer.querySelector('[data-testid="santa-marker"]');
 }
 
-function pin(): HTMLImageElement | null {
-  return overlay().panes.markerLayer.querySelector("img");
+function pin(): SVGSVGElement | null {
+  return overlay().panes.markerLayer.querySelector('[data-testid="santa-body"]');
 }
 
 function headingRing(): SVGSVGElement | null {
@@ -74,26 +74,26 @@ describe("createSantaMarker", () => {
     expect(pin()).toBe(null);
   });
 
-  it("renders the bundled pin image with its tip on the fix", () => {
+  it("renders the circle under the hat with its centre on the fix", () => {
     const santa = createSantaMarker(libs, map, SEEDED.standard);
     santa.setState("tracking", { lat: 41, lng: -110 });
     expect(overlay().map).toBe(map);
-    const img = pin()!;
-    expect(img).not.toBeNull();
-    expect(img.getAttribute("src")).toBe(SANTA_PIN_URL);
-    expect(img.style.height).toBe("52px");
+    const body = pin()!;
+    expect(body).not.toBeNull();
+    expect(overlay().panes.markerLayer.querySelector("img")).toBeNull();
     const el = marker()!;
-    expect(el.contains(img)).toBe(true);
+    expect(el.contains(body)).toBe(true);
+    expect(el.style.width).toBe("36px");
+    expect(el.style.height).toBe("36px");
     expect(el.style.position).toBe("absolute");
-    expect(el.style.transform).toBe("translate(-50%, -100%)");
+    expect(el.style.transform).toBe("translate(-50%, -50%)");
     expect(el.style.left).toBe("-1100px");
     expect(el.style.top).toBe("410px");
-    expect(img.style.filter).toBe("");
-    expect(img.getAttribute("alt")).toBe("");
-    expect(img.getAttribute("aria-hidden")).toBe("true");
+    expect(body.style.filter).toBe("");
+    expect(body.getAttribute("aria-hidden")).toBe("true");
   });
 
-  it("moves the image when a new fix arrives", () => {
+  it("moves the marker when a new fix arrives", () => {
     const santa = createSantaMarker(libs, map, SEEDED.standard);
     santa.setState("tracking", { lat: 41, lng: -110 });
     santa.setState("tracking", { lat: 42, lng: -111 });
@@ -102,15 +102,13 @@ describe("createSantaMarker", () => {
     expect(santa.getPosition()).toEqual({ lat: 42, lng: -111 });
   });
 
-  it("keeps the last position and desaturates the same image on signalLost", () => {
+  it("keeps the last position and desaturates the same body on signalLost", () => {
     const santa = createSantaMarker(libs, map, SEEDED.standard);
     santa.setState("tracking", { lat: 41, lng: -110 });
     santa.setState("signalLost", null);
     expect(overlay().map).toBe(map);
     expect(santa.getPosition()).toEqual({ lat: 41, lng: -110 });
-    const img = pin()!;
-    expect(img.getAttribute("src")).toBe(SANTA_PIN_URL);
-    expect(img.style.filter).toBe(SIGNAL_LOST_FILTER);
+    expect(pin()!.style.filter).toBe(SIGNAL_LOST_FILTER);
     expect(SIGNAL_LOST_FILTER).toContain("grayscale");
     expect(marker()!.style.filter).toBe("");
     expect(headingRing()!.style.filter).toBe("");
@@ -118,7 +116,7 @@ describe("createSantaMarker", () => {
     expect(pin()!.style.filter).toBe("");
   });
 
-  it("turns the indicator, never the image, and hides it for no heading", () => {
+  it("turns the arc, never the body, and hides it for no heading", () => {
     const santa = createSantaMarker(libs, map, SEEDED.standard);
     santa.setState("tracking", { lat: 41, lng: -110 });
     expect(headingRing()!.style.opacity).toBe("0");
@@ -128,25 +126,27 @@ describe("createSantaMarker", () => {
     expect(headingRing()!.style.opacity).toBe("1");
     expect(headingRing()!.getAttribute("data-heading")).toBe("10");
     expect(pin()!.style.transform).toBe("");
-    expect(marker()!.style.transform).toBe("translate(-50%, -100%)");
+    expect(marker()!.style.transform).toBe("translate(-50%, -50%)");
     santa.setHeading(null);
     expect(headingRing()!.style.opacity).toBe("0");
   });
 
-  it("colours the beam from the theme's heading colour, falling back to the arrow colour, and recolours on a theme change", () => {
+  it("colours the circle from the theme's chrome and the arc from its heading colour, and recolours the three on a theme change", () => {
     const santa = createSantaMarker(libs, map, SEEDED.standard);
     santa.setState("tracking", { lat: 41, lng: -110 });
-    const strokes = () => Array.from(headingRing()!.querySelectorAll("[stroke]")).map((s) => s.getAttribute("stroke"));
-    const stops = () => Array.from(headingRing()!.querySelectorAll("stop")).map((s) => s.getAttribute("stop-color"));
-    expect(strokes()).toContain(SEEDED.standard.overlay.headingColor);
-    expect(strokes()).not.toContain(SEEDED.standard.overlay.arrowColor);
+    const circle = () => pin()!.querySelector(":scope > circle")!;
+    const arc = () => headingRing()!.querySelectorAll("path")[1];
+    expect(circle().getAttribute("fill")).toBe(SEEDED.standard.chrome.bg);
+    expect(circle().getAttribute("stroke")).toBe(SEEDED.standard.chrome.accent);
+    expect(arc().getAttribute("stroke")).toBe(SEEDED.standard.overlay.headingColor);
     santa.setTheme(SEEDED.charcoal);
-    expect(strokes()).toContain(SEEDED.charcoal.overlay.headingColor);
-    expect(strokes()).not.toContain(SEEDED.standard.overlay.headingColor);
-    expect(stops()).toEqual([SEEDED.charcoal.overlay.headingColor, SEEDED.charcoal.overlay.headingColor]);
+    const next = santaMarkerColors(SEEDED.charcoal);
+    expect(circle().getAttribute("fill")).toBe(next.fill);
+    expect(circle().getAttribute("stroke")).toBe(next.ring);
+    expect(arc().getAttribute("stroke")).toBe(SEEDED.charcoal.overlay.headingColor);
     const old = SEEDED.expedition;
     santa.setTheme({ ...old, overlay: { ...old.overlay, headingColor: "" } });
-    expect(strokes()).toContain(old.overlay.arrowColor);
+    expect(arc().getAttribute("stroke")).toBe(old.overlay.arrowColor);
   });
 
   it("hides the marker again when waitingForFix returns", () => {

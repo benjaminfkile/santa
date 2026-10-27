@@ -7,9 +7,10 @@
 //    map takes `maxBounds` and the fitted least zoom.
 //  - The first fix is placed at once; a second fix within the playback
 //    delay is not yet at its target and glides there frame by frame; the
-//    pin image stays upright (no `setRotation`, the default rotation
-//    alignment) while its heading indicator's `data-heading` follows the
-//    frame the short way and is recoloured by `setTheme`; the camera never
+//    marker, anchored `center`, keeps its body upright (no `setRotation`,
+//    the default rotation alignment) while its heading arc's
+//    `data-heading` follows the frame the short way; `setTheme` recolours
+//    the fill, the ring and the arc; the camera never
 //    moves per frame (no `jumpTo`).
 //  - The follow rule: frames inside the central box make no camera call,
 //    a frame outside makes one `easeTo` of 300 ms with no zoom, two within
@@ -22,7 +23,7 @@
 //  - The indicator turns to the heading minus the bearing (90 at 30 is
 //    60), `data-heading` the true heading and `data-bearing` the bearing;
 //    a `rotate` applies the last heading again at the new bearing and
-//    reports it through `onBearingChange`; the image never rotates.
+//    reports it through `onBearingChange`; the body never rotates.
 //  - A fix outside the box stands Santa on its edge and follows there;
 //    `recenter` and `fitHistory` clamp to the box.
 //  - `setMapType` takes exactly the theme's terrain layers out and puts
@@ -121,6 +122,10 @@ function santaHeading(): SVGSVGElement {
   return santaMarker()!.element.querySelector('[data-testid="santa-heading"]') as SVGSVGElement;
 }
 
+function santaBody(): SVGSVGElement {
+  return santaMarker()!.element.querySelector('[data-testid="santa-body"]') as SVGSVGElement;
+}
+
 const HISTORY = [
   { lat: 46.8, lng: -114.1, recordedAt: "2023-12-24T02:00:00Z" },
   { lat: 46.9, lng: -114.0, recordedAt: "2023-12-24T02:30:00Z" },
@@ -167,16 +172,16 @@ describe("the first view", () => {
   });
 });
 
-describe("the Santa pin and the camera", () => {
+describe("the Santa marker and the camera", () => {
   it("places the first fix at once and makes no camera call", () => {
     fakeFrames().install();
     const { c, map } = build();
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: 90 }, true);
     expect(santaMarker()?.lngLat).toEqual([-113.9, 46.9]);
-    expect(santaMarker()?.anchor).toBe("bottom");
+    expect(santaMarker()?.anchor).toBe("center");
     expect(santaMarker()?.rotationAlignment).toBeUndefined();
     expect(santaMarker()?.rotation).toBe(0);
-    expect(santaMarker()?.element.querySelector("img")?.style.transform).toBe("");
+    expect(santaBody().style.transform).toBe("");
     expect(santaHeading().getAttribute("data-heading")).toBe("90");
     expect(santaHeading().style.transform).toBe("rotate(90deg)");
     expect(map.jumpTo).not.toHaveBeenCalled();
@@ -231,7 +236,7 @@ describe("the Santa pin and the camera", () => {
     expect(santaHeading().getAttribute("data-heading")).toBe("90");
     expect(santaHeading().getAttribute("data-bearing")).toBe("30");
     expect(santaMarker()?.rotation).toBe(0);
-    expect(santaMarker()?.element.querySelector("img")?.style.transform).toBe("");
+    expect(santaBody().style.transform).toBe("");
   });
 
   it("a rotate applies the last heading again at the new bearing and reports the bearing", () => {
@@ -286,29 +291,29 @@ describe("the Santa pin and the camera", () => {
     expect(map.jumpTo).not.toHaveBeenCalled();
   });
 
-  it("colours the heading beam from the theme's heading colour and recolours it on setTheme", async () => {
+  it("colours the circle from the theme's chrome and the arc from its heading colour, and recolours the three on setTheme", async () => {
     const { c } = build();
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.9, seq: 1, headingDeg: 90 }, true);
-    const strokes = () => Array.from(santaHeading().querySelectorAll("[stroke]")).map((e) => e.getAttribute("stroke"));
-    const stops = () => Array.from(santaHeading().querySelectorAll("stop")).map((e) => e.getAttribute("stop-color"));
-    const light = themes().light.overlay;
-    expect(strokes()).toContain(light.headingColor);
-    expect(strokes()).not.toContain(light.routeColor);
-    expect(stops()).toEqual([light.headingColor, light.headingColor]);
+    const circle = () => santaBody().querySelector(":scope > circle")!;
+    const arc = () => santaHeading().querySelectorAll("path")[1];
+    const light = themes().light;
+    expect(circle().getAttribute("fill")).toBe(light.chrome.bg);
+    expect(circle().getAttribute("stroke")).toBe(light.chrome.accent);
+    expect(arc().getAttribute("stroke")).toBe(light.overlay.headingColor);
     const dark = themes().dark;
     await c.setTheme({ ...dark, overlay: { ...dark.overlay, headingColor: "#69f0ae" } });
-    expect(strokes()).toContain("#69f0ae");
-    expect(strokes()).not.toContain(light.headingColor);
-    expect(stops()).toEqual(["#69f0ae", "#69f0ae"]);
+    expect(circle().getAttribute("fill")).toBe(dark.chrome.bg);
+    expect(circle().getAttribute("stroke")).toBe(dark.chrome.accent);
+    expect(arc().getAttribute("stroke")).toBe("#69f0ae");
     await c.setTheme({ ...dark, overlay: { ...dark.overlay, headingColor: "" } });
-    expect(strokes()).toContain(dark.overlay.arrowColor);
+    expect(arc().getAttribute("stroke")).toBe(dark.overlay.arrowColor);
   });
 
-  it("hides the pin while waiting for a fix and dims it while the signal is lost", () => {
+  it("hides the marker while waiting for a fix and dims its body while the signal is lost", () => {
     const { c } = build();
     c.setLiveFix("tracking", { lat: 46.9, lng: -113.9 }, true);
     c.setLiveFix("signalLost", { lat: 46.9, lng: -113.9 }, false);
-    expect(santaMarker()?.element.querySelector("img")?.style.filter).toBe(SIGNAL_LOST_FILTER);
+    expect(santaBody().style.filter).toBe(SIGNAL_LOST_FILTER);
     expect(santaMarker()?.element.style.filter).toBe("");
     expect(santaHeading().style.filter).toBe("");
     expect(santaHeading().style.opacity).toBe("0");

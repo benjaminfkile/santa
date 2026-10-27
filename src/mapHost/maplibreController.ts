@@ -12,17 +12,18 @@
 // on the zoom, debounced ZOOM_REDRAW_MS, with the step and interval tables
 // of 8.5. `setTheme` awaits the theme's body; a later call wins over an
 // earlier one still waiting, and the colour scheme never changes it.
-// The Santa pin is an HTML marker holding the same image as on Google,
-// its tip on the displayed position, hidden while waiting for a fix and
-// filtered while the signal is lost (8.7). Every fix with a new seq goes
+// The Santa marker is an HTML marker holding the same element as on
+// Google (a circle under the Santa hat, santaPin.ts), anchored `center` so
+// its centre is on the displayed position, hidden while waiting for a fix
+// and its body filtered while the signal is lost (8.7). Every fix with a new seq goes
 // to the Santa motion (santaMotion.ts), whose frames place the marker
 // with `setLngLat` and turn its heading indicator (santaPin.ts) the short
 // way to the heading minus the map's bearing (`getBearing`), so the
-// chevron points along the map as it is turned; the last heading is
+// arc points along the map as it is turned; the last heading is
 // applied again at the new bearing on every `rotate` and `rotateend`,
 // which also report the bearing through `onBearingChange`. The marker
-// keeps MapLibre's default rotation alignment and the image never
-// rotates. A theme change recolours the indicator. While
+// keeps MapLibre's default rotation alignment and the body never
+// rotates. A theme change recolours the circle's fill and ring and the arc. While
 // following, a frame checks the follow rule (src/map/follow.ts): when the
 // displayed position, through `project`, has left the central box of the
 // container and the last follow pan started at least 500 ms ago (so the
@@ -77,8 +78,8 @@ import {
   type TrackerViewpoint,
   type ViewpointBadges,
 } from "../map/viewpointsOverlay";
-import { createSantaPinElement, santaHeadingColor } from "../map/santaPin";
-import { SANTA_MARKER_HEIGHT, SIGNAL_LOST_FILTER } from "../map/santaMarker";
+import { createSantaPinElement, santaMarkerColors } from "../map/santaPin";
+import { SIGNAL_LOST_FILTER } from "../map/santaMarker";
 import { clampToBbox, inBox, MIN_ZOOM_FLOOR, type LatLng } from "../map/bounds";
 import { ensureProtocol, NORTH_UP_MS, OSM_ATTRIBUTION, watchContext, type MapLibreFailure } from "./handle";
 import { applyPlaces, protomapsKinds } from "./places";
@@ -280,12 +281,12 @@ export function createMaplibreController(
     observer.observe(container);
   }
 
-  // The Santa pin, its tip (the wrapper's bottom centre) on the fix.
-  const pin = createSantaPinElement(SANTA_MARKER_HEIGHT, santaHeadingColor(theme));
+  // The Santa marker, its centre (the circle's centre) on the fix.
+  const pin = createSantaPinElement(santaMarkerColors(theme));
   pin.element.setAttribute("data-testid", "santa-marker");
-  const santa = opts.showSantaMarker ? new Marker({ element: pin.element, anchor: "bottom" }) : null;
+  const santa = opts.showSantaMarker ? new Marker({ element: pin.element, anchor: "center" }) : null;
   let santaShown = false;
-  // Where the pin stands now, clamped to the box.
+  // Where the marker stands now, clamped to the box.
   let displayed: LatLng | null = null;
   // While a recenter's pan runs, frames leave the camera alone.
   let recentering: ReturnType<typeof setTimeout> | null = null;
@@ -473,7 +474,7 @@ export function createMaplibreController(
       theme = t;
       body = next;
       restyle();
-      pin.setColor(santaHeadingColor(t));
+      pin.setColors(santaMarkerColors(t));
       userLoc?.setTheme(t);
     },
     setPois(filter) {
@@ -530,7 +531,7 @@ export function createMaplibreController(
         santaShown = false;
       } else {
         const variant = state === "signalLost" ? "signalLost" : "tracking";
-        pin.image.style.filter = variant === "signalLost" ? SIGNAL_LOST_FILTER : "";
+        pin.body.style.filter = variant === "signalLost" ? SIGNAL_LOST_FILTER : "";
         pin.element.setAttribute("data-variant", variant);
       }
       if (state === "waitingForFix" || pos === null) {
