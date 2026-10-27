@@ -83,8 +83,8 @@ describe("createSantaMarker", () => {
     expect(overlay().panes.markerLayer.querySelector("img")).toBeNull();
     const el = marker()!;
     expect(el.contains(body)).toBe(true);
-    expect(el.style.width).toBe("36px");
-    expect(el.style.height).toBe("36px");
+    expect(el.style.width).toBe("28px");
+    expect(el.style.height).toBe("28px");
     expect(el.style.position).toBe("absolute");
     expect(el.style.transform).toBe("translate(-50%, -50%)");
     expect(el.style.left).toBe("-1100px");

@@ -21,21 +21,21 @@ import {
 } from "../../../src/map/santaPin";
 
 const COLORS = { fill: "#fafafa", ring: "#0000ff", heading: "#ff0000" };
-const ARC = "M -9.72 -20.85 A 23 23 0 0 1 9.72 -20.85";
+const ARC = "M -8.03 -17.22 A 19 19 0 0 1 8.03 -17.22";
 
 function heading(el: HTMLElement): SVGSVGElement {
   return el.querySelector('[data-testid="santa-heading"]') as SVGSVGElement;
 }
 
 describe("createSantaPinElement", () => {
-  it("is a 36 px square holding the body and then the heading indicator, centred on it", () => {
+  it("is a 28 px square holding the body and then the heading indicator, centred on it", () => {
     const pin = createSantaPinElement(COLORS);
     const svg = heading(pin.element);
-    expect(SANTA_MARKER_SIZE).toBe(36);
+    expect(SANTA_MARKER_SIZE).toBe(28);
     expect(HEADING_BOX).toBe(60);
     expect(pin.element.tagName).toBe("DIV");
-    expect(pin.element.style.width).toBe("36px");
-    expect(pin.element.style.height).toBe("36px");
+    expect(pin.element.style.width).toBe("28px");
+    expect(pin.element.style.height).toBe("28px");
     expect(pin.element.style.position).toBe("relative");
     expect(pin.element.style.pointerEvents).toBe("none");
     expect(pin.element.children).toHaveLength(2);
@@ -43,16 +43,16 @@ describe("createSantaPinElement", () => {
     expect(pin.element.lastElementChild).toBe(svg);
     expect(pin.body.getAttribute("data-testid")).toBe("santa-body");
     expect(pin.body.getAttribute("aria-hidden")).toBe("true");
-    expect(pin.body.getAttribute("width")).toBe("36");
-    expect(pin.body.getAttribute("viewBox")).toBe("-18 -18 36 36");
+    expect(pin.body.getAttribute("width")).toBe("28");
+    expect(pin.body.getAttribute("viewBox")).toBe("-14 -14 28 28");
     expect(pin.body.style.overflow).toBe("visible");
     expect(svg.getAttribute("aria-hidden")).toBe("true");
     expect(svg.getAttribute("width")).toBe("60");
     expect(svg.getAttribute("height")).toBe("60");
     expect(svg.getAttribute("viewBox")).toBe("-30 -30 60 60");
     expect(svg.style.position).toBe("absolute");
-    expect(svg.style.left).toBe("-12px");
-    expect(svg.style.top).toBe("-12px");
+    expect(svg.style.left).toBe("-16px");
+    expect(svg.style.top).toBe("-16px");
     expect(svg.style.overflow).toBe("visible");
     expect(svg.style.pointerEvents).toBe("none");
     expect(svg.style.transformOrigin).toBe("50% 50%");
@@ -67,13 +67,13 @@ describe("createSantaPinElement", () => {
     expect(circle.tagName).toBe("circle");
     expect(circle.getAttribute("cx")).toBe("0");
     expect(circle.getAttribute("cy")).toBe("0");
-    expect(circle.getAttribute("r")).toBe("18");
+    expect(circle.getAttribute("r")).toBe("14");
     expect(circle.getAttribute("fill")).toBe("#fafafa");
     expect(circle.getAttribute("stroke")).toBe("#0000ff");
     expect(circle.getAttribute("stroke-width")).toBe("3");
     expect((circle as SVGElement).style.filter).toBe("drop-shadow(0 1.5px 2.5px rgba(0, 0, 0, 0.4))");
     expect(hat.tagName).toBe("g");
-    expect(hat.getAttribute("transform")).toBe("translate(-20.7 -39.46) scale(0.4549)");
+    expect(hat.getAttribute("transform")).toBe("translate(-16.1 -30.69) scale(0.3538)");
     expect((hat as SVGElement).style.filter).toBe("drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.3))");
     const shapes = Array.from(hat.children);
     expect(shapes.map((s) => s.tagName)).toEqual(["path", "path", "rect", "circle"]);
@@ -92,8 +92,8 @@ describe("createSantaPinElement", () => {
     }
   });
 
-  it("draws one 50 degree arc of radius 23, a 5.5 px halo then the 3.5 px colour", () => {
-    expect([ARC_RADIUS, ARC_SPREAD, ARC_WIDTH, ARC_HALO_WIDTH]).toEqual([23, 50, 3.5, 5.5]);
+  it("draws one 50 degree arc of radius 19, a 5.5 px halo then the 3.5 px colour", () => {
+    expect([ARC_RADIUS, ARC_SPREAD, ARC_WIDTH, ARC_HALO_WIDTH]).toEqual([19, 50, 3.5, 5.5]);
     const svg = heading(createSantaPinElement(COLORS).element);
     const paths = Array.from(svg.querySelectorAll("path"));
     expect(paths).toHaveLength(2);

@@ -5,27 +5,36 @@
 
 import type { MapTheme } from "./themes";
 
-// The wrapper and the circle, css px square.
-export const SANTA_MARKER_SIZE = 36;
-// The heading arc: its radius (the circle's 18, half the ring's 3, and a
-// 3.5 px gap), its spread in degrees (half each side of the heading), its
-// stroke and its halo's, all in css px, drawn in an SVG HEADING_BOX css px
-// square centred on the circle.
-export const ARC_RADIUS = 23;
+// The wrapper and the circle, css px square. Every other size below
+// follows from it.
+export const SANTA_MARKER_SIZE = 28;
+const RADIUS = SANTA_MARKER_SIZE / 2;
+const RING_WIDTH = 3;
+// The heading arc: its radius (the circle's, half the ring, and a 3.5 px
+// gap), its spread in degrees (half each side of the heading), its stroke
+// and its halo's, all in css px, drawn in an SVG HEADING_BOX css px square
+// centred on the circle.
+export const ARC_RADIUS = RADIUS + RING_WIDTH / 2 + 3.5;
 export const ARC_SPREAD = 50;
 export const ARC_WIDTH = 3.5;
 export const ARC_HALO_WIDTH = 5.5;
 export const HEADING_BOX = 60;
 export const HEADING_TRANSITION_MS = 300;
-const RADIUS = SANTA_MARKER_SIZE / 2;
-const RING_WIDTH = 3;
 const HALO = "rgba(0, 0, 0, 0.45)";
 const SVG_NS = "http://www.w3.org/2000/svg";
 
-// The hat: a 91 x 63 drawing scaled to 41.4 css px wide, centred, its
-// bottom edge 7.2 px below the circle's top edge so the brim sits on the
-// circle. Its colours are fixed on every theme.
-const HAT_TRANSFORM = "translate(-20.7 -39.46) scale(0.4549)";
+// The hat: a 91 x 63 drawing scaled to 1.15 times the circle's width,
+// centred, its bottom edge a fifth of the circle's width below the
+// circle's top edge so the brim sits on the circle. Its colours are fixed
+// on every theme.
+const HAT_BOX_WIDTH = 91;
+const HAT_BOX_HEIGHT = 63;
+const HAT_WIDTH = SANTA_MARKER_SIZE * 1.15;
+const HAT_SCALE = HAT_WIDTH / HAT_BOX_WIDTH;
+const HAT_LEFT = -HAT_WIDTH / 2;
+const HAT_TOP = -RADIUS + SANTA_MARKER_SIZE * 0.2 - HAT_BOX_HEIGHT * HAT_SCALE;
+const px = (n: number, places: number) => String(Math.round(n * 10 ** places) / 10 ** places);
+const HAT_TRANSFORM = `translate(${px(HAT_LEFT, 2)} ${px(HAT_TOP, 2)}) scale(${px(HAT_SCALE, 4)})`;
 const HAT_SHAPES: ReadonlyArray<[string, Record<string, string>]> = [
   // The cone.
   ["path", { d: "M 8 50 C 12 30, 24 12, 44 6 C 56 3, 68 6, 76 12 C 80 15, 82 18, 80 21 C 74 14, 64 12, 56 16 C 68 26, 76 38, 78 50 Z", fill: "#d8262b" }],
@@ -82,8 +91,8 @@ export type SantaPinElement = {
   setColors(colors: SantaMarkerColors): void;
 };
 
-// A wrapper `div` holding, first, the body: an SVG with a circle of radius
-// 18 at its centre in the fill colour, stroked 3 px in the ring colour,
+// A wrapper `div` holding, first, the body: an SVG with a circle of
+// RADIUS at its centre in the fill colour, stroked 3 px in the ring colour,
 // under the Santa hat. Then the heading indicator: an SVG centred on the
 // circle holding one arc of ARC_RADIUS spanning ARC_SPREAD degrees centred
 // on north before the turn, stroked once as a dark halo and once in the
