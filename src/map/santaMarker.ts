@@ -1,21 +1,19 @@
-// docs/site.md sections 7.6, 8.2, and 8.7. Santa marker: the pin element
-// of santaPin.ts (the legacy pin image upright, about 52 css px tall, with
-// the heading indicator around its tip) in a Google Maps `OverlayView`,
-// the wrapper's bottom centre (the pin tip) on the fix, rounded to whole
-// pixels on every draw. Hidden while waiting for a fix; the signal-lost
-// variant is the same image desaturated and dimmed through a CSS filter on
-// the image only. `setHeading` turns the indicator the short way to the
-// heading (at bearing 0: this map never turns) and null hides it; the
-// image never rotates. `setTheme` recolours
-// the indicator.
+// docs/site.md sections 7.6, 8.2, and 8.7. Santa marker: the element of
+// santaPin.ts (a 36 css px circle in the theme's chrome colours under the
+// Santa hat, with the heading arc on its rim) in a Google Maps
+// `OverlayView`, the wrapper's centre on the fix, rounded to whole pixels
+// on every draw. Hidden while waiting for a fix; the signal-lost variant
+// is the same body desaturated and dimmed through a CSS filter on the body
+// only. `setHeading` turns the arc the short way to the heading (at
+// bearing 0: this map never turns) and null hides it; the body never
+// rotates. `setTheme` recolours the circle's fill and ring and the arc.
 
 import type { LiveState } from "../store/liveState";
 import type { MapTheme } from "./themes";
-import { createSantaPinElement, santaHeadingColor } from "./santaPin";
+import { createSantaPinElement, santaMarkerColors } from "./santaPin";
 
 export type MarkerVariant = "tracking" | "signalLost";
 
-export const SANTA_MARKER_HEIGHT = 52;
 export const SIGNAL_LOST_FILTER = "grayscale(1) opacity(0.55)";
 
 export type SantaMarker = {
@@ -36,12 +34,12 @@ export function createSantaMarker(
   let variant: MarkerVariant = "tracking";
   let position: google.maps.LatLngLiteral | null = null;
 
-  const pin = createSantaPinElement(SANTA_MARKER_HEIGHT, santaHeadingColor(theme));
+  const pin = createSantaPinElement(santaMarkerColors(theme));
   const el = pin.element;
   el.setAttribute("data-testid", "santa-marker");
   el.style.position = "absolute";
-  // The pin tip, the wrapper's bottom centre, sits on the overlay point.
-  el.style.transform = "translate(-50%, -100%)";
+  // The wrapper's centre, the circle's centre, sits on the overlay point.
+  el.style.transform = "translate(-50%, -50%)";
 
   class SantaOverlay extends libs.maps.OverlayView {
     onAdd() {
@@ -67,7 +65,7 @@ export function createSantaMarker(
       if (overlay.getMap()) overlay.setMap(null);
       return;
     }
-    pin.image.style.filter = variant === "signalLost" ? SIGNAL_LOST_FILTER : "";
+    pin.body.style.filter = variant === "signalLost" ? SIGNAL_LOST_FILTER : "";
     el.setAttribute("data-variant", variant);
     if (overlay.getMap()) overlay.draw();
     else overlay.setMap(map);
@@ -99,7 +97,7 @@ export function createSantaMarker(
       pin.setHeading(headingDeg, 0);
     },
     setTheme(t) {
-      pin.setColor(santaHeadingColor(t));
+      pin.setColors(santaMarkerColors(t));
     },
     getPosition() {
       return position;

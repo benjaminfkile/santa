@@ -3,8 +3,8 @@
 // the map styles (the theme's with the section's place filter on top).
 // Subscribes to the store once and moves the marker imperatively; React
 // never re-renders on a fix. Every fix with a new seq goes to the Santa
-// motion (santaMotion.ts), whose frames place the pin and turn its heading
-// indicator; a theme change recolours the indicator. While
+// motion (santaMotion.ts), whose frames place the marker and turn its heading
+// indicator; a theme change recolours the marker. While
 // following, a frame (and a redraw of the projection probe) checks the
 // follow rule (follow.ts): when the displayed position has left the
 // central box of the canvas and the last follow pan started at least
@@ -113,7 +113,7 @@ export function createMapController(
   let santa: SantaMarker | null = null;
   let motion: SantaMotion | null = null;
   let stopVisibility: (() => void) | null = null;
-  // Where the pin stands now, clamped to the box.
+  // Where the marker stands now, clamped to the box.
   let displayed: google.maps.LatLngLiteral | null = null;
   // While a recenter's pan runs, frames leave the camera alone.
   let recentering: ReturnType<typeof setTimeout> | null = null;
