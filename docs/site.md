@@ -308,7 +308,7 @@ export function createStore(initial: SiteStore) {
 export const store = createStore(initialStore);
 ```
 
-React reads through `useStore(selector)` built on `useSyncExternalStore` with referential selectors, so a new live object re-renders only the components that read the fields that changed. The map module subscribes to the store directly and moves the marker imperatively; React never re-renders the map on a fix.
+React reads through `useStore(selector)` built on `useSyncExternalStore` with referential selectors, so a new live object re-renders only the components that read the fields that changed; the hook memoizes the selector result against the store state and the selector itself, so a selector that closes over a prop (the slug page reads its route parameter) recomputes as soon as the prop changes without waiting for the next poll. The map module subscribes to the store directly and moves the marker imperatively; React never re-renders the map on a fix.
 
 ### 5.2 State machine
 
