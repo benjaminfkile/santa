@@ -1,7 +1,16 @@
 /* docs/site.md section 7.6. The compass face in the flight gauge: the bezel
    and its ticks in --panel-2, the N, E, S and W letters in the micro style
    with north picked out in the accent, and the two-ended needle that turns
-   over 300 ms about the dial's centre. */
+   over 300 ms about the dial's centre. The whole face turns against the
+   map's bearing about the same centre, over the same 300 ms. */
+
+/* The face (bezel, ticks, letters and needle) rotates about the centre of
+   the 54 by 54 viewBox to minus the map's bearing. */
+.face {
+  transform-box: view-box;
+  transform-origin: 27px 27px;
+  transition: transform 300ms ease-out;
+}
 
 .rose {
   fill: none;

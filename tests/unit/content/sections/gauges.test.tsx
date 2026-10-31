@@ -347,6 +347,51 @@ describe("HeadingCompass", () => {
     expect(utils.getByTestId("flight-gauge-heading-needle").style.transform).toBe("rotate(370deg)");
   });
 
+  it("the face stands still on a north-up map and without a bearing", () => {
+    const utils = render(<HeadingCompass headingDeg={312} />);
+    const face = () => utils.getByTestId("flight-gauge-heading-face");
+    expect(face().style.transform).toBe("rotate(0deg)");
+    expect(face().getAttribute("data-bearing")).toBe("0");
+    utils.rerender(<HeadingCompass headingDeg={312} bearingDeg={0} />);
+    expect(face().style.transform).toBe("rotate(0deg)");
+  });
+
+  it("turns the whole face against the map's bearing, the needle with it", () => {
+    const utils = render(<HeadingCompass headingDeg={312} bearingDeg={90} />);
+    const svg = utils.getByTestId("flight-gauge-heading");
+    const face = utils.getByTestId("flight-gauge-heading-face");
+    expect(face.style.transform).toBe("rotate(-90deg)");
+    expect(face.getAttribute("data-bearing")).toBe("90");
+    // The bezel, every tick, every letter and the needle are inside the face.
+    expect(face.contains(utils.getByTestId("flight-gauge-heading-rose"))).toBe(true);
+    expect(face.querySelectorAll("line")).toHaveLength(8);
+    const letters = Array.from(face.querySelectorAll("text")).map((t) => t.textContent);
+    expect(letters).toEqual(["N", "E", "S", "W"]);
+    expect(face.contains(utils.getByTestId("flight-gauge-heading-needle"))).toBe(true);
+    // The needle keeps its place on the rose, so the reading is the true heading.
+    expect(utils.getByTestId("flight-gauge-heading-needle").style.transform).toBe("rotate(312deg)");
+    expect(utils.getByTestId("flight-gauge-heading-value").textContent).toBe("NW");
+    // The reading and the label are outside the face, so they never turn.
+    expect(face.contains(utils.getByTestId("flight-gauge-heading-value"))).toBe(false);
+    expect(face.contains(utils.getByTestId("flight-gauge-heading-label"))).toBe(false);
+    expect(svg.contains(face)).toBe(true);
+  });
+
+  it("the face turns the short way as the map twists, like the needle", () => {
+    const utils = render(<HeadingCompass headingDeg={0} bearingDeg={170} />);
+    const face = () => utils.getByTestId("flight-gauge-heading-face");
+    expect(face().style.transform).toBe("rotate(-170deg)");
+    utils.rerender(<HeadingCompass headingDeg={0} bearingDeg={-170} />);
+    // From -170 to +170 is 20 degrees on, not 340 back.
+    expect(face().style.transform).toBe("rotate(-190deg)");
+    utils.rerender(<HeadingCompass headingDeg={0} bearingDeg={0} />);
+    expect(face().style.transform).toBe("rotate(-360deg)");
+    // A null heading keeps the face turned, with no needle.
+    utils.rerender(<HeadingCompass headingDeg={null} bearingDeg={45} />);
+    expect(face().style.transform).toBe("rotate(-405deg)");
+    expect(utils.queryByTestId("flight-gauge-heading-needle")).toBeNull();
+  });
+
   
   it("shortestRotation moves at most half a turn either way", () => {
     expect(shortestRotation(350, 10)).toBe(370);
@@ -360,6 +405,7 @@ describe("HeadingCompass", () => {
   it("the stylesheet turns the needle over 300 ms whatever the motion preference", () => {
     const css = readFileSync(resolve(gaugesDir, "HeadingCompass.module.css"), "utf8");
     expect(css).toMatch(/\.needle \{[^}]*transition: transform 300ms/);
+    expect(css).toMatch(/\.face \{[^}]*transform-origin: 27px 27px;[^}]*transition: transform 300ms/);
     expect(css).toContain("fill: var(--accent)");
     expect(css).toContain("fill: var(--text-dim)");
     expect(css).not.toMatch(/prefers-reduced-motion|transition: none/);

@@ -6,7 +6,8 @@
 // The instruments are speed, altitude and heading, top to bottom. The
 // airborne time and the distance are not among them: each has its own pill
 // under the live pill (7.6). The tracker menu's gauge button hides all
-// three at once.
+// three at once. The map's bearing (`bearingDeg`, 0 when north-up or on
+// Google) reaches the heading compass so its face turns with the map.
 
 import { useStore } from "../../../store/useStore";
 import { headingToCardinal, metresToFeet, mpsToMph, type Cardinal } from "../../../lib/units";
@@ -36,7 +37,9 @@ export function useFlightReadings(): Readings {
   };
 }
 
-export function FlightGauge() {
+export type FlightGaugeProps = { bearingDeg?: number };
+
+export function FlightGauge({ bearingDeg = 0 }: FlightGaugeProps) {
   const readings = useFlightReadings();
   const Speed = instruments.speed;
   const Altitude = instruments.altitude;
@@ -50,7 +53,7 @@ export function FlightGauge() {
         <Altitude feet={readings.feet} />
       </div>
       <div className={styles.gaugeFace}>
-        <Heading degrees={readings.degrees} cardinal={readings.cardinal} />
+        <Heading degrees={readings.degrees} cardinal={readings.cardinal} bearingDeg={bearingDeg} />
       </div>
     </div>
   );

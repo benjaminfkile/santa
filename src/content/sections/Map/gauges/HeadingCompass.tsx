@@ -9,6 +9,13 @@
 // The needle turns through a CSS transform transition, and its rotation is
 // kept cumulative so each change takes the short way round. An unavailable
 // heading draws the face with no needle and the placeholder.
+//
+// The whole face (bezel, ticks, letters and needle) turns against the map's
+// bearing, the short way too, so N on the dial points where north is on the
+// map as it is turned and the needle points the same way as the heading arc
+// on Santa's rim. The reading and the label sit outside the face and never
+// turn; the needle keeps its place on the rose, so the cardinal reads the
+// same on a turned map. On a north-up map the face stands still.
 
 import { useState } from "react";
 import { copy } from "../../../../copy/copy";
@@ -56,14 +63,20 @@ const MINOR = [45, 135, 225, 315];
 const HEAD = `M${C} ${C - R + 1} L${C + NEEDLE_HALF_WIDTH} ${C - NEEDLE_INNER} L${C - NEEDLE_HALF_WIDTH} ${C - NEEDLE_INNER} Z`;
 const TAIL = `M${C} ${C + R - 1} L${C + NEEDLE_HALF_WIDTH} ${C + NEEDLE_INNER} L${C - NEEDLE_HALF_WIDTH} ${C + NEEDLE_INNER} Z`;
 
-export type HeadingCompassProps = { headingDeg: number | null };
+export type HeadingCompassProps = { headingDeg: number | null; bearingDeg?: number };
 
-export function HeadingCompass({ headingDeg }: HeadingCompassProps) {
+export function HeadingCompass({ headingDeg, bearingDeg = 0 }: HeadingCompassProps) {
   const known = headingDeg !== null && Number.isFinite(headingDeg);
   const [needle, setNeedle] = useState({ heading: known ? headingDeg : null, rotation: known ? headingDeg : 0 });
   const heading = known ? headingDeg : null;
   if (heading !== null && heading !== needle.heading) {
     setNeedle({ heading, rotation: shortestRotation(needle.rotation, heading) });
+  }
+  // The face turns to minus the bearing, kept cumulative like the needle.
+  const bearing = Number.isFinite(bearingDeg) ? bearingDeg : 0;
+  const [face, setFace] = useState({ bearing, rotation: -bearing });
+  if (bearing !== face.bearing) {
+    setFace({ bearing, rotation: shortestRotation(face.rotation, -bearing) });
   }
   return (
     <GaugeFrame
@@ -74,6 +87,12 @@ export function HeadingCompass({ headingDeg }: HeadingCompassProps) {
       track={false}
       testId="flight-gauge-heading"
     >
+      <g
+        className={styles.face}
+        style={{ transform: `rotate(${face.rotation}deg)` }}
+        data-testid="flight-gauge-heading-face"
+        data-bearing={Math.round(bearing)}
+      >
       <circle className={styles.rose} cx={C} cy={C} r={R} data-testid="flight-gauge-heading-rose" />
       <g className={styles.ticks} data-testid="flight-gauge-heading-ticks">
         {MAJOR.map((deg) => {
@@ -109,12 +128,13 @@ export function HeadingCompass({ headingDeg }: HeadingCompassProps) {
           <path className={styles.needleTail} d={TAIL} />
         </g>
       ) : null}
+      </g>
     </GaugeFrame>
   );
 }
 
-// The slot adapter: the gauge passes `degrees`; the compass derives the
-// cardinal from the rounded degrees itself.
-export function HeadingInstrument({ degrees }: HeadingInstrumentProps) {
-  return <HeadingCompass headingDeg={degrees} />;
+// The slot adapter: the gauge passes `degrees` and the map's bearing; the
+// compass derives the cardinal from the rounded degrees itself.
+export function HeadingInstrument({ degrees, bearingDeg }: HeadingInstrumentProps) {
+  return <HeadingCompass headingDeg={degrees} bearingDeg={bearingDeg} />;
 }

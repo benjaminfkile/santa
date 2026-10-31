@@ -11,7 +11,9 @@ export type SpeedInstrumentProps = { mph: number | null };
 
 export type AltitudeInstrumentProps = { feet: number | null };
 
-export type HeadingInstrumentProps = { degrees: number | null; cardinal: Cardinal | null };
+// `bearingDeg` is the map's bearing, degrees clockwise from north, so the
+// compass face can turn with the map; absent means north-up.
+export type HeadingInstrumentProps = { degrees: number | null; cardinal: Cardinal | null; bearingDeg?: number };
 
 export type InstrumentSlots = {
   speed: ComponentType<SpeedInstrumentProps>;

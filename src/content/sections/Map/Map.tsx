@@ -553,7 +553,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
               </div>
 
               <div className={bottomLeftClass} data-testid="map-bottom-left">
-                {showGauge ? <FlightGauge /> : null}
+                {showGauge ? <FlightGauge bearingDeg={bearing} /> : null}
                 {overlays.sponsorCarousel ? (
                   <div className={styles.sponsorOverlay}>
                     <SponsorCarousel

@@ -1,4 +1,5 @@
 export const __esModule: true;
+export const face: string;
 export const minorTicks: string;
 export const needle: string;
 export const needleHead: string;

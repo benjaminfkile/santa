@@ -25,7 +25,7 @@ vi.mock("../../../../src/content/sections/Map/Map.module.css", async () => {
   return Object.fromEntries(Array.from(names, (n) => [n, n]));
 });
 
-type Options = { onUserLocationChange: (s: UserLocationState) => void };
+type Options = { onUserLocationChange: (s: UserLocationState) => void; onBearingChange?: (b: number) => void };
 const mapView: { options: Options | null } = { options: null };
 
 vi.mock("../../../../src/map/MapView", () => ({
@@ -146,6 +146,24 @@ describe("the flight gauge", () => {
     expect(utils.queryByTestId("flight-gauge-next")).toBeNull();
     expect(utils.queryByTestId("flight-gauge-prev")).toBeNull();
     expect(utils.queryByTestId("flight-gauge-airborne")).toBeNull();
+  });
+
+  it("turns the compass face with the map's bearing and back when it is north-up again", async () => {
+    seed(FULL);
+    const utils = await renderMap();
+    const face = () => utils.getByTestId("flight-gauge-heading-face");
+    expect(face().style.transform).toBe("rotate(0deg)");
+
+    // The controller reports a twist: the face turns against it, the needle
+    // keeps the true heading, and the reading is unchanged.
+    act(() => mapView.options?.onBearingChange?.(-45));
+    expect(face().style.transform).toBe("rotate(45deg)");
+    expect(face().getAttribute("data-bearing")).toBe("-45");
+    expect(utils.getByTestId("flight-gauge-heading-needle").style.transform).toBe("rotate(92.4deg)");
+    expect(value(utils, "heading")).toBe("E");
+
+    act(() => mapView.options?.onBearingChange?.(0));
+    expect(face().style.transform).toBe("rotate(0deg)");
   });
 
   it("reads thousands the way the rest of the tracker does", async () => {
