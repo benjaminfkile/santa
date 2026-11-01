@@ -14,8 +14,12 @@ import { CandyCaneIcon } from "./candy-cane";
 import { CloudIcon } from "./cloud";
 import { CompassIcon } from "./compass";
 import { CookieIcon } from "./cookie";
+import { CookieChocolateChipIcon } from "./cookie-chocolate-chip";
+import { CookieGingerbreadIcon } from "./cookie-gingerbread";
 import { CookieSmileIcon } from "./cookie-smile";
+import { CookieSnickerdoodleIcon } from "./cookie-snickerdoodle";
 import { CookieStarIcon } from "./cookie-star";
+import { CookieSugarIcon } from "./cookie-sugar";
 import { CookieSwirlIcon } from "./cookie-swirl";
 import { DrumIcon } from "./drum";
 import { EarmuffsIcon } from "./earmuffs";
@@ -83,8 +87,12 @@ export const LIBRARY_ICONS: Record<string, IconComponent> = {
   "cloud": CloudIcon,
   "compass": CompassIcon,
   "cookie": CookieIcon,
+  "cookie-chocolate-chip": CookieChocolateChipIcon,
+  "cookie-gingerbread": CookieGingerbreadIcon,
   "cookie-smile": CookieSmileIcon,
+  "cookie-snickerdoodle": CookieSnickerdoodleIcon,
   "cookie-star": CookieStarIcon,
+  "cookie-sugar": CookieSugarIcon,
   "cookie-swirl": CookieSwirlIcon,
   "drum": DrumIcon,
   "earmuffs": EarmuffsIcon,
