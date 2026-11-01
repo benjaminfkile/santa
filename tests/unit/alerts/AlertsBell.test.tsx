@@ -42,6 +42,7 @@ vi.mock("../../../src/alerts/Alerts.module.css", () => ({
   event: "event",
   subject: "subject",
   message: "message",
+  messageLead: "messageLead",
 }));
 vi.mock("../../../src/ui/Dialog.module.css", () => ({
   dialog: "dialog",
@@ -355,7 +356,7 @@ describe("AlertsDialog", () => {
     expect(getByTestId("alerts-dialog").querySelector('[data-testid="alerts-dialog-new"]')).toBeNull();
   });
 
-  it("shows each alert's message under its subject, and no body element when the message is null", async () => {
+  it("shows a status alert's message under its subject, an update's message alone, and no body element when the message is null", async () => {
     mockLists([
       { ...alert(5, "2026-10-01T10:00:00Z", "Santa is delayed"), message: "Fog over the bay.\nWe will fly at nine." },
       { ...alert(6, "2026-10-01T11:00:00Z", "A message from the elves", "event_message"), message: "Cocoa at the north gate." },
@@ -370,7 +371,11 @@ describe("AlertsDialog", () => {
     expect(body.classList.contains("message")).toBe(true);
     expect(body.previousElementSibling?.classList.contains("subject")).toBe(true);
     const update = dialog.querySelector('[data-testid="alerts-dialog-row-6"]')!;
-    expect(update.querySelector('[data-testid="alerts-dialog-message"]')?.textContent).toBe("Cocoa at the north gate.");
+    const updateBody = update.querySelector('[data-testid="alerts-dialog-message"]')!;
+    expect(updateBody.textContent).toBe("Cocoa at the north gate.");
+    expect(updateBody.classList.contains("messageLead")).toBe(true);
+    expect(update.querySelector(".subject")).toBeNull();
+    expect(update.textContent).not.toContain("A message from the elves");
     const bare = dialog.querySelector('[data-testid="alerts-dialog-row-7"]')!;
     expect(bare.querySelector('[data-testid="alerts-dialog-message"]')).toBeNull();
     expect(bare.querySelector(".subject")?.textContent).toBe("Santa is in the air");

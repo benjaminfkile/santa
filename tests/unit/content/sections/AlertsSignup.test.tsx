@@ -431,7 +431,7 @@ describe("AlertsSignup alerts list", () => {
     expect(subsApi.getMe).not.toHaveBeenCalled();
   });
 
-  it("shows each alert's message under its subject, and no body element when the message is null", async () => {
+  it("shows a status alert's message under its subject, an update's message alone, and no body element when the message is null", async () => {
     seed({
       alerts: [
         alert(1, "event_status", "Postponed", "2024-12-24T18:00:00Z", "Fog over the bay.\nWe will walk tomorrow."),
@@ -443,9 +443,10 @@ describe("AlertsSignup alerts list", () => {
     const body = getByTestId("alert-1").querySelector('[data-testid="alert-message"]')!;
     expect(body.textContent).toBe("Fog over the bay.\nWe will walk tomorrow.");
     expect(body.previousElementSibling?.getAttribute("data-testid")).toBe("alert-subject");
-    expect(getByTestId("alert-2").querySelector('[data-testid="alert-message"]')?.textContent).toBe(
-      "Cocoa at the north gate.",
-    );
+    const update = getByTestId("alert-2");
+    expect(update.querySelector('[data-testid="alert-message"]')?.textContent).toBe("Cocoa at the north gate.");
+    expect(update.querySelector('[data-testid="alert-subject"]')).toBeNull();
+    expect(update.textContent).not.toContain("Latest update");
     const bare = getByTestId("alert-3");
     expect(bare.querySelector('[data-testid="alert-message"]')).toBeNull();
     expect(bare.querySelector('[data-testid="alert-subject"]')?.textContent).toBe("We are live");

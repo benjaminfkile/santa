@@ -91,3 +91,10 @@
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
+/* An update alert's message standing in for its subject. */
+.messageLead {
+  color: var(--text);
+  font-size: 0.875rem;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}

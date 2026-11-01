@@ -203,6 +203,13 @@
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
+/* An update alert's message standing in for its subject. */
+.alertsSignupSentMessageLead {
+  color: var(--text);
+  font-size: 0.9375rem;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
 
 :global(section[data-align="center"]) .alertsSignup { margin-inline: auto; }
 :global(section[data-align="center"]) .alertsSignupForm { align-items: center; }

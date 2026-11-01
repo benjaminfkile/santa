@@ -386,6 +386,9 @@ function AlertsList({ alerts }: { alerts: SnapshotAlert[] }) {
 
 function AlertRow({ row, eventName }: { row: SnapshotAlert; eventName: string }) {
   const kindLabel = alertKindLabel(row.kind);
+  // An update alert's subject is the first line of its message, so with a
+  // message present the message stands alone in the subject's place.
+  const lead = kindLabel === copy.alerts.kindUpdate && row.message !== null;
   return (
     <li className={styles.alertsSignupSentRow} data-testid={`alert-${row.id}`}>
       <div className={styles.alertsSignupSentHead}>
@@ -406,11 +409,16 @@ function AlertRow({ row, eventName }: { row: SnapshotAlert; eventName: string })
       <div className={styles.alertsSignupSentEvent} data-testid="alert-event">
         {eventName}
       </div>
-      <div className={styles.alertsSignupSentSubject} data-testid="alert-subject">
-        {row.subject}
-      </div>
+      {lead ? null : (
+        <div className={styles.alertsSignupSentSubject} data-testid="alert-subject">
+          {row.subject}
+        </div>
+      )}
       {row.message !== null ? (
-        <div className={styles.alertsSignupSentMessage} data-testid="alert-message">
+        <div
+          className={lead ? styles.alertsSignupSentMessageLead : styles.alertsSignupSentMessage}
+          data-testid="alert-message"
+        >
           {row.message}
         </div>
       ) : null}

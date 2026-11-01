@@ -5,7 +5,9 @@
 // the head and the footer, which stay put. It lists the snapshot's
 // alerts newest first (`createdAt` in the viewer's timezone, the event
 // name from `snapshot.event.name`, the subject line, the message under it when the alert
-// carries one, and the kind label of section 13.1), with
+// carries one, and the kind label of section 13.1; an update alert with a
+// message shows the message alone, since its subject is the message's
+// first line and would read twice), with
 // a New marker on each alert whose id is above `seenId`, the seen mark
 // held when the dialog opened. The footer carries Close.
 
@@ -85,6 +87,7 @@ export function AlertsDialog({ alerts, eventName, seenId, onClose }: AlertsDialo
                 const fresh = seenId === null || id > seenId;
                 const label = alertKindLabel(row.kind);
                 const update = label === copy.alerts.kindUpdate;
+                const lead = update && row.message != null;
                 return (
                   <li key={id} className={styles.row} data-testid={`alerts-dialog-row-${id}`}>
                     <div className={styles.rowHead}>
@@ -97,9 +100,11 @@ export function AlertsDialog({ alerts, eventName, seenId, onClose }: AlertsDialo
                       ) : null}
                     </div>
                     <div className={styles.event}>{eventName}</div>
-                    <div className={styles.subject}>{row.subject}</div>
+                    {lead ? null : <div className={styles.subject}>{row.subject}</div>}
                     {row.message != null ? (
-                      <div className={styles.message} data-testid="alerts-dialog-message">{row.message}</div>
+                      <div className={lead ? styles.messageLead : styles.message} data-testid="alerts-dialog-message">
+                        {row.message}
+                      </div>
                     ) : null}
                   </li>
                 );
