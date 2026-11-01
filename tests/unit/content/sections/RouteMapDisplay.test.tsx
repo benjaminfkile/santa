@@ -31,8 +31,8 @@
 //    new tab: Apple Maps on an Apple touch device, Google Maps everywhere
 //    else.
 //  - The map is created without cooperativeGestures.
-//  - The section passes labelMinZoom 12: the handle listens on the
-//    viewpoint and time label dot layers; below zoom 12 a pointer on a dot
+//  - The section passes labelMinZoom 10: the handle listens on the
+//    viewpoint and time label dot layers; below zoom 10 a pointer on a dot
 //    shows a popup with its label until it leaves, a tap on a time dot
 //    shows it for 2.5 s, and the container carries data-names; a click on
 //    any viewpoint dot opens that viewpoint's popover above the dot, a
@@ -1073,13 +1073,13 @@ describe("route map dot layer events", () => {
 });
 
 describe("route map viewpoint dot clicks", () => {
-  it("passes labelMinZoom 12 to the style's two text layers", async () => {
+  it("passes labelMinZoom 10 to the style's two text layers", async () => {
     await renderSection(null, { settings: { landmarks: [PLAIN] } });
     const style = currentStyle() as unknown as { layers: { id: string; minzoom?: number }[] };
     const gated = style.layers.filter((l) => l.minzoom !== undefined && l.id.startsWith("route-"));
     expect(gated.map((l) => [l.id, l.minzoom])).toEqual([
-      ["route-landmarks", 12],
-      ["route-time-labels", 12],
+      ["route-landmarks", 10],
+      ["route-time-labels", 10],
     ]);
   });
 

@@ -21,6 +21,7 @@ export const alertsSignupSentKind: string;
 export const alertsSignupSentKindStatus: string;
 export const alertsSignupSentKindUpdate: string;
 export const alertsSignupSentMessage: string;
+export const alertsSignupSentMessageLead: string;
 export const alertsSignupSentRow: string;
 export const alertsSignupSentRows: string;
 export const alertsSignupSentSubject: string;

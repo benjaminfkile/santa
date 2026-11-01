@@ -92,7 +92,7 @@ import * as ibtn from "../../../ui/IconButton.module.css";
 type ThemesModule = typeof import("../../../map/themes");
 
 // The least zoom at which the viewpoint names and the time label text show.
-const LABEL_MIN_ZOOM = 12;
+const LABEL_MIN_ZOOM = 10;
 
 const NO_MARKS: readonly LatLng[] = [];
 const NO_LABELS: readonly TimelineLabel[] = [];
