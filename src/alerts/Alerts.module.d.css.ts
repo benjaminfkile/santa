@@ -9,6 +9,7 @@ export const kind: string;
 export const kindStatus: string;
 export const kindUpdate: string;
 export const message: string;
+export const messageLead: string;
 export const row: string;
 export const rowHead: string;
 export const rows: string;
