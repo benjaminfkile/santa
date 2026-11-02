@@ -189,6 +189,13 @@
   gap: 4px;
   min-width: 0;
 }
+/* Below 360 px (a foldable's cover screen) the buttons do not fit on one
+   row: the account button and the right group wrap onto their own rows,
+   and the right group wraps its buttons too. */
+@media (max-width: 359.98px) {
+  .footer { flex-wrap: wrap; row-gap: 8px; }
+  .footerEnd { flex-wrap: wrap; row-gap: 8px; }
+}
 /* A toggle and the buttons it switches on are one bracketed group, so it
    reads as a set rather than as more buttons in the row. The rules are
    drawn only while the extras are there (.footerGroupOpen); on its own the

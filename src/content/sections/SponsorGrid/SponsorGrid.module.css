@@ -1,5 +1,6 @@
 /* docs/site.md section 7.4. Sponsor grid: one responsive grid of equal
-   cards (repeat(auto-fill, minmax(280px, 1fr)) with a 16 px gap, the
+   cards (repeat(auto-fill, minmax(min(280px, 100%), 1fr)) with a 16 px gap,
+   a card narrower than 280 px only on a screen narrower than that, the
    minimum 340 px from 1100 px; every
    row stretches to its tallest card). Each card is the frost recipe:
    the sponsor's name as its heading at the top, the logo large and
@@ -21,7 +22,7 @@
 
 .sponsorGridList {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
   gap: 16px;
   align-items: stretch;
   padding: 0;
