@@ -89,7 +89,9 @@ export function createMapLibreUserLocation(
   element.style.boxSizing = "border-box";
   element.style.border = "2px solid var(--text-bright)";
   element.style.pointerEvents = "none";
-  element.style.position = "relative";
+  // No inline position: MapLibre gives .maplibregl-marker position absolute
+  // (the chevron is positioned against it); an inline relative put the dot
+  // back in normal flow, below Santa's marker, off its true point.
 
   // The chevron, centred on the dot and pushed CHEVRON_OFFSET_PX out along
   // the bearing; in the dot's colour with its stroke, pulsing with it.

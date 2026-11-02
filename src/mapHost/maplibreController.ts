@@ -284,6 +284,9 @@ export function createMaplibreController(
   // The Santa marker, its centre (the circle's centre) on the fix.
   const pin = createSantaPinElement(santaMarkerColors(theme));
   pin.element.setAttribute("data-testid", "santa-marker");
+  // MapLibre positions markers absolutely; the pin's inline relative (kept
+  // for the Google wrapper) would put it in normal flow under other markers.
+  pin.element.style.position = "";
   const santa = opts.showSantaMarker ? new Marker({ element: pin.element, anchor: "center" }) : null;
   let santaShown = false;
   // Where the marker stands now, clamped to the box.
