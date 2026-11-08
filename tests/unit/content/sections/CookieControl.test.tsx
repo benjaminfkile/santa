@@ -304,6 +304,34 @@ describe("CookieControl", () => {
     await waitFor(() => expect(container.querySelector("#cookie-note-error")?.textContent).toBe("Too long."));
   });
 
+  it("has no note box; with cookies left there is no all-left line", async () => {
+    setLiveStatus(3);
+    setCookieTypes([{ id: 10, name: "Chip" }]);
+    const { container, queryByTestId } = await openWith(3, 0, 3);
+    expect(container.querySelector("textarea")).toBeNull();
+    expect(queryByTestId("cookie-note-counter")).toBeNull();
+    expect(queryByTestId("cookie-all-left")).toBeNull();
+  });
+
+  it("says the visitor has left all their cookies in the note box's place once the allowance is used", async () => {
+    setLiveStatus(3);
+    setCookieTypes([{ id: 10, name: "Chip" }]);
+    const { getByTestId } = await openWith(3, 3, 0);
+    expect(getByTestId("cookie-all-left").textContent).toBe("You have left all your cookies for this year");
+    expect(getByTestId("cookie-submit")).toBeDisabled();
+  });
+
+  it("shows the all-left line after a submit uses the last cookie", async () => {
+    setLiveStatus(3);
+    setCookieTypes([{ id: 10, name: "Chip" }]);
+    vi.mocked(cookiesApi.leaveCookies).mockResolvedValueOnce({ limit: 1, used: 1, remaining: 0, items: [] } as never);
+    const { getByTestId, findByTestId } = await openWith(1, 0, 1);
+    await userEvent.click(getByTestId("cookie-type"));
+    await userEvent.click(getByTestId("cookie-submit"));
+    expect((await findByTestId("cookie-all-left")).textContent).toBe("You have left all your cookies for this year");
+    expect(vi.mocked(cookiesApi.leaveCookies).mock.calls[0][0]).toMatchObject({ note: null });
+  });
+
   it("exposes cookie-type on each cookie type's add button in the dialog", async () => {
     setLiveStatus(3);
     setCookieTypes([

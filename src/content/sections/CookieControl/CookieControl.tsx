@@ -473,6 +473,10 @@ export function CookieDialog({
               );
             }}
           />
+          {/* The note box is off until it is reworked (planned for next year): a
+              note only travels with cookies, so after the last cookie it could
+              be typed but never sent. state.note stays "", so submit sends
+              note: null. To bring it back, restore this block.
           <label className={field.field}>
             <span className={field.label}>{copy.cookies.noteLabel}</span>
             <textarea
@@ -486,6 +490,12 @@ export function CookieDialog({
             />
             <span className={field.counter} data-testid="cookie-note-counter">{state.note.length}/140</span>
           </label>
+          */}
+          {/* In the note box's place: once the visitor has left their whole
+              allowance, say so (unless the limit error already says it). */}
+          {state.remaining <= 0 && state.error !== copy.cookies.limitReached ? (
+            <p className={dlg.notice} role="status" data-testid="cookie-all-left">{copy.cookies.limitReached}</p>
+          ) : null}
           {state.fieldError !== null ? (
             <p id="cookie-note-error" role="alert" className={field.error}>{state.fieldError}</p>
           ) : null}
