@@ -13,7 +13,7 @@ import { initialStore } from "../../../../src/store/types";
 import type { ContentBundle } from "../../../../src/store/types";
 import type { LiveObject, Snapshot } from "../../../../src/contracts";
 import type { UserLocationState } from "../../../../src/map/userLocation";
-import { resetTrackerTogglesForTests } from "../../../../src/content/sections/Map/trackerToggles";
+import { resetTrackerTogglesForTests, writeTrackerToggle } from "../../../../src/content/sections/Map/trackerToggles";
 
 // CSS processing is off in unit tests, so the Map module's classes map to
 // their own names here; the rules themselves are read from the file.
@@ -102,6 +102,9 @@ function setWidth(px: number) {
 
 beforeEach(() => {
   resetTrackerTogglesForTests();
+  // The gauge starts hidden on a first visit (the test below); the rest
+  // start with it shown.
+  writeTrackerToggle("flightDock", true);
   setWidth(1024);
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-12-24T02:12:30Z"));
@@ -319,6 +322,18 @@ describe("the flight gauge", () => {
     fireEvent.click(again.getByTestId("tracker-menu-flight-dock"));
     fireEvent.click(again.getByRole("button", { name: "Close menu" }));
     expect(again.getByTestId("flight-gauge")).toBeInTheDocument();
+  });
+
+  it("starts hidden on a first visit, its menu button off, until the viewer turns it on", async () => {
+    resetTrackerTogglesForTests();
+    seed(FULL);
+    const utils = await renderMap();
+    expect(utils.queryByTestId("flight-gauge")).toBeNull();
+    fireEvent.click(utils.getByRole("button", { name: "Tracker menu" }));
+    expect(utils.getByTestId("tracker-menu-flight-dock").getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(utils.getByTestId("tracker-menu-flight-dock"));
+    fireEvent.click(utils.getByRole("button", { name: "Close menu" }));
+    expect(utils.getByTestId("flight-gauge")).toBeInTheDocument();
   });
 
   it("hides with the other overlays while the tracker menu is open", async () => {

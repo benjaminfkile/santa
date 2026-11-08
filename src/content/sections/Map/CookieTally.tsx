@@ -5,7 +5,7 @@
 // further left while the icons stay in one column. Legibility comes from
 // a shadow in the chrome's panel colour. Rows reorder in place as live
 // objects arrive, with no animation. The chevron above the rows collapses
-// them for a viewer who would rather not look at them; collapsed, the
+// them, and a first visit starts that way; collapsed, the
 // chevron is left, and the choice is stored in trackerToggles like the
 // tracker's other choices and followed from there, so a replace from the
 // account sync shows at once. The total over every type is not shown here:
@@ -49,7 +49,7 @@ function readIcon(icon: unknown): IconRef | null {
 export function CookieTally({ bundle }: { bundle: ContentBundle }) {
   const cookieTypes = useStore((s) => s.snapshot?.cookieTypes ?? null);
   const tally = useStore((s) => s.live?.cookieTally ?? null);
-  const open = useTrackerToggle("cookieTally", true);
+  const open = useTrackerToggle("cookieTally", false);
 
   if (cookieTypes === null || cookieTypes.length === 0) return null;
   const ranked = rankCookieTypes(cookieTypes, tally ?? {});

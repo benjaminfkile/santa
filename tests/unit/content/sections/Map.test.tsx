@@ -198,28 +198,28 @@ describe("Map section class coverage", () => {
     const pressed = (id: string) => utils.getByTestId(id).getAttribute("aria-pressed");
     const road = () => utils.getByRole("radio", { name: /Road/ });
     expect(road().getAttribute("aria-checked")).toBe("false");
-    expect(pressed("tracker-menu-flight-dock")).toBe("true");
+    expect(pressed("tracker-menu-flight-dock")).toBe("false");
     expect(pressed("tracker-menu-flight-history")).toBe("false");
     expect(pressed("tracker-menu-snow")).toBe("false");
 
     act(() =>
       replaceTrackerSettings({
         mapType: "roadmap",
-        flightDock: false,
+        flightDock: true,
         flightHistory: true,
         timeLabels: false,
         snow: true,
       }),
     );
     expect(road().getAttribute("aria-checked")).toBe("true");
-    expect(pressed("tracker-menu-flight-dock")).toBe("false");
+    expect(pressed("tracker-menu-flight-dock")).toBe("true");
     expect(pressed("tracker-menu-flight-history")).toBe("true");
     expect(pressed("tracker-menu-time-labels")).toBe("false");
     expect(pressed("tracker-menu-snow")).toBe("true");
 
     act(() => replaceTrackerSettings({}));
     expect(road().getAttribute("aria-checked")).toBe("false");
-    expect(pressed("tracker-menu-flight-dock")).toBe("true");
+    expect(pressed("tracker-menu-flight-dock")).toBe("false");
     expect(pressed("tracker-menu-flight-history")).toBe("false");
     cleanup();
     resetTrackerTogglesForTests();

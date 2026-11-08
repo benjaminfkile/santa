@@ -255,14 +255,16 @@
 }
 
 /* Leave a cookie: the cookie total then the bare cookie-plus glyph, under
-   the tally. The total takes the tally's count class and sits left of the
-   glyph with the rows' 5 px gap, the glyph 26 px inside a 44 px hit area
-   with the same shadow and no box. */
+   the tally and lined up with its rows: the glyph's centre on the icon
+   column (11 px padding + 14 px half icon = 25 px from the right edge) and
+   the total's right edge on the counts' (11 + 28 + 5 = 44 px). The glyph
+   is 26 px inside a 44 px hit area with the same shadow and no box, so the
+   button sits 3 px in from the edge and reaches 3 px under the total. */
 .cookieLeaveRow {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 5px;
+  gap: 0;
   user-select: none;
 }
 .cookieLeave {
@@ -281,6 +283,7 @@
   transition: var(--hover-transition);
 }
 .cookieLeave:hover { color: var(--cookie-bright); }
+.cookieLeaveRow > .cookieLeave { margin: 0 3px 0 -3px; }
 
 /* Bottom-right: zoom in and out while following, recenter when not, and
    above them the north-up button while the map is turned. The zoom group

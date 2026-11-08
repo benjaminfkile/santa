@@ -242,7 +242,7 @@ export const Map: SectionComponent = ({ data, bundle }) => {
     writeTrackerToggle("timeLabels", v);
   }, []);
   // Open by default above 760 px, collapsed to the handle pill below.
-  const flightDockOn = useTrackerToggle("flightDock", true);
+  const flightDockOn = useTrackerToggle("flightDock", false);
   const setFlightDockOn = useCallback((v: boolean) => {
     writeTrackerToggle("flightDock", v);
   }, []);

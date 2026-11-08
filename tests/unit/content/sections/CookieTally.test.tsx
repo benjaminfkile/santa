@@ -18,6 +18,7 @@ import { CookieTally, cookieTotal } from "../../../../src/content/sections/Map/C
 import {
   replaceTrackerSettings,
   resetTrackerTogglesForTests,
+  writeTrackerToggle,
 } from "../../../../src/content/sections/Map/trackerToggles";
 import { CookieDialog } from "../../../../src/content/sections/CookieControl/CookieControl";
 import * as mapStyles from "../../../../src/content/sections/Map/Map.module.css";
@@ -108,6 +109,8 @@ async function renderMap(overlays: Record<string, boolean>, auth: AuthState = { 
 beforeEach(() => {
   // The tally's collapse choice lives in a module, so it leaks between tests.
   resetTrackerTogglesForTests();
+  // A first visit starts collapsed (the test below); the rest start open.
+  writeTrackerToggle("cookieTally", true);
   act(() => store.setState({ ...initialStore }));
   vi.mocked(cookiesApi.getMyCookies).mockReset();
   vi.mocked(cookiesApi.leaveCookies).mockReset();
@@ -194,7 +197,20 @@ describe("CookieTally", () => {
     act(() => replaceTrackerSettings({ cookieTally: false }));
     expect(view.getByTestId("cookie-tally-toggle").getAttribute("aria-expanded")).toBe("false");
     expect(view.queryByTestId("cookie-tally")).toBeNull();
+    act(() => replaceTrackerSettings({ cookieTally: true }));
+    expect(view.queryByTestId("cookie-tally")).not.toBeNull();
+    // An empty replace drops the choice: back to the default, collapsed.
     act(() => replaceTrackerSettings({}));
+    expect(view.queryByTestId("cookie-tally")).toBeNull();
+  });
+
+  it("starts collapsed on a first visit: the chevron alone, pointing down", () => {
+    resetTrackerTogglesForTests();
+    setState({ "1": 1 });
+    const view = render(<CookieTally bundle={bundle} />);
+    expect(view.getByTestId("cookie-tally-toggle").getAttribute("aria-expanded")).toBe("false");
+    expect(view.queryByTestId("cookie-tally")).toBeNull();
+    fireEvent.click(view.getByTestId("cookie-tally-toggle"));
     expect(view.queryByTestId("cookie-tally")).not.toBeNull();
   });
 
@@ -212,6 +228,12 @@ describe("CookieTally", () => {
     expect(rule("cookieTallyCount")).toMatch(/tabular-nums/);
     expect(rule("cookieTallyIcon")).toMatch(/drop-shadow\([^)]*var\(--panel\)\)/);
     expect(rule("cookieLeave")).toMatch(/width: 44px/);
+    // The leave row lines up with the rows above it: the glyph's centre on
+    // the icon column (25 px in) and the total's right edge on the counts'
+    // (44 px in), so the 44 px button sits 3 px in and reaches 3 px left.
+    expect(rule("cookieTally")).toMatch(/padding: 0 11px 0 0/);
+    expect(rule("cookieLeaveRow")).toMatch(/gap: 0;/);
+    expect(css).toMatch(/.cookieLeaveRow > .cookieLeave { margin: 0 3px 0 -3px; }/);
   });
 
   it("has no total row: the chevron then the list, and only the chevron while collapsed", () => {
