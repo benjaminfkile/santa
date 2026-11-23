@@ -18,6 +18,7 @@ import { copy } from "./copy/copy";
 import { store } from "./store/useStore";
 import { startSystemListener } from "./content/theme/colorScheme";
 import { session } from "./auth/session";
+import { printConsoleBanner } from "./lib/consoleBanner";
 
 function renderMisconfigured(root: HTMLElement, variable: string): void {
   root.replaceChildren();
@@ -32,6 +33,8 @@ function renderMisconfigured(root: HTMLElement, variable: string): void {
 }
 
 async function boot(): Promise<void> {
+  printConsoleBanner();
+
   const rootEl = document.getElementById("root");
   if (!rootEl) return;
 
