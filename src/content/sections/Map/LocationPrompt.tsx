@@ -1,7 +1,7 @@
 // docs/site.md section 8.6. Disabled state: explains why location is
 // asked, warns when inside the FB or IG in-app browser, gives OS-specific
-// steps, and offers Enable and Cancel. Enabled state: offers Disable and
-// Back. After a PERMISSION_DENIED error the prompt reopens on the
+// steps, and offers Cancel then Enable. Enabled state: offers Back then
+// Disable (site.md 22: the confirming action last, right-aligned). After a PERMISSION_DENIED error the prompt reopens on the
 // instructions section.
 
 import { useEffect, useRef } from "react";
@@ -58,8 +58,8 @@ export function LocationPrompt({
         <>
           <p>You are showing your location on the map.</p>
           <div className={styles.locationPromptActions}>
-            <button type="button" className={btn.btn} onClick={onDisable}>Disable</button>
             <button type="button" className={btn.btnQuiet} onClick={onClose}>Back</button>
+            <button type="button" className={btn.btn} onClick={onDisable}>Disable</button>
           </div>
         </>
       ) : (
@@ -92,8 +92,8 @@ export function LocationPrompt({
             </div>
           ) : null}
           <div className={styles.locationPromptActions}>
-            <button type="button" className={btn.btnFill} onClick={onEnable}>Enable</button>
             <button type="button" className={btn.btnQuiet} onClick={onClose}>Cancel</button>
+            <button type="button" className={btn.btnFill} onClick={onEnable}>Enable</button>
           </div>
         </>
       )}
