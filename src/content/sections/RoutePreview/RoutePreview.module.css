@@ -25,11 +25,10 @@
 .locationPrompt::backdrop {
   background: rgba(0, 0, 0, 0.55);
 }
-.locationPromptActions {
-  display: flex;
-  gap: var(--space-3);
-  margin-top: var(--space-4);
-}
+/* Both dialogs' button rows are the shared action row (site.md 22):
+   right-aligned, cancel or back first, the confirming action last. */
+.locationPromptActions,
+.routeDisclaimerActions { composes: actions from "../../../ui/Dialog.module.css"; }
 .locationPromptInapp {
   color: var(--warn);
   margin-block: var(--space-3);

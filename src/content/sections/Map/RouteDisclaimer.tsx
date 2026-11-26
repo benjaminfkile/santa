@@ -1,5 +1,6 @@
 // docs/site.md section 7.6. Shown on the first live-screen visit per
-// browser; "I understand" stores the localStorage key.
+// browser; "I understand", alone on the right of the shared action row,
+// stores the localStorage key.
 
 import { useEffect, useRef, useState } from "react";
 import { storageGet, storageSet } from "../../../lib/storage";
@@ -44,9 +45,11 @@ export function RouteDisclaimer() {
         The route shown is a plan and may change. Please stay clear of any moving
         vehicles.
       </p>
-      <button type="button" className={btn.btnFill} onClick={acknowledge}>
-        I understand
-      </button>
+      <div className={styles.routeDisclaimerActions} data-testid="route-disclaimer-actions">
+        <button type="button" className={btn.btnFill} onClick={acknowledge}>
+          I understand
+        </button>
+      </div>
     </dialog>
   );
 }
