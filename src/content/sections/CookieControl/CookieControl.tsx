@@ -2,7 +2,10 @@
 // status 3; signedOutCopy with a sign-in link when signed out; a button
 // that opens the cookie dialog, centred in the viewport, where the visitor
 // picks how many of each type to leave (up to the remaining allowance) and
-// the site posts them in one request. The dialog is on the narrow width of
+// the site posts them in one request. Signed out, with every cookie left,
+// and while cookies are closed the dialog lists the types as a live
+// leaderboard by `rankCookieTypes`; the picking view ranks them once per
+// open and keeps that order. The dialog is on the narrow width of
 // the shared recipe, with a close X in its head and its picker in the
 // recipe's scroll region. The dialog is exported for the live
 // screen, which opens it from its own glyph; signed out it offers Sign in.
@@ -10,7 +13,7 @@
 // section shows the closed line in place of its button and the dialog
 // shows the same line and calls nothing.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import type { SectionComponent } from "../../registry";
 import type { ContentBundle, SiteStore } from "../../../store/types";
@@ -25,6 +28,7 @@ import { getMyCookies, leaveCookies } from "../../../api/cookies";
 import { ApiRequestError, SignInRequired, surfaceFor } from "../../../api/errors";
 import { copy } from "../../../copy/copy";
 import { CloseGlyph, MinusGlyph, PlusGlyph } from "../Map/glyphs";
+import { rankCookieTypes } from "../Leaderboard/Leaderboard";
 import * as styles from "./CookieControl.module.css";
 import * as btn from "../../../ui/Button.module.css";
 import * as dlg from "../../../ui/Dialog.module.css";
@@ -151,26 +155,66 @@ type Ready = Extract<DialogState, { kind: "ready" }>;
 // cookies are closed it shows the closed line with Close and calls nothing.
 // The cookie list: one row per type, the icon, the name with the running
 // tally under it, and whatever the caller puts at the end of the row. The
-// signed-in dialog passes its stepper; the signed-out one passes nothing,
-// so a visitor who cannot leave cookies yet still sees what there is to
-// leave and how many of each Santa has.
+// picking view passes its stepper; the leaderboard views (signed out, all
+// left, closed) pass nothing and set `ranked`, which puts the 1-based rank
+// before the icon and tints the leader. `animate` slides a row from its
+// old place to its new one when the order changes (FLIP over 300 ms).
 function CookieRows({
   types,
   tally,
   bundle,
   trailing,
+  ranked = false,
+  animate = false,
 }: {
   types: CookieType[];
   tally: Record<string, number> | null;
   bundle: ContentBundle;
   trailing?: (type: CookieType, id: number) => ReactNode;
+  ranked?: boolean;
+  animate?: boolean;
 }) {
+  const rowEls = useRef(new Map<number, HTMLLIElement>());
+  // Each row's top within the list after the last order change, so the
+  // next change knows where every row came from.
+  const tops = useRef(new Map<number, number>());
+  const orderKey = types.map((t) => num(t.id)).join(",");
+  useLayoutEffect(() => {
+    const next = new Map<number, number>();
+    for (const [id, el] of rowEls.current) next.set(id, el.offsetTop);
+    if (animate) {
+      for (const [id, el] of rowEls.current) {
+        const before = tops.current.get(id);
+        const after = next.get(id) ?? 0;
+        if (before === undefined || before === after) continue;
+        el.style.transition = "none";
+        el.style.transform = `translateY(${before - after}px)`;
+        void el.offsetHeight;
+        el.style.transition = "transform 300ms ease";
+        el.style.transform = "";
+      }
+    }
+    tops.current = next;
+  }, [orderKey, animate]);
   return (
     <ul className={styles.rows}>
-      {types.map((t) => {
+      {types.map((t, i) => {
         const id = num(t.id);
+        const cls = [styles.row, ranked ? styles.rowRanked : "", ranked && i === 0 ? styles.rowLeader : ""]
+          .filter(Boolean)
+          .join(" ");
         return (
-          <li key={id} className={styles.row} data-testid="cookie-row">
+          <li
+            key={id}
+            ref={(el) => {
+              if (el !== null) rowEls.current.set(id, el);
+              else rowEls.current.delete(id);
+            }}
+            className={cls}
+            data-testid="cookie-row"
+            data-cookie-type-id={id}
+          >
+            {ranked ? <span className={styles.rowRank} data-testid="cookie-row-rank">{i + 1}</span> : null}
             {renderTypeIcon(t.icon, bundle)}
             <span className={styles.rowText}>
               <span className={styles.rowName}>{t.name}</span>
@@ -187,6 +231,22 @@ function CookieRows({
   );
 }
 
+// The picking view's order: the held ids first, skipping any no longer in
+// `types`, then any type the held order does not know, in rank order.
+function inHeldOrder(types: CookieType[], held: number[], tally: Record<string, number>): CookieType[] {
+  const byId = new Map(types.map((t) => [num(t.id), t]));
+  const out: CookieType[] = [];
+  for (const id of held) {
+    const t = byId.get(id);
+    if (t !== undefined) out.push(t);
+  }
+  const known = new Set(held);
+  for (const t of rankCookieTypes(types, tally)) {
+    if (!known.has(num(t.id))) out.push(t);
+  }
+  return out;
+}
+
 export function CookieDialog({
   bundle,
   onClose,
@@ -200,6 +260,12 @@ export function CookieDialog({
   // The live tally, so each row says how many of that cookie Santa has
   // been left so far, beside the visitor's own picks.
   const tally = useStore((s) => s.live?.cookieTally ?? null);
+  // The leaderboard views rank on every render, so a new live object
+  // reorders their rows while the dialog is open.
+  const ranked = rankCookieTypes(cookieTypes, tally ?? {});
+  // The picking view's order, ranked once when the ready state first
+  // arrives in this open and held until the dialog unmounts on close.
+  const [heldOrder, setHeldOrder] = useState<number[] | null>(null);
   const cookiesClosed = useStore(selectCookiesClosed);
   const { state: auth } = useAuth();
   const signedIn = auth.status === "signedIn";
@@ -374,8 +440,9 @@ export function CookieDialog({
     if (cookiesClosed) {
       return (
         <>
-          <div className={dlg.scroll}>
+          <div className={dlg.scroll} data-testid="cookie-dialog-scroll">
             <p className={dlg.copy} data-testid="cookie-dialog-closed">{copy.cookies.closed}</p>
+            <CookieRows types={ranked} tally={tally} bundle={bundle} ranked animate />
           </div>
           <div className={dlg.actions}>
             <button type="button" className={btn.btnQuiet} onClick={close}>{copy.cookies.close}</button>
@@ -384,17 +451,17 @@ export function CookieDialog({
       );
     }
     if (auth.status !== "unknown" && !signedIn) {
-      // The same list as the signed-in dialog, so a visitor who is not
-      // signed in still sees the cookies and how many of each Santa has;
-      // the steppers are what they are missing, and the notice above the
-      // list and the Sign in action say why.
+      // The live leaderboard, so a visitor who is not signed in still sees
+      // the cookies and how many of each Santa has; the steppers are what
+      // they are missing, and the notice above the list and the Sign in
+      // action say why.
       return (
         <>
           <div className={dlg.scroll} data-testid="cookie-dialog-scroll">
             <p className={styles.signInNotice} data-testid="cookie-dialog-signed-out">
               {copy.cookies.signInToLeave}
             </p>
-            <CookieRows types={cookieTypes} tally={tally} bundle={bundle} />
+            <CookieRows types={ranked} tally={tally} bundle={bundle} ranked animate />
           </div>
           <div className={dlg.actions}>
             <button type="button" className={btn.btnQuiet} onClick={close}>{copy.cookies.close}</button>
@@ -430,7 +497,31 @@ export function CookieDialog({
         </>
       );
     }
-    const types = state.typesOverride ?? cookieTypes;
+    if (state.remaining <= 0) {
+      // Everything is left: the live leaderboard, then the thanks for the
+      // last pick when there is one, then the all-left line last, and Close.
+      return (
+        <>
+          <div className={dlg.scroll} data-testid="cookie-dialog-scroll">
+            <CookieRows types={ranked} tally={tally} bundle={bundle} ranked animate />
+            {state.error !== null && state.error !== copy.cookies.limitReached ? (
+              <p role="alert" className={dlg.alert} data-testid="cookie-error">{state.error}</p>
+            ) : null}
+            {state.confirmation !== null ? (
+              <p className={dlg.notice} role="status" data-testid="cookie-confirmation">{state.confirmation}</p>
+            ) : null}
+            <p className={dlg.notice} role="status" data-testid="cookie-all-left">{copy.cookies.limitReached}</p>
+          </div>
+          <div className={dlg.actions}>
+            <button type="button" className={btn.btnQuiet} onClick={close}>{copy.cookies.close}</button>
+          </div>
+        </>
+      );
+    }
+    const list = state.typesOverride ?? cookieTypes;
+    const held = heldOrder ?? rankCookieTypes(list, tally ?? {}).map((t) => num(t.id));
+    if (heldOrder === null) setHeldOrder(held);
+    const types = inHeldOrder(list, held, tally ?? {});
     const cooldownSecs =
       state.cooldownUntil !== null ? Math.max(0, Math.ceil((state.cooldownUntil - nowMs) / 1000)) : 0;
     const canAdd = total < state.remaining && !state.submitting;
@@ -491,11 +582,6 @@ export function CookieDialog({
             <span className={field.counter} data-testid="cookie-note-counter">{state.note.length}/140</span>
           </label>
           */}
-          {/* In the note box's place: once the visitor has left their whole
-              allowance, say so (unless the limit error already says it). */}
-          {state.remaining <= 0 && state.error !== copy.cookies.limitReached ? (
-            <p className={dlg.notice} role="status" data-testid="cookie-all-left">{copy.cookies.limitReached}</p>
-          ) : null}
           {state.fieldError !== null ? (
             <p id="cookie-note-error" role="alert" className={field.error}>{state.fieldError}</p>
           ) : null}

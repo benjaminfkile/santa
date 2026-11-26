@@ -63,6 +63,21 @@
   border-top: 1px solid var(--line);
 }
 .row:first-child { border-top: 0; }
+/* The leaderboard views (signed out, all left, closed): the rank before the
+   icon, and the leader on the soft accent with its rank in the accent. */
+.rowRanked { grid-template-columns: 2ch 28px minmax(0, 1fr) auto; }
+.rowRank {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.875rem;
+  color: var(--text-dim);
+  text-align: right;
+}
+.rowLeader { background: var(--accent-soft); }
+.rowLeader .rowRank {
+  color: var(--accent);
+  font-weight: 700;
+}
 .rowIcon { display: flex; align-items: center; justify-content: center; color: var(--accent); }
 .rowIconPlaceholder { width: 20px; height: 20px; border-radius: 50%; background: var(--panel-2); }
 .rowName {
