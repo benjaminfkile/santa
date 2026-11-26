@@ -175,27 +175,37 @@ function CookieRows({
   animate?: boolean;
 }) {
   const rowEls = useRef(new Map<number, HTMLLIElement>());
-  // Each row's top within the list after the last order change, so the
-  // next change knows where every row came from.
-  const tops = useRef(new Map<number, number>());
   const orderKey = types.map((t) => num(t.id)).join(",");
-  useLayoutEffect(() => {
-    const next = new Map<number, number>();
-    for (const [id, el] of rowEls.current) next.set(id, el.offsetTop);
+  // FLIP: when the order changes, read every row's top from the DOM as it
+  // still stands (this render has not committed yet), then after the commit
+  // slide each row from that top to its new one. Reading at the change, not
+  // after the previous commit, matters: the dialog's first commit happens
+  // before showModal lays it out, so tops taken then are all 0.
+  const prevKey = useRef(orderKey);
+  const before = useRef<Map<number, number> | null>(null);
+  if (prevKey.current !== orderKey) {
+    prevKey.current = orderKey;
     if (animate) {
-      for (const [id, el] of rowEls.current) {
-        const before = tops.current.get(id);
-        const after = next.get(id) ?? 0;
-        if (before === undefined || before === after) continue;
-        el.style.transition = "none";
-        el.style.transform = `translateY(${before - after}px)`;
-        void el.offsetHeight;
-        el.style.transition = "transform 300ms ease";
-        el.style.transform = "";
-      }
+      const m = new Map<number, number>();
+      for (const [id, el] of rowEls.current) m.set(id, el.offsetTop);
+      before.current = m;
     }
-    tops.current = next;
-  }, [orderKey, animate]);
+  }
+  useLayoutEffect(() => {
+    const m = before.current;
+    before.current = null;
+    if (m === null) return;
+    for (const [id, el] of rowEls.current) {
+      const from = m.get(id);
+      const to = el.offsetTop;
+      if (from === undefined || from === to) continue;
+      el.style.transition = "none";
+      el.style.transform = `translateY(${from - to}px)`;
+      void el.offsetHeight;
+      el.style.transition = "transform 300ms ease";
+      el.style.transform = "";
+    }
+  }, [orderKey]);
   return (
     <ul className={styles.rows}>
       {types.map((t, i) => {

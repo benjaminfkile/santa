@@ -609,6 +609,39 @@ describe("the cookie dialog's order", () => {
       }
     });
 
+    it("slides from where the rows were at the change, not from the first commit (rows laid out only after showModal)", () => {
+      // Every row reads 0 until the dialog is laid out, as before showModal.
+      let laidOut = false;
+      Object.defineProperty(HTMLElement.prototype, "offsetTop", {
+        configurable: true,
+        get(this: HTMLElement) {
+          const parent = this.parentElement;
+          return !laidOut || parent === null ? 0 : Array.from(parent.children).indexOf(this) * 48;
+        },
+      });
+      const set: string[] = [];
+      const proto = Object.getPrototypeOf(document.createElement("div").style);
+      const td = Object.getOwnPropertyDescriptor(proto, "transform");
+      Object.defineProperty(proto, "transform", {
+        configurable: true,
+        get(this: CSSStyleDeclaration) { return td?.get?.call(this); },
+        set(this: CSSStyleDeclaration, v: string) { if (v !== "") set.push(v); td?.set?.call(this, v); },
+      });
+      try {
+        setLiveStatus(3);
+        setCookieTypes(THREE);
+        setTally({});
+        renderDialog({ status: "signedOut" });
+        laidOut = true;
+        setTally({ "12": 3 });
+        // 12 moved from the third row (96) to the first (0); the other two
+        // moved down one row each. Nothing slides from 0 to its new place.
+        expect(set.sort()).toEqual(["translateY(-48px)", "translateY(-48px)", "translateY(96px)"].sort());
+      } finally {
+        if (td) Object.defineProperty(proto, "transform", td);
+      }
+    });
+
     it("the picking view never moves a row", async () => {
       setLiveStatus(3);
       setCookieTypes(THREE);
