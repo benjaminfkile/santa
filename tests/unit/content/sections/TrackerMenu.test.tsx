@@ -465,7 +465,7 @@ describe("TrackerMenu account button", () => {
     expect(css).toMatch(/\.footerBtn\s*\{[^}]*flex:\s*none;[^}]*width:\s*44px;[^}]*height:\s*44px/);
     expect(css).not.toMatch(/\.footerBtn\s*\{[^}]*min-width:\s*0/);
     expect(css).toMatch(/\.close\s*\{\s*composes:\s*footerBtn/);
-    expect(ruleOf(css, ".trackerMenu")).toContain("width: min(360px, 100%)");
+    expect(ruleOf(css, ".trackerMenu")).toContain("width: min(400px, 100%)");
     expect(css).toMatch(/\.panel\s*\{[^}]*padding:\s*6px/);
   });
 });
