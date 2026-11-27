@@ -5,6 +5,8 @@
 // the operator's private notes, never here. Docs use <placeholder> names.
 // A line that must keep a match (a documented example value) is listed, as the
 // exact matched text, one per line, in .no-infra-allow at the repository root.
+// A file that must keep one kind of match is listed in FILE_EXEMPT with the
+// rule names it may break; every other rule still applies to it.
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -31,6 +33,9 @@ const RULES = [
 
 // Addresses every Android emulator and Docker bridge uses, and AWS's public CA bundle host.
 const ALWAYS_ALLOWED = new Set(["10.0.2.2", "10.0.0.1", "172.17.0.1", "truststore.pki.rds.amazonaws.com"]);
+// The developer console banner credits the operator with a link to his site.
+const FILE_EXEMPT = new Map([["src/lib/consoleBanner.ts", new Set(["operator domain"])]]);
+
 const allowFile = join(root, ".no-infra-allow");
 const allowed = new Set(ALWAYS_ALLOWED);
 if (existsSync(allowFile)) {
@@ -59,6 +64,7 @@ for (const file of files) {
   const lines = text.split("\n");
   for (let i = 0; i < lines.length; i++) {
     for (const [name, re] of RULES) {
+      if (FILE_EXEMPT.get(file)?.has(name)) continue;
       re.lastIndex = 0;
       let m;
       while ((m = re.exec(lines[i]))) {

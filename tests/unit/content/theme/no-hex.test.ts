@@ -3,8 +3,10 @@
 // stylesheet, .ts, and .tsx file under src/ and fails when a hex colour
 // appears outside tokens.css. The generated icons are excluded, and so is
 // the Santa marker (src/map/santaPin.ts), whose hat is a fixed red and
-// white drawing on every theme (8.7); the map palettes are data in the
-// theme rows, not code.
+// white drawing on every theme (8.7), and the developer console banner
+// (src/lib/consoleBanner.ts), a fixed pixel-art drawing that only the
+// browser console shows; the map palettes are data in the theme rows, not
+// code.
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -16,9 +18,10 @@ const srcRoot = resolve(here, "../../../../src");
 const tokensPath = resolve(srcRoot, "content/theme/tokens.css");
 const generatedIconsDir = resolve(srcRoot, "content/icons/generated");
 const santaPinPath = resolve(srcRoot, "map/santaPin.ts");
+const consoleBannerPath = resolve(srcRoot, "lib/consoleBanner.ts");
 
 function isExcludedFile(full: string): boolean {
-  if (full === tokensPath || full === santaPinPath) return true;
+  if (full === tokensPath || full === santaPinPath || full === consoleBannerPath) return true;
   if (full.startsWith(generatedIconsDir + sep) || full === generatedIconsDir) return true;
   if (full.endsWith(".d.css.ts")) return true;
   return false;
